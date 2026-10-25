@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Week columns</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 1920px; height: 1080px; box-sizing: border-box; padding: 32px; background: #F3F5F8; font-family: 'Figtree', system-ui, sans-serif; color: #161B22; display: flex; flex-direction: column; gap: 24px">
+
+<header style="height: 128px; display: flex; align-items: center; justify-content: space-between; gap: 32px">
+<div style="display: flex; align-items: center; gap: 28px">
+<div style="font-size: 112px; font-weight: 600; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums">07:18</div>
+<div>
+<div style="font-size: 44px; font-weight: 600; line-height: 1.1">Wednesday</div>
+<div style="font-size: 28px; color: #4A5565; margin-top: 4px">21 October</div>
+</div>
+</div>
+
+<div style="display: flex; align-items: center; gap: 16px">
+<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#161B22" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="16" y1="13" x2="16" y2="21"/><line x1="8" y1="13" x2="8" y2="21"/><line x1="12" y1="15" x2="12" y2="23"/><path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"/></svg>
+<div style="font-size: 56px; font-weight: 600; line-height: 1">11°</div>
+<div>
+<div style="font-size: 24px; font-weight: 600">Light rain</div>
+<div style="font-size: 22px; color: #4A5565">High 13° · Low 8°</div>
+</div>
+</div>
+
+<nav aria-label="Filter by person" style="display: flex; align-items: center; gap: 10px">
+<button style="height: 64px; padding: 0 26px; border-radius: 32px; border: 2px solid #161B22; background: #161B22; color: #FFFFFF; font-size: 22px; font-weight: 600">All</button>
+<button style="height: 64px; padding: 0 22px 0 10px; border-radius: 32px; border: 2px solid #C3CBD7; background: #FFFFFF; color: #161B22; font-size: 22px; font-weight: 600; display: flex; align-items: center; gap: 10px"><span style="width: 40px; height: 40px; border-radius: 20px; background: #2456C9; color: #FFFFFF; font-size: 20px; font-weight: 700; display: flex; align-items: center; justify-content: center">A</span>Alex</button>
+<button style="height: 64px; padding: 0 22px 0 10px; border-radius: 32px; border: 2px solid #C3CBD7; background: #FFFFFF; color: #161B22; font-size: 22px; font-weight: 600; display: flex; align-items: center; gap: 10px"><span style="width: 40px; height: 40px; border-radius: 20px; background: #B85200; color: #FFFFFF; font-size: 20px; font-weight: 700; display: flex; align-items: center; justify-content: center">S</span>Sam</button>
+<button style="height: 64px; padding: 0 22px 0 10px; border-radius: 32px; border: 2px solid #C3CBD7; background: #FFFFFF; color: #161B22; font-size: 22px; font-weight: 600; display: flex; align-items: center; gap: 10px"><span style="width: 40px; height: 40px; border-radius: 20px; background: #0B7A64; color: #FFFFFF; font-size: 20px; font-weight: 700; display: flex; align-items: center; justify-content: center">M</span>Maya</button>
+<button style="height: 64px; padding: 0 22px 0 10px; border-radius: 32px; border: 2px solid #C3CBD7; background: #FFFFFF; color: #161B22; font-size: 22px; font-weight: 600; display: flex; align-items: center; gap: 10px"><span style="width: 40px; height: 40px; border-radius: 20px; background: #6C3FC4; color: #FFFFFF; font-size: 20px; font-weight: 700; display: flex; align-items: center; justify-content: center">L</span>Leo</button>
+</nav>
+</header>
+
+<main style="flex: 1; min-height: 0; display: flex; gap: 14px">
+<sc-for list="{{days}}" as="day" hint-placeholder-count="7">
+<section style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 12px; padding: 14px; border-radius: 24px; background: {{day.bg}}; box-shadow: {{day.ring}}">
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-radius: 14px; background: {{day.headBg}}; color: {{day.headFg}}">
+<span style="font-size: 30px; font-weight: 700">{{day.name}}</span>
+<span style="font-size: 44px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums">{{day.num}}</span>
+</div>
+<sc-for list="{{day.allDay}}" as="a" hint-placeholder-count="1">
+<div style="padding: 8px 14px; border-radius: 12px; background: {{a.bg}}; color: {{a.fg}}; font-size: 22px; font-weight: 600">{{a.title}}</div>
+</sc-for>
+<sc-for list="{{day.events}}" as="ev" hint-placeholder-count="3">
+<div style="display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-radius: 16px; background: {{ev.bg}}; color: {{ev.fg}}">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<span style="font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums">{{ev.time}}</span>
+<span style="width: 32px; height: 32px; border-radius: 16px; background: {{ev.solid}}; color: #FFFFFF; font-size: {{ev.fs}}; font-weight: 700; display: flex; align-items: center; justify-content: center">{{ev.who}}</span>
+</div>
+<div style="font-size: 26px; font-weight: 600; line-height: 1.15">{{ev.title}}</div>
+</div>
+</sc-for>
+</section>
+</sc-for>
+</main>
+
+<footer style="height: 96px; display: flex; align-items: center; justify-content: space-between; gap: 24px">
+<div style="display: flex; align-items: center; gap: 12px">
+<button aria-label="Previous week" style="width: 72px; height: 72px; border-radius: 20px; border: 2px solid #C3CBD7; background: #FFFFFF; display: flex; align-items: center; justify-content: center"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#161B22" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
+<div style="min-width: 280px; text-align: center">
+<div style="font-size: 28px; font-weight: 700">This week</div>
+<div style="font-size: 22px; color: #4A5565">19–25 October</div>
+</div>
+<button aria-label="Next week" style="width: 72px; height: 72px; border-radius: 20px; border: 2px solid #C3CBD7; background: #FFFFFF; display: flex; align-items: center; justify-content: center"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#161B22" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
+</div>
+
+<div style="display: flex; padding: 6px; gap: 6px; border-radius: 26px; background: #E3E8F0">
+<button style="width: 132px; height: 60px; border-radius: 20px; border: 0; background: transparent; color: #161B22; font-size: 24px; font-weight: 600">Day</button>
+<button style="width: 132px; height: 60px; border-radius: 20px; border: 0; background: #FFFFFF; color: #161B22; font-size: 24px; font-weight: 700">Week</button>
+<button style="width: 132px; height: 60px; border-radius: 20px; border: 0; background: transparent; color: #161B22; font-size: 24px; font-weight: 600">Month</button>
+</div>
+
+<div style="display: flex; align-items: center; gap: 16px">
+<div style="height: 56px; padding: 0 22px 0 18px; border-radius: 28px; background: #FFFFFF; border: 2px solid #C3CBD7; display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 600">
+<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#161B22" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>Alexa linked</div>
+<button style="height: 72px; padding: 0 28px; border-radius: 22px; border: 2px solid #C3CBD7; background: #FFFFFF; color: #161B22; font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 12px">
+<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#161B22" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>Shopping
+<span style="min-width: 36px; height: 36px; padding: 0 8px; box-sizing: border-box; border-radius: 18px; background: #161B22; color: #FFFFFF; font-size: 20px; font-weight: 700; display: flex; align-items: center; justify-content: center">7</span></button>
+<button style="height: 72px; padding: 0 32px; border-radius: 22px; border: 0; background: #161B22; color: #FFFFFF; font-size: 26px; font-weight: 700; display: flex; align-items: center; gap: 12px"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add event</button>
+</div>
+</footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1920,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const P = {
+      D: { who: 'A', fs: '18px', bg: '#D6E4FF', fg: '#0F2F78', solid: '#2456C9' },
+      M: { who: 'S', fs: '18px', bg: '#FFDDB8', fg: '#6B2E00', solid: '#B85200' },
+      E: { who: 'M', fs: '18px', bg: '#BDEBDD', fg: '#0A4136', solid: '#0B7A64' },
+      N: { who: 'L', fs: '18px', bg: '#E6D8FA', fg: '#46228A', solid: '#6C3FC4' },
+      F: { who: 'All', fs: '14px', bg: '#E3E6EB', fg: '#1E2530', solid: '#4A5565' }
+    };
+    const ev = (time, title, p) => Object.assign({ time: time, title: title }, P[p]);
+    const ad = (title, p) => ({ title: title, bg: P[p].bg, fg: P[p].fg });
+    const day = (name, num, state, allDay, events) => ({
+      name: name,
+      num: num,
+      allDay: allDay,
+      events: events,
+      bg: state === 'past' ? '#E6EAF1' : '#FFFFFF',
+      ring: state === 'today' ? '0 0 0 4px #161B22' : 'none',
+      headBg: state === 'today' ? '#161B22' : (state === 'past' ? '#D5DBE5' : '#EDF0F5'),
+      headFg: state === 'today' ? '#FFFFFF' : '#161B22'
+    });
+    return {
+      days: [
+        day('Mon', '19', 'past', [], [ev('16:00', 'Swimming', 'E'), ev('18:30', 'Cubs', 'N')]),
+        day('Tue', '20', 'past', [], [ev('09:00', 'Team offsite', 'D'), ev('17:30', 'Football training', 'N')]),
+        day('Wed', '21', 'today', [], [ev('07:45', 'School run', 'M'), ev('10:00', 'Boiler service', 'M'), ev('16:30', 'Piano lesson', 'E'), ev('19:00', 'Book club', 'M')]),
+        day('Thu', '22', 'future', [ad('Bin day', 'F')], [ev('17:00', 'Swimming', 'E'), ev('18:00', 'Five-a-side', 'D')]),
+        day('Fri', '23', 'future', [], [ev('15:30', 'Dentist', 'N'), ev('19:30', 'Takeaway night', 'F')]),
+        day('Sat', '24', 'future', [], [ev('09:30', 'Football match', 'N'), ev('14:00', 'Birthday party', 'E'), ev('19:00', 'Date night', 'D')]),
+        day('Sun', '25', 'future', [ad('Clocks go back', 'F')], [ev('12:30', 'Lunch at Gran’s', 'F'), ev('16:00', 'Garden tidy', 'M')])
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>D · Sleep mode (motion sensor)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+</style>
+<style>
+html, body { height: 100%; overflow: hidden; background: #05070A; }
+#stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+</style>
+</head>
+<body>
+<div id="stage">
+<div style="width: 1920px; height: 1080px; box-sizing: border-box; padding: 48px 64px; background: #05070A; font-family: 'Figtree', system-ui, sans-serif; color: #8B95A5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; position: relative">
+
+<div style="font-size: 280px; font-weight: 500; line-height: 1; letter-spacing: -0.03em; color: #9AA4B4; font-variant-numeric: tabular-nums">14:41</div>
+<div style="font-size: 44px; font-weight: 500; color: #8B95A5">Wednesday 21 October</div>
+
+<div style="margin-top: 40px; display: flex; align-items: center; gap: 20px; padding: 18px 32px; border-radius: 24px; border: 2px solid #232A35">
+<span style="width: 44px; height: 44px; border-radius: 22px; background: #0B7A64; color: #FFFFFF; font-size: 22px; font-weight: 700; display: flex; align-items: center; justify-content: center">M</span>
+<span style="font-size: 30px; font-weight: 600; color: #A6B0BF">Piano lesson · 16:30</span>
+<span style="font-size: 26px; color: #8B95A5">in 1 h 49 min</span>
+</div>
+
+<div style="position: absolute; left: 0; right: 0; bottom: 40px; display: flex; align-items: center; justify-content: center; gap: 14px; font-size: 24px; font-weight: 500; color: #7B8696">
+<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#7B8696" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+Motion sensor on · wake with a wave or a tap
+</div>
+
+</div>
+</div>
+<script>
+// Scale the 1920×1080 screen to fit the window. Add ?actual to view at 100%.
+const stage = document.getElementById('stage');
+function fit() {
+  if (location.search.includes('actual')) { document.documentElement.style.overflow = document.body.style.overflow = 'auto'; return; }
+  const s = Math.min(innerWidth / 1920, innerHeight / 1080);
+  stage.style.transform = 'translate(' + (innerWidth - 1920 * s) / 2 + 'px,' + (innerHeight - 1080 * s) / 2 + 'px) scale(' + s + ')';
+}
+addEventListener('resize', fit);
+fit();
+</script>
+</body>
+</html>
