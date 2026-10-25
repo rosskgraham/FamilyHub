@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en" data-register="editorial">
+<head>
+<title>One glance at the kitchen wall shows the family's whole day</title>
+<link rel="stylesheet" href="kit.css" data-ve-kit>
+<style>
+.shot { aspect-ratio: 16 / 9; padding: 0; overflow: hidden; }
+.shot iframe { width: 100%; height: 100%; border: 0; display: block; pointer-events: none; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: var(--s-5); margin-top: var(--s-5); }
+.facts h3 { margin: var(--s-2) 0; }
+.facts p { margin: 0; color: var(--text-dim); }
+.road { list-style: none; padding: 0; margin: var(--s-5) 0 0; display: grid; gap: var(--s-4); border-left: 2px solid var(--border-bright); }
+.road li { position: relative; padding-left: var(--s-5); }
+.road li::before { content: ""; position: absolute; left: -7px; top: 0.45em; width: 12px; height: 12px; border-radius: 50%; background: var(--bg); border: 2px solid var(--border-bright); }
+.road li.is-next::before { background: var(--accent); border-color: var(--accent); }
+.road b { display: block; }
+.road span { color: var(--text-dim); }
+.asks li { margin-bottom: var(--s-3); }
+</style>
+</head>
+<body><main>
+
+<header>
+  <p class="eyebrow">FamilyHub</p>
+  <h1>One glance at the kitchen wall shows the family's whole day</h1>
+  <p class="lead">A touchscreen by the kettle shows what's on today, who it's for, the week ahead and the <b>shopping list</b>. Nobody has to ask, shout up the stairs, or check four phones.</p>
+  <p class="meta">A proposal from Alex · October 2026</p>
+</header>
+
+<figure>
+  <div class="frame shot"><iframe src="../../design/mockups/html/Today.html" title="Mockup of the Today view" tabindex="-1" loading="lazy"></iframe></div>
+  <figcaption><span class="fig-n">Fig. 1</span>The home screen: the next thing coming up, the rest of today, the next four days, and the shopping list. Each person has their own colour.</figcaption>
+</figure>
+
+<section>
+  <p class="ve-label caps">Why</p>
+  <h2>The plan lives in four phones today; the Hub puts it in one place</h2>
+  <figure>
+    <div class="frame">
+      <svg class="ve-svg" viewBox="0 0 800 330" aria-label="Now, everyone in the kitchen checks four separate phones. With the Hub, Google Calendar and Google Tasks feed one screen that everyone can see.">
+        <rect class="ve-bnd" x="10" y="20" width="370" height="300"/>
+        <text class="ve-bnd-t" x="22" y="40">NOW</text>
+        <rect class="ve-bnd" x="420" y="20" width="370" height="300"/>
+        <text class="ve-bnd-t" x="432" y="40">WITH THE HUB</text>
+
+        <path class="ve-e is-async" d="M70 230V142"/>
+        <path class="ve-e is-async" d="M155 230V142"/>
+        <path class="ve-e is-async" d="M240 230V142"/>
+        <path class="ve-e is-async" d="M325 230V142"/>
+        <text class="ve-el r" x="76" y="190">looks</text>
+        <text class="ve-el r" x="161" y="190">looks</text>
+        <text class="ve-el r" x="246" y="190">looks</text>
+        <text class="ve-el r" x="331" y="190">looks</text>
+
+        <path class="ve-e is-hot" d="M515 130V200H530"/>
+        <path class="ve-e is-hot" d="M695 130V200H680"/>
+        <path class="ve-e" d="M605 230V262"/>
+        <text class="ve-el r" x="521" y="162">1 min</text>
+        <text class="ve-el l" x="689" y="162">1 min</text>
+        <text class="ve-el r" x="611" y="252">glance</text>
+
+        <g class="ve-n"><rect class="sh" x="35" y="60" width="70" height="80" rx="10"/><text x="70" y="92" text-anchor="middle">Alex</text><text class="sub" x="70" y="114" text-anchor="middle">phone</text></g>
+        <g class="ve-n"><rect class="sh" x="120" y="60" width="70" height="80" rx="10"/><text x="155" y="92" text-anchor="middle">Sam</text><text class="sub" x="155" y="114" text-anchor="middle">phone</text></g>
+        <g class="ve-n"><rect class="sh" x="205" y="60" width="70" height="80" rx="10"/><text x="240" y="92" text-anchor="middle">Maya</text><text class="sub" x="240" y="114" text-anchor="middle">phone</text></g>
+        <g class="ve-n"><rect class="sh" x="290" y="60" width="70" height="80" rx="10"/><text x="325" y="92" text-anchor="middle">Leo</text><text class="sub" x="325" y="114" text-anchor="middle">phone</text></g>
+        <g class="ve-n"><rect class="sh" x="35" y="230" width="325" height="66"/><text x="197" y="254" text-anchor="middle">The kitchen</text><text class="sub" x="197" y="278" text-anchor="middle">“What time is piano?”</text></g>
+
+        <g class="ve-n"><rect class="sh" x="440" y="60" width="150" height="70"/><text x="515" y="88" text-anchor="middle">Google Calendar</text><text class="sub" x="515" y="110" text-anchor="middle">everyone's events</text></g>
+        <g class="ve-n"><rect class="sh" x="620" y="60" width="150" height="70"/><text x="695" y="88" text-anchor="middle">Google Tasks</text><text class="sub" x="695" y="110" text-anchor="middle">shopping list</text></g>
+        <g class="ve-n is-key"><rect class="sh" x="530" y="170" width="150" height="60"/><text x="605" y="192" text-anchor="middle">The Hub</text><text class="sub" x="605" y="214" text-anchor="middle">on the wall</text></g>
+        <g class="ve-n"><rect class="sh" x="440" y="262" width="330" height="46"/><text x="605" y="285" text-anchor="middle">Everyone, at a glance</text></g>
+      </svg>
+    </div>
+    <figcaption><span class="fig-n">Fig. 2</span>The Hub reads the calendars and the shopping list we already use, and shows them on one screen everyone can see.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <p class="ve-label caps">A day with it</p>
+  <h2>It answers the morning questions before anyone asks them</h2>
+  <figure class="ve-steps">
+    <div class="frame">
+      <svg class="ve-svg" viewBox="0 0 800 210" aria-label="A day with the Hub, from waking at 06:30 to sleeping at 22:00.">
+        <path class="ve-axis" d="M40 100H760"/>
+        <g class="ve-n" data-s="1"><text class="sub" x="70" y="70" text-anchor="middle">06:30</text><circle class="sh" cx="70" cy="100" r="9"/><text x="70" y="136" text-anchor="middle">Hub wakes<tspan x="70" dy="1.2em">from Sleep</tspan></text></g>
+        <g class="ve-n" data-s="2"><text class="sub" x="202" y="70" text-anchor="middle">07:18</text><circle class="sh" cx="202" cy="100" r="9"/><text x="202" y="136" text-anchor="middle">“School run<tspan x="202" dy="1.2em">in 27 min”</tspan></text></g>
+        <g class="ve-n" data-s="3"><text class="sub" x="334" y="70" text-anchor="middle">08:00</text><circle class="sh" cx="334" cy="100" r="9"/><text x="334" y="136" text-anchor="middle">Out of milk:<tspan x="334" dy="1.2em">add on the Hub</tspan></text></g>
+        <g class="ve-n" data-s="4"><text class="sub" x="466" y="70" text-anchor="middle">17:40</text><circle class="sh" cx="466" cy="100" r="9"/><text x="466" y="136" text-anchor="middle">Milk ticked<tspan x="466" dy="1.2em">in the shop</tspan></text></g>
+        <g class="ve-n" data-s="5"><text class="sub" x="598" y="70" text-anchor="middle">18:15</text><circle class="sh" cx="598" cy="100" r="9" stroke-dasharray="3 3"/><text x="598" y="136" text-anchor="middle">Recipe video<tspan x="598" dy="1.2em">while cooking</tspan></text><text class="sub" x="598" y="190" text-anchor="middle">coming later</text></g>
+        <g class="ve-n" data-s="6"><text class="sub" x="730" y="70" text-anchor="middle">22:00</text><circle class="sh" cx="730" cy="100" r="9"/><text x="730" y="136" text-anchor="middle">Hub sleeps:<tspan x="730" dy="1.2em">dim clock</tspan></text></g>
+      </svg>
+    </div>
+    <div class="ve-player">
+      <ol class="ve-cap">
+        <li data-n="1/6">06:30. The screen comes out of its overnight Sleep and shows today.</li>
+        <li data-n="2/6">07:18. Breakfast. The screen already says the school run is next, in 27 minutes, and whose it is.</li>
+        <li data-n="3/6">08:00. Someone finishes the milk and adds it to the list on the screen. Two taps.</li>
+        <li data-n="4/6">17:40. In the shop, milk goes in the basket and gets ticked off in the Google Tasks app. The Hub shows it ticked within a minute.</li>
+        <li data-n="5/6">18:15. A saved recipe video plays on the screen while you cook. This comes after the first version.</li>
+        <li data-n="6/6">22:00. The screen dims to a clock and tomorrow's first event until morning.</li>
+      </ol>
+      <button data-go="-1" aria-label="Previous step">‹</button>
+      <button data-play>Play</button>
+      <input type="range" min="1" max="6" value="6" aria-label="Step">
+      <button data-go="1" aria-label="Next step">›</button>
+    </div>
+    <figcaption><span class="fig-n">Fig. 3</span>An ordinary Wednesday. Press Play to step through it.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <p class="ve-label caps">What changes</p>
+  <h2>Two small habits change; everything else stays as it is</h2>
+  <p>We still add events on our phones in Google Calendar, in the same Google account. Alexa still plays the music. Only two things are new.</p>
+
+  <h3>1. The shopping list moves from Keep to Google Tasks</h3>
+  <p>Google doesn't let anything outside its own apps read a Keep note. Google Tasks does the same job, and it works in the shop even with no signal.</p>
+  <div class="cases">
+    <div class="case" data-st="risk">
+      <span class="chip risk">Keep</span>
+      <h3>The Hub can't see it</h3>
+      <svg class="ve-mini" viewBox="0 0 240 128" aria-label="A Keep note cannot connect to the Hub">
+        <path class="ve-e is-st" d="M96 64H144"/>
+        <text class="ve-x" x="120" y="64">✕</text>
+        <g class="ve-n"><rect class="sh" x="16" y="40" width="80" height="48"/><text x="56" y="64" text-anchor="middle">Keep</text></g>
+        <g class="ve-n"><rect class="sh" x="144" y="40" width="80" height="48"/><text x="184" y="64" text-anchor="middle">Hub</text></g>
+      </svg>
+    </div>
+    <div class="case" data-st="ok">
+      <span class="chip ok">Tasks</span>
+      <h3>The Hub and phones share it</h3>
+      <svg class="ve-mini" viewBox="0 0 240 128" aria-label="Google Tasks syncs with the Hub both ways">
+        <path class="ve-e is-st" d="M96 64H144"/>
+        <text class="ve-el" x="120" y="52" text-anchor="middle">syncs</text>
+        <g class="ve-n"><rect class="sh" x="16" y="40" width="80" height="48"/><text x="56" y="64" text-anchor="middle">Tasks</text></g>
+        <g class="ve-n"><rect class="sh" x="144" y="40" width="80" height="48"/><text x="184" y="64" text-anchor="middle">Hub</text></g>
+      </svg>
+    </div>
+  </div>
+
+  <h3>2. An event for one person goes on that person's calendar</h3>
+  <p>The Hub colours each event by the calendar it's on. The Family calendar is for things that involve everyone.</p>
+  <div class="cases">
+    <div class="case" data-st="warn">
+      <span class="chip warn">Family calendar</span>
+      <h3>Shows as everyone's</h3>
+      <svg class="ve-mini" viewBox="0 0 240 128" aria-label="Leo's dentist on the Family calendar shows in grey for everyone">
+        <rect x="16" y="40" width="208" height="48" rx="10" fill="#E3E6EB"/>
+        <circle cx="42" cy="64" r="15" fill="#4A5565"/>
+        <text x="42" y="64" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-size="14" font-weight="700">All</text>
+        <text x="68" y="64" dominant-baseline="central" fill="#1E2530" font-size="16" font-weight="600">15:30 Dentist</text>
+      </svg>
+    </div>
+    <div class="case" data-st="ok">
+      <span class="chip ok">Leo's calendar</span>
+      <h3>Shows as Leo's</h3>
+      <svg class="ve-mini" viewBox="0 0 240 128" aria-label="Leo's dentist on Leo's calendar shows in his purple with an L">
+        <rect x="16" y="40" width="208" height="48" rx="10" fill="#E6D8FA"/>
+        <circle cx="42" cy="64" r="15" fill="#6C3FC4"/>
+        <text x="42" y="64" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-size="16" font-weight="700">L</text>
+        <text x="68" y="64" dominant-baseline="central" fill="#46228A" font-size="16" font-weight="600">15:30 Dentist</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="ve-label caps">Living with it</p>
+  <h2>It looks after itself and keeps the family's data at home</h2>
+  <div class="facts">
+    <div><span class="chip ok">Quiet</span><h3>Sleeps at night</h3><p>From 22:00 to 06:30 it shows only a dim clock. A touch wakes it.</p></div>
+    <div><span class="chip ok">Tidy</span><h3>Goes back to today</h3><p>Leave it for two minutes and it returns to the home screen by itself.</p></div>
+    <div><span class="chip ok">Steady</span><h3>Wi-Fi drops don't blank it</h3><p>It keeps showing the last plan it loaded, with the time it last updated.</p></div>
+    <div><span class="chip ok">Private</span><h3>No camera, no microphone</h3><p>The later motion sensor only senses body heat. Nothing on the internet can reach the screen.</p></div>
+  </div>
+</section>
+
+<section>
+  <p class="ve-label caps">Cost</p>
+  <h2>About £240 once, then about £2 a month in electricity</h2>
+  <div class="kpis">
+    <div class="kpi"><span class="ve-label">Hardware, once</span><span class="val"><span class="unit">£</span><span data-count="240">240</span></span></div>
+    <div class="kpi"><span class="ve-label">Electricity, a month</span><span class="val"><span class="unit">£</span><span data-count="2">2</span></span></div>
+    <div class="kpi"><span class="ve-label">Subscriptions</span><span class="val"><span class="unit">£</span><span data-count="0">0</span></span></div>
+  </div>
+  <div class="ve-table"><table>
+    <thead><tr><th>Part</th><th class="num">Estimate</th></tr></thead>
+    <tbody>
+      <tr><td>15.6″ touchscreen with speakers</td><td class="num">£130</td></tr>
+      <tr><td>Raspberry Pi 5 computer, power supply, memory card and case</td><td class="num">£90</td></tr>
+      <tr><td>Wall bracket</td><td class="num">£15</td></tr>
+      <tr><td>Motion sensor (added later)</td><td class="num">£5</td></tr>
+      <tr><td><b>Total</b></td><td class="num"><b>£240</b></td></tr>
+    </tbody>
+  </table></div>
+  <p>These are estimates. I'll check real prices before buying anything. The electricity figure assumes about 12 watts around the clock.</p>
+</section>
+
+<section>
+  <p class="ve-label caps">When</p>
+  <h2>On the wall within a month or two, then it grows</h2>
+  <ol class="road">
+    <li class="is-next"><b>In 1–2 months: on the wall</b><span>Calendar, shopping list, weather and Sleep. Built and tested on the desk first.</span></li>
+    <li><b>Two weeks later: the first version is done</b><span>Done means we've stopped checking phones for the day's plan.</span></li>
+    <li><b>Next: recipe videos</b><span>Save a YouTube recipe on your phone and play it on the wall.</span></li>
+    <li><b>Then: the motion sensor</b><span>The screen wakes when someone walks in and sleeps when the kitchen is empty.</span></li>
+    <li><b>Later: ask Alexa to add to the list</b></li>
+  </ol>
+</section>
+
+<section>
+  <p class="ve-label caps">What I'd ask of you</p>
+  <h2>Three yeses get it started</h2>
+  <ul class="asks">
+    <li><b>A spot on the kitchen wall</b> near a socket, where you can read it from across the room.</li>
+    <li><b>Try Google Tasks</b> for the shopping list instead of Keep.</li>
+    <li><b>Put one-person events</b> on that person's own calendar.</li>
+  </ul>
+</section>
+
+<section class="sources" aria-label="Sources"><p class="ve-label caps">Sources</p><p><code>docs/requirements.md</code> · <code>design/mockups/</code> · cost figures are estimates</p></section>
+
+</main></body>
+</html>

@@ -4,3 +4,6 @@ dist/
 !.env.example
 .DS_Store
 Thumbs.db
+
+# visual-explainer render previews
+docs/diagrams/*.sheet*.png

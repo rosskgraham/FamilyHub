@@ -11,6 +11,7 @@ Planning. Hardware isn't chosen yet.
 - [Requirements](docs/requirements.md): scope, quality bar, milestones and what "v1 done" means
 - [Glossary](GLOSSARY.md): the words we use for things
 - [Decisions](docs/adr/): why the big choices went the way they did
+- [The pitch](docs/diagrams/familyhub-pitch.html): a visual explainer of the idea for the family (open in a browser)
 
 ## Design
 
