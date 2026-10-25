@@ -1,0 +1,20 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-10-21T06:20:00Z" },
+  "title": "Kitchen Calendar Mockups",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1920, "h": 1080, "title": "A · Week columns" },
+    "Lanes.dc.html": { "x": 2000, "y": 0, "w": 1920, "h": 1080, "title": "B · Lanes by person" },
+    "Today.dc.html": { "x": 4000, "y": 0, "w": 1920, "h": 1080, "title": "C · Today + shopping list" },
+    "Sleep.dc.html": { "x": 0, "y": 1500, "w": 1920, "h": 1080, "title": "D · Sleep mode (motion sensor)" },
+    "Watch.dc.html": { "x": 2000, "y": 1500, "w": 1920, "h": 1080, "title": "E · Watch YouTube" }
+  },
+  "order": ["Main.dc.html", "Lanes.dc.html", "Today.dc.html", "Sleep.dc.html", "Watch.dc.html"],
+  "notes": {
+    "t1": { "x": 0, "y": -260, "text": "Kitchen wall display: week-view options", "kind": "title1", "maxW": 5920 },
+    "t2": { "x": 0, "y": 1180, "text": "Sleep and watch states", "kind": "title1", "maxW": 3920 }
+  },
+  "designSystems": []
+}

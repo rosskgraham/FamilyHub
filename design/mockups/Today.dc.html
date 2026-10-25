@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Today and shopping list</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 1920px; height: 1080px; box-sizing: border-box; padding: 32px; background: #F3F5F8; font-family: 'Figtree', system-ui, sans-serif; color: #161B22; display: flex; flex-direction: column; gap: 24px">
+
+<header style="height: 128px; display: flex; align-items: center; justify-content: space-between; gap: 32px">
+<div style="display: flex; align-items: center; gap: 28px">
+<div style="font-size: 112px; font-weight: 600; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums">07:18</div>
+<div>
+<div style="font-size: 44px; font-weight: 600; line-height: 1.1">Wednesday</div>
+<div style="font-size: 28px; color: #4A5565; margin-top: 4px">21 October</div>
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 16px">
+<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#161B22" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="16" y1="13" x2="16" y2="21"/><line x1="8" y1="13" x2="8" y2="21"/><line x1="12" y1="15" x2="12" y2="23"/><path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"/></svg>
+<div style="font-size: 56px; font-weight: 600; line-height: 1">11°</div>
+<div>
+<div style="font-size: 24px; font-weight: 600">Light rain</div>
+<div style="font-size: 22px; color: #4A5565">High 13° · Low 8°</div>
+</div>
+</div>
+</header>
+
+<main style="flex: 1; min-height: 0; display: flex; gap: 24px">
+
+<div style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+
+<section style="flex: none; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 24px 32px; border-radius: 28px; background: #161B22; color: #FFFFFF">
+<div style="display: flex; align-items: center; gap: 24px">
+<span style="width: 80px; height: 80px; border-radius: 40px; background: #B85200; color: #FFFFFF; font-size: 38px; font-weight: 700; display: flex; align-items: center; justify-content: center">S</span>
+<div>
+<div style="font-size: 22px; font-weight: 700; letter-spacing: 0.08em; color: #AEB8C7">NEXT UP · IN 27 MIN</div>
+<div style="font-size: 56px; font-weight: 700; line-height: 1.1; margin-top: 4px">School run</div>
+<div style="font-size: 28px; color: #D5DBE5; margin-top: 2px">Sam</div>
+</div>
+</div>
+<div style="font-size: 104px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums">07:45</div>
+</section>
+
+<section style="flex: none; display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 28px; font-weight: 700">Later today</div>
+<sc-for list="{{later}}" as="r" hint-placeholder-count="3">
+<div style="height: 76px; box-sizing: border-box; display: flex; align-items: center; gap: 20px; padding: 0 24px; border-radius: 20px; background: {{r.bg}}; color: {{r.fg}}">
+<span style="width: 96px; font-size: 32px; font-weight: 700; font-variant-numeric: tabular-nums">{{r.time}}</span>
+<span style="width: 44px; height: 44px; border-radius: 22px; background: {{r.solid}}; color: #FFFFFF; font-size: 22px; font-weight: 700; display: flex; align-items: center; justify-content: center">{{r.tag}}</span>
+<span style="flex: 1; font-size: 34px; font-weight: 600">{{r.title}}</span>
+<span style="font-size: 24px; font-weight: 600">{{r.name}}</span>
+</div>
+</sc-for>
+</section>
+
+<section style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 28px; font-weight: 700">Coming up</div>
+<div style="flex: 1; min-height: 0; display: flex; gap: 12px">
+<sc-for list="{{coming}}" as="d" hint-placeholder-count="4">
+<div style="flex: 1 1 0; min-width: 0; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: 20px; background: #FFFFFF">
+<div style="display: flex; align-items: baseline; gap: 10px">
+<span style="font-size: 28px; font-weight: 700">{{d.name}}</span>
+<span style="font-size: 28px; font-weight: 600; color: #4A5565; font-variant-numeric: tabular-nums">{{d.num}}</span>
+</div>
+<sc-for list="{{d.events}}" as="ev" hint-placeholder-count="2">
+<div style="display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 12px; background: {{ev.bg}}; color: {{ev.fg}}; font-size: 21px; font-weight: 600; line-height: 1.2">
+<span style="flex: none; padding: 1px 8px; border-radius: 10px; background: {{ev.solid}}; color: #FFFFFF; font-size: 16px; font-weight: 700">{{ev.tag}}</span>
+<span><span style="font-weight: 700; font-variant-numeric: tabular-nums">{{ev.time}}</span> {{ev.title}}</span>
+</div>
+</sc-for>
+</div>
+</sc-for>
+</div>
+</section>
+
+</div>
+
+<aside style="width: 560px; flex: none; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px; padding: 28px; border-radius: 28px; background: #FFFFFF">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<div style="font-size: 36px; font-weight: 700">Shopping</div>
+<div style="padding: 6px 16px; border-radius: 20px; background: #EDF0F5; font-size: 22px; font-weight: 600">6 to get</div>
+</div>
+<div style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px">
+<sc-for list="{{items}}" as="item" hint-placeholder-count="7">
+<div style="height: 64px; flex: none; display: flex; align-items: center; gap: 16px">
+<span style="width: 44px; height: 44px; flex: none; box-sizing: border-box; border-radius: 12px; border: 3px solid #5B6676; background: {{item.boxBg}}; display: flex; align-items: center; justify-content: center">
+<sc-if value="{{item.done}}" hint-placeholder-val="{{ false }}">
+<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+</sc-if>
+</span>
+<span style="flex: 1; font-size: 30px; font-weight: 600; color: {{item.color}}; text-decoration: {{item.deco}}">{{item.text}}</span>
+<sc-if value="{{item.voice}}" hint-placeholder-val="{{ true }}">
+<span style="display: flex; align-items: center; gap: 6px; padding: 5px 12px 5px 10px; border-radius: 18px; background: #EDF0F5; font-size: 20px; font-weight: 600">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#161B22" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>Voice</span>
+</sc-if>
+</div>
+</sc-for>
+</div>
+<div style="flex: none; display: flex; gap: 12px">
+<button style="flex: 1; height: 72px; border-radius: 22px; border: 2px solid #C3CBD7; background: #FFFFFF; color: #161B22; font-size: 26px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 12px"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#161B22" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add item</button>
+<button aria-label="Add by voice" style="width: 72px; height: 72px; border-radius: 22px; border: 0; background: #161B22; display: flex; align-items: center; justify-content: center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg></button>
+</div>
+</aside>
+
+</main>
+
+<footer style="height: 96px; display: flex; align-items: center; justify-content: space-between; gap: 24px">
+<div style="display: flex; padding: 6px; gap: 6px; border-radius: 26px; background: #E3E8F0">
+<button style="width: 132px; height: 60px; border-radius: 20px; border: 0; background: #FFFFFF; color: #161B22; font-size: 24px; font-weight: 700">Day</button>
+<button style="width: 132px; height: 60px; border-radius: 20px; border: 0; background: transparent; color: #161B22; font-size: 24px; font-weight: 600">Week</button>
+<button style="width: 132px; height: 60px; border-radius: 20px; border: 0; background: transparent; color: #161B22; font-size: 24px; font-weight: 600">Month</button>
+</div>
+<div style="display: flex; align-items: center; gap: 16px">
+<div style="height: 56px; padding: 0 22px 0 18px; border-radius: 28px; background: #FFFFFF; border: 2px solid #C3CBD7; display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 600">
+<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#161B22" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>Alexa linked</div>
+<button style="height: 72px; padding: 0 32px; border-radius: 22px; border: 0; background: #161B22; color: #FFFFFF; font-size: 26px; font-weight: 700; display: flex; align-items: center; gap: 12px"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add event</button>
+</div>
+</footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1920,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const P = {
+      R: { tag: 'A', name: 'Alex', bg: '#D6E4FF', fg: '#0F2F78', solid: '#2456C9' },
+      F: { tag: 'S', name: 'Sam', bg: '#FFDDB8', fg: '#6B2E00', solid: '#B85200' },
+      I: { tag: 'M', name: 'Maya', bg: '#BDEBDD', fg: '#0A4136', solid: '#0B7A64' },
+      M: { tag: 'L', name: 'Leo', bg: '#E6D8FA', fg: '#46228A', solid: '#6C3FC4' },
+      A: { tag: 'All', name: 'Everyone', bg: '#E3E6EB', fg: '#1E2530', solid: '#4A5565' }
+    };
+    const ev = (time, title, p) => Object.assign({ time: time, title: title }, P[p]);
+    const item = (text, voice, done) => ({
+      text: text,
+      voice: voice,
+      done: done,
+      boxBg: done ? '#161B22' : '#FFFFFF',
+      color: done ? '#4A5565' : '#161B22',
+      deco: done ? 'line-through' : 'none'
+    });
+    return {
+      later: [ev('10:00', 'Boiler service', 'F'), ev('16:30', 'Piano lesson', 'I'), ev('19:00', 'Book club', 'F')],
+      coming: [
+        { name: 'Thu', num: '22', events: [ev('', 'Bin day', 'A'), ev('17:00', 'Swimming', 'I'), ev('18:00', 'Five-a-side', 'R')] },
+        { name: 'Fri', num: '23', events: [ev('15:30', 'Dentist', 'M'), ev('19:30', 'Takeaway night', 'A')] },
+        { name: 'Sat', num: '24', events: [ev('09:30', 'Football match', 'M'), ev('14:00', 'Birthday party', 'I'), ev('19:00', 'Date night', 'R')] },
+        { name: 'Sun', num: '25', events: [ev('', 'Clocks go back', 'A'), ev('12:30', 'Lunch at Gran’s', 'A'), ev('16:00', 'Garden tidy', 'F')] }
+      ],
+      items: [
+        item('Milk', true, false),
+        item('Eggs', true, false),
+        item('Bananas', false, false),
+        item('Cheddar', false, false),
+        item('Washing-up liquid', true, false),
+        item('Lunchbox snacks', false, false),
+        item('Wholemeal bread', false, true)
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
