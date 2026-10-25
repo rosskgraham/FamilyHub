@@ -4,7 +4,7 @@ A family wall display for the kitchen: a shared calendar, the weather, a shoppin
 
 ## Status
 
-Planning. Hardware isn't chosen yet.
+Early build. The Today and Week views run on a PC with sample data; see [`app/`](app/README.md). Hardware isn't chosen yet.
 
 ## Docs
 

@@ -95,6 +95,8 @@ Out of scope: Spotify (Alexa already handles it), the Month view, and creating o
 
 ## Engineering practice
 
+This is where the project ends up, not what each step must have from day one. Early milestones aim for something that works, keeping only the foundations that are painful to add later: strict TypeScript, fake data by default, and no secrets in the repo. The rest arrives step by step.
+
 - Strict TypeScript, linting and auto-formatting.
 - Vitest unit tests on the logic that's easy to get wrong: turning Google data into Events and Shopping items, the offline queue, Sleep and theme timing.
 - Playwright end-to-end tests of every view, including screenshot comparisons.

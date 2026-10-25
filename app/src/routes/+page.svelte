@@ -1,0 +1,347 @@
+<script lang="ts">
+	import { eventsOn } from '#lib/calendar.ts';
+	import { clock } from '#lib/clock.svelte.ts';
+	import Badge from '#lib/components/Badge.svelte';
+	import { owners } from '#lib/household.ts';
+	import { addDays, dayOfMonth, formatIn, formatTime, formatWeekday } from '#lib/time.ts';
+	import type { PageProps } from './$types';
+
+	let { data }: PageProps = $props();
+
+	const upcoming = $derived(
+		eventsOn(data.events, data.today).timed.filter((e) => new Date(e.start) > clock.now)
+	);
+	const next = $derived(upcoming[0]);
+	const later = $derived(upcoming.slice(1));
+	const comingUp = $derived(
+		[1, 2, 3, 4].map((i) => {
+			const key = addDays(data.today, i);
+			const { allDay, timed } = eventsOn(data.events, key);
+			return { key, events: [...allDay, ...timed] };
+		})
+	);
+
+	// Ticking off isn't saved until the Shopping list comes from Google Tasks.
+	let ticked: Record<string, boolean> = $state({});
+	const items = $derived(
+		data.shopping.map((item) => ({ ...item, tickedOff: ticked[item.id] ?? item.tickedOff }))
+	);
+	const toGet = $derived(items.filter((item) => !item.tickedOff).length);
+</script>
+
+<div class="today">
+	{#if next}
+		{@const owner = owners[next.owner]}
+		<section class="next">
+			<div class="who">
+				<Badge {owner} size={80} />
+				<div>
+					<div class="eyebrow">Next up · {formatIn(clock.now, new Date(next.start))}</div>
+					<div class="title">{next.title}</div>
+					<div class="name">{owner.name}</div>
+				</div>
+			</div>
+			<div class="time tabular">{formatTime(new Date(next.start))}</div>
+		</section>
+	{:else}
+		<section class="next">
+			<div class="title">Nothing else today</div>
+		</section>
+	{/if}
+
+	{#if later.length > 0}
+		<section class="later">
+			<h2>Later today</h2>
+			{#each later as event (event.id)}
+				{@const owner = owners[event.owner]}
+				<div class="row" style:background={owner.bg} style:color={owner.fg}>
+					<span class="row-time tabular">{formatTime(new Date(event.start))}</span>
+					<Badge {owner} size={44} />
+					<span class="row-title">{event.title}</span>
+					<span class="row-name">{owner.name}</span>
+				</div>
+			{/each}
+		</section>
+	{/if}
+
+	<section class="coming">
+		<h2>Coming up</h2>
+		<div class="days">
+			{#each comingUp as day (day.key)}
+				<div class="day">
+					<div class="day-head">
+						<span>{formatWeekday(day.key, 'short')}</span>
+						<span class="day-num tabular">{dayOfMonth(day.key)}</span>
+					</div>
+					{#each day.events as event (event.id)}
+						{@const owner = owners[event.owner]}
+						<div class="chip" style:background={owner.bg} style:color={owner.fg}>
+							<span class="tag" style:background={owner.solid}>{owner.initial}</span>
+							<span>
+								{#if !event.allDay}<b class="tabular">{formatTime(new Date(event.start))}</b>{/if}
+								{event.title}
+							</span>
+						</div>
+					{/each}
+				</div>
+			{/each}
+		</div>
+	</section>
+</div>
+
+<aside class="shopping">
+	<div class="shopping-head">
+		<h2>Shopping</h2>
+		<span class="count">{toGet} to get</span>
+	</div>
+	<ul>
+		{#each items as item (item.id)}
+			<li>
+				<button
+					class="box"
+					class:ticked={item.tickedOff}
+					aria-pressed={item.tickedOff}
+					aria-label="{item.tickedOff ? 'Untick' : 'Tick off'} {item.text}"
+					onclick={() => (ticked[item.id] = !item.tickedOff)}
+				>
+					<span class="mark">
+						{#if item.tickedOff}
+							<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+								><polyline points="20 6 9 17 4 12" /></svg
+							>
+						{/if}
+					</span>
+				</button>
+				<span class="item" class:ticked={item.tickedOff}>{item.text}</span>
+			</li>
+		{/each}
+	</ul>
+	<p class="note">Sample list. Ticking isn't saved yet.</p>
+</aside>
+
+<style>
+	.today {
+		flex: 1 1 0;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+	}
+	h2 {
+		margin: 0;
+		font-size: 28px;
+		font-weight: 700;
+	}
+
+	.next {
+		flex: none;
+		min-height: 168px;
+		box-sizing: border-box;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 24px;
+		padding: 24px 32px;
+		border-radius: 28px;
+		background: var(--ink);
+		color: #ffffff;
+	}
+	.who {
+		display: flex;
+		align-items: center;
+		gap: 24px;
+	}
+	.eyebrow {
+		font-size: 22px;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: #aeb8c7;
+	}
+	.title {
+		font-size: 56px;
+		font-weight: 700;
+		line-height: 1.1;
+		margin-top: 4px;
+	}
+	.name {
+		font-size: 28px;
+		color: #d5dbe5;
+		margin-top: 2px;
+	}
+	.time {
+		font-size: 104px;
+		font-weight: 600;
+		line-height: 1;
+	}
+
+	.later {
+		flex: none;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+	.row {
+		height: 76px;
+		box-sizing: border-box;
+		display: flex;
+		align-items: center;
+		gap: 20px;
+		padding: 0 24px;
+		border-radius: 20px;
+	}
+	.row-time {
+		width: 96px;
+		font-size: 32px;
+		font-weight: 700;
+	}
+	.row-title {
+		flex: 1;
+		font-size: 34px;
+		font-weight: 600;
+	}
+	.row-name {
+		font-size: 24px;
+		font-weight: 600;
+	}
+
+	.coming {
+		flex: 1;
+		min-height: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+	.days {
+		flex: 1;
+		min-height: 0;
+		display: flex;
+		gap: 12px;
+	}
+	.day {
+		flex: 1 1 0;
+		min-width: 0;
+		box-sizing: border-box;
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		padding: 14px;
+		border-radius: 20px;
+		background: var(--card);
+		overflow: hidden;
+	}
+	.day-head {
+		display: flex;
+		align-items: baseline;
+		gap: 10px;
+		font-size: 28px;
+		font-weight: 700;
+	}
+	.day-num {
+		font-weight: 600;
+		color: var(--dim);
+	}
+	.chip {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 6px 10px;
+		border-radius: 12px;
+		font-size: 21px;
+		font-weight: 600;
+		line-height: 1.2;
+	}
+	.tag {
+		flex: none;
+		padding: 1px 8px;
+		border-radius: 10px;
+		color: #ffffff;
+		font-size: 16px;
+		font-weight: 700;
+	}
+
+	.shopping {
+		width: 560px;
+		flex: none;
+		box-sizing: border-box;
+		margin-left: 24px;
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+		padding: 28px;
+		border-radius: 28px;
+		background: var(--card);
+	}
+	.shopping-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+	.shopping-head h2 {
+		font-size: 36px;
+	}
+	.count {
+		padding: 6px 16px;
+		border-radius: 20px;
+		background: var(--soft);
+		font-size: 22px;
+		font-weight: 600;
+	}
+	ul {
+		flex: 1;
+		min-height: 0;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+	li {
+		height: 64px;
+		flex: none;
+		display: flex;
+		align-items: center;
+		gap: 16px;
+	}
+	/* A 64px touch target around a 44px box. */
+	.box {
+		width: 64px;
+		height: 64px;
+		flex: none;
+		padding: 0;
+		border: 0;
+		background: none;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	.mark {
+		width: 44px;
+		height: 44px;
+		box-sizing: border-box;
+		border-radius: 12px;
+		border: 3px solid #5b6676;
+		background: var(--card);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	.box.ticked .mark {
+		background: var(--ink);
+	}
+	.item {
+		flex: 1;
+		font-size: 30px;
+		font-weight: 600;
+	}
+	.item.ticked {
+		color: var(--dim);
+		text-decoration: line-through;
+	}
+	.note {
+		margin: 0;
+		font-size: 20px;
+		color: var(--dim);
+	}
+</style>
