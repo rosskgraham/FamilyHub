@@ -7,5 +7,7 @@ export const GET: RequestHandler = ({ url, cookies }) => {
 	if (!isConfigured()) redirect(303, '/setup');
 	const state = crypto.randomUUID();
 	cookies.set('google_state', state, { path: '/auth/google', httpOnly: true, sameSite: 'lax', maxAge: 600 });
-	redirect(303, signInUrl(`${url.origin}/auth/google/callback`, state));
+	redirect(303, signInUrl(`${url.origin}/auth/google/callback`, state), {
+		external: ['https://accounts.google.com']
+	});
 };
