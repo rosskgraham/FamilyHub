@@ -2,6 +2,7 @@
 	import { eventsOn } from '#lib/calendar.ts';
 	import { clock } from '#lib/clock.svelte.ts';
 	import Badge from '#lib/components/Badge.svelte';
+	import Banner from '#lib/components/Banner.svelte';
 	import { fitColumn, type Space } from '#lib/fit.ts';
 	import { owners } from '#lib/household.ts';
 	import { dayOfMonth, formatDayMonth, formatTime, formatWeekday, type DayKey } from '#lib/time.ts';
@@ -70,8 +71,7 @@
 					<span class="num tabular">{dayOfMonth(key)}</span>
 				</a>
 				{#each fit.allDay as event (event.id)}
-					{@const owner = owners[event.owner]}
-					<div class="all-day" style:height="{SPACE.row}px" style:background={owner.bg} style:color={owner.fg}>{event.title}</div>
+					<Banner owner={owners[event.owner]} title={event.title} height={SPACE.row} />
 				{/each}
 				{#if fit.earlier > 0}
 					<a class="line" href="/day?date={key}" style:height="{SPACE.row}px">{fit.earlier} earlier</a>
@@ -208,7 +208,6 @@
 		line-height: 1;
 	}
 
-	.all-day,
 	.row,
 	.line {
 		display: flex;
@@ -221,10 +220,6 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
-	}
-	.all-day {
-		display: block;
-		line-height: 44px;
 	}
 	.row-time {
 		flex: none;

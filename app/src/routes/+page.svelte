@@ -2,6 +2,7 @@
 	import { eventsOn } from '#lib/calendar.ts';
 	import { clock } from '#lib/clock.svelte.ts';
 	import Badge from '#lib/components/Badge.svelte';
+	import Banner from '#lib/components/Banner.svelte';
 	import { fitColumn } from '#lib/fit.ts';
 	import { owners } from '#lib/household.ts';
 	import { addDays, dayOfMonth, formatIn, formatTime, formatWeekday } from '#lib/time.ts';
@@ -12,6 +13,7 @@
 	// Fixed heights, so what fits is worked out rather than measured.
 	const MAIN = 744; // the stage between the header and the bottom bar
 	const NEXT = 168;
+	const BANNER = 56;
 	const SECTION_GAP = 16;
 	const HEADING = 34;
 	const HEADING_GAP = 10;
@@ -23,9 +25,8 @@
 	const CHIP = 38;
 	const CHIP_GAP = 8;
 
-	const upcoming = $derived(
-		eventsOn(data.events, data.today).timed.filter((e) => new Date(e.start) > clock.now)
-	);
+	const today = $derived(eventsOn(data.events, data.today));
+	const upcoming = $derived(today.timed.filter((e) => new Date(e.start) > clock.now));
 	const next = $derived(upcoming[0]);
 	const rest = $derived(upcoming.slice(1));
 	// Up to three rows; with more, two rows and a "+N more today" row.
@@ -37,6 +38,7 @@
 		MAIN -
 			NEXT -
 			SECTION_GAP -
+			(today.allDay.length > 0 ? BANNER + SECTION_GAP : 0) -
 			(laterRows > 0 ? HEADING + HEADING_GAP + laterRows * LATER_ROW + (laterRows - 1) * LATER_GAP + SECTION_GAP : 0) -
 			HEADING -
 			HEADING_GAP -
@@ -67,7 +69,6 @@
 				<div>
 					<div class="eyebrow">Next up · {formatIn(clock.now, new Date(next.start))}</div>
 					<div class="title">{next.title}</div>
-					<div class="name">{owner.name}</div>
 				</div>
 			</div>
 			<div class="time tabular">{formatTime(new Date(next.start))}</div>
@@ -76,6 +77,14 @@
 		<section class="next" style:height="{NEXT}px">
 			<div class="title">Nothing else today</div>
 		</section>
+	{/if}
+
+	{#if today.allDay.length > 0}
+		<div class="banners" style:height="{BANNER}px">
+			{#each today.allDay as event (event.id)}
+				<Banner owner={owners[event.owner]} title={event.title} height={BANNER} badge={36} fontSize={26} />
+			{/each}
+		</div>
 	{/if}
 
 	{#if laterRows > 0}
@@ -104,14 +113,14 @@
 						<span>{formatWeekday(key, 'short')}</span>
 						<span class="day-num tabular">{dayOfMonth(key)}</span>
 					</a>
-					{#each [...fit.allDay, ...fit.timed] as event (event.id)}
+					{#each fit.allDay as event (event.id)}
+						<Banner owner={owners[event.owner]} title={event.title} height={CHIP} badge={24} fontSize={21} />
+					{/each}
+					{#each fit.timed as event (event.id)}
 						{@const owner = owners[event.owner]}
 						<div class="chip" style:height="{CHIP}px" style:background={owner.bg} style:color={owner.fg}>
 							<span class="tag" style:background={owner.solid}>{owner.initial}</span>
-							<span class="chip-text">
-								{#if !event.allDay}<b class="tabular">{formatTime(new Date(event.start))}</b>{/if}
-								{event.title}
-							</span>
+							<span class="chip-text"><b class="tabular">{formatTime(new Date(event.start))}</b> {event.title}</span>
 						</div>
 					{/each}
 					{#if fit.more > 0}
@@ -199,10 +208,10 @@
 		line-height: 1.1;
 		margin-top: 4px;
 	}
-	.name {
-		font-size: 28px;
-		color: #d5dbe5;
-		margin-top: 2px;
+	.banners {
+		display: flex;
+		gap: 12px;
+		overflow: hidden;
 	}
 	.time {
 		font-size: 104px;

@@ -2,6 +2,7 @@
 	import { eventsOn } from '#lib/calendar.ts';
 	import { clock } from '#lib/clock.svelte.ts';
 	import Badge from '#lib/components/Badge.svelte';
+	import Banner from '#lib/components/Banner.svelte';
 	import { owners } from '#lib/household.ts';
 	import { addDays, formatDayMonth, formatTime, formatWeekday } from '#lib/time.ts';
 	import type { PageProps } from './$types';
@@ -40,13 +41,15 @@
 		{#if data.date !== data.today}
 			<a class="back" href="/day">Back to today</a>
 		{/if}
-		{#each day.allDay as event (event.id)}
-			{@const owner = owners[event.owner]}
-			<span class="all-day" style:background={owner.bg} style:color={owner.fg}>
-				<Badge {owner} size={36} />{event.title}
-			</span>
-		{/each}
 	</div>
+
+	{#if day.allDay.length > 0}
+		<div class="banners">
+			{#each day.allDay as event (event.id)}
+				<Banner owner={owners[event.owner]} title={event.title} height={56} badge={36} fontSize={26} />
+			{/each}
+		</div>
+	{/if}
 
 	{#if day.timed.length === 0}
 		<p class="empty">Nothing on.</p>
@@ -116,17 +119,12 @@
 		display: flex;
 		align-items: center;
 	}
-	.all-day {
-		margin-left: 12px;
+	.banners {
 		height: 56px;
-		padding: 0 20px 0 10px;
-		border-radius: 28px;
+		flex: none;
 		display: flex;
-		align-items: center;
-		gap: 10px;
-		font-size: 24px;
-		font-weight: 600;
-		white-space: nowrap;
+		gap: 12px;
+		overflow: hidden;
 	}
 
 	.empty {
@@ -138,7 +136,8 @@
 		flex: 1;
 		min-height: 0;
 		display: grid;
-		grid-template-rows: repeat(7, 76px);
+		/* Seven rows fit under the all-day banners: 7 × 72px + 6 × 10px gaps. */
+		grid-template-rows: repeat(7, 72px);
 		grid-auto-flow: column;
 		grid-auto-columns: minmax(0, 1fr);
 		gap: 10px 24px;
