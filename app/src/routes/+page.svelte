@@ -87,7 +87,6 @@
 					<span class="row-time tabular">{formatTime(new Date(event.start))}</span>
 					<Badge {owner} size={44} />
 					<span class="row-title">{event.title}</span>
-					<span class="row-name">{owner.name}</span>
 				</div>
 			{/each}
 			{#if laterMore > 0}
@@ -236,10 +235,6 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
-	}
-	.row-name {
-		font-size: 24px;
-		font-weight: 600;
 	}
 	.row.more {
 		justify-content: center;

@@ -59,7 +59,6 @@
 					<span class="time tabular">{formatTime(new Date(event.start))}–{formatTime(new Date(event.end))}</span>
 					<Badge {owner} size={44} />
 					<span class="title">{event.title}</span>
-					<span class="name">{owner.name}</span>
 				</div>
 			{/each}
 		</div>
@@ -169,10 +168,5 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
-	}
-	.name {
-		flex: none;
-		font-size: 24px;
-		font-weight: 600;
 	}
 </style>
