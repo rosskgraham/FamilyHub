@@ -11,7 +11,8 @@
 	let { data }: PageProps = $props();
 
 	// A column is 656px: 14px padding top and bottom, a 64px heading, and 564px for rows.
-	const SPACE: Space = { height: 564, gap: 12, card: 112, row: 44 };
+	// A card holds a two-line title: 24px padding + 32px time row + 6px gap + 2 × 30px lines.
+	const SPACE: Space = { height: 564, gap: 12, card: 124, row: 44 };
 
 	const title = $derived.by(() => {
 		if (data.offset === 0) return 'This week';

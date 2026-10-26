@@ -191,6 +191,7 @@
 		color: #ffffff;
 	}
 	.who {
+		min-width: 0;
 		display: flex;
 		align-items: center;
 		gap: 24px;
@@ -202,11 +203,17 @@
 		text-transform: uppercase;
 		color: #aeb8c7;
 	}
+	/* Two lines at most, so a long title stays inside the 168px card. */
 	.title {
 		font-size: 56px;
 		font-weight: 700;
 		line-height: 1.1;
 		margin-top: 4px;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
 	}
 	.banners {
 		display: flex;
