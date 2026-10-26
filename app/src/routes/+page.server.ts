@@ -1,5 +1,5 @@
 import { sampleShopping } from '#lib/sample.ts';
-import { calendar } from '#lib/server/calendar/index.ts';
+import { loadCalendar } from '#lib/server/calendar/index.ts';
 import { addDays, dayKey } from '#lib/time.ts';
 import type { PageServerLoad } from './$types';
 
@@ -8,9 +8,6 @@ const DAYS = 5;
 
 export const load: PageServerLoad = async () => {
 	const today = dayKey(new Date());
-	return {
-		today,
-		events: await calendar.listEvents(today, addDays(today, DAYS)),
-		shopping: sampleShopping
-	};
+	const { events, status } = await loadCalendar(today, addDays(today, DAYS));
+	return { today, events, calendarStatus: status, shopping: sampleShopping };
 };

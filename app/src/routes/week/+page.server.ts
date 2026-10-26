@@ -1,4 +1,4 @@
-import { calendar } from '#lib/server/calendar/index.ts';
+import { loadCalendar } from '#lib/server/calendar/index.ts';
 import { addDays, dayKey, startOfWeek } from '#lib/time.ts';
 import type { PageServerLoad } from './$types';
 
@@ -11,10 +11,6 @@ export const load: PageServerLoad = async ({ url }) => {
 	const today = dayKey(new Date());
 	const monday = addDays(startOfWeek(today), offset * 7);
 	const days = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
-	return {
-		today,
-		offset,
-		days,
-		events: await calendar.listEvents(monday, addDays(monday, 7))
-	};
+	const { events, status } = await loadCalendar(monday, addDays(monday, 7));
+	return { today, offset, days, events, calendarStatus: status };
 };

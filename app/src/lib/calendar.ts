@@ -12,6 +12,12 @@ export interface CalendarEvent {
 	end: string;
 }
 
+/** Where the Events on screen came from, and how fresh they are. */
+export type CalendarStatus =
+	| { kind: 'sample'; setUp: boolean }
+	| { kind: 'live'; updatedAt: string }
+	| { kind: 'stale'; reason: 'sign-in' | 'offline'; updatedAt: string | null };
+
 export interface DayEvents {
 	allDay: CalendarEvent[];
 	timed: CalendarEvent[];
