@@ -25,10 +25,12 @@ This is under **Google Auth Platform** (older consoles call it **OAuth consent s
 3. **Data Access → Add or remove scopes:** add exactly these two:
    - `https://www.googleapis.com/auth/calendar.readonly` (read Calendars, never change them)
    - `https://www.googleapis.com/auth/tasks` (read and change the Shopping list)
-4. **Audience → Publish app**, and confirm. The status must say **In production**.
+4. **Audience → Test users → Add users:** add the Household's Google account. While the app is in **Testing**, only listed test users can sign in.
 
-> [!IMPORTANT]
-> Don't leave the app in **Testing**. In Testing, Google ends the Hub's sign-in every 7 days. In production but unverified, the sign-in lasts, and Google shows a "Google hasn't verified this app" warning once when you sign in. Choose **Advanced → Go to FamilyHub (unsafe)** to continue. That warning is expected for a personal app and isn't a problem. Don't submit the app for verification.
+> [!NOTE]
+> Leave the app in **Testing** while the Hub runs on a PC. In Testing, Google ends the Hub's sign-in every 7 days, so you sign in again once a week. That's fine for development.
+>
+> The Hub on the wall can't need signing in weekly, so the app gets published in the Pi milestone. Publishing asks for a homepage and a privacy policy address, which this runbook will cover then. When signing in to an unverified published app, Google shows a "Google hasn't verified this app" warning once: choose **Advanced → Go to FamilyHub (unsafe)**. That's expected for a personal app. Don't submit the app for verification.
 
 ## 4. Create the Hub's credentials
 
@@ -67,5 +69,6 @@ Calendar IDs aren't secret, but they're the Household's. Note them for now. They
 ## If something goes wrong
 
 - **"Access blocked: This app's request is invalid":** the redirect address doesn't match. Check it matches step 4 exactly, including `http` and the port.
-- **The sign-in stops working after a week:** the app is still in Testing. Publish it (step 3.4) and sign in again.
+- **The sign-in stops working after a week:** expected while the app is in Testing. Sign in again.
+- **"Access blocked: FamilyHub has not completed the Google verification process":** the account signing in isn't a test user. Add it (step 3.4).
 - **"Access denied" with no warning screen:** the signed-in Google account isn't the Household's account.
