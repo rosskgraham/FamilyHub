@@ -5,6 +5,7 @@
 
 	const links = [
 		{ href: '/', label: 'Today' },
+		{ href: '/day', label: 'Day' },
 		{ href: '/week', label: 'Week' }
 	];
 

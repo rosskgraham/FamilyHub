@@ -2,22 +2,51 @@
 	import { eventsOn } from '#lib/calendar.ts';
 	import { clock } from '#lib/clock.svelte.ts';
 	import Badge from '#lib/components/Badge.svelte';
+	import { fitColumn } from '#lib/fit.ts';
 	import { owners } from '#lib/household.ts';
 	import { addDays, dayOfMonth, formatIn, formatTime, formatWeekday } from '#lib/time.ts';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
 
+	// Fixed heights, so what fits is worked out rather than measured.
+	const MAIN = 744; // the stage between the header and the bottom bar
+	const NEXT = 168;
+	const SECTION_GAP = 16;
+	const HEADING = 34;
+	const HEADING_GAP = 10;
+	const LATER_ROW = 76;
+	const LATER_GAP = 10;
+	const LATER_MAX = 3;
+	const DAY_PADDING = 14;
+	const DAY_HEAD = 34;
+	const CHIP = 38;
+	const CHIP_GAP = 8;
+
 	const upcoming = $derived(
 		eventsOn(data.events, data.today).timed.filter((e) => new Date(e.start) > clock.now)
 	);
 	const next = $derived(upcoming[0]);
-	const later = $derived(upcoming.slice(1));
+	const rest = $derived(upcoming.slice(1));
+	// Up to three rows; with more, two rows and a "+N more today" row.
+	const later = $derived(rest.length > LATER_MAX ? rest.slice(0, LATER_MAX - 1) : rest);
+	const laterMore = $derived(rest.length - later.length);
+	const laterRows = $derived(later.length + (laterMore > 0 ? 1 : 0));
+
+	const comingHeight = $derived(
+		MAIN -
+			NEXT -
+			SECTION_GAP -
+			(laterRows > 0 ? HEADING + HEADING_GAP + laterRows * LATER_ROW + (laterRows - 1) * LATER_GAP + SECTION_GAP : 0) -
+			HEADING -
+			HEADING_GAP -
+			2 * DAY_PADDING -
+			DAY_HEAD
+	);
 	const comingUp = $derived(
 		[1, 2, 3, 4].map((i) => {
 			const key = addDays(data.today, i);
-			const { allDay, timed } = eventsOn(data.events, key);
-			return { key, events: [...allDay, ...timed] };
+			return { key, fit: fitColumn(eventsOn(data.events, key), { height: comingHeight, gap: CHIP_GAP, row: CHIP }) };
 		})
 	);
 
@@ -29,10 +58,10 @@
 	const toGet = $derived(items.filter((item) => !item.tickedOff).length);
 </script>
 
-<div class="today">
+<div class="today" style:gap="{SECTION_GAP}px">
 	{#if next}
 		{@const owner = owners[next.owner]}
-		<section class="next">
+		<section class="next" style:height="{NEXT}px">
 			<div class="who">
 				<Badge {owner} size={80} />
 				<div>
@@ -44,45 +73,51 @@
 			<div class="time tabular">{formatTime(new Date(next.start))}</div>
 		</section>
 	{:else}
-		<section class="next">
+		<section class="next" style:height="{NEXT}px">
 			<div class="title">Nothing else today</div>
 		</section>
 	{/if}
 
-	{#if later.length > 0}
-		<section class="later">
-			<h2>Later today</h2>
+	{#if laterRows > 0}
+		<section class="later" style:gap="{LATER_GAP}px">
+			<h2 style:margin-bottom="{HEADING_GAP - LATER_GAP}px">Later today</h2>
 			{#each later as event (event.id)}
 				{@const owner = owners[event.owner]}
-				<div class="row" style:background={owner.bg} style:color={owner.fg}>
+				<div class="row" style:height="{LATER_ROW}px" style:background={owner.bg} style:color={owner.fg}>
 					<span class="row-time tabular">{formatTime(new Date(event.start))}</span>
 					<Badge {owner} size={44} />
 					<span class="row-title">{event.title}</span>
 					<span class="row-name">{owner.name}</span>
 				</div>
 			{/each}
+			{#if laterMore > 0}
+				<a class="row more" href="/day" style:height="{LATER_ROW}px">+{laterMore} more today</a>
+			{/if}
 		</section>
 	{/if}
 
 	<section class="coming">
-		<h2>Coming up</h2>
+		<h2 style:margin-bottom="{HEADING_GAP}px">Coming up</h2>
 		<div class="days">
-			{#each comingUp as day (day.key)}
-				<div class="day">
-					<div class="day-head">
-						<span>{formatWeekday(day.key, 'short')}</span>
-						<span class="day-num tabular">{dayOfMonth(day.key)}</span>
-					</div>
-					{#each day.events as event (event.id)}
+			{#each comingUp as { key, fit } (key)}
+				<div class="day" style:padding="{DAY_PADDING}px" style:gap="{CHIP_GAP}px">
+					<a class="day-head" href="/day?date={key}" style:height="{DAY_HEAD}px">
+						<span>{formatWeekday(key, 'short')}</span>
+						<span class="day-num tabular">{dayOfMonth(key)}</span>
+					</a>
+					{#each [...fit.allDay, ...fit.timed] as event (event.id)}
 						{@const owner = owners[event.owner]}
-						<div class="chip" style:background={owner.bg} style:color={owner.fg}>
+						<div class="chip" style:height="{CHIP}px" style:background={owner.bg} style:color={owner.fg}>
 							<span class="tag" style:background={owner.solid}>{owner.initial}</span>
-							<span>
+							<span class="chip-text">
 								{#if !event.allDay}<b class="tabular">{formatTime(new Date(event.start))}</b>{/if}
 								{event.title}
 							</span>
 						</div>
 					{/each}
+					{#if fit.more > 0}
+						<a class="chip more" href="/day?date={key}" style:height="{CHIP}px">+{fit.more} more</a>
+					{/if}
 				</div>
 			{/each}
 		</div>
@@ -125,23 +160,24 @@
 		min-width: 0;
 		display: flex;
 		flex-direction: column;
-		gap: 16px;
+	}
+	.today > * {
+		flex: none;
 	}
 	h2 {
 		margin: 0;
 		font-size: 28px;
 		font-weight: 700;
+		line-height: 34px;
 	}
 
 	.next {
-		flex: none;
-		min-height: 168px;
 		box-sizing: border-box;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		gap: 24px;
-		padding: 24px 32px;
+		padding: 0 32px;
 		border-radius: 28px;
 		background: var(--ink);
 		color: #ffffff;
@@ -176,13 +212,10 @@
 	}
 
 	.later {
-		flex: none;
 		display: flex;
 		flex-direction: column;
-		gap: 10px;
 	}
 	.row {
-		height: 76px;
 		box-sizing: border-box;
 		display: flex;
 		align-items: center;
@@ -197,20 +230,29 @@
 	}
 	.row-title {
 		flex: 1;
+		min-width: 0;
 		font-size: 34px;
 		font-weight: 600;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 	.row-name {
 		font-size: 24px;
 		font-weight: 600;
 	}
+	.row.more {
+		justify-content: center;
+		background: var(--soft);
+		font-size: 28px;
+		font-weight: 700;
+	}
 
 	.coming {
-		flex: 1;
+		flex: 1 1 0;
 		min-height: 0;
 		display: flex;
 		flex-direction: column;
-		gap: 10px;
 	}
 	.days {
 		flex: 1;
@@ -224,15 +266,16 @@
 		box-sizing: border-box;
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
-		padding: 14px;
 		border-radius: 20px;
 		background: var(--card);
 		overflow: hidden;
 	}
+	.day > * {
+		flex: none;
+	}
 	.day-head {
 		display: flex;
-		align-items: baseline;
+		align-items: center;
 		gap: 10px;
 		font-size: 28px;
 		font-weight: 700;
@@ -242,14 +285,25 @@
 		color: var(--dim);
 	}
 	.chip {
+		box-sizing: border-box;
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		padding: 6px 10px;
+		padding: 0 10px;
 		border-radius: 12px;
 		font-size: 21px;
 		font-weight: 600;
-		line-height: 1.2;
+	}
+	.chip-text {
+		min-width: 0;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	.chip.more {
+		justify-content: center;
+		background: var(--soft);
+		font-weight: 700;
 	}
 	.tag {
 		flex: none;
@@ -279,6 +333,7 @@
 	}
 	.shopping-head h2 {
 		font-size: 36px;
+		line-height: 1.2;
 	}
 	.count {
 		padding: 6px 16px;

@@ -1,11 +1,16 @@
 <script lang="ts">
 	import { eventsOn } from '#lib/calendar.ts';
+	import { clock } from '#lib/clock.svelte.ts';
 	import Badge from '#lib/components/Badge.svelte';
+	import { fitColumn, type Space } from '#lib/fit.ts';
 	import { owners } from '#lib/household.ts';
 	import { dayOfMonth, formatDayMonth, formatTime, formatWeekday, type DayKey } from '#lib/time.ts';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
+
+	// A column is 656px: 14px padding top and bottom, a 64px heading, and 564px for rows.
+	const SPACE: Space = { height: 564, gap: 12, card: 112, row: 44 };
 
 	const title = $derived.by(() => {
 		if (data.offset === 0) return 'This week';
@@ -22,6 +27,13 @@
 			? `${dayOfMonth(first)}–${formatDayMonth(last)}`
 			: `${formatDayMonth(first)} – ${formatDayMonth(last)}`;
 	});
+
+	const columns = $derived(
+		data.days.map((key) => ({
+			key,
+			fit: fitColumn(eventsOn(data.events, key), SPACE, key === data.today ? clock.now : undefined)
+		}))
+	);
 
 	function state(key: DayKey): 'past' | 'today' | 'future' {
 		if (key === data.today) return 'today';
@@ -51,27 +63,40 @@
 	</div>
 
 	<div class="columns">
-		{#each data.days as key (key)}
-			{@const { allDay, timed } = eventsOn(data.events, key)}
-			<section class="day {state(key)}">
-				<div class="head">
+		{#each columns as { key, fit } (key)}
+			<section class="day {state(key)}" style:gap="{SPACE.gap}px">
+				<a class="head" href="/day?date={key}">
 					<span class="name">{formatWeekday(key, 'short')}</span>
 					<span class="num tabular">{dayOfMonth(key)}</span>
-				</div>
-				{#each allDay as event (event.id)}
+				</a>
+				{#each fit.allDay as event (event.id)}
 					{@const owner = owners[event.owner]}
-					<div class="all-day" style:background={owner.bg} style:color={owner.fg}>{event.title}</div>
+					<div class="all-day" style:height="{SPACE.row}px" style:background={owner.bg} style:color={owner.fg}>{event.title}</div>
 				{/each}
-				{#each timed as event (event.id)}
+				{#if fit.earlier > 0}
+					<a class="line" href="/day?date={key}" style:height="{SPACE.row}px">{fit.earlier} earlier</a>
+				{/if}
+				{#each fit.timed as event (event.id)}
 					{@const owner = owners[event.owner]}
-					<div class="event" style:background={owner.bg} style:color={owner.fg}>
-						<div class="event-top">
-							<span class="event-time tabular">{formatTime(new Date(event.start))}</span>
-							<Badge {owner} />
+					{#if fit.compact}
+						<div class="row" style:height="{SPACE.row}px" style:background={owner.bg} style:color={owner.fg}>
+							<span class="row-time tabular">{formatTime(new Date(event.start))}</span>
+							<Badge {owner} size={26} />
+							<span class="row-title">{event.title}</span>
 						</div>
-						<div class="event-title">{event.title}</div>
-					</div>
+					{:else}
+						<div class="card" style:height="{SPACE.card}px" style:background={owner.bg} style:color={owner.fg}>
+							<div class="card-top">
+								<span class="card-time tabular">{formatTime(new Date(event.start))}</span>
+								<Badge {owner} />
+							</div>
+							<div class="card-title">{event.title}</div>
+						</div>
+					{/if}
 				{/each}
+				{#if fit.more > 0}
+					<a class="line more" href="/day?date={key}" style:height="{SPACE.row}px">+{fit.more} more</a>
+				{/if}
 			</section>
 		{/each}
 	</div>
@@ -87,6 +112,7 @@
 	}
 
 	.nav {
+		height: 72px;
 		flex: none;
 		display: flex;
 		align-items: center;
@@ -141,11 +167,14 @@
 		box-sizing: border-box;
 		display: flex;
 		flex-direction: column;
-		gap: 12px;
 		padding: 14px;
 		border-radius: 24px;
 		background: var(--card);
 		overflow: hidden;
+	}
+	.day > * {
+		flex: none;
+		box-sizing: border-box;
 	}
 	.day.past {
 		background: var(--past);
@@ -154,10 +183,11 @@
 		box-shadow: 0 0 0 4px var(--ink);
 	}
 	.head {
+		height: 64px;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 10px 14px;
+		padding: 0 14px;
 		border-radius: 14px;
 		background: var(--soft);
 	}
@@ -177,31 +207,71 @@
 		font-weight: 600;
 		line-height: 1;
 	}
-	.all-day {
-		padding: 8px 14px;
+
+	.all-day,
+	.row,
+	.line {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 0 12px;
 		border-radius: 12px;
-		font-size: 22px;
+		font-size: 20px;
 		font-weight: 600;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
-	.event {
+	.all-day {
+		display: block;
+		line-height: 44px;
+	}
+	.row-time {
+		flex: none;
+		font-weight: 700;
+	}
+	.row-title {
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	.line {
+		justify-content: center;
+		border: 2px dashed var(--line);
+		color: var(--dim);
+	}
+	.more {
+		border-style: solid;
+		background: var(--soft);
+		color: var(--ink);
+		font-weight: 700;
+	}
+
+	.card {
 		display: flex;
 		flex-direction: column;
 		gap: 6px;
 		padding: 12px 14px;
 		border-radius: 16px;
+		overflow: hidden;
 	}
-	.event-top {
+	.card-top {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 	}
-	.event-time {
+	.card-time {
 		font-size: 22px;
 		font-weight: 700;
 	}
-	.event-title {
+	.card-title {
 		font-size: 26px;
 		font-weight: 600;
 		line-height: 1.15;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
 	}
 </style>
