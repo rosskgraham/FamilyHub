@@ -6,6 +6,8 @@ import { readJson, writeJson } from './store.ts';
 export interface Settings {
 	/** Which Google Calendar belongs to each Member, and which is the Family calendar. */
 	calendars: Partial<Record<OwnerId, string>>;
+	/** The Google Tasks list that is the Shopping list. */
+	shoppingList?: string;
 }
 
 const SETTINGS_FILE = 'settings.json';

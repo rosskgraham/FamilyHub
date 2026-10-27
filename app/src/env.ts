@@ -12,7 +12,7 @@ export const variables = defineEnvVars({
 		schema: optional
 	},
 	CALENDAR_SOURCE: {
-		description: 'Set to `sample` to show sample Events even when Google is set up.',
+		description: 'Set to `sample` to show sample Events and a sample Shopping list even when Google is set up.',
 		schema: (value) => (value === 'sample' ? 'sample' : undefined)
 	}
 });
