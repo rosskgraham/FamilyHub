@@ -35,8 +35,8 @@ The plan is in [docs/requirements.md](docs/requirements.md). Progress so far:
 | ✅ | Today, Day and Week views | Done, on a PC |
 | ✅ | Real Google Calendars | Done, on a PC |
 | ✅ | Shopping list from Google Tasks | Done, on a PC |
-| ⬜ | Real weather (Open-Meteo) | Next |
-| ⬜ | A Raspberry Pi set up from scripts, showing the Hub full-screen | |
+| ✅ | Real weather (Open-Meteo) | Done, on a PC |
+| ⬜ | A Raspberry Pi set up from scripts, showing the Hub full-screen | Next |
 | ⬜ | Overnight sleep, and a Day and Evening theme | |
 | ⬜ | Offline resilience, then on the kitchen wall: **v1** | |
 | ⬜ | Recipe videos from a YouTube playlist | After v1 |

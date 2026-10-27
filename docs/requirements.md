@@ -108,17 +108,20 @@ This is where the project ends up, not what each step must have from day one. Ea
 
 ## Milestones
 
-1. Repo skeleton and CI.
-2. The Today view on the PC with fake data, checked against the mockups.
-3. A bare Pi set up from scripts, showing the Hub full-screen.
-4. Google Calendar.
-5. Google Tasks.
-6. Weather.
-7. Sleep and screen power.
+1. Repo, requirements and mockups.
+2. The Today, Day and Week views on the PC with fake data, checked against the mockups.
+3. Google Calendar.
+4. Google Tasks.
+5. Weather.
+6. A bare Pi set up from scripts, showing the Hub full-screen.
+7. Sleep and screen power, and the Day and Evening themes.
 8. Offline resilience.
 9. Mounted on the wall: **v1**.
 10. Watch.
 11. Motion sensor.
+12. Alexa.
+
+The README's progress table shows where things stand.
 
 ## v1 is done when
 

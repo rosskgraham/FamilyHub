@@ -15,7 +15,7 @@ Then open <http://localhost:5173>. The screen is designed at 1920×1080 and scal
 - `/` is the Today view.
 - `/week` is the Week view. `?week=1` shows next week, and `?week=-1` last week.
 
-Until it's set up, it shows sample Events (a typical week repeated for every week) and a sample Shopping list kept in memory, which resets when the app restarts. The weather is always a sample for now.
+Until it's set up, it shows sample Events (a typical week repeated for every week) and a sample Shopping list kept in memory, which resets when the app restarts. The weather is a sample until home is set.
 
 ## Show the real Calendars and Shopping list
 
@@ -25,7 +25,11 @@ Until it's set up, it shows sample Events (a typical week repeated for every wee
 
 The corner then shows when the Calendars last updated. It warns if the Hub is offline or Google needs it to sign in again (weekly while the Google app is in Testing).
 
-The sign-in and the Calendar choices are kept in `app/data/`, which Git ignores. Delete that folder to start again. Set `CALENDAR_SOURCE=sample` in `app/.env` to show sample Events even when Google is set up.
+The sign-in and the Calendar choices are kept in `app/data/`, which Git ignores. Delete that folder to start again. Set `CALENDAR_SOURCE=sample` in `app/.env` to show sample Events, a sample Shopping list and sample weather even when Google and home are set up.
+
+## Show the real weather
+
+Put home's latitude and longitude in `app/.env`, for example `HOME_LATITUDE=51.50` and `HOME_LONGITUDE=-0.12`. Two decimal places is close enough. The header then shows the current weather from [Open-Meteo](https://open-meteo.com/), which needs no key, and the highest chance of rain in the next three hours. It asks again every 10 minutes. If Open-Meteo can't be reached, the header keeps the last forecast for up to three hours, then hides the weather rather than show a stale forecast.
 
 ## Check types
 
