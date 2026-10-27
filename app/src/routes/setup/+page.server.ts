@@ -2,6 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import { owners, type OwnerId } from '#lib/household.ts';
 import { isConfigured, isSignedIn, SignInNeeded, signOut } from '#lib/server/google/auth.ts';
 import { listCalendars, type GoogleCalendar } from '#lib/server/calendar/google.ts';
+import { listTaskLists, type GoogleTaskList } from '#lib/server/shopping/google.ts';
 import { readSettings, writeSettings } from '#lib/server/settings.ts';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -23,8 +24,9 @@ export const load: PageServerLoad = async ({ url }) => {
 	if (!(await isSignedIn())) return { step: 'sign-in' as const, problem };
 
 	let calendars: GoogleCalendar[];
+	let taskLists: GoogleTaskList[];
 	try {
-		calendars = await listCalendars();
+		[calendars, taskLists] = await Promise.all([listCalendars(), listTaskLists()]);
 	} catch (e) {
 		if (e instanceof SignInNeeded) return { step: 'sign-in' as const, problem: 'ended' };
 		throw e;
@@ -34,7 +36,17 @@ export const load: PageServerLoad = async ({ url }) => {
 		owner: owners[id],
 		calendarId: settings.calendars[id] ?? guess(id, calendars)
 	}));
-	return { step: 'calendars' as const, problem, calendars, choices, saved: Object.keys(settings.calendars).length > 0 };
+	const shoppingList =
+		settings.shoppingList ?? taskLists.find((l) => l.title.toLowerCase().includes('shopping'))?.id ?? '';
+	return {
+		step: 'calendars' as const,
+		problem,
+		calendars,
+		choices,
+		taskLists,
+		shoppingList,
+		saved: Object.keys(settings.calendars).length > 0
+	};
 };
 
 export const actions = {
@@ -46,7 +58,8 @@ export const actions = {
 			if (typeof value === 'string' && value !== '') calendars[id] = value;
 		}
 		if (Object.keys(calendars).length === 0) return fail(400, { message: 'Choose at least one Calendar.' });
-		await writeSettings({ calendars });
+		const list = form.get('shoppingList');
+		await writeSettings({ calendars, shoppingList: typeof list === 'string' && list !== '' ? list : undefined });
 		redirect(303, '/');
 	},
 	signOut: async () => {

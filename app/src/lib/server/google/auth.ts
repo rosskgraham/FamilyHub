@@ -96,17 +96,31 @@ async function accessToken(): Promise<string> {
 	return remember(await requestToken({ grant_type: 'refresh_token', refresh_token: stored.refreshToken }));
 }
 
-/** GET a Google API, signed in as the Household. */
-export async function googleGet<T>(url: string): Promise<T> {
+/** Call a Google API, signed in as the Household. Resolves to undefined for an empty response. */
+export async function googleRequest<T>(
+	method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
+	url: string,
+	body?: unknown
+): Promise<T> {
 	for (let attempt = 0; attempt < 2; attempt++) {
-		const response = await fetch(url, { headers: { authorization: `Bearer ${await accessToken()}` } });
-		if (response.ok) return (await response.json()) as T;
+		const headers: Record<string, string> = { authorization: `Bearer ${await accessToken()}` };
+		if (body !== undefined) headers['content-type'] = 'application/json';
+		const response = await fetch(url, {
+			method,
+			headers,
+			body: body === undefined ? undefined : JSON.stringify(body)
+		});
+		if (response.ok) return (response.status === 204 ? undefined : await response.json()) as T;
 		// An access token Google no longer accepts: forget it and try once more.
 		if (response.status === 401 && attempt === 0) {
 			cached = null;
 			continue;
 		}
-		throw new Error(`Google API request failed: ${response.status} ${url.split('?')[0]}`);
+		throw new Error(`Google API request failed: ${response.status} ${method} ${url.split('?')[0]}`);
 	}
 	throw new SignInNeeded();
+}
+
+export function googleGet<T>(url: string): Promise<T> {
+	return googleRequest<T>('GET', url);
 }

@@ -14,7 +14,7 @@
 </script>
 
 <section class="setup">
-	<h1>Set up Google Calendar</h1>
+	<h1>Set up Google</h1>
 
 	{#if problem}<p class="problem">{problem}</p>{/if}
 	{#if form?.message}<p class="problem">{form.message}</p>{/if}
@@ -39,6 +39,16 @@
 					</select>
 				</label>
 			{/each}
+			<p class="section">Choose the Google Tasks list that is the Shopping list.</p>
+			<label>
+				<span class="who">Shopping</span>
+				<select name="shoppingList" value={data.shoppingList}>
+					<option value="">Sample list</option>
+					{#each data.taskLists as list (list.id)}
+						<option value={list.id}>{list.title}</option>
+					{/each}
+				</select>
+			</label>
 			<div class="actions">
 				<button class="primary" type="submit">{data.saved ? 'Save' : 'Save and show the calendar'}</button>
 				<button class="quiet" type="submit" formaction="?/signOut">Sign out of Google</button>
@@ -60,6 +70,9 @@
 	p {
 		margin: 0 0 24px;
 		color: var(--dim);
+	}
+	.section {
+		margin: 16px 0 0;
 	}
 	.problem {
 		padding: 16px 24px;
