@@ -12,6 +12,7 @@ FamilyHub is a personal project, built by one family for its own kitchen. Buildi
 
 - **Shows everyone's day at a glance.** It reads the Household's Google Calendars: one per person, plus a shared Family calendar. Each person has a colour and an initial, so you can tell whose an Event is from across the room.
 - **Keeps the shopping list on the wall.** Add or tick off items on the screen, and in the shop on your phone. The list lives in Google Tasks, so phones need nothing new. Tap to tick off, long-press to remove.
+- **Makes chores a game for the kids.** Each child has a lane of Chores for the morning, after school and the evening, ticks them off at the screen, and earns Stars. Finishing a Routine gets a chime and a burst of stars.
 - **Fits a busy day without scrolling.** Busy days switch to compact rows, and anything that still doesn't fit goes behind a "+N more" that opens the full day. Nothing is cut off silently.
 - **Looks after itself.** It keeps showing the last plan if the Wi-Fi drops, says when it last updated, and tells the family in plain words when it needs attention.
 - **Stays at home.** It runs on a Raspberry Pi in the kitchen, and nothing on the internet can reach it.
@@ -37,8 +38,8 @@ The plan is in [docs/requirements.md](docs/requirements.md). Progress so far:
 | ✅ | Shopping list from Google Tasks | Done, on a PC |
 | ✅ | Real weather (Open-Meteo) | Done, on a PC |
 | ✅ | Tests and CI: unit tests, screenshot tests, GitHub Actions | Done |
-| ⬜ | Chore chart, first slice: kids tick off their Chores for Stars ([design](design/mockups/chores/notes.md)) | Next |
-| ⬜ | Overnight sleep, and a Day and Evening theme | |
+| ✅ | Chore chart, first slice: kids tick off their Chores for Stars ([design](design/mockups/chores/notes.md)) | Done, on a PC |
+| ⬜ | Overnight sleep, and a Day and Evening theme | Next |
 | ⬜ | Offline resilience | |
 | ⬜ | A versioned release built on every merge | |
 | ⬜ | A Raspberry Pi set up from scripts, showing the Hub full-screen | |

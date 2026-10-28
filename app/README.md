@@ -34,6 +34,16 @@ The sign-in and the Calendar choices are kept in `app/data/`, which Git ignores.
 
 Put home's latitude and longitude in `app/.env`, for example `HOME_LATITUDE=51.50` and `HOME_LONGITUDE=-0.12`. Two decimal places is close enough. The header then shows the current weather from [Open-Meteo](https://open-meteo.com/), which needs no key, and the highest chance of rain in the next three hours. It asks again every 10 minutes. If Open-Meteo can't be reached, the header keeps the last forecast for up to three hours, then hides the weather rather than show a stale forecast.
 
+## Set up the real Chores
+
+Copy `app/chores.example.json` to `app/chores.json`, which Git ignores, and put in the Household's Routines and Chores:
+
+- Each **Routine** has an `id`, a `name` and a `from` time, in the order they happen. The current one is marked "Now".
+- Each **Chore** has an `id`, a `name`, an `icon` (`teeth`, `bed`, `shirt`, `home`, `music`, `book` or `bin`), `stars` from 1 to 3, the `routines` it's done in, and `who` does it, by their names in `household.json` (capitals don't matter). Add `days`, such as `["Wed"]`, for a Chore that isn't every day.
+- History is recorded against the ids, so a `name` can change freely, but changing an `id` starts its history afresh.
+
+Changes show on the next reload. Ticks are kept in `app/data/hub.db`, a SQLite database ([ADR 0006](../docs/adr/0006-hub-owned-data-in-sqlite.md)). Without `chores.json`, or with `CALENDAR_SOURCE=sample`, the Chores section shows sample Chores for Maya and Leo with a made-up week, kept in memory, which resets when the app restarts.
+
 ## Check types and run the tests
 
 ```

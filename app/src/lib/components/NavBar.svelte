@@ -7,7 +7,8 @@
 		{ href: '/', label: 'Today' },
 		{ href: '/day', label: 'Day' },
 		{ href: '/week', label: 'Week' },
-		{ href: '/shopping', label: 'Shopping' }
+		{ href: '/shopping', label: 'Shopping' },
+		{ href: '/chores', label: 'Chores' }
 	];
 
 	const status = $derived(page.data.calendarStatus as CalendarStatus | undefined);

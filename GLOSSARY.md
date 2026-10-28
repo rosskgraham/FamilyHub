@@ -25,7 +25,7 @@ The wall-mounted touchscreen in the kitchen, and the product as a whole.
 _Avoid_: Screen, display, dashboard, tablet
 
 **Section**:
-One of the Hub's top-level areas, each for one job: Calendar, Shopping or Watch.
+One of the Hub's top-level areas, each for one job: Calendar, Shopping, Chores or Watch.
 _Avoid_: App, tab, page, mode, screen
 
 **Today view**:
@@ -91,3 +91,17 @@ _Avoid_: Complete, check, done
 **Remove**:
 Take a Shopping item off the list straight away, for one added by mistake.
 _Avoid_: Delete, clear
+
+### Chores
+
+**Chore**:
+A job a child is expected to do, such as making their bed, ticked off at the Hub. A Chore can be in more than one Routine, such as brushing teeth morning and evening, and each is ticked off separately.
+_Avoid_: Task (a Google Tasks item), to-do, job
+
+**Routine**:
+A named group of Chores done at one time of day, such as Morning or Evening. The one whose time it is shows as "Now".
+_Avoid_: Schedule, list, session
+
+**Star**:
+What a child earns for ticking off a Chore, 1 to 3 per Chore. A child's Stars add up over time.
+_Avoid_: Points, score

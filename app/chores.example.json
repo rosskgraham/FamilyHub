@@ -1,0 +1,13 @@
+{
+	"routines": [
+		{ "id": "morning", "name": "Morning", "from": "06:30" },
+		{ "id": "after-school", "name": "After school", "from": "15:30" },
+		{ "id": "evening", "name": "Evening", "from": "18:00" }
+	],
+	"chores": [
+		{ "id": "teeth", "name": "Brush your teeth", "icon": "teeth", "stars": 1, "routines": ["morning", "evening"], "who": ["maya", "leo"] },
+		{ "id": "bed", "name": "Make your bed", "icon": "bed", "stars": 1, "routines": ["morning"], "who": ["maya", "leo"] },
+		{ "id": "room", "name": "Tidy your room", "icon": "home", "stars": 2, "routines": ["after-school"], "who": ["maya"] },
+		{ "id": "bins", "name": "Put the bins out", "icon": "bin", "stars": 3, "routines": ["evening"], "who": ["leo"], "days": ["Wed"] }
+	]
+}
