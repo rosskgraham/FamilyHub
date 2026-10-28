@@ -1,4 +1,9 @@
 <script lang="ts">
+	// Figtree is served by the Hub itself, so it still shows when the Wi-Fi is down.
+	import '@fontsource/figtree/400.css';
+	import '@fontsource/figtree/500.css';
+	import '@fontsource/figtree/600.css';
+	import '@fontsource/figtree/700.css';
 	import '../app.css';
 	import favicon from '#lib/assets/favicon.svg';
 	import Header from '#lib/components/Header.svelte';
