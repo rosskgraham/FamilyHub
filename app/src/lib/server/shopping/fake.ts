@@ -1,5 +1,6 @@
 import type { ShoppingItem } from '#lib/shopping.ts';
 import { dayKey } from '#lib/time.ts';
+import { now } from '../now.ts';
 import type { ShoppingSource } from './source.ts';
 
 // A sample list kept in memory, so ticking, adding and removing can be tried
@@ -20,12 +21,12 @@ const items: FakeItem[] = [
 	item('Cheddar'),
 	item('Washing-up liquid'),
 	item('Lunchbox snacks'),
-	item('Wholemeal bread', new Date())
+	item('Wholemeal bread', now())
 ];
 
 export const fakeShopping: ShoppingSource = {
 	async list() {
-		const today = dayKey(new Date());
+		const today = dayKey(now());
 		const toGet = items.filter((i) => !i.tickedOffAt);
 		const ticked = items.filter((i) => i.tickedOffAt && dayKey(i.tickedOffAt) === today);
 		return [...toGet, ...ticked].map(
@@ -37,7 +38,7 @@ export const fakeShopping: ShoppingSource = {
 	},
 	async setTickedOff(id, tickedOff) {
 		const found = items.find((i) => i.id === id);
-		if (found) found.tickedOffAt = tickedOff ? new Date() : null;
+		if (found) found.tickedOffAt = tickedOff ? now() : null;
 	},
 	async remove(id) {
 		const index = items.findIndex((i) => i.id === id);

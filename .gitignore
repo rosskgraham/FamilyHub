@@ -7,3 +7,6 @@ Thumbs.db
 
 # visual-explainer render previews
 docs/diagrams/*.sheet*.png
+
+# Claude Code worktrees
+.claude/worktrees/

@@ -41,7 +41,20 @@ npm run check
 npm test
 ```
 
-`npm run test:watch` reruns the tests as files change. Unit tests sit next to the code they test, as `*.test.ts`. GitHub Actions runs both checks on every pull request.
+`npm run test:watch` reruns the tests as files change. Unit tests sit next to the code they test, as `*.test.ts`.
+
+## Screenshot tests
+
+Playwright takes a screenshot of each view and compares it with the one in `app/e2e/__screenshots__/`. It uses sample data and pretends it's 08:15 on Wednesday 28 October 2026, whatever is in `app/.env`. Screenshots differ slightly between operating systems, so they're always taken in the Playwright Linux image, which needs Docker running:
+
+```
+npm run test:screenshots          # compare with the saved screenshots
+npm run test:screenshots:update   # save new ones after a deliberate change
+```
+
+Commit updated screenshots with the change that caused them, so the pull request shows the before and after. If CI finds a difference, the run's **playwright-report** download shows it.
+
+GitHub Actions runs the type check, the unit tests and the screenshot tests on every pull request, and `main` only accepts changes through a pull request that passes them.
 
 ## Layout
 
