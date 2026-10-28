@@ -103,7 +103,7 @@ This is where the project ends up, not what each step must have from day one. Ea
 - GitHub Actions runs all checks on every pull request. Work goes in small pull requests, even solo.
 - Renovate keeps dependencies up to date.
 - Fake data is the default on the PC, in CI and in screenshot tests. A "FamilyHub Test" calendar and "Test shopping" Tasks list are used only for deliberate checks against the real APIs. Only the Pi uses the Household's real data.
-- The repo stays private.
+- The repo is public, so nothing personal is committed: the Household's names, home's location, Google credentials and sign-in, and anything read from Google stay in files Git ignores. Sample data is all the repo, CI and screenshots ever show.
 - New terms go in the glossary, and decisions that are hard to reverse and surprising get an ADR.
 
 ## Milestones
