@@ -3,7 +3,6 @@
 	import { clock } from '#lib/clock.svelte.ts';
 	import Badge from '#lib/components/Badge.svelte';
 	import Banner from '#lib/components/Banner.svelte';
-	import { owners } from '#lib/household.ts';
 	import { addDays, formatDayMonth, formatTime, formatWeekday } from '#lib/time.ts';
 	import type { PageProps } from './$types';
 
@@ -46,7 +45,7 @@
 	{#if day.allDay.length > 0}
 		<div class="banners">
 			{#each day.allDay as event (event.id)}
-				<Banner owner={owners[event.owner]} title={event.title} height={56} badge={36} fontSize={26} />
+				<Banner owner={data.owners[event.owner]} title={event.title} height={56} badge={36} fontSize={26} />
 			{/each}
 		</div>
 	{/if}
@@ -57,7 +56,7 @@
 		<!-- Fills a column of seven rows, then a second column. -->
 		<div class="rows">
 			{#each day.timed as event (event.id)}
-				{@const owner = owners[event.owner]}
+				{@const owner = data.owners[event.owner]}
 				<div class="row" class:past={isPast(event.end)} style:background={owner.bg} style:color={owner.fg}>
 					<span class="time tabular">{formatTime(new Date(event.start))}–{formatTime(new Date(event.end))}</span>
 					<Badge {owner} size={44} />

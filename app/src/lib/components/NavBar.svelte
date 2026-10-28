@@ -26,7 +26,7 @@
 	{:else if status?.kind === 'live'}
 		<span class="status">Updated {formatTime(new Date(status.updatedAt))}</span>
 	{:else if status?.kind === 'stale' && status.reason === 'sign-in'}
-		<a class="status problem" href="/setup">Calendar needs signing in again, ask Alex</a>
+		<a class="status problem" href="/setup">Calendar needs signing in again</a>
 	{:else if status?.kind === 'stale'}
 		<span class="status problem">Offline · {updated(status.updatedAt)}</span>
 	{/if}

@@ -5,7 +5,7 @@ import { readJson, writeJson } from './store.ts';
 // It moves to a reviewed settings file in the repo with the Pi milestone.
 export interface Settings {
 	/** Which Google Calendar belongs to each Member, and which is the Family calendar. */
-	calendars: Partial<Record<OwnerId, string>>;
+	calendars: Record<OwnerId, string>;
 	/** The Google Tasks list that is the Shopping list. */
 	shoppingList?: string;
 }

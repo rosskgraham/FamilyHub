@@ -56,7 +56,7 @@
 			if (!response.ok) {
 				problem =
 					response.status === 401
-						? 'Google needs signing in again, ask Alex.'
+						? 'Google needs signing in again.'
 						: 'Couldn’t reach Google. Try again.';
 				return false;
 			}

@@ -25,6 +25,9 @@
 		<p>Sign in with the Household’s Google account. Google will warn that the app isn’t verified; that’s expected.</p>
 		<a class="primary" href="/auth/google" data-sveltekit-reload>Sign in with Google</a>
 	{:else}
+		{#if !data.householdFromFile}
+			<p class="problem">These are sample names. List the Household in <code>app/household.json</code> (copy <code>household.example.json</code>), then reload this page.</p>
+		{/if}
 		<p>Choose whose each Calendar is. Events show in that person’s colour.</p>
 		<form method="POST" action="?/save">
 			{#each data.choices as choice (choice.owner.id)}
