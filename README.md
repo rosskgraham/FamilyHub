@@ -37,14 +37,15 @@ The plan is in [docs/requirements.md](docs/requirements.md). Progress so far:
 | ✅ | Shopping list from Google Tasks | Done, on a PC |
 | ✅ | Real weather (Open-Meteo) | Done, on a PC |
 | ✅ | Tests and CI: unit tests, screenshot tests, GitHub Actions | Done |
-| ⬜ | Overnight sleep, and a Day and Evening theme | Next |
+| ⬜ | Chore chart, first slice: kids tick off their Chores for Stars ([design](design/mockups/chores/notes.md)) | Next |
+| ⬜ | Overnight sleep, and a Day and Evening theme | |
 | ⬜ | Offline resilience | |
 | ⬜ | A versioned release built on every merge | |
 | ⬜ | A Raspberry Pi set up from scripts, showing the Hub full-screen | |
 | ⬜ | On the kitchen wall: **v1** | |
 | ⬜ | Recipe videos from a YouTube playlist | After v1 |
 | ⬜ | A motion sensor that wakes it when someone walks in | After v1 |
-| ⬜ | A chore chart the kids tick off for Stars, streaks and a family treat ([mockups](design/mockups/chores/notes.md)) | After v1 |
+| ⬜ | The rest of the chore chart: streaks, the family jar and Rewards | After v1 |
 | ⬜ | Adding to the shopping list by asking Alexa | Later |
 
 v1 is done when it's been on the wall for two weeks and nobody goes back to checking their phone for the day's plan.
@@ -55,6 +56,7 @@ v1 is done when it's been on the wall for two weeks and nobody goes back to chec
 - **Data:** Google Calendar (read-only) and Google Tasks, signed in as the Household's one Google account. Weather from Open-Meteo.
 - **Hardware:** a Raspberry Pi 5 with a 15.6″ 1080p touchscreen, running the app full-screen in a browser ([why a Pi](docs/adr/0001-web-app-on-raspberry-pi.md)).
 - **Hosting:** none. Everything runs on the Pi and nothing is reachable from the internet ([ADR 0002](docs/adr/0002-everything-runs-on-the-pi.md)). The Pi will pull its own releases and roll back if one is unhealthy ([ADR 0004](docs/adr/0004-pi-pulls-releases.md)).
+- **Data:** Chores, the Hub's only data of its own, live in SQLite on the Pi, backed up nightly to Google Drive ([ADR 0006](docs/adr/0006-hub-owned-data-in-sqlite.md)).
 - **Monitoring:** OpenTelemetry to Azure Application Insights, with anything personal stripped before it leaves the house ([ADR 0005](docs/adr/0005-telemetry-via-otel-collector-to-app-insights.md)).
 
 ## Run it yourself
