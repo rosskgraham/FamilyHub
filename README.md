@@ -37,9 +37,11 @@ The plan is in [docs/requirements.md](docs/requirements.md). Progress so far:
 | ✅ | Shopping list from Google Tasks | Done, on a PC |
 | ✅ | Real weather (Open-Meteo) | Done, on a PC |
 | ✅ | Tests and CI: unit tests, screenshot tests, GitHub Actions | Done |
-| ⬜ | A Raspberry Pi set up from scripts, showing the Hub full-screen | Next |
-| ⬜ | Overnight sleep, and a Day and Evening theme | |
-| ⬜ | Offline resilience, then on the kitchen wall: **v1** | |
+| ⬜ | Overnight sleep, and a Day and Evening theme | Next |
+| ⬜ | Offline resilience | |
+| ⬜ | A versioned release built on every merge | |
+| ⬜ | A Raspberry Pi set up from scripts, showing the Hub full-screen | |
+| ⬜ | On the kitchen wall: **v1** | |
 | ⬜ | Recipe videos from a YouTube playlist | After v1 |
 | ⬜ | A motion sensor that wakes it when someone walks in | After v1 |
 | ⬜ | A chore chart the kids tick off for Stars, streaks and a family treat ([mockups](design/mockups/chores/notes.md)) | After v1 |

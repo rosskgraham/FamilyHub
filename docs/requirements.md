@@ -90,7 +90,11 @@ Out of scope: Spotify (Alexa already handles it), the Month view, and creating o
 - **Google:** one free Google Cloud project, used only for the sign-in. It asks for read-only calendar access and read-write Tasks access, and is set to "In production" so the sign-in doesn't expire every 7 days. A runbook in the repo covers the setup.
 - **Releases:** every merge to `main` builds a versioned release. The Pi pulls it, checks it's healthy, and rolls back automatically if not ([ADR 0004](adr/0004-pi-pulls-releases.md)).
 - **Pi setup:** built entirely from Ansible scripts in the repo, so a dead SD card means re-running one command. The system disk is read-only so a power cut can't damage it, a watchdog restarts the app if it crashes or hangs, security updates are automatic, and SSH is by key only.
-- **Settings:** member calendars and colours, sleep schedule, location and the Tasks list name live in a settings file in the repo, applied by the setup scripts. A change is a pull request. There's no settings screen in v1.
+- **Settings:** the repo is public, so settings are split by whether they're personal.
+  - Personal settings stay out of the repo: the Household's names and colours in `app/household.json`, and home's location in `app/.env`. The setup scripts copy them to the Pi from Alex's PC, alongside the secrets.
+  - Whose each Google Calendar is, and which Tasks list is the Shopping list, are chosen on the Hub's setup page and kept on the Hub.
+  - Everything else, such as the Sleep schedule, lives in the repo, so changing it is a pull request.
+  - There's no settings screen in v1 apart from the Google setup page.
 - **Secrets:** stored in Azure Key Vault (Standard tier, which costs effectively nothing). The setup scripts run from Alex's PC, read the secrets with his Azure sign-in, and place them on the Pi. The Pi holds no Azure credentials apart from the Application Insights connection string. The Google sign-in token is created on the Hub and lives only there. No secret is ever in the repo.
 - **Monitoring:** the app uses OpenTelemetry for traces, metrics and logs, sent through an OpenTelemetry Collector on the Pi to Azure Application Insights ([ADR 0005](adr/0005-telemetry-via-otel-collector-to-app-insights.md)). The screen's browser code reports through the server. The Collector strips Event titles, Shopping items and names before anything leaves the house, and this is tested. Alerts go from Azure Monitor to Alex when a sync has failed for over an hour or the Hub stops reporting.
 
@@ -115,16 +119,17 @@ FamilyHub is held to the same engineering standards as production software at wo
 4. Google Tasks.
 5. Weather.
 6. Tests and CI: Vitest unit tests and GitHub Actions, then Playwright screenshot tests of every view.
-7. A bare Pi set up from scripts, showing the Hub full-screen.
-8. Sleep and screen power, and the Day and Evening themes.
-9. Offline resilience.
-10. Mounted on the wall: **v1**.
-11. Watch.
-12. Motion sensor.
-13. Chores.
-14. Alexa.
+7. Sleep and the Day and Evening themes, on the PC.
+8. Offline resilience.
+9. Releases: every merge to `main` builds a versioned release.
+10. A Pi set up from scripts, showing the Hub full-screen, pulling releases, and powering the screen down for Sleep.
+11. Mounted on the wall: **v1**.
+12. Watch.
+13. Motion sensor.
+14. Chores.
+15. Alexa.
 
-The README's progress table shows where things stand.
+Everything up to the Pi can be built and tested on the PC, so it comes first. The hardware is ordered during those milestones, so the screen's Sleep behaviour can be tested on the bench at milestone 10. The README's progress table shows where things stand.
 
 ## v1 is done when
 
