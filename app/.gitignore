@@ -18,8 +18,9 @@ Thumbs.db
 !.env.example
 !.env.test
 
-# The real Household's names; household.example.json shows the shape.
+# The real Household and its Chores; the .example.json files show the shape.
 household.json
+chores.json
 
 # Vite
 vite.config.js.timestamp-*
