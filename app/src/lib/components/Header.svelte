@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { clock } from '#lib/clock.svelte.ts';
-	import type { Weather } from '#lib/sample.ts';
+	import WeatherIcon from './WeatherIcon.svelte';
+	import { RAIN_HOURS, type Weather } from '#lib/weather.ts';
 	import { dayKey, formatDayMonth, formatTime, formatWeekday } from '#lib/time.ts';
 
-	let { weather }: { weather: Weather } = $props();
+	let { weather }: { weather: Weather | null } = $props();
 
 	const today = $derived(dayKey(clock.now));
 </script>
@@ -17,18 +18,17 @@
 		</div>
 	</div>
 
-	<div class="weather">
-		<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
-			><line x1="16" y1="13" x2="16" y2="21" /><line x1="8" y1="13" x2="8" y2="21" /><line x1="12" y1="15" x2="12" y2="23" /><path
-				d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"
-			/></svg
-		>
-		<div class="temperature">{weather.temperature}°</div>
-		<div>
-			<div class="summary">{weather.summary}</div>
-			<div class="range">High {weather.high}° · Low {weather.low}°</div>
+	{#if weather}
+		<div class="weather">
+			<WeatherIcon icon={weather.icon} />
+			<div class="temperature">{weather.temperature}°</div>
+			<div>
+				<div class="summary">{weather.summary}</div>
+				<div class="range">High {weather.high}° · Low {weather.low}°</div>
+				<div class="range">Rain {weather.rainChance}% next {RAIN_HOURS} hours</div>
+			</div>
 		</div>
-	</div>
+	{/if}
 </header>
 
 <style>
