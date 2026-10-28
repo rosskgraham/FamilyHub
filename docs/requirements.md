@@ -79,6 +79,7 @@ Alex, Sam, Maya and Leo. Everyone sees every Event and can use every Quick actio
 1. **Watch:** YouTube from a "Kitchen" playlist that Members add to from their phones. Search with an on-screen keyboard comes later. Ads play without YouTube Premium.
 2. **Motion sensor:** wakes the Hub on approach, and lets it sleep in the daytime when nobody's around.
 3. **Alexa:** adding Shopping items by voice.
+4. **Chores:** a lane per child of Chores grouped into Routines, ticked off at the Hub on trust. Ticks earn Stars to swap for personal Rewards; a marble goes in the family jar on each day every child finishes; streaks survive one missed day; finishing a Routine plays a chime and an animation. Design and open questions: [chores notes](../design/mockups/chores/notes.md).
 
 Out of scope: Spotify (Alexa already handles it), the Month view, and creating or editing Events at the Hub.
 
@@ -120,7 +121,8 @@ FamilyHub is held to the same engineering standards as production software at wo
 10. Mounted on the wall: **v1**.
 11. Watch.
 12. Motion sensor.
-13. Alexa.
+13. Chores.
+14. Alexa.
 
 The README's progress table shows where things stand.
 

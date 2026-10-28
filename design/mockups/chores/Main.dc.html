@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Chores, a lane per child</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 1920px; height: 1080px; box-sizing: border-box; padding: 32px; background: #F3F5F8; font-family: 'Figtree', system-ui, sans-serif; color: #161B22; display: flex; flex-direction: column; gap: 24px">
+
+<header style="height: 128px; flex: none; display: flex; align-items: center; justify-content: space-between; gap: 32px">
+<div style="display: flex; align-items: center; gap: 28px">
+<div style="font-size: 112px; font-weight: 600; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums">07:18</div>
+<div>
+<div style="font-size: 44px; font-weight: 600; line-height: 1.1">Wednesday</div>
+<div style="font-size: 28px; color: #4A5565; margin-top: 4px">28 October</div>
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 16px">
+<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#161B22" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+<div style="font-size: 56px; font-weight: 600; line-height: 1">9°</div>
+<div>
+<div style="font-size: 24px; font-weight: 600">Cloudy</div>
+<div style="font-size: 22px; color: #4A5565">High 12° · Low 6°</div>
+<div style="font-size: 22px; color: #4A5565">Rain 20% next 3 hours</div>
+</div>
+</div>
+</header>
+
+<main style="flex: 1; min-height: 0; display: flex; gap: 24px">
+
+<sc-for list="{{kids}}" as="k" hint-placeholder-count="2">
+<section style="flex: 1 1 0; min-width: 0; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px; padding: 24px; border-radius: 28px; background: #FFFFFF">
+
+<div style="height: 80px; flex: none; display: flex; align-items: center; gap: 20px">
+<span style="width: 72px; height: 72px; flex: none; border-radius: 36px; background: {{k.solid}}; color: #FFFFFF; font-size: 36px; font-weight: 700; display: flex; align-items: center; justify-content: center">{{k.initial}}</span>
+<div style="flex: 1; min-width: 0">
+<div style="font-size: 44px; font-weight: 700; line-height: 1.1">{{k.name}}</div>
+<div style="font-size: 24px; color: #4A5565; margin-top: 2px">{{k.progress}}</div>
+</div>
+<div style="height: 56px; padding: 0 20px 0 14px; border-radius: 28px; background: #FFF4D6; color: #5C3D00; display: flex; align-items: center; gap: 8px; font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums">
+<svg width="32" height="32" viewBox="0 0 24 24" fill="#F5B400" stroke="#8A5A00" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>{{k.stars}}</div>
+</div>
+
+<sc-for list="{{k.groups}}" as="g" hint-placeholder-count="2">
+<div style="flex: none; display: flex; flex-direction: column; gap: 10px">
+<div style="height: 36px; display: flex; align-items: center; gap: 12px">
+<span style="font-size: 28px; font-weight: 700">{{g.name}}</span>
+<sc-if value="{{g.now}}" hint-placeholder-val="{{true}}">
+<span style="padding: 3px 12px; border-radius: 14px; background: #161B22; color: #FFFFFF; font-size: 20px; font-weight: 700">Now</span>
+</sc-if>
+<sc-if value="{{g.done}}" hint-placeholder-val="{{false}}">
+<span style="display: flex; align-items: center; gap: 6px; padding: 3px 12px 3px 8px; border-radius: 14px; background: {{k.solid}}; color: #FFFFFF; font-size: 20px; font-weight: 700"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>All done</span>
+</sc-if>
+<sc-if value="{{g.later}}" hint-placeholder-val="{{false}}">
+<span style="font-size: 22px; font-weight: 600; color: #4A5565">{{g.when}}</span>
+</sc-if>
+</div>
+
+<sc-for list="{{g.chores}}" as="c" hint-placeholder-count="3">
+<button style="height: 72px; box-sizing: border-box; display: flex; align-items: center; gap: 18px; padding: 0 20px 0 12px; border-radius: 20px; border: 0; background: {{c.bg}}; color: {{c.fg}}; text-align: left">
+<span style="width: 52px; height: 52px; flex: none; box-sizing: border-box; border-radius: 14px; border: 3px solid {{c.box}}; background: {{c.boxFill}}; display: flex; align-items: center; justify-content: center">
+<sc-if value="{{c.done}}" hint-placeholder-val="{{false}}"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></sc-if>
+</span>
+<sc-if value="{{c.ic.teeth}}" hint-placeholder-val="{{false}}"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></sc-if>
+<sc-if value="{{c.ic.bed}}" hint-placeholder-val="{{false}}"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg></sc-if>
+<sc-if value="{{c.ic.shirt}}" hint-placeholder-val="{{false}}"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg></sc-if>
+<sc-if value="{{c.ic.home}}" hint-placeholder-val="{{false}}"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></sc-if>
+<sc-if value="{{c.ic.music}}" hint-placeholder-val="{{false}}"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></sc-if>
+<sc-if value="{{c.ic.book}}" hint-placeholder-val="{{false}}"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></sc-if>
+<sc-if value="{{c.ic.bin}}" hint-placeholder-val="{{false}}"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></sc-if>
+<span style="flex: 1; min-width: 0; font-size: 32px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.name}}</span>
+<sc-if value="{{c.weekly}}" hint-placeholder-val="{{false}}">
+<span style="flex: none; padding: 3px 12px; border-radius: 14px; border: 2px solid {{k.solid}}; font-size: 20px; font-weight: 700">Weekly</span>
+</sc-if>
+<span style="flex: none; display: flex; align-items: center; gap: 4px; font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums">
+<svg width="26" height="26" viewBox="0 0 24 24" fill="{{c.starFill}}" stroke="#8A5A00" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>{{c.stars}}</span>
+</button>
+</sc-for>
+</div>
+</sc-for>
+
+<sc-for list="{{k.collapsed}}" as="g" hint-placeholder-count="1">
+<div style="height: 64px; flex: none; box-sizing: border-box; display: flex; align-items: center; gap: 12px; padding: 0 20px; border-radius: 20px; border: 2px dashed #C3CBD7">
+<span style="font-size: 28px; font-weight: 700">{{g.name}}</span>
+<span style="flex: 1; font-size: 24px; color: #4A5565">{{g.summary}}</span>
+<span style="font-size: 22px; font-weight: 600; color: #4A5565">{{g.when}}</span>
+</div>
+</sc-for>
+
+</section>
+</sc-for>
+
+<aside style="width: 528px; flex: none; display: flex; flex-direction: column; gap: 24px">
+
+<section style="flex: none; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px; padding: 28px; border-radius: 28px; background: #161B22; color: #FFFFFF">
+<div style="font-size: 22px; font-weight: 700; letter-spacing: 0.08em; color: #AEB8C7">FAMILY GOAL</div>
+<div style="font-size: 48px; font-weight: 700; line-height: 1.1">Cinema trip</div>
+<div style="font-size: 24px; line-height: 1.35; color: #D5DBE5">A marble goes in the jar on every day you both finish all your jobs.</div>
+<div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; padding: 8px 0">
+<sc-for list="{{marbles}}" as="m" hint-placeholder-count="10">
+<span style="width: 64px; height: 64px; justify-self: center; box-sizing: border-box; border-radius: 32px; border: 3px solid {{m.border}}; background: {{m.fill}}"></span>
+</sc-for>
+</div>
+<div style="font-size: 30px; font-weight: 700">7 of 10 · 3 to go</div>
+</section>
+
+<section style="flex: 1; min-height: 0; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; padding: 28px; border-radius: 28px; background: #FFFFFF">
+<div style="font-size: 32px; font-weight: 700">Up for grabs</div>
+<sc-for list="{{bonus}}" as="b" hint-placeholder-count="2">
+<div style="height: 80px; flex: none; display: flex; align-items: center; gap: 14px">
+<div style="flex: 1; min-width: 0">
+<div style="font-size: 28px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{b.name}}</div>
+<div style="display: flex; align-items: center; gap: 4px; font-size: 22px; font-weight: 700; color: #5C3D00"><svg width="22" height="22" viewBox="0 0 24 24" fill="#F5B400" stroke="#8A5A00" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>{{b.stars}}</div>
+</div>
+<button style="height: 64px; flex: none; padding: 0 22px; border-radius: 20px; border: 2px solid #C3CBD7; background: #FFFFFF; color: #161B22; font-size: 24px; font-weight: 700">I’ll do it</button>
+</div>
+</sc-for>
+</section>
+
+</aside>
+
+</main>
+
+<footer style="height: 96px; flex: none; display: flex; align-items: center; justify-content: space-between">
+<nav aria-label="Views" style="display: flex; padding: 6px; gap: 6px; border-radius: 26px; background: #E3E8F0">
+<a href="Today.dc.html" style="width: 132px; height: 64px; border-radius: 20px; color: #161B22; text-decoration: none; font-size: 24px; font-weight: 600; display: flex; align-items: center; justify-content: center">Today</a>
+<a href="#" style="width: 132px; height: 64px; border-radius: 20px; color: #161B22; text-decoration: none; font-size: 24px; font-weight: 600; display: flex; align-items: center; justify-content: center">Day</a>
+<a href="#" style="width: 132px; height: 64px; border-radius: 20px; color: #161B22; text-decoration: none; font-size: 24px; font-weight: 600; display: flex; align-items: center; justify-content: center">Week</a>
+<a href="#" style="width: 132px; height: 64px; border-radius: 20px; color: #161B22; text-decoration: none; font-size: 24px; font-weight: 600; display: flex; align-items: center; justify-content: center">Shopping</a>
+<a href="Main.dc.html" aria-current="page" style="width: 132px; height: 64px; border-radius: 20px; background: #FFFFFF; color: #161B22; text-decoration: none; font-size: 24px; font-weight: 700; display: flex; align-items: center; justify-content: center">Chores</a>
+</nav>
+<a href="Week.dc.html" style="height: 64px; padding: 0 26px; box-sizing: border-box; border-radius: 22px; background: #161B22; color: #FFFFFF; text-decoration: none; font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 10px">This week<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></a>
+</footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1920,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var icons = ['teeth', 'bed', 'shirt', 'home', 'music', 'book', 'bin'];
+    function chore(kid, name, icon, done, stars, weekly) {
+      var ic = {};
+      icons.forEach(function (i) { ic[i] = i === icon; });
+      return {
+        name: name, ic: ic, done: done, stars: '+' + stars, weekly: !!weekly,
+        bg: done ? kid.bg : '#F3F5F8', fg: done ? kid.fg : '#161B22',
+        box: done ? kid.solid : '#5B6676', boxFill: done ? kid.solid : '#FFFFFF',
+        starFill: done ? '#F5B400' : '#FFFFFF'
+      };
+    }
+    var maya = { name: 'Maya', initial: 'M', solid: '#0B7A64', bg: '#BDEBDD', fg: '#0A4136' };
+    var leo = { name: 'Leo', initial: 'L', solid: '#6C3FC4', bg: '#E6D8FA', fg: '#46228A' };
+    maya.stars = '14';
+    maya.progress = 'Morning: 2 of 3 done';
+    maya.groups = [
+      { name: 'Morning', now: true, chores: [
+        chore(maya, 'Brush your teeth', 'teeth', true, 1),
+        chore(maya, 'Make your bed', 'bed', true, 1),
+        chore(maya, 'Get dressed', 'shirt', false, 1)
+      ] },
+      { name: 'After school', later: true, when: 'From 15:30', chores: [
+        chore(maya, 'Tidy your room', 'home', false, 2),
+        chore(maya, 'Piano practice', 'music', false, 2)
+      ] }
+    ];
+    maya.collapsed = [{ name: 'Evening', summary: '3 jobs', when: 'From 18:00' }];
+    leo.stars = '11';
+    leo.progress = 'Morning: all done';
+    leo.groups = [
+      { name: 'Morning', done: true, chores: [
+        chore(leo, 'Brush your teeth', 'teeth', true, 1),
+        chore(leo, 'Make your bed', 'bed', true, 1),
+        chore(leo, 'Get dressed', 'shirt', true, 1)
+      ] },
+      { name: 'After school', later: true, when: 'From 15:30', chores: [
+        chore(leo, 'Reading, 10 minutes', 'book', false, 2),
+        chore(leo, 'Put the bins out', 'bin', false, 3, true)
+      ] }
+    ];
+    leo.collapsed = [{ name: 'Evening', summary: '3 jobs', when: 'From 18:00' }];
+    var marbles = [];
+    for (var i = 0; i < 10; i++) {
+      marbles.push(i < 7 ? { fill: '#F5B400', border: '#F5B400' } : { fill: 'transparent', border: '#5B6676' });
+    }
+    return {
+      kids: [maya, leo],
+      marbles: marbles,
+      bonus: [
+        { name: 'Empty the dishwasher', stars: '+2' },
+        { name: 'Help with the big shop', stars: '+3' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
