@@ -2,6 +2,7 @@ import type { CalendarEvent } from '#lib/calendar.ts';
 import type { OwnerId } from '#lib/household.ts';
 import { ukTime } from '#lib/time.ts';
 import { googleGet } from '../google/auth.ts';
+import { toEvents, withoutDuplicates, type GoogleEvent } from './from-google.ts';
 import type { CalendarSource } from './source.ts';
 
 const API = 'https://www.googleapis.com/calendar/v3';
@@ -16,21 +17,8 @@ interface CalendarListResponse {
 	items: { id: string; summary: string; summaryOverride?: string; primary?: boolean }[];
 }
 
-interface GoogleTime {
-	date?: string;
-	dateTime?: string;
-}
-
 interface EventsResponse {
-	items: {
-		id: string;
-		iCalUID?: string;
-		status?: string;
-		summary?: string;
-		start: GoogleTime;
-		end: GoogleTime;
-		attendees?: { self?: boolean; responseStatus?: string }[];
-	}[];
+	items: GoogleEvent[];
 	nextPageToken?: string;
 }
 
@@ -65,33 +53,13 @@ export function googleCalendar(calendars: Record<OwnerId, string>): CalendarSour
 						const response = await googleGet<EventsResponse>(
 							`${API}/calendars/${encodeURIComponent(calendarId)}/events?${params}`
 						);
-						for (const item of response.items) {
-							if (item.status === 'cancelled') continue;
-							if (item.attendees?.some((a) => a.self && a.responseStatus === 'declined')) continue;
-							const allDay = item.start.date !== undefined;
-							events.push({
-								id: item.iCalUID ?? item.id,
-								title: item.summary ?? '(No title)',
-								owner,
-								allDay,
-								start: allDay ? item.start.date! : new Date(item.start.dateTime!).toISOString(),
-								end: allDay ? item.end.date! : new Date(item.end.dateTime!).toISOString()
-							});
-						}
+						events.push(...toEvents(response.items, owner));
 						pageToken = response.nextPageToken;
 					} while (pageToken);
 					return events;
 				})
 			);
-			// An Event on two Calendars (one person invited to a Family event) shows once,
-			// under whichever owner was read first.
-			const seen = new Set<string>();
-			return perCalendar.flat().filter((e) => {
-				const key = `${e.id}@${e.start}`;
-				if (seen.has(key)) return false;
-				seen.add(key);
-				return true;
-			});
+			return withoutDuplicates(perCalendar.flat());
 		}
 	};
 }

@@ -1,6 +1,6 @@
-import type { ShoppingItem } from '#lib/shopping.ts';
 import { dayKey } from '#lib/time.ts';
 import { googleGet, googleRequest } from '../google/auth.ts';
+import { toShoppingItems, type GoogleTask } from './from-google.ts';
 import type { ShoppingSource } from './source.ts';
 
 const API = 'https://tasks.googleapis.com/tasks/v1';
@@ -14,18 +14,8 @@ interface TaskListsResponse {
 	items?: { id: string; title: string }[];
 }
 
-interface Task {
-	id: string;
-	title?: string;
-	status: 'needsAction' | 'completed';
-	completed?: string;
-	position?: string;
-	deleted?: boolean;
-	parent?: string;
-}
-
 interface TasksResponse {
-	items?: Task[];
+	items?: GoogleTask[];
 	nextPageToken?: string;
 }
 
@@ -39,7 +29,7 @@ export function googleShopping(listId: string): ShoppingSource {
 	const tasks = `${API}/lists/${encodeURIComponent(listId)}/tasks`;
 	return {
 		async list() {
-			const all: Task[] = [];
+			const all: GoogleTask[] = [];
 			let pageToken: string | undefined;
 			do {
 				// Completed items are hidden by default; ask for them to show today's ticks.
@@ -50,16 +40,7 @@ export function googleShopping(listId: string): ShoppingSource {
 				pageToken = response.nextPageToken;
 			} while (pageToken);
 
-			const today = dayKey(new Date());
-			const byPosition = (a: Task, b: Task) => (a.position ?? '').localeCompare(b.position ?? '');
-			const usable = all.filter((t) => !t.deleted && !t.parent && t.title?.trim());
-			const toGet = usable.filter((t) => t.status === 'needsAction').sort(byPosition);
-			const ticked = usable
-				.filter((t) => t.status === 'completed' && t.completed && dayKey(new Date(t.completed)) === today)
-				.sort(byPosition);
-			return [...toGet, ...ticked].map(
-				(t): ShoppingItem => ({ id: t.id, text: t.title!.trim(), tickedOff: t.status === 'completed' })
-			);
+			return toShoppingItems(all, dayKey(new Date()));
 		},
 		async add(text) {
 			await googleRequest('POST', tasks, { title: text });

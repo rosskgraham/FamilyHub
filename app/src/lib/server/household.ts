@@ -17,10 +17,10 @@ export async function configuredHousehold(): Promise<{ household: Household; fro
 		if ((e as NodeJS.ErrnoException).code === 'ENOENT') return { household: sampleHousehold, fromFile: false };
 		throw e;
 	}
-	return { household: household(parse(text)), fromFile: true };
+	return { household: household(parseHousehold(text)), fromFile: true };
 }
 
-function parse(text: string): MemberConfig[] {
+export function parseHousehold(text: string): MemberConfig[] {
 	let json: unknown;
 	try {
 		json = JSON.parse(text);

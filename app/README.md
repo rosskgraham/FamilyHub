@@ -34,11 +34,14 @@ The sign-in and the Calendar choices are kept in `app/data/`, which Git ignores.
 
 Put home's latitude and longitude in `app/.env`, for example `HOME_LATITUDE=51.50` and `HOME_LONGITUDE=-0.12`. Two decimal places is close enough. The header then shows the current weather from [Open-Meteo](https://open-meteo.com/), which needs no key, and the highest chance of rain in the next three hours. It asks again every 10 minutes. If Open-Meteo can't be reached, the header keeps the last forecast for up to three hours, then hides the weather rather than show a stale forecast.
 
-## Check types
+## Check types and run the tests
 
 ```
 npm run check
+npm test
 ```
+
+`npm run test:watch` reruns the tests as files change. Unit tests sit next to the code they test, as `*.test.ts`. GitHub Actions runs both checks on every pull request.
 
 ## Layout
 
