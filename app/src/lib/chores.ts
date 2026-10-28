@@ -30,11 +30,25 @@ export interface Chore {
 	days?: Weekday[];
 }
 
+/** A job any child can do for extra Stars, once a day, first come. */
+export interface BonusJob {
+	id: string;
+	name: string;
+	stars: number;
+	/** The days it's up for grabs. Every day if left out. */
+	days?: Weekday[];
+}
+
 export interface ChoreConfig {
 	/** In the order they happen in the day. */
 	routines: Routine[];
 	chores: Chore[];
+	/** Up for grabs. */
+	bonus: BonusJob[];
 }
+
+/** Bonus jobs aren't in a Routine, so they're recorded with this in place of one. */
+export const UP_FOR_GRABS = '';
 
 /** One thing that happened: a Chore ticked off or unticked. Stars are worked out from these. */
 export interface ChoreEvent {
@@ -78,6 +92,21 @@ export function choresFor(config: ChoreConfig, child: OwnerId, day: DayKey): Rou
 		.filter((g) => g.chores.length > 0);
 }
 
+/** The Bonus jobs up for grabs on a day. */
+export function bonusOn(config: ChoreConfig, day: DayKey): BonusJob[] {
+	const today = WEEKDAYS[weekday(day)]!;
+	return config.bonus.filter((b) => b.days === undefined || b.days.includes(today));
+}
+
+/** Who has done each Bonus job on a day. */
+export function bonusDoneBy(events: ChoreEvent[], day: DayKey): Map<string, OwnerId> {
+	const latest = new Map<string, ChoreEvent>();
+	for (const e of events) if (e.day === day && e.routine === UP_FOR_GRABS) latest.set(`${e.child}/${e.chore}`, e);
+	const doneBy = new Map<string, OwnerId>();
+	for (const e of latest.values()) if (e.ticked && !doneBy.has(e.chore)) doneBy.set(e.chore, e.child);
+	return doneBy;
+}
+
 /** The children with any Chores at all, in Household order. */
 export function children(config: ChoreConfig, household: OwnerId[]): OwnerId[] {
 	return household.filter((id) => config.chores.some((c) => c.who.includes(id)));
@@ -108,6 +137,11 @@ export function starTotals(events: ChoreEvent[]): Map<OwnerId, number> {
 /** The Routine whose time it is: the last one that has started, or none before the first. */
 export function currentRoutine(routines: Routine[], hhmm: string): Routine | undefined {
 	return routines.filter((r) => r.from <= hhmm).at(-1);
+}
+
+/** A Bonus job as the Chores section shows it. */
+export interface BonusView extends Pick<BonusJob, 'id' | 'name' | 'stars'> {
+	doneBy: OwnerId | null;
 }
 
 /** What a child's lane shows: their Routines today, with what's ticked off. */

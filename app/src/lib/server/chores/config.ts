@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { readFile } from 'node:fs/promises';
-import { CHORE_ICONS, WEEKDAYS, type Chore, type ChoreConfig, type Routine } from '#lib/chores.ts';
+import { CHORE_ICONS, WEEKDAYS, type BonusJob, type Chore, type ChoreConfig, type Routine } from '#lib/chores.ts';
 import { EVERYONE, type Household } from '#lib/household.ts';
 
 // The real Chores stay out of Git beside household.json; chores.example.json shows the shape.
@@ -22,6 +22,11 @@ export const sampleChores: ChoreConfig = {
 		{ id: 'reading', name: 'Reading, 10 minutes', icon: 'book', stars: 2, routines: ['after-school'], who: ['leo'] },
 		{ id: 'bins', name: 'Put the bins out', icon: 'bin', stars: 3, routines: ['evening'], who: ['leo'], days: ['Wed'] },
 		{ id: 'pyjamas', name: 'Pyjamas on', icon: 'shirt', stars: 1, routines: ['evening'], who: ['maya', 'leo'] }
+	],
+	bonus: [
+		{ id: 'dishwasher', name: 'Empty the dishwasher', stars: 2 },
+		{ id: 'table', name: 'Set the table for dinner', stars: 1 },
+		{ id: 'big-shop', name: 'Help with the big shop', stars: 3, days: ['Sat'] }
 	]
 };
 
@@ -41,7 +46,7 @@ const ID = /^[a-z0-9][a-z0-9-]*$/;
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 export function parseChores(text: string, household: Household): ChoreConfig {
-	let json: { routines?: unknown; chores?: unknown };
+	let json: { routines?: unknown; chores?: unknown; bonus?: unknown };
 	try {
 		json = JSON.parse(text);
 	} catch {
@@ -50,6 +55,7 @@ export function parseChores(text: string, household: Household): ChoreConfig {
 	if (!Array.isArray(json?.routines) || json.routines.length === 0) {
 		error(500, `${CHORES_FILE} needs a "routines" list with at least one Routine.`);
 	}
+	if (json.bonus !== undefined && !Array.isArray(json.bonus)) error(500, `"bonus" in ${CHORES_FILE} needs to be a list.`);
 	if (!Array.isArray(json.chores) || json.chores.length === 0) {
 		error(500, `${CHORES_FILE} needs a "chores" list with at least one Chore.`);
 	}
@@ -94,9 +100,7 @@ export function parseChores(text: string, household: Household): ChoreConfig {
 			if (!found) error(500, `${where} is for "${w}", who isn't in household.json. Members are ${names}.`);
 			return found.id;
 		});
-		if (c.days !== undefined && (!Array.isArray(c.days) || c.days.length === 0 || !c.days.every((d) => (WEEKDAYS as readonly string[]).includes(d)))) {
-			error(500, `${where} has "days" that aren't ${WEEKDAYS.join(', ')}.`);
-		}
+		checkDays(c.days, where);
 		choreIds.add(c.id);
 		return {
 			id: c.id,
@@ -108,5 +112,24 @@ export function parseChores(text: string, household: Household): ChoreConfig {
 			...(c.days ? { days: [...new Set(c.days)] } : {})
 		};
 	});
-	return { routines, chores };
+
+	// Bonus jobs share ids with Chores, so the two can't clash in the record.
+	const bonus = ((json.bonus ?? []) as Partial<BonusJob>[]).map((b, i): BonusJob => {
+		const where = typeof b?.id === 'string' ? `Bonus job "${b.id}" in ${CHORES_FILE}` : `Bonus job ${i + 1} in ${CHORES_FILE}`;
+		if (typeof b?.id !== 'string' || !ID.test(b.id) || choreIds.has(b.id)) {
+			error(500, `${where} needs an "id" of lower-case letters, digits and dashes, different from every Chore and Bonus job.`);
+		}
+		if (typeof b.name !== 'string' || b.name.trim() === '') error(500, `${where} needs a "name".`);
+		if (!Number.isInteger(b.stars) || b.stars! < 1 || b.stars! > 3) error(500, `${where} needs "stars" from 1 to 3.`);
+		checkDays(b.days, where);
+		choreIds.add(b.id);
+		return { id: b.id, name: b.name.trim(), stars: b.stars!, ...(b.days ? { days: [...new Set(b.days)] } : {}) };
+	});
+	return { routines, chores, bonus };
+}
+
+function checkDays(days: unknown, where: string) {
+	if (days !== undefined && (!Array.isArray(days) || days.length === 0 || !days.every((d) => (WEEKDAYS as readonly string[]).includes(d)))) {
+		error(500, `${where} has "days" that aren't ${WEEKDAYS.join(', ')}.`);
+	}
 }

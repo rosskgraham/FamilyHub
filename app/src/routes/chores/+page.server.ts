@@ -1,4 +1,4 @@
-import { children, choresFor, currentRoutine, isTicked, starTotals, tickedOn, type ChoreLane } from '#lib/chores.ts';
+import { bonusDoneBy, bonusOn, children, choresFor, currentRoutine, isTicked, starTotals, tickedOn, type BonusView, type ChoreLane } from '#lib/chores.ts';
 import { choresSetup } from '#lib/server/chores/index.ts';
 import { now } from '#lib/server/now.ts';
 import { dayKey, formatTime } from '#lib/time.ts';
@@ -32,5 +32,9 @@ export const load: PageServerLoad = async () => {
 			}))
 		})
 	);
-	return { lanes, owners: household, sample };
+	const doneBy = bonusDoneBy(events, day);
+	const bonus = bonusOn(config, day).map(
+		({ id, name, stars }): BonusView => ({ id, name, stars, doneBy: doneBy.get(id) ?? null })
+	);
+	return { lanes, bonus, owners: household, sample };
 };

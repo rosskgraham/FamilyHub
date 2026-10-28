@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { children, choresFor, currentRoutine, isTicked, starTotals, tickedOn, type ChoreConfig, type ChoreEvent } from './chores.ts';
+import { bonusDoneBy, bonusOn, children, choresFor, currentRoutine, isTicked, starTotals, tickedOn, UP_FOR_GRABS, type ChoreConfig, type ChoreEvent } from './chores.ts';
 
 const config: ChoreConfig = {
 	routines: [
@@ -10,6 +10,10 @@ const config: ChoreConfig = {
 		{ id: 'teeth', name: 'Brush your teeth', icon: 'teeth', stars: 1, routines: ['morning', 'evening'], who: ['maya', 'leo'] },
 		{ id: 'bed', name: 'Make your bed', icon: 'bed', stars: 1, routines: ['morning'], who: ['maya'] },
 		{ id: 'bins', name: 'Put the bins out', icon: 'bin', stars: 3, routines: ['evening'], who: ['leo'], days: ['Wed'] }
+	],
+	bonus: [
+		{ id: 'dishwasher', name: 'Empty the dishwasher', stars: 2 },
+		{ id: 'big-shop', name: 'Help with the big shop', stars: 3, days: ['Sat'] }
 	]
 };
 
@@ -94,6 +98,34 @@ describe('starTotals', () => {
 
 	it('keeps the Stars a tick earned, even if the Chore is worth more later', () => {
 		expect(starTotals([event(WED, 'leo', 'bins', 'evening', true, 2)]).get('leo')).toBe(2);
+	});
+});
+
+describe('Bonus jobs', () => {
+	const grab = (day: string, child: string, job: string, ticked = true) => event(day, child, job, UP_FOR_GRABS, ticked, 2);
+
+	it('are up for grabs on their days', () => {
+		expect(bonusOn(config, WED).map((b) => b.id)).toEqual(['dishwasher']);
+		expect(bonusOn(config, '2026-10-31').map((b) => b.id)).toEqual(['dishwasher', 'big-shop']);
+	});
+
+	it('belong to whoever did them that day', () => {
+		const done = bonusDoneBy([grab(WED, 'leo', 'dishwasher')], WED);
+		expect(Object.fromEntries(done)).toEqual({ dishwasher: 'leo' });
+		expect(bonusDoneBy([grab(WED, 'leo', 'dishwasher')], THU).size).toBe(0);
+	});
+
+	it('go back up for grabs when undone', () => {
+		const events = [grab(WED, 'leo', 'dishwasher'), grab(WED, 'leo', 'dishwasher', false), grab(WED, 'maya', 'dishwasher')];
+		expect(bonusDoneBy(events, WED).get('dishwasher')).toBe('maya');
+	});
+
+	it('add to the Stars of whoever did them', () => {
+		expect(starTotals([grab(WED, 'leo', 'dishwasher'), event(WED, 'leo', 'teeth', 'morning')]).get('leo')).toBe(3);
+	});
+
+	it('don’t count as a Routine’s Chores', () => {
+		expect(tickedOn([grab(WED, 'leo', 'dishwasher')], WED).has('leo/dishwasher/morning')).toBe(false);
 	});
 });
 
