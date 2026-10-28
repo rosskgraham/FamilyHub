@@ -42,6 +42,7 @@ The plan is in [docs/requirements.md](docs/requirements.md). Progress so far:
 | ⬜ | Offline resilience, then on the kitchen wall: **v1** | |
 | ⬜ | Recipe videos from a YouTube playlist | After v1 |
 | ⬜ | A motion sensor that wakes it when someone walks in | After v1 |
+| ⬜ | A chore chart the kids tick off for Stars, streaks and a family treat ([mockups](design/mockups/chores/notes.md)) | After v1 |
 | ⬜ | Adding to the shopping list by asking Alexa | Later |
 
 v1 is done when it's been on the wall for two weeks and nobody goes back to checking their phone for the day's plan.
@@ -75,5 +76,5 @@ Open <http://localhost:5173>. It starts with sample data. To show real Google Ca
 | [`GLOSSARY.md`](GLOSSARY.md) | The words the project uses for things, such as Hub, Member and Section |
 | [`docs/adr/`](docs/adr/) | Why the big decisions went the way they did |
 | [`docs/runbooks/`](docs/runbooks/) | Step-by-step setup guides |
-| [`design/mockups/`](design/mockups/README.md) | The original UI mockups. Open `html/index.html` in a browser. |
+| [`design/mockups/`](design/mockups/README.md) | The original UI mockups. Open `html/index.html` in a browser. The Chores designs are in [`chores/`](design/mockups/chores/README.md). |
 | [`docs/diagrams/familyhub-pitch.html`](docs/diagrams/familyhub-pitch.html) | A one-page visual pitch of the idea, written for the family. Open it from a local checkout. |

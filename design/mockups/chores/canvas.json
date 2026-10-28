@@ -1,0 +1,20 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-10-28T07:00:00Z" },
+  "title": "FamilyHub Chores Mockups",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1920, "h": 1080, "title": "A · Chores, a lane per child (chosen)" },
+    "Board.dc.html": { "x": 2000, "y": 0, "w": 1920, "h": 1080, "title": "B · Chores, one shared board (not chosen)" },
+    "Celebrate.dc.html": { "x": 0, "y": 1500, "w": 1920, "h": 1080, "title": "C · Ticking off the last job of a routine" },
+    "Week.dc.html": { "x": 2000, "y": 1500, "w": 1920, "h": 1080, "title": "D · This week: Stars, streaks and the family goal" },
+    "Today.dc.html": { "x": 4000, "y": 1500, "w": 1920, "h": 1080, "title": "E · Today view with a chores glance" }
+  },
+  "order": ["Main.dc.html", "Board.dc.html", "Celebrate.dc.html", "Week.dc.html", "Today.dc.html"],
+  "notes": {
+    "t1": { "x": 0, "y": -260, "text": "Chores Section: a lane per child, chosen over one shared board", "kind": "title1", "maxW": 3920 },
+    "t2": { "x": 0, "y": 1240, "text": "Ticking off, the week, and a glance on the Today view", "kind": "title1", "maxW": 5920 }
+  },
+  "designSystems": []
+}

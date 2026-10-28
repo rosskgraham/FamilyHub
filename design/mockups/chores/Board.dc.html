@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Chores, one shared board</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 1920px; height: 1080px; box-sizing: border-box; padding: 32px; background: #F3F5F8; font-family: 'Figtree', system-ui, sans-serif; color: #161B22; display: flex; flex-direction: column; gap: 24px">
+
+<header style="height: 128px; flex: none; display: flex; align-items: center; justify-content: space-between; gap: 32px">
+<div style="display: flex; align-items: center; gap: 28px">
+<div style="font-size: 112px; font-weight: 600; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums">07:18</div>
+<div>
+<div style="font-size: 44px; font-weight: 600; line-height: 1.1">Wednesday</div>
+<div style="font-size: 28px; color: #4A5565; margin-top: 4px">28 October</div>
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 16px">
+<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#161B22" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+<div style="font-size: 56px; font-weight: 600; line-height: 1">9°</div>
+<div>
+<div style="font-size: 24px; font-weight: 600">Cloudy</div>
+<div style="font-size: 22px; color: #4A5565">High 12° · Low 6°</div>
+<div style="font-size: 22px; color: #4A5565">Rain 20% next 3 hours</div>
+</div>
+</div>
+</header>
+
+<main style="flex: 1; min-height: 0; box-sizing: border-box; display: flex; flex-direction: column; padding: 20px 28px; border-radius: 28px; background: #FFFFFF">
+
+<div style="height: 88px; flex: none; display: grid; grid-template-columns: minmax(0, 1fr) 380px 380px; align-items: center; border-bottom: 2px solid #E3E8F0">
+<div style="font-size: 36px; font-weight: 700">Today’s jobs</div>
+<sc-for list="{{kids}}" as="k" hint-placeholder-count="2">
+<div style="display: flex; align-items: center; justify-content: center; gap: 14px">
+<span style="width: 56px; height: 56px; flex: none; border-radius: 28px; background: {{k.solid}}; color: #FFFFFF; font-size: 28px; font-weight: 700; display: flex; align-items: center; justify-content: center">{{k.initial}}</span>
+<span style="font-size: 34px; font-weight: 700">{{k.name}}</span>
+<span style="display: flex; align-items: center; gap: 4px; padding: 4px 14px 4px 10px; border-radius: 20px; background: #FFF4D6; color: #5C3D00; font-size: 26px; font-weight: 700"><svg width="26" height="26" viewBox="0 0 24 24" fill="#F5B400" stroke="#8A5A00" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>{{k.stars}}</span>
+</div>
+</sc-for>
+</div>
+
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="10">
+<sc-if value="{{r.heading}}" hint-placeholder-val="{{false}}">
+<div style="height: 40px; flex: none; display: flex; align-items: flex-end; gap: 12px; padding: 0 4px 4px">
+<span style="font-size: 26px; font-weight: 700">{{r.name}}</span>
+<sc-if value="{{r.now}}" hint-placeholder-val="{{false}}"><span style="padding: 2px 12px; border-radius: 14px; background: #161B22; color: #FFFFFF; font-size: 20px; font-weight: 700">Now</span></sc-if>
+<span style="font-size: 22px; font-weight: 600; color: #4A5565">{{r.when}}</span>
+</div>
+</sc-if>
+<sc-if value="{{r.chore}}" hint-placeholder-val="{{true}}">
+<div style="height: 66px; flex: none; display: grid; grid-template-columns: minmax(0, 1fr) 380px 380px; align-items: center; border-bottom: 1px solid #E3E8F0">
+<div style="display: flex; align-items: center; gap: 14px; padding-left: 4px; min-width: 0">
+<span style="font-size: 30px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.name}}</span>
+<span style="display: flex; align-items: center; gap: 4px; font-size: 22px; font-weight: 700; color: #5C3D00"><svg width="22" height="22" viewBox="0 0 24 24" fill="#F5B400" stroke="#8A5A00" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>{{r.stars}}</span>
+<sc-if value="{{r.weekly}}" hint-placeholder-val="{{false}}"><span style="padding: 2px 12px; border-radius: 14px; border: 2px solid #5B6676; font-size: 20px; font-weight: 700">Weekly</span></sc-if>
+</div>
+<sc-for list="{{r.cells}}" as="c" hint-placeholder-count="2">
+<div style="height: 100%; display: flex; align-items: center; justify-content: center">
+<sc-if value="{{c.mine}}" hint-placeholder-val="{{true}}">
+<button aria-label="{{c.label}}" style="width: 200px; height: 58px; border-radius: 18px; border: 0; background: {{c.bg}}; display: flex; align-items: center; justify-content: center">
+<span style="width: 46px; height: 46px; box-sizing: border-box; border-radius: 12px; border: 3px solid {{c.box}}; background: {{c.boxFill}}; display: flex; align-items: center; justify-content: center">
+<sc-if value="{{c.done}}" hint-placeholder-val="{{false}}"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></sc-if>
+</span>
+</button>
+</sc-if>
+<sc-if value="{{c.notMine}}" hint-placeholder-val="{{false}}">
+<span style="font-size: 30px; font-weight: 600; color: #5B6676" aria-label="Not this child’s job">–</span>
+</sc-if>
+</div>
+</sc-for>
+</div>
+</sc-if>
+</sc-for>
+
+<div style="height: 60px; flex: none; display: flex; align-items: center; gap: 12px; padding: 0 4px">
+<span style="font-size: 26px; font-weight: 700">Evening</span>
+<span style="flex: 1; font-size: 22px; color: #4A5565">Brush your teeth, pyjamas on, pack your school bag</span>
+<span style="font-size: 22px; font-weight: 600; color: #4A5565">From 18:00</span>
+</div>
+
+</main>
+
+<footer style="height: 96px; flex: none; display: flex; align-items: center; justify-content: space-between">
+<nav aria-label="Views" style="display: flex; padding: 6px; gap: 6px; border-radius: 26px; background: #E3E8F0">
+<a href="Today.dc.html" style="width: 132px; height: 64px; border-radius: 20px; color: #161B22; text-decoration: none; font-size: 24px; font-weight: 600; display: flex; align-items: center; justify-content: center">Today</a>
+<a href="#" style="width: 132px; height: 64px; border-radius: 20px; color: #161B22; text-decoration: none; font-size: 24px; font-weight: 600; display: flex; align-items: center; justify-content: center">Day</a>
+<a href="#" style="width: 132px; height: 64px; border-radius: 20px; color: #161B22; text-decoration: none; font-size: 24px; font-weight: 600; display: flex; align-items: center; justify-content: center">Week</a>
+<a href="#" style="width: 132px; height: 64px; border-radius: 20px; color: #161B22; text-decoration: none; font-size: 24px; font-weight: 600; display: flex; align-items: center; justify-content: center">Shopping</a>
+<a href="Board.dc.html" aria-current="page" style="width: 132px; height: 64px; border-radius: 20px; background: #FFFFFF; color: #161B22; text-decoration: none; font-size: 24px; font-weight: 700; display: flex; align-items: center; justify-content: center">Chores</a>
+</nav>
+<div style="display: flex; align-items: center; gap: 16px">
+<div style="height: 56px; padding: 0 22px; border-radius: 28px; background: #161B22; color: #FFFFFF; display: flex; align-items: center; gap: 12px; font-size: 22px; font-weight: 600">Family goal: Cinema trip · 7 of 10</div>
+<a href="Week.dc.html" style="height: 64px; padding: 0 26px; box-sizing: border-box; border-radius: 22px; border: 2px solid #C3CBD7; background: #FFFFFF; color: #161B22; text-decoration: none; font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 10px">This week<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#161B22" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></a>
+</div>
+</footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1920,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var maya = { name: 'Maya', initial: 'M', solid: '#0B7A64', bg: '#BDEBDD', stars: '14' };
+    var leo = { name: 'Leo', initial: 'L', solid: '#6C3FC4', bg: '#E6D8FA', stars: '11' };
+    var kids = [maya, leo];
+    // m/l: 1 = done, 0 = to do, null = not that child's job.
+    function cell(kid, state, chore) {
+      if (state === null) return { mine: false, notMine: true };
+      var done = state === 1;
+      return {
+        mine: true, notMine: false, done: done,
+        label: kid.name + ': ' + chore + (done ? ', done' : ', to do'),
+        bg: done ? kid.bg : '#F3F5F8',
+        box: done ? kid.solid : '#5B6676',
+        boxFill: done ? kid.solid : '#FFFFFF'
+      };
+    }
+    function chore(name, stars, m, l, weekly) {
+      return { chore: true, heading: false, name: name, stars: '+' + stars, weekly: !!weekly, cells: [cell(maya, m, name), cell(leo, l, name)] };
+    }
+    return {
+      kids: kids,
+      rows: [
+        { heading: true, chore: false, name: 'Morning', now: true, when: '' },
+        chore('Brush your teeth', 1, 1, 1),
+        chore('Make your bed', 1, 1, 1),
+        chore('Get dressed', 1, 0, 1),
+        { heading: true, chore: false, name: 'After school', now: false, when: 'From 15:30' },
+        chore('Tidy your room', 2, 0, null),
+        chore('Piano practice', 2, 0, null),
+        chore('Reading, 10 minutes', 2, null, 0),
+        chore('Put the bins out', 3, null, 0, true)
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
