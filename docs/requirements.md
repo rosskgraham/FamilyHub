@@ -79,7 +79,7 @@ Alex, Sam, Maya and Leo. Everyone sees every Event and can use every Quick actio
 1. **Watch:** YouTube from a "Kitchen" playlist that Members add to from their phones. Search with an on-screen keyboard comes later. Ads play without YouTube Premium.
 2. **Motion sensor:** wakes the Hub on approach, and lets it sleep in the daytime when nobody's around.
 3. **Alexa:** adding Shopping items by voice.
-4. **Chores:** a lane per child of Chores grouped into Routines, ticked off at the Hub on trust. Ticks earn Stars to swap for personal Rewards; a marble goes in the family jar on each day every child finishes; streaks survive one missed day; finishing a Routine plays a chime and an animation. Design and open questions: [chores notes](../design/mockups/chores/notes.md).
+4. **Chores**, after its first slice (milestone 7): a lane per child of Chores grouped into Routines, ticked off at the Hub on trust. Ticks earn Stars to swap for personal Rewards; a marble goes in the family jar on each day every child finishes; streaks survive one missed day; finishing a Routine plays a chime and an animation. Design and open questions: [chores notes](../design/mockups/chores/notes.md).
 
 Out of scope: Spotify (Alexa already handles it), the Month view, and creating or editing Events at the Hub.
 
@@ -87,9 +87,10 @@ Out of scope: Spotify (Alexa already handles it), the Month view, and creating o
 
 - **Software:** SvelteKit with strict TypeScript, providing both the screen and a small server.
 - **Where it runs:** everything runs on the Pi, and nothing is reachable from the internet ([ADR 0002](adr/0002-everything-runs-on-the-pi.md)). Google and Open-Meteo are checked for changes rather than pushing them.
-- **Google:** one free Google Cloud project, used only for the sign-in. It asks for read-only calendar access and read-write Tasks access, and is set to "In production" so the sign-in doesn't expire every 7 days. A runbook in the repo covers the setup.
+- **Google:** one free Google Cloud project, used only for the sign-in. It asks for read-only calendar access, read-write Tasks access, and access to the Drive files it creates itself (for backups), and is set to "In production" so the sign-in doesn't expire every 7 days. A runbook in the repo covers the setup.
+- **Data the Hub owns:** Chores live in SQLite on the Pi's writable partition. It records what happened, and Stars and streaks are worked out from that. A snapshot goes to Google Drive nightly, and a rebuild restores the latest one ([ADR 0006](adr/0006-hub-owned-data-in-sqlite.md)).
 - **Releases:** every merge to `main` builds a versioned release. The Pi pulls it, checks it's healthy, and rolls back automatically if not ([ADR 0004](adr/0004-pi-pulls-releases.md)).
-- **Pi setup:** built entirely from Ansible scripts in the repo, so a dead SD card means re-running one command. The system disk is read-only so a power cut can't damage it, a watchdog restarts the app if it crashes or hangs, security updates are automatic, and SSH is by key only.
+- **Pi setup:** built entirely from Ansible scripts in the repo, so a dead SD card means re-running one command. The system disk is read-only so a power cut can't damage it, with a small writable partition for the Google sign-in and the Hub's own data, a watchdog restarts the app if it crashes or hangs, security updates are automatic, and SSH is by key only.
 - **Settings:** the repo is public, so settings are split by whether they're personal.
   - Personal settings stay out of the repo: the Household's names and colours in `app/household.json`, and home's location in `app/.env`. The setup scripts copy them to the Pi from Alex's PC, alongside the secrets.
   - Whose each Google Calendar is, and which Tasks list is the Shopping list, are chosen on the Hub's setup page and kept on the Hub.
@@ -119,17 +120,18 @@ FamilyHub is held to the same engineering standards as production software at wo
 4. Google Tasks.
 5. Weather.
 6. Tests and CI: Vitest unit tests and GitHub Actions, then Playwright screenshot tests of every view.
-7. Sleep and the Day and Evening themes, on the PC.
-8. Offline resilience.
-9. Releases: every merge to `main` builds a versioned release.
-10. A Pi set up from scripts, showing the Hub full-screen, pulling releases, and powering the screen down for Sleep.
-11. Mounted on the wall: **v1**.
-12. Watch.
-13. Motion sensor.
-14. Chores.
-15. Alexa.
+7. Chores, first slice: a lane per child, Routines, ticking off, Stars, the chime and animation, and the midnight reset, stored as ADR 0006 describes.
+8. Sleep and the Day and Evening themes, on the PC.
+9. Offline resilience.
+10. Releases: every merge to `main` builds a versioned release.
+11. A Pi set up from scripts, showing the Hub full-screen, pulling releases, and powering the screen down for Sleep.
+12. Mounted on the wall: **v1**.
+13. Watch.
+14. Motion sensor.
+15. Chores, the rest: streaks, the family jar, Rewards, grown-up overrides, the week view, and the Today view card.
+16. Alexa.
 
-Everything up to the Pi can be built and tested on the PC, so it comes first. The hardware is ordered during those milestones, so the screen's Sleep behaviour can be tested on the bench at milestone 10. The README's progress table shows where things stand.
+Everything up to the Pi can be built and tested on the PC, so it comes first. The first slice of Chores comes first of all, to have something to show while the hardware is on order. The screen's Sleep behaviour is tested on the bench at milestone 11. The README's progress table shows where things stand.
 
 ## v1 is done when
 

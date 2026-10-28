@@ -62,7 +62,7 @@ Deliberately left out: leaderboards, "Maya beat Leo", lost Stars for missed jobs
 | Google Tasks, one list per child | Editable from phones with no new app. | Tasks has no idea of Routines, Stars, days of the week or rewards, so most of it would be encoded in task titles or notes; and a tick at the Hub would mark the task done for everyone, every day, so the daily reset fights Tasks' model. |
 | A settings screen on the Hub | Quick changes. | The requirements rule out a settings screen in v1, and the children could change their own chores. |
 
-What a child ticks off (and their Stars, streaks and marbles) is new state that has to survive a restart and a power cut. That makes it the Hub's first data of its own that isn't a copy of something in Google, so it needs backing up. That probably deserves an ADR.
+What a child ticks off (and their Stars, streaks and marbles) is the Hub's first data of its own. It lives in SQLite on the Pi, as a record of what happened, with a nightly backup to Google Drive. Grown-ups can override: give or take Stars, or fix a wrong tick. See [ADR 0006](../../../docs/adr/0006-hub-owned-data-in-sqlite.md).
 
 ## Proposed glossary terms
 
@@ -79,7 +79,6 @@ The sample Household's children are Maya and Leo; Alex and Sam are the grown-ups
 
 ## Still open
 
-1. **How does a grown-up approve a Reward?** On the Hub with a PIN, or out loud ("ask Alex"), with the Hub just recording it?
+1. **How does the Hub know a grown-up is tapping?** Grown-ups approve Rewards and make overrides at the Hub. A PIN, or trust, the same as children's ticks?
 2. **Do the grown-ups get Chores too?** It would model the behaviour, but makes the Section busier.
 3. **Volume and quiet hours:** a chime is decided, but should it be quieter or silent during Sleep hours?
-4. **Where the Hub's own data lives:** ticks, Stars, streaks and marbles are the first data that isn't a copy of something in Google. How it's stored and backed up probably needs an ADR, made with offline resilience.
