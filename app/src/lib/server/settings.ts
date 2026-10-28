@@ -1,8 +1,8 @@
 import type { OwnerId } from '#lib/household.ts';
 import { readJson, writeJson } from './store.ts';
 
-// Chosen on the setup page and kept on the Hub's disk for now.
-// It moves to a reviewed settings file in the repo with the Pi milestone.
+// Chosen on the setup page and kept on the Hub's disk. The repo is public,
+// so these never go in it.
 export interface Settings {
 	/** Which Google Calendar belongs to each Member, and which is the Family calendar. */
 	calendars: Record<OwnerId, string>;
