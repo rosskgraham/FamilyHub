@@ -86,5 +86,5 @@ Open <http://localhost:5173>. It starts with sample data. To show real Google Ca
 | [`GLOSSARY.md`](GLOSSARY.md) | The words the project uses for things, such as Hub, Member and Section |
 | [`docs/adr/`](docs/adr/) | Why the big decisions went the way they did |
 | [`docs/runbooks/`](docs/runbooks/) | Step-by-step setup guides |
-| [`design/mockups/`](design/mockups/README.md) | The original UI mockups. Open `html/index.html` in a browser. The Chores designs are in [`chores/`](design/mockups/chores/README.md). |
+| [`design/mockups/`](design/mockups/README.md) | The original UI mockups. Open `html/index.html` in a browser. The Chores designs are in [`chores/`](design/mockups/chores/README.md), and the parked portrait designs in [`portrait/`](design/mockups/portrait/README.md). |
 | [`docs/diagrams/familyhub-pitch.html`](docs/diagrams/familyhub-pitch.html) | A one-page visual pitch of the idea, written for the family. Open it from a local checkout. |

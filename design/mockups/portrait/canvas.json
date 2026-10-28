@@ -1,0 +1,18 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-10-28T08:30:00Z" },
+  "title": "FamilyHub Portrait Mockups",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1080, "h": 1920, "title": "A · Today, portrait: coming days as rows" },
+    "Grid.dc.html": { "x": 1160, "y": 0, "w": 1080, "h": 1920, "title": "B · Today, portrait: coming days as a 2 × 2 grid" },
+    "Week.dc.html": { "x": 2400, "y": 0, "w": 1080, "h": 1920, "title": "C · Week, portrait: a row per day (sketch)" }
+  },
+  "order": ["Main.dc.html", "Grid.dc.html", "Week.dc.html"],
+  "notes": {
+    "t1": { "x": 0, "y": -260, "text": "Today view in portrait: two ways to lay out the coming days", "kind": "title1", "maxW": 2240 },
+    "t2": { "x": 2400, "y": -260, "text": "Other views", "kind": "title1", "maxW": 1080 }
+  },
+  "designSystems": []
+}

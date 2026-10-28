@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Today view, portrait, coming days as rows</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+button{font-family:inherit}
+a{color:inherit;text-decoration:none}
+</style>
+</helmet>
+<div style="width: 1080px; height: 1920px; box-sizing: border-box; padding: 32px; background: #F3F5F8; font-family: 'Figtree', system-ui, sans-serif; color: #161B22; display: flex; flex-direction: column; gap: 24px">
+
+<header style="height: 128px; flex: none; display: flex; align-items: center; justify-content: space-between; gap: 24px">
+<div style="display: flex; align-items: center; gap: 24px">
+<div style="font-size: 112px; font-weight: 600; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums">08:15</div>
+<div>
+<div style="font-size: 44px; font-weight: 600; line-height: 1.1">Wednesday</div>
+<div style="font-size: 28px; color: #4A5565; margin-top: 4px">28 October</div>
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 12px">
+<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#161B22" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 13v8M8 13v8M12 15v8M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"/></svg>
+<div style="font-size: 56px; font-weight: 600; line-height: 1">11°</div>
+<div>
+<div style="font-size: 24px; font-weight: 600">Light rain</div>
+<div style="font-size: 22px; color: #4A5565">High 13° · Low 8°</div>
+<div style="font-size: 22px; color: #4A5565">Rain 70% next 3 hours</div>
+</div>
+</div>
+</header>
+
+<main style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px">
+
+<section style="height: 168px; flex: none; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 0 32px; border-radius: 28px; background: #161B22; color: #FFFFFF">
+<div style="min-width: 0; display: flex; align-items: center; gap: 24px">
+<span style="width: 80px; height: 80px; flex: none; border-radius: 40px; background: #B85200; color: #FFFFFF; font-size: 40px; font-weight: 700; display: flex; align-items: center; justify-content: center">S</span>
+<div style="min-width: 0">
+<div style="font-size: 22px; font-weight: 700; letter-spacing: 0.08em; color: #AEB8C7">NEXT UP · IN 1 H 45 MIN</div>
+<div style="font-size: 56px; font-weight: 700; line-height: 1.1; margin-top: 4px">Boiler service</div>
+</div>
+</div>
+<div style="font-size: 104px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums">10:00</div>
+</section>
+
+<section style="flex: none; display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 28px; font-weight: 700; line-height: 34px">Later today</h2>
+<sc-for list="{{later}}" as="e" hint-placeholder-count="2">
+<div style="height: 76px; box-sizing: border-box; display: flex; align-items: center; gap: 20px; padding: 0 24px; border-radius: 20px; background: {{e.bg}}; color: {{e.fg}}">
+<span style="font-size: 32px; font-weight: 700; font-variant-numeric: tabular-nums">{{e.time}}</span>
+<span style="width: 44px; height: 44px; flex: none; border-radius: 22px; background: {{e.solid}}; color: #FFFFFF; font-size: 22px; font-weight: 700; display: flex; align-items: center; justify-content: center">{{e.initial}}</span>
+<span style="font-size: 32px; font-weight: 600">{{e.title}}</span>
+</div>
+</sc-for>
+</section>
+
+<section style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 28px; font-weight: 700; line-height: 34px">Coming up</h2>
+<div style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px">
+<sc-for list="{{days}}" as="d" hint-placeholder-count="5">
+<a href="#" style="flex: 1 1 0; min-height: 0; box-sizing: border-box; display: flex; gap: 16px; padding: 14px 16px; border-radius: 20px; background: #FFFFFF">
+<div style="width: 96px; flex: none; display: flex; flex-direction: column; justify-content: center">
+<div style="font-size: 26px; font-weight: 600; color: #4A5565">{{d.weekday}}</div>
+<div style="font-size: 44px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums">{{d.num}}</div>
+</div>
+<div style="flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-content: center; gap: 8px">
+<sc-for list="{{d.chips}}" as="c" hint-placeholder-count="3">
+<span style="height: 38px; max-width: 100%; box-sizing: border-box; display: flex; align-items: center; gap: 8px; padding: 0 14px 0 6px; border-radius: 12px; background: {{c.bg}}; color: {{c.fg}}; border: {{c.border}}; font-size: 21px; white-space: nowrap">
+<span style="min-width: 26px; height: 26px; box-sizing: border-box; padding: 0 5px; border-radius: 13px; background: {{c.solid}}; color: #FFFFFF; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center">{{c.initial}}</span>
+<span style="overflow: hidden; text-overflow: ellipsis"><b style="font-variant-numeric: tabular-nums">{{c.time}}</b> {{c.title}}</span>
+</span>
+</sc-for>
+<sc-if value="{{d.hasMore}}" hint-placeholder-val="{{false}}">
+<span style="height: 38px; box-sizing: border-box; display: flex; align-items: center; padding: 0 16px; border-radius: 12px; background: #E3E8F0; font-size: 21px; font-weight: 700">{{d.more}}</span>
+</sc-if>
+</div>
+</a>
+</sc-for>
+</div>
+</section>
+
+<section style="flex: none; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px; padding: 28px; border-radius: 28px; background: #FFFFFF">
+<div style="height: 44px; display: flex; align-items: center; justify-content: space-between">
+<h2 style="margin: 0; font-size: 36px; font-weight: 700">Shopping</h2>
+<span style="padding: 6px 16px; border-radius: 20px; background: #EDF0F5; font-size: 22px; font-weight: 600">6 to get</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(4, 64px); grid-auto-flow: column; column-gap: 24px; row-gap: 8px">
+<sc-for list="{{shopping}}" as="s" hint-placeholder-count="7">
+<button style="height: 64px; display: flex; align-items: center; gap: 20px; padding: 0 8px; border: 0; background: none; color: {{s.color}}; text-align: left; font-size: 32px; font-weight: 500">
+<span style="width: 44px; height: 44px; flex: none; box-sizing: border-box; border-radius: 10px; border: 3px solid {{s.box}}; background: {{s.fill}}; display: flex; align-items: center; justify-content: center">
+<sc-if value="{{s.ticked}}" hint-placeholder-val="{{false}}"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></sc-if>
+</span>
+<span style="text-decoration: {{s.strike}}">{{s.text}}</span>
+</button>
+</sc-for>
+</div>
+<button style="height: 72px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: 12px; border: 2px solid #C3CBD7; border-radius: 20px; background: #FFFFFF; font-size: 28px; font-weight: 700">
+<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+Add item
+</button>
+</section>
+
+</main>
+
+<footer style="height: 96px; flex: none; display: flex; align-items: center; justify-content: space-between; gap: 16px">
+<nav aria-label="Views" style="display: flex; gap: 4px; padding: 6px; border-radius: 24px; background: #E3E8F0">
+<a href="#" style="height: 64px; display: flex; align-items: center; padding: 0 26px; border-radius: 18px; background: #FFFFFF; font-size: 26px; font-weight: 700">Today</a>
+<a href="#" style="height: 64px; display: flex; align-items: center; padding: 0 22px; border-radius: 18px; font-size: 26px; font-weight: 600">Day</a>
+<a href="#" style="height: 64px; display: flex; align-items: center; padding: 0 22px; border-radius: 18px; font-size: 26px; font-weight: 600">Week</a>
+<a href="#" style="height: 64px; display: flex; align-items: center; padding: 0 22px; border-radius: 18px; font-size: 26px; font-weight: 600">Shopping</a>
+<a href="#" style="height: 64px; display: flex; align-items: center; padding: 0 22px; border-radius: 18px; font-size: 26px; font-weight: 600">Chores</a>
+</nav>
+<a href="#" style="height: 56px; display: flex; align-items: center; padding: 0 22px; border-radius: 28px; border: 2px dashed #C3CBD7; font-size: 22px; font-weight: 600; color: #4A5565">Sample data</a>
+</footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1080,"height":1920}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var o = {
+      A: { initial: 'A', bg: '#D6E4FF', fg: '#0F2F78', solid: '#2456C9' },
+      S: { initial: 'S', bg: '#FFDDB8', fg: '#6B2E00', solid: '#B85200' },
+      M: { initial: 'M', bg: '#BDEBDD', fg: '#0A4136', solid: '#0B7A64' },
+      L: { initial: 'L', bg: '#E6D8FA', fg: '#46228A', solid: '#6C3FC4' },
+      E: { initial: 'All', bg: '#E3E6EB', fg: '#1E2530', solid: '#4A5565' }
+    };
+    function ev(time, title, who) {
+      var w = o[who];
+      return { time: time, title: title, initial: w.initial, bg: w.bg, fg: w.fg, solid: w.solid, border: '0' };
+    }
+    function allDay(title, who) {
+      var w = o[who];
+      return { time: '', title: title, initial: w.initial, bg: '#FFFFFF', fg: '#161B22', solid: w.solid, border: '2px solid #161B22' };
+    }
+    function day(weekday, num, chips, more) {
+      return { weekday: weekday, num: num, chips: chips, hasMore: more > 0, more: '+' + more + ' more' };
+    }
+    function item(text, ticked) {
+      return {
+        text: text, ticked: ticked,
+        color: ticked ? '#4A5565' : '#161B22', strike: ticked ? 'line-through' : 'none',
+        box: ticked ? '#161B22' : '#5B6676', fill: ticked ? '#161B22' : '#FFFFFF'
+      };
+    }
+    return {
+      later: [ev('16:30', 'Piano lesson', 'M'), ev('19:00', 'Book club', 'S')],
+      days: [
+        day('Thu', '29', [allDay('Bin day', 'E'), ev('17:00', 'Swimming', 'M'), ev('18:00', 'Five-a-side', 'A')], 0),
+        day('Fri', '30', [ev('15:30', 'Dentist', 'L'), ev('19:30', 'Takeaway night', 'E')], 0),
+        day('Sat', '31', [ev('08:00', 'Parkrun', 'A'), ev('09:00', 'Swimming lesson', 'M'), ev('09:30', 'Football match', 'L'), ev('10:30', 'Haircut', 'S'), ev('11:00', 'Big shop', 'E')], 7),
+        day('Sun', '1', [ev('12:30', 'Lunch at Gran’s', 'E'), ev('16:00', 'Garden tidy', 'S')], 0),
+        day('Mon', '2', [ev('16:00', 'Swimming', 'M'), ev('18:30', 'Cubs', 'L')], 0)
+      ],
+      shopping: [
+        item('Milk', false), item('Eggs', false), item('Bananas', false), item('Cheddar', false),
+        item('Washing-up liquid', false), item('Lunchbox snacks', false), item('Wholemeal bread', true)
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

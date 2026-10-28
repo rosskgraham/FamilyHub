@@ -81,6 +81,8 @@ Alex, Sam, Maya and Leo. Everyone sees every Event and can use every Quick actio
 3. **Alexa:** adding Shopping items by voice.
 4. **Chores**, after its first slice (milestone 7): a lane per child of Chores grouped into Routines, ticked off at the Hub on trust. Ticks earn Stars to swap for personal Rewards; a marble goes in the family jar on each day every child finishes; streaks survive one missed day; finishing a Routine plays a chime and an animation. Design and open questions: [chores notes](../design/mockups/chores/notes.md).
 
+Parked: **portrait orientation**, with the screen mounted the tall way ([mockups and open questions](../design/mockups/portrait/notes.md)). Until it's decided, the screen and mount for v1 should be able to rotate, with touch that still works rotated.
+
 Out of scope: Spotify (Alexa already handles it), the Month view, and creating or editing Events at the Hub.
 
 ## Architecture and operations
