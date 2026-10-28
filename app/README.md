@@ -20,8 +20,11 @@ Until it's set up, it shows sample Events (a typical week repeated for every wee
 ## Show the real Calendars and Shopping list
 
 1. Follow [the Google Cloud runbook](../docs/runbooks/google-cloud-setup.md), and put `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `app/.env`.
-2. Run the app, and choose **Sample data · set up Google** in the bottom corner (or go to <http://localhost:5173/setup>).
-3. Sign in with the Household's Google account, then choose whose each Calendar is and which Google Tasks list is the Shopping list.
+2. Copy `app/household.example.json` to `app/household.json` and put in the Household's Members, each with a name and a colour (`blue`, `orange`, `green` or `purple`). An `initial` is optional; it's the first letter of the name otherwise. Git ignores this file. Everyone, for the Family calendar, is always there.
+3. Run the app, and choose **Sample data · set up Google** in the bottom corner (or go to <http://localhost:5173/setup>).
+4. Sign in with the Household's Google account, then choose each Member's Calendar and which Google Tasks list is the Shopping list.
+
+To change a Calendar later, go back to <http://localhost:5173/setup>. Changes to `household.json` show on the next reload. Renaming a Member means choosing their Calendar again. Sample Events always use the made-up Household (Alex, Sam, Maya and Leo).
 
 The corner then shows when the Calendars last updated. It warns if the Hub is offline or Google needs it to sign in again (weekly while the Google app is in Testing).
 

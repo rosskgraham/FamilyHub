@@ -4,7 +4,6 @@
 	import Badge from '#lib/components/Badge.svelte';
 	import Banner from '#lib/components/Banner.svelte';
 	import { fitColumn, type Space } from '#lib/fit.ts';
-	import { owners } from '#lib/household.ts';
 	import { dayOfMonth, formatDayMonth, formatTime, formatWeekday, type DayKey } from '#lib/time.ts';
 	import type { PageProps } from './$types';
 
@@ -72,13 +71,13 @@
 					<span class="num tabular">{dayOfMonth(key)}</span>
 				</a>
 				{#each fit.allDay as event (event.id)}
-					<Banner owner={owners[event.owner]} title={event.title} height={SPACE.row} />
+					<Banner owner={data.owners[event.owner]} title={event.title} height={SPACE.row} />
 				{/each}
 				{#if fit.earlier > 0}
 					<a class="line" href="/day?date={key}" style:height="{SPACE.row}px">{fit.earlier} earlier</a>
 				{/if}
 				{#each fit.timed as event (event.id)}
-					{@const owner = owners[event.owner]}
+					{@const owner = data.owners[event.owner]}
 					{#if fit.compact}
 						<div class="row" style:height="{SPACE.row}px" style:background={owner.bg} style:color={owner.fg}>
 							<span class="row-time tabular">{formatTime(new Date(event.start))}</span>

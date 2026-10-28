@@ -5,7 +5,6 @@
 	import Banner from '#lib/components/Banner.svelte';
 	import ShoppingList from '#lib/components/ShoppingList.svelte';
 	import { fitColumn } from '#lib/fit.ts';
-	import { owners } from '#lib/household.ts';
 	import { addDays, dayOfMonth, formatIn, formatTime, formatWeekday } from '#lib/time.ts';
 	import type { PageProps } from './$types';
 
@@ -57,7 +56,7 @@
 
 <div class="today" style:gap="{SECTION_GAP}px">
 	{#if next}
-		{@const owner = owners[next.owner]}
+		{@const owner = data.owners[next.owner]}
 		<section class="next" style:height="{NEXT}px">
 			<div class="who">
 				<Badge {owner} size={80} />
@@ -77,7 +76,7 @@
 	{#if today.allDay.length > 0}
 		<div class="banners" style:height="{BANNER}px">
 			{#each today.allDay as event (event.id)}
-				<Banner owner={owners[event.owner]} title={event.title} height={BANNER} badge={36} fontSize={26} />
+				<Banner owner={data.owners[event.owner]} title={event.title} height={BANNER} badge={36} fontSize={26} />
 			{/each}
 		</div>
 	{/if}
@@ -86,7 +85,7 @@
 		<section class="later" style:gap="{LATER_GAP}px">
 			<h2 style:margin-bottom="{HEADING_GAP - LATER_GAP}px">Later today</h2>
 			{#each later as event (event.id)}
-				{@const owner = owners[event.owner]}
+				{@const owner = data.owners[event.owner]}
 				<div class="row" style:height="{LATER_ROW}px" style:background={owner.bg} style:color={owner.fg}>
 					<span class="row-time tabular">{formatTime(new Date(event.start))}</span>
 					<Badge {owner} size={44} />
@@ -109,10 +108,10 @@
 						<span class="day-num tabular">{dayOfMonth(key)}</span>
 					</a>
 					{#each fit.allDay as event (event.id)}
-						<Banner owner={owners[event.owner]} title={event.title} height={CHIP} badge={24} fontSize={21} />
+						<Banner owner={data.owners[event.owner]} title={event.title} height={CHIP} badge={24} fontSize={21} />
 					{/each}
 					{#each fit.timed as event (event.id)}
-						{@const owner = owners[event.owner]}
+						{@const owner = data.owners[event.owner]}
 						<div class="chip" style:height="{CHIP}px" style:background={owner.bg} style:color={owner.fg}>
 							<span class="tag" style:background={owner.solid}>{owner.initial}</span>
 							<span class="chip-text"><b class="tabular">{formatTime(new Date(event.start))}</b> {event.title}</span>

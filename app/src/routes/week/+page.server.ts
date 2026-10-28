@@ -11,6 +11,6 @@ export const load: PageServerLoad = async ({ url }) => {
 	const today = dayKey(new Date());
 	const monday = addDays(startOfWeek(today), offset * 7);
 	const days = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
-	const { events, status } = await loadCalendar(monday, addDays(monday, 7));
-	return { today, offset, days, events, calendarStatus: status };
+	const { events, status, household } = await loadCalendar(monday, addDays(monday, 7));
+	return { today, offset, days, events, calendarStatus: status, owners: household };
 };

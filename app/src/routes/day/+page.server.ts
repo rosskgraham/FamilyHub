@@ -7,6 +7,6 @@ export const load: PageServerLoad = async ({ url }) => {
 	const today = dayKey(new Date());
 	const requested = url.searchParams.get('date') ?? '';
 	const date = /^\d{4}-\d{2}-\d{2}$/.test(requested) && !Number.isNaN(Date.parse(requested)) ? requested : today;
-	const { events, status } = await loadCalendar(date, addDays(date, 1));
-	return { today, date, events, calendarStatus: status };
+	const { events, status, household } = await loadCalendar(date, addDays(date, 1));
+	return { today, date, events, calendarStatus: status, owners: household };
 };

@@ -44,7 +44,7 @@ export async function listCalendars(): Promise<GoogleCalendar[]> {
 }
 
 /** Reads the Calendars mapped to each owner. */
-export function googleCalendar(calendars: Partial<Record<OwnerId, string>>): CalendarSource {
+export function googleCalendar(calendars: Record<OwnerId, string>): CalendarSource {
 	return {
 		async listEvents(from, to) {
 			const timeMin = ukTime(from, '00:00').toISOString();
@@ -72,7 +72,7 @@ export function googleCalendar(calendars: Partial<Record<OwnerId, string>>): Cal
 							events.push({
 								id: item.iCalUID ?? item.id,
 								title: item.summary ?? '(No title)',
-								owner: owner as OwnerId,
+								owner,
 								allDay,
 								start: allDay ? item.start.date! : new Date(item.start.dateTime!).toISOString(),
 								end: allDay ? item.end.date! : new Date(item.end.dateTime!).toISOString()

@@ -1,0 +1,8 @@
+{
+	"members": [
+		{ "name": "Alex", "colour": "blue" },
+		{ "name": "Sam", "colour": "orange" },
+		{ "name": "Maya", "colour": "green" },
+		{ "name": "Leo", "colour": "purple" }
+	]
+}
