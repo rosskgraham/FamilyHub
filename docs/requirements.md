@@ -95,10 +95,10 @@ Out of scope: Spotify (Alexa already handles it), the Month view, and creating o
 
 ## Engineering practice
 
-This is where the project ends up, not what each step must have from day one. Early milestones aim for something that works, keeping only the foundations that are painful to add later: strict TypeScript, fake data by default, and no secrets in the repo. The rest arrives step by step.
+FamilyHub is held to the same engineering standards as production software at work. From the Tests and CI milestone on, every change comes with its tests and passes CI. Practices that only matter once the Hub runs unattended, such as Renovate, arrive with the milestone that needs them.
 
 - Strict TypeScript, linting and auto-formatting.
-- Vitest unit tests on the logic that's easy to get wrong: turning Google data into Events and Shopping items, the offline queue, Sleep and theme timing.
+- Vitest unit tests on the logic that's easy to get wrong: turning Google and Open-Meteo data into Events, Shopping items and weather, fitting Events into columns, the offline queue, Sleep and theme timing.
 - Playwright end-to-end tests of every view, including screenshot comparisons.
 - GitHub Actions runs all checks on every pull request. Work goes in small pull requests, even solo.
 - Renovate keeps dependencies up to date.
@@ -113,13 +113,14 @@ This is where the project ends up, not what each step must have from day one. Ea
 3. Google Calendar.
 4. Google Tasks.
 5. Weather.
-6. A bare Pi set up from scripts, showing the Hub full-screen.
-7. Sleep and screen power, and the Day and Evening themes.
-8. Offline resilience.
-9. Mounted on the wall: **v1**.
-10. Watch.
-11. Motion sensor.
-12. Alexa.
+6. Tests and CI: Vitest unit tests and GitHub Actions, then Playwright screenshot tests of every view.
+7. A bare Pi set up from scripts, showing the Hub full-screen.
+8. Sleep and screen power, and the Day and Evening themes.
+9. Offline resilience.
+10. Mounted on the wall: **v1**.
+11. Watch.
+12. Motion sensor.
+13. Alexa.
 
 The README's progress table shows where things stand.
 

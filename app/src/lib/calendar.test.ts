@@ -1,0 +1,34 @@
+import { describe, expect, it } from 'vitest';
+import { eventsOn, type CalendarEvent } from './calendar.ts';
+
+const timed = (id: string, start: string, end: string): CalendarEvent => ({
+	id,
+	title: id,
+	owner: 'alex',
+	allDay: false,
+	start,
+	end
+});
+const allDay = (id: string, start: string, end: string): CalendarEvent => ({ ...timed(id, start, end), allDay: true });
+
+describe('eventsOn', () => {
+	it('includes every day an all-day Event covers, but not its end day', () => {
+		const holiday = allDay('holiday', '2026-10-26', '2026-10-29');
+		expect(eventsOn([holiday], '2026-10-26').allDay).toEqual([holiday]);
+		expect(eventsOn([holiday], '2026-10-28').allDay).toEqual([holiday]);
+		expect(eventsOn([holiday], '2026-10-29').allDay).toEqual([]);
+	});
+
+	it('puts a timed Event on its UK day, not its UTC day', () => {
+		// 00:30 on 2 July in the UK is 23:30 on 1 July in UTC.
+		const late = timed('late', '2026-07-01T23:30:00.000Z', '2026-07-02T00:30:00.000Z');
+		expect(eventsOn([late], '2026-07-02').timed).toEqual([late]);
+		expect(eventsOn([late], '2026-07-01').timed).toEqual([]);
+	});
+
+	it('sorts timed Events by start', () => {
+		const lunch = timed('lunch', '2026-10-28T12:00:00.000Z', '2026-10-28T13:00:00.000Z');
+		const breakfast = timed('breakfast', '2026-10-28T08:00:00.000Z', '2026-10-28T09:00:00.000Z');
+		expect(eventsOn([lunch, breakfast], '2026-10-28').timed).toEqual([breakfast, lunch]);
+	});
+});
