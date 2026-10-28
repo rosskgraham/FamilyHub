@@ -40,7 +40,8 @@ Copy `app/chores.example.json` to `app/chores.json`, which Git ignores, and put 
 
 - Each **Routine** has an `id`, a `name` and a `from` time, in the order they happen. The current one is marked "Now".
 - Each **Chore** has an `id`, a `name`, an `icon` (`teeth`, `bed`, `shirt`, `home`, `music`, `book` or `bin`), `stars` from 1 to 3, the `routines` it's done in, and `who` does it, by their names in `household.json` (capitals don't matter). Add `days`, such as `["Wed"]`, for a Chore that isn't every day.
-- History is recorded against the ids, so a `name` can change freely, but changing an `id` starts its history afresh.
+- **Bonus jobs**, under `bonus`, are optional extras shown as **Up for grabs**. Each has an `id`, a `name`, `stars` from 1 to 3 and optional `days`. Any child can do one: they tap **Done it**, then their own badge, and the Stars go to them. Each job can be done once a day, by whoever's first; tapping it again offers **Undo**.
+- History is recorded against the ids, so a `name` can change freely, but changing an `id` starts its history afresh. Bonus jobs and Chores can't share an id.
 
 Changes show on the next reload. Ticks are kept in `app/data/hub.db`, a SQLite database ([ADR 0006](../docs/adr/0006-hub-owned-data-in-sqlite.md)). Without `chores.json`, or with `CALENDAR_SOURCE=sample`, the Chores section shows sample Chores for Maya and Leo with a made-up week, kept in memory, which resets when the app restarts.
 

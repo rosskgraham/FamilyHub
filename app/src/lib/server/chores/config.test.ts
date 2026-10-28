@@ -10,12 +10,18 @@ const parse = (text: string) => parseChores(text, sampleHousehold);
 describe('parseChores', () => {
 	it('reads Routines and Chores, trimming names and dropping repeats', () => {
 		const config = parse(file([{ ...routine, name: ' Morning ' }], [{ ...chore, who: ['maya', 'maya'], days: ['Mon', 'Wed'] }]));
-		expect(config).toEqual({ routines: [routine], chores: [{ ...chore, days: ['Mon', 'Wed'] }] });
+		expect(config).toEqual({ routines: [routine], chores: [{ ...chore, days: ['Mon', 'Wed'] }], bonus: [] });
 	});
 
 	it('finds Members by name or id, whatever the capitals', () => {
 		const config = parse(file([routine], [{ ...chore, who: ['Maya', 'LEO', ' sam '] }]));
 		expect(config.chores[0]!.who).toEqual(['maya', 'leo', 'sam']);
+	});
+
+	it('reads Bonus jobs, which are optional', () => {
+		const job = { id: 'dishwasher', name: 'Empty the dishwasher', stars: 2, days: ['Sat'] };
+		expect(parse(JSON.stringify({ routines: [routine], chores: [chore], bonus: [job] })).bonus).toEqual([job]);
+		expect(parse(file([routine], [chore])).bonus).toEqual([]);
 	});
 
 	it('accepts the sample Chores', () => {
@@ -37,6 +43,9 @@ describe('parseChores', () => {
 		['Everyone doing a Chore', file([routine], [{ ...chore, who: ['everyone'] }]), 'is for "everyone"'],
 		['nobody doing a Chore', file([routine], [{ ...chore, who: [] }]), 'needs "who"'],
 		['a day that isn’t a day', file([routine], [{ ...chore, days: ['Wednesday'] }]), 'has "days" that'],
+		['Bonus jobs that aren’t a list', JSON.stringify({ routines: [routine], chores: [chore], bonus: {} }), '"bonus" in chores.json needs to be a list'],
+		['a Bonus job with a Chore’s id', JSON.stringify({ routines: [routine], chores: [chore], bonus: [{ id: 'bed', name: 'Bed', stars: 1 }] }), 'Bonus job "bed" in chores.json needs an "id"'],
+		['a Bonus job without Stars', JSON.stringify({ routines: [routine], chores: [chore], bonus: [{ id: 'car', name: 'Wash the car' }] }), '"stars" from 1 to 3'],
 	])('explains %s', (_, text, message) => {
 		expect(() => parse(text)).toThrow(
 			expect.objectContaining({ body: expect.objectContaining({ message: expect.stringContaining(message) }) })

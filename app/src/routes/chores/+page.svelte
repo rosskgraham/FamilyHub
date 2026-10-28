@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Celebration from '#lib/components/Celebration.svelte';
 	import ChoreLane from '#lib/components/ChoreLane.svelte';
+	import UpForGrabs from '#lib/components/UpForGrabs.svelte';
 	import type { OwnerId } from '#lib/household.ts';
 	import type { PageProps } from './$types';
 
@@ -9,7 +10,8 @@
 	let celebrating: { child: OwnerId; routine: string; stars: number } | null = $state(null);
 </script>
 
-<!-- The Chores section: a lane per child, each ticking off their own Chores. -->
+<!-- The Chores section: a lane per child, each ticking off their own Chores, and Bonus jobs beside them. -->
+<div class="chores">
 <div class="lanes">
 	{#each data.lanes as lane (lane.child)}
 		<ChoreLane
@@ -18,6 +20,12 @@
 			ondone={(routine, stars) => (celebrating = { child: lane.child, routine, stars })}
 		/>
 	{/each}
+</div>
+{#if data.bonus.length > 0}
+	<aside>
+		<UpForGrabs jobs={data.bonus} owners={data.owners} kids={data.lanes.map((l) => l.child)} />
+	</aside>
+{/if}
 </div>
 
 {#if celebrating}
@@ -30,6 +38,17 @@
 {/if}
 
 <style>
+	.chores {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		gap: 24px;
+	}
+	aside {
+		width: 528px;
+		flex: none;
+		display: flex;
+	}
 	.lanes {
 		flex: 1;
 		min-width: 0;

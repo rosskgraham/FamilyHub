@@ -29,3 +29,29 @@ test('finishing a Routine celebrates it', async ({ page }) => {
 	await expect(maya.getByText('Morning: all done')).toBeVisible();
 	await expect(maya.getByRole('button', { name: 'Untick Get dressed' })).toBeVisible();
 });
+
+test('an Up for grabs job goes to whoever did it, first come', async ({ page, request }) => {
+	await page.goto('/chores');
+	const grabs = page.getByRole('region', { name: 'Up for grabs' });
+	const leo = page.getByRole('region', { name: 'Leo’s Chores' });
+	await expect(leo.getByLabel('38 Stars')).toBeVisible();
+
+	await grabs.getByRole('button', { name: 'Done it' }).first().click();
+	const who = grabs.getByRole('group', { name: 'Who did Empty the dishwasher?' });
+	await page.evaluate(() => document.fonts.ready);
+	await expect(page).toHaveScreenshot('chores-who-did-it.png');
+	await who.getByRole('button', { name: 'Leo' }).click();
+	await expect(grabs.getByRole('button', { name: 'Done by Leo. Undo?' })).toBeVisible();
+	await expect(leo.getByLabel('40 Stars')).toBeVisible();
+	await page.evaluate(() => document.fonts.ready);
+	await expect(page).toHaveScreenshot('chores-up-for-grabs.png');
+
+	// Nobody else can take it now.
+	const late = await request.post('/api/chores', { data: { child: 'maya', chore: 'dishwasher', routine: '', ticked: true } });
+	expect(late.status()).toBe(409);
+
+	await grabs.getByRole('button', { name: 'Done by Leo. Undo?' }).click();
+	await grabs.getByRole('button', { name: 'Undo', exact: true }).click();
+	await expect(grabs.getByRole('button', { name: 'Done it' })).toHaveCount(2);
+	await expect(leo.getByLabel('38 Stars')).toBeVisible();
+});

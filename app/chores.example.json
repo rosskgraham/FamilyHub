@@ -9,5 +9,9 @@
 		{ "id": "bed", "name": "Make your bed", "icon": "bed", "stars": 1, "routines": ["morning"], "who": ["maya", "leo"] },
 		{ "id": "room", "name": "Tidy your room", "icon": "home", "stars": 2, "routines": ["after-school"], "who": ["maya"] },
 		{ "id": "bins", "name": "Put the bins out", "icon": "bin", "stars": 3, "routines": ["evening"], "who": ["leo"], "days": ["Wed"] }
+	],
+	"bonus": [
+		{ "id": "dishwasher", "name": "Empty the dishwasher", "stars": 2 },
+		{ "id": "big-shop", "name": "Help with the big shop", "stars": 3, "days": ["Sat"] }
 	]
 }

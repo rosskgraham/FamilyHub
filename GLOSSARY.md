@@ -103,5 +103,9 @@ A named group of Chores done at one time of day, such as Morning or Evening. The
 _Avoid_: Schedule, list, session
 
 **Star**:
-What a child earns for ticking off a Chore, 1 to 3 per Chore. A child's Stars add up over time.
+What a child earns for ticking off a Chore or doing a Bonus job, 1 to 3 each. Each child's Stars add up over time, separately.
 _Avoid_: Points, score
+
+**Bonus job**:
+An extra job, shown as Up for grabs, that any child can do for Stars. It can be done once a day, by whoever's first.
+_Avoid_: Extra chore, task
