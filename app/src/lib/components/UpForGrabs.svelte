@@ -188,12 +188,15 @@
 		flex: 1;
 		min-width: 0;
 	}
+	/* Two lines at most, so a name still shows beside a wide Done. */
 	.name {
 		overflow: hidden;
 		font-size: 28px;
 		font-weight: 600;
-		white-space: nowrap;
-		text-overflow: ellipsis;
+		line-height: 1.15;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
 	}
 	.done .name {
 		color: var(--dim);
