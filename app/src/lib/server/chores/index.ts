@@ -36,8 +36,8 @@ export async function choresSetup(): Promise<ChoresSetup> {
 }
 
 /**
- * Records a tick or untick, if it's a Chore the child really has today, or a Bonus job that's
- * still up for grabs (or theirs, to undo). Returns false if not.
+ * Records a tick or untick, if it's a Chore the child really has today, or a Bonus job they
+ * haven't done yet today (or have, to undo). Returns false if not.
  */
 export function recordTick(setup: ChoresSetup, tick: ChoreTick): boolean {
 	const { config, store } = setup;
@@ -54,12 +54,13 @@ export function recordTick(setup: ChoresSetup, tick: ChoreTick): boolean {
 	return true;
 }
 
-// First come: a Bonus job someone has done today is theirs until they undo it.
+// Each child does a Bonus job at most once a day. Children who do it together each get its Stars,
+// to recognise the teamwork.
 function bonusJob({ config, household, store }: ChoresSetup, tick: ChoreTick, day: DayKey) {
 	if (!children(config, Object.keys(household)).includes(tick.child)) return undefined;
 	const job = bonusOn(config, day).find((b) => b.id === tick.chore);
-	const doneBy = bonusDoneBy(store.events(), day).get(tick.chore);
-	if (tick.ticked ? doneBy !== undefined : doneBy !== tick.child) return undefined;
+	const doneBy = bonusDoneBy(store.events(), day).get(tick.chore) ?? [];
+	if (tick.ticked === doneBy.includes(tick.child)) return undefined;
 	return job;
 }
 

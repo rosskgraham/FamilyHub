@@ -107,5 +107,5 @@ What a child earns for ticking off a Chore or doing a Bonus job, 1 to 3 each. Ea
 _Avoid_: Points, score
 
 **Bonus job**:
-An extra job, shown as Up for grabs, that any child can do for Stars. It can be done once a day, by whoever's first.
+An extra job, shown as Up for grabs, that any child can do for Stars. It can be done once a day, by one child or by several together, and each child who did it gets its Stars.
 _Avoid_: Extra chore, task

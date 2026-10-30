@@ -34,7 +34,7 @@ export const load: PageServerLoad = async () => {
 	);
 	const doneBy = bonusDoneBy(events, day);
 	const bonus = bonusOn(config, day).map(
-		({ id, name, stars }): BonusView => ({ id, name, stars, doneBy: doneBy.get(id) ?? null })
+		({ id, name, stars }): BonusView => ({ id, name, stars, doneBy: doneBy.get(id) ?? [] })
 	);
 	return { lanes, bonus, owners: household, sample };
 };

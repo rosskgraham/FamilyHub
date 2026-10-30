@@ -9,28 +9,45 @@
 	let { jobs, owners, kids }: { jobs: BonusView[]; owners: Household; kids: OwnerId[] } = $props();
 
 	// Changes show straight away and are undone if the Hub turns them down.
-	let pending: Record<string, OwnerId | null> = $state({});
+	let pending: Record<string, OwnerId[]> = $state({});
 	let picking: string | null = $state(null);
+	// Who did the job being picked for. Children who did it together each get its Stars.
+	let chosen: OwnerId[] = $state([]);
 	let undoing: string | null = $state(null);
 	let problem: string | null = $state(null);
 
 	const shown = $derived(jobs.map((j) => ({ ...j, doneBy: j.id in pending ? pending[j.id]! : j.doneBy })));
 
-	async function send(job: string, child: OwnerId, ticked: boolean) {
+	function pick(job: string) {
+		picking = picking === job ? null : job;
+		chosen = [];
+	}
+
+	function choose(kid: OwnerId) {
+		chosen = chosen.includes(kid) ? chosen.filter((k) => k !== kid) : [...chosen, kid];
+	}
+
+	/** "Leo", "Leo and Maya", "Leo, Maya and Sam". */
+	function together(names: string[]): string {
+		return names.length < 2 ? (names[0] ?? '') : `${names.slice(0, -1).join(', ')} and ${names.at(-1)}`;
+	}
+
+	async function send(job: string, kids: OwnerId[], ticked: boolean) {
 		picking = null;
 		undoing = null;
 		problem = null;
-		pending[job] = ticked ? child : null;
+		pending[job] = ticked ? kids : [];
 		if (ticked) chime();
-		const tick: ChoreTick = { child, chore: job, routine: UP_FOR_GRABS, ticked };
 		try {
-			const response = await fetch('/api/chores', {
-				method: 'POST',
-				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify(tick)
-			});
-			if (response.status === 409) problem = 'Someone else got there first.';
-			else if (!response.ok) problem = 'That didn’t save. Try again.';
+			for (const child of kids) {
+				const tick: ChoreTick = { child, chore: job, routine: UP_FOR_GRABS, ticked };
+				const response = await fetch('/api/chores', {
+					method: 'POST',
+					headers: { 'content-type': 'application/json' },
+					body: JSON.stringify(tick)
+				});
+				if (!response.ok) problem = 'That didn’t save. Try again.';
+			}
 			await invalidateAll();
 		} catch {
 			problem = 'Couldn’t reach the Hub. Try again.';
@@ -42,52 +59,66 @@
 <section class="grabs" aria-labelledby="grabs-title">
 	<div>
 		<h2 id="grabs-title">Up for grabs</h2>
-		<p class="hint">Extra Stars for whoever does it first</p>
+		<p class="hint">Extra Stars for everyone who does it</p>
 	</div>
 
 	{#if problem}<p class="message" role="alert">{problem}</p>{/if}
 
 	<ul>
 		{#each shown as job (job.id)}
-			{@const by = job.doneBy ? owners[job.doneBy] : undefined}
-			<li class:done={by}>
+			{@const by = job.doneBy.map((id) => owners[id]!)}
+			{@const names = together(by.map((o) => o.name))}
+			<li class:done={by.length > 0}>
 				<div class="job">
 					<div class="about">
 						<div class="name">{job.name}</div>
 						<div class="earn tabular"><Star size={22} />+{job.stars}</div>
 					</div>
-					{#if by}
+					{#if by.length > 0}
+						<!-- One child's colour, or a neutral one when they did it together. -->
 						<button
 							class="by"
-							style:background={by.bg}
-							style:color={by.fg}
-							aria-label="Done by {by.name}. Undo?"
+							style:background={by.length === 1 ? by[0]!.bg : 'var(--soft)'}
+							style:color={by.length === 1 ? by[0]!.fg : 'var(--ink)'}
+							aria-label="Done by {names}. Undo?"
 							onclick={() => (undoing = undoing === job.id ? null : job.id)}
 						>
-							<Badge owner={by} size={40} />
+							<span class="badges">
+								{#each by as owner (owner.id)}<Badge {owner} size={40} />{/each}
+							</span>
 							Done
 						</button>
 					{:else}
-						<button class="take" aria-expanded={picking === job.id} onclick={() => (picking = picking === job.id ? null : job.id)}>
+						<button class="take" aria-expanded={picking === job.id} onclick={() => pick(job.id)}>
 							Done it
 						</button>
 					{/if}
 				</div>
 
-				{#if picking === job.id && !by}
+				{#if picking === job.id && by.length === 0}
 					<div class="pick" role="group" aria-label="Who did {job.name}?">
-						<span class="ask">Who did it?</span>
+						<span class="ask">Who did it? Pick everyone who helped.</span>
 						{#each kids as kid (kid)}
-							<button class="kid" aria-label={owners[kid]!.name} onclick={() => send(job.id, kid, true)}>
-								<Badge owner={owners[kid]!} size={56} />
-								<span>{owners[kid]!.name}</span>
+							{@const owner = owners[kid]!}
+							<button
+								class="kid"
+								aria-label={owner.name}
+								aria-pressed={chosen.includes(kid)}
+								style:border-color={chosen.includes(kid) ? owner.solid : null}
+								style:background={chosen.includes(kid) ? owner.bg : null}
+								style:color={chosen.includes(kid) ? owner.fg : null}
+								onclick={() => choose(kid)}
+							>
+								<Badge {owner} size={56} />
+								<span>{owner.name}</span>
 							</button>
 						{/each}
+						<button class="take" disabled={chosen.length === 0} onclick={() => send(job.id, chosen, true)}>Done</button>
 					</div>
-				{:else if undoing === job.id && by}
+				{:else if undoing === job.id && by.length > 0}
 					<div class="pick">
-						<span class="ask">Not done by {by.name}?</span>
-						<button class="quiet" onclick={() => send(job.id, by.id, false)}>Undo</button>
+						<span class="ask">Not done by {names}?</span>
+						<button class="quiet" onclick={() => send(job.id, job.doneBy, false)}>Undo</button>
 						<button class="quiet" onclick={() => (undoing = null)}>Keep</button>
 					</div>
 				{/if}
@@ -196,6 +227,13 @@
 		padding-left: 12px;
 		border: 0;
 	}
+	.badges {
+		display: flex;
+		gap: 4px;
+	}
+	.take:disabled {
+		opacity: 0.4;
+	}
 	.pick {
 		display: flex;
 		flex-wrap: wrap;
@@ -209,11 +247,12 @@
 	}
 	.kid {
 		height: 72px;
+		box-sizing: border-box;
 		display: flex;
 		align-items: center;
 		gap: 12px;
 		padding: 0 22px 0 8px;
-		border: 2px solid var(--line);
+		border: 3px solid var(--line);
 		border-radius: 36px;
 		background: var(--card);
 		font-size: 26px;
