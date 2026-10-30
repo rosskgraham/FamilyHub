@@ -130,6 +130,8 @@
 <style>
 	.grabs {
 		flex: 1;
+		/* Stays inside its column, so a long name shortens rather than widening the panel. */
+		min-width: 0;
 		min-height: 0;
 		box-sizing: border-box;
 		display: flex;
