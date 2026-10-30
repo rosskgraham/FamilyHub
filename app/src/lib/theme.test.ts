@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { sleepPalette } from './sleep.ts';
 import { memberColours, palettes, themeAt, themes, type Palette } from './theme.ts';
 
 describe('themeAt', () => {
@@ -78,5 +79,23 @@ describe.each(themes)('the %s theme', (theme) => {
 
 	it.each(shapes(palette))('has visible shapes: %s', (_, fg, bg) => {
 		expect(contrast(fg, bg)).toBeGreaterThanOrEqual(3);
+	});
+});
+
+describe('Sleep', () => {
+	const p = sleepPalette;
+
+	it.each([
+		['clock', p.clock],
+		['date', p.text],
+		['next Event', p.event],
+		['hint', p.hint]
+	])('has readable text: %s', (_, fg) => {
+		expect(contrast(fg, p.bg)).toBeGreaterThanOrEqual(4.5);
+	});
+
+	// Sleep draws Members in their Evening colours.
+	it.each(memberColours)('has a visible %s badge', (m) => {
+		expect(contrast(palettes.evening.members[m].solid, p.bg)).toBeGreaterThanOrEqual(3);
 	});
 });

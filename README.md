@@ -44,8 +44,8 @@ The plan is in [docs/requirements.md](docs/requirements.md). Progress so far:
 | ✅ | Real weather (Open-Meteo) | Done, on a PC |
 | ✅ | Tests and CI: unit tests, screenshot tests, GitHub Actions | Done |
 | ✅ | Chore chart, first slice: kids tick off their Chores for Stars ([design](design/mockups/chores/notes.md)) | Done, on a PC |
-| ⬜ | Overnight sleep, and a Day and Evening theme | Themes done, on a PC; Sleep next |
-| ⬜ | Offline resilience | |
+| ✅ | Overnight sleep, and a Day and Evening theme | Done, on a PC |
+| ⬜ | Offline resilience | Next |
 | ⬜ | A versioned release built on every merge | |
 | ⬜ | A Raspberry Pi set up from scripts, showing the Hub full-screen | |
 | ⬜ | On the kitchen wall: **v1** | |

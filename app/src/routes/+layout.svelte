@@ -8,7 +8,11 @@
 	import favicon from '#lib/assets/favicon.svg';
 	import Header from '#lib/components/Header.svelte';
 	import NavBar from '#lib/components/NavBar.svelte';
+	import Sleep from '#lib/components/Sleep.svelte';
+	import { clock } from '#lib/clock.svelte.ts';
+	import { isAsleep, sleepPalette } from '#lib/sleep.ts';
 	import { cssVariables, palettes } from '#lib/theme.ts';
+	import { browser } from '$app/env';
 	import { invalidateAll } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import type { LayoutProps } from './$types';
@@ -24,6 +28,15 @@
 	const left = $derived((innerWidth - WIDTH * scale) / 2);
 	const top = $derived((innerHeight - HEIGHT * scale) / 2);
 
+	// Overnight the Hub sleeps until it's touched, and goes back to Sleep two minutes after the last touch.
+	// Only in the browser, which has the real clock and the touches.
+	let lastTouch: Date | null = $state(null);
+	const asleep = $derived(browser && isAsleep(clock.now, lastTouch));
+	const theme = $derived(asleep ? 'evening' : data.theme);
+	function touched() {
+		if (!asleep) lastTouch = new Date();
+	}
+
 	// Check for changes every minute.
 	onMount(() => {
 		const timer = setInterval(() => invalidateAll(), 60_000);
@@ -36,14 +49,17 @@
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
-<svelte:window bind:innerWidth bind:innerHeight />
+<svelte:window bind:innerWidth bind:innerHeight onpointerdowncapture={touched} />
 
 <!-- The theme changes within a minute of sunset or sunrise, when the page next checks for changes. -->
-<div class="hub {data.theme}" style={cssVariables(palettes[data.theme])}>
+<div class="hub {theme}" style={cssVariables(palettes[theme])} style:background={asleep ? sleepPalette.bg : null}>
 	<div class="stage" style:transform="translate({left}px, {top}px) scale({scale})">
 		<Header weather={data.weather} />
 		<main>{@render children()}</main>
 		<NavBar />
+		{#if asleep}
+			<Sleep events={data.sleep.events} owners={data.sleep.owners} onwake={() => (lastTouch = new Date())} />
+		{/if}
 	</div>
 </div>
 
