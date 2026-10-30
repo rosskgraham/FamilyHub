@@ -14,6 +14,12 @@ test('chores view', async ({ page }) => {
 	await expect(page).toHaveScreenshot('chores.png');
 });
 
+test('chores view in the Evening theme', async ({ page }) => {
+	await page.goto('/chores?theme=evening');
+	await page.evaluate(() => document.fonts.ready);
+	await expect(page).toHaveScreenshot('chores-evening.png');
+});
+
 test('finishing a Routine celebrates it', async ({ page }) => {
 	await page.goto('/chores');
 	const maya = page.getByRole('region', { name: 'Maya’s Chores' });

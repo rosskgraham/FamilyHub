@@ -1,14 +1,5 @@
-/* Day theme, from the mockups. The Evening theme comes later. */
+/* The colours come from the theme (src/lib/theme.ts), set on the page's outermost element. */
 :root {
-	--bg: #f3f5f8;
-	--card: #ffffff;
-	--ink: #161b22;
-	--dim: #4a5565;
-	--line: #c3cbd7;
-	--soft: #edf0f5;
-	--segment: #e3e8f0;
-	--past: #e6eaf1;
-	--past-head: #d5dbe5;
 	--font: 'Figtree', system-ui, sans-serif;
 }
 
@@ -17,8 +8,6 @@ body {
 	margin: 0;
 	height: 100%;
 	overflow: hidden;
-	background: var(--bg);
-	color: var(--ink);
 	font-family: var(--font);
 }
 

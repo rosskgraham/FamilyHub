@@ -122,7 +122,7 @@
 		margin: 0;
 		font-size: 22px;
 		font-weight: 600;
-		color: #a3201a;
+		color: var(--problem);
 	}
 	ul {
 		flex: 1;
@@ -171,7 +171,7 @@
 		gap: 4px;
 		font-size: 22px;
 		font-weight: 700;
-		color: #5c3d00;
+		color: var(--star-fg);
 	}
 	.take,
 	.by,

@@ -113,7 +113,7 @@
 					{#each fit.timed as event (event.id)}
 						{@const owner = data.owners[event.owner]}
 						<div class="chip" style:height="{CHIP}px" style:background={owner.bg} style:color={owner.fg}>
-							<span class="tag" style:background={owner.solid}>{owner.initial}</span>
+							<span class="tag" style:background={owner.solid} style:color={owner.on}>{owner.initial}</span>
 							<span class="chip-text"><b class="tabular">{formatTime(new Date(event.start))}</b> {event.title}</span>
 						</div>
 					{/each}
@@ -155,8 +155,8 @@
 		gap: 24px;
 		padding: 0 32px;
 		border-radius: 28px;
-		background: var(--ink);
-		color: #ffffff;
+		background: var(--hero);
+		color: var(--on-hero);
 	}
 	.who {
 		min-width: 0;
@@ -169,7 +169,7 @@
 		font-weight: 700;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
-		color: #aeb8c7;
+		color: var(--hero-dim);
 	}
 	/* Two lines at most, so a long title stays inside the 168px card. */
 	.title {
@@ -288,7 +288,6 @@
 		flex: none;
 		padding: 1px 8px;
 		border-radius: 10px;
-		color: #ffffff;
 		font-size: 16px;
 		font-weight: 700;
 	}

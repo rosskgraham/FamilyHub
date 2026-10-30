@@ -13,6 +13,7 @@
 	style:height="{size}px"
 	style:font-size="{fontSize}px"
 	style:background={owner.solid}
+	style:color={owner.on}
 	title={owner.name}>{owner.initial}</span
 >
 
@@ -20,7 +21,6 @@
 	.badge {
 		flex: none;
 		border-radius: 50%;
-		color: #ffffff;
 		font-weight: 700;
 		display: flex;
 		align-items: center;

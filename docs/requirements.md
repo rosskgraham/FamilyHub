@@ -58,7 +58,7 @@ Alex, Sam, Maya and Leo. Everyone sees every Event and can use every Quick actio
 
 ### Look and locale
 
-- Day theme until sunset, Evening theme after, with sunset times from Open-Meteo.
+- Day theme from sunrise until sunset, Evening theme after, with sunrise and sunset times from Open-Meteo.
 - UK time zone, 24-hour clock, British date formats and English, °C, weeks start on Monday.
 
 ### Legibility (tested)

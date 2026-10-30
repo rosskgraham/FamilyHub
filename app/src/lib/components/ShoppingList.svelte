@@ -159,7 +159,7 @@
 					>
 						<span class="mark">
 							{#if item.tickedOff}
-								<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+								<svg width="26" height="26" viewBox="0 0 24 24" fill="none" style="stroke: var(--on-ink)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
 									><polyline points="20 6 9 17 4 12" /></svg
 								>
 							{/if}
@@ -223,8 +223,8 @@
 	}
 	.chip.problem,
 	.message {
-		background: #ffddb8;
-		color: #6b2e00;
+		background: var(--warn-bg);
+		color: var(--warn-fg);
 	}
 	.message {
 		flex: none;
@@ -276,7 +276,7 @@
 		flex: none;
 		box-sizing: border-box;
 		border-radius: 12px;
-		border: 3px solid #5b6676;
+		border: 3px solid var(--box);
 		background: var(--card);
 		display: flex;
 		align-items: center;
@@ -361,7 +361,7 @@
 	.primary {
 		border: 0;
 		background: var(--ink);
-		color: #ffffff;
+		color: var(--on-ink);
 	}
 	.primary:disabled {
 		opacity: 0.4;
@@ -372,7 +372,7 @@
 	}
 	.danger {
 		border: 0;
-		background: #b42318;
-		color: #ffffff;
+		background: var(--danger);
+		color: var(--on-danger);
 	}
 </style>

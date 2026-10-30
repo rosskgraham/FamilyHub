@@ -8,6 +8,7 @@
 	import favicon from '#lib/assets/favicon.svg';
 	import Header from '#lib/components/Header.svelte';
 	import NavBar from '#lib/components/NavBar.svelte';
+	import { cssVariables, palettes } from '#lib/theme.ts';
 	import { invalidateAll } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import type { LayoutProps } from './$types';
@@ -37,13 +38,26 @@
 
 <svelte:window bind:innerWidth bind:innerHeight />
 
-<div class="stage" style:transform="translate({left}px, {top}px) scale({scale})">
-	<Header weather={data.weather} />
-	<main>{@render children()}</main>
-	<NavBar />
+<!-- The theme changes within a minute of sunset or sunrise, when the page next checks for changes. -->
+<div class="hub {data.theme}" style={cssVariables(palettes[data.theme])}>
+	<div class="stage" style:transform="translate({left}px, {top}px) scale({scale})">
+		<Header weather={data.weather} />
+		<main>{@render children()}</main>
+		<NavBar />
+	</div>
 </div>
 
 <style>
+	.hub {
+		position: fixed;
+		inset: 0;
+		background: var(--bg);
+		color: var(--ink);
+		color-scheme: light;
+	}
+	.hub.evening {
+		color-scheme: dark;
+	}
 	.stage {
 		position: absolute;
 		left: 0;

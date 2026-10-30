@@ -32,7 +32,7 @@ describe('household', () => {
 			{ id: 'mary-ann', name: 'Mary Ann', colour: 'green', initial: 'MA' }
 		]);
 		expect(Object.keys(result)).toEqual(['tom', 'mary-ann', 'everyone']);
-		expect(result.tom).toMatchObject({ initial: 'T', solid: '#2456C9' });
+		expect(result.tom).toMatchObject({ initial: 'T', solid: 'var(--blue-solid)' });
 		expect(result['mary-ann']!.initial).toBe('MA');
 		expect(result.everyone!.initial).toBe('All');
 	});
