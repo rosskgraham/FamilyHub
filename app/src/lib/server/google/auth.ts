@@ -10,11 +10,23 @@ const SCOPES = [
 const AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const TOKEN_FILE = 'google-token.json';
+// A request that hangs is as good as none, and holds up the page while it waits.
+const TIMEOUT_MS = 10_000;
 
 /** Google has ended the Hub's sign-in, or it never signed in. */
 export class SignInNeeded extends Error {
 	constructor() {
 		super('Google sign-in needed');
+	}
+}
+
+/** Google answered, but turned the request down, for example because the item is gone. Trying again won't help. */
+export class GoogleRefused extends Error {
+	readonly status: number;
+
+	constructor(status: number, message: string) {
+		super(message);
+		this.status = status;
 	}
 }
 
@@ -63,7 +75,8 @@ async function requestToken(body: Record<string, string>): Promise<TokenResponse
 	const response = await fetch(TOKEN_URL, {
 		method: 'POST',
 		headers: { 'content-type': 'application/x-www-form-urlencoded' },
-		body: new URLSearchParams({ client_id: id, client_secret: secret, ...body })
+		body: new URLSearchParams({ client_id: id, client_secret: secret, ...body }),
+		signal: AbortSignal.timeout(TIMEOUT_MS)
 	});
 	if (response.ok) return (await response.json()) as TokenResponse;
 	const problem = (await response.json().catch(() => ({}))) as { error?: string };
@@ -108,7 +121,8 @@ export async function googleRequest<T>(
 		const response = await fetch(url, {
 			method,
 			headers,
-			body: body === undefined ? undefined : JSON.stringify(body)
+			body: body === undefined ? undefined : JSON.stringify(body),
+			signal: AbortSignal.timeout(TIMEOUT_MS)
 		});
 		if (response.ok) return (response.status === 204 ? undefined : await response.json()) as T;
 		// An access token Google no longer accepts: forget it and try once more.
@@ -116,7 +130,12 @@ export async function googleRequest<T>(
 			cached = null;
 			continue;
 		}
-		throw new Error(`Google API request failed: ${response.status} ${method} ${url.split('?')[0]}`);
+		const message = `Google API request failed: ${response.status} ${method} ${url.split('?')[0]}`;
+		// 408 and 429 mean try later, like a server error.
+		if (response.status >= 400 && response.status < 500 && response.status !== 408 && response.status !== 429) {
+			throw new GoogleRefused(response.status, message);
+		}
+		throw new Error(message);
 	}
 	throw new SignInNeeded();
 }

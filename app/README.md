@@ -15,6 +15,7 @@ Then open <http://localhost:5173>. The screen is designed at 1920×1080 and scal
 - `/` is the Today view.
 - `/week` is the Week view. `?week=1` shows next week, and `?week=-1` last week.
 - `?theme=evening` or `?theme=day` on any page shows that theme whatever the time. Otherwise the Day theme shows from sunrise to sunset and the Evening theme after.
+- After two minutes without a touch, the Hub goes back to the Today view, except from the setup page.
 - From 22:00 to 06:30 the Hub shows Sleep: a dim clock and the next Event. A tap wakes it, and it goes back to Sleep two minutes after the last touch. The schedule is `sleepSchedule` in `src/lib/sleep.ts`, so changing it is a pull request.
 
 Until it's set up, it shows sample Events (a typical week repeated for every week) and a sample Shopping list kept in memory, which resets when the app restarts. The weather is a sample until home is set.
@@ -30,7 +31,13 @@ To change a Calendar later, go back to <http://localhost:5173/setup>. Changes to
 
 The corner then shows when the Calendars last updated. It warns if the Hub is offline or Google needs it to sign in again (weekly while the Google app is in Testing).
 
-The sign-in and the Calendar choices are kept in `app/data/`, which Git ignores. Delete that folder to start again. Set `CALENDAR_SOURCE=sample` in `app/.env` to show sample Events, a sample Shopping list and sample weather even when Google and home are set up.
+The sign-in and the Calendar choices are kept in `app/data/`, which Git ignores. Delete that folder to start again.
+
+### When Google can't be reached
+
+- The Hub shows the last Events and Shopping list it loaded, and the bottom bar says "Offline · last updated 14:02". They're kept in `app/data/` too, so they still show after a restart, and on a new day the Calendar is pieced together from the days it loaded before. To spare the Pi's SD card, they're written when they change and otherwise hourly.
+- Shopping changes wait in `app/data/shopping-queue.json` and show on screen straight away, with "Offline · 2 to send" on the list. They're sent in order once Google answers. One Google turns down, such as ticking off an item someone deleted on their phone, is dropped.
+- Google requests give up after 10 seconds, so a dead connection never holds up the screen. Set `CALENDAR_SOURCE=sample` in `app/.env` to show sample Events, a sample Shopping list and sample weather even when Google and home are set up.
 
 ## Show the real weather
 
@@ -76,10 +83,10 @@ GitHub Actions runs the type check, the unit tests and the screenshot tests on e
 - `src/lib/theme.ts`: the Day and Evening themes, and when each shows.
 - `src/lib/sleep.ts`: the Sleep schedule, and whether the Hub is asleep. `src/lib/components/Sleep.svelte` is the Sleep screen.
 - `src/lib/calendar.ts`: the Event type and grouping Events by day.
-- `src/lib/server/calendar/`: where Events come from. `google.ts` reads Google Calendar, `fake.ts` is the sample week, and `index.ts` picks one and keeps the last good result for when Google can't be reached.
+- `src/lib/server/calendar/`: where Events come from. `google.ts` reads Google Calendar, `fake.ts` is the sample week, `index.ts` picks one, and `cache.ts` keeps the last good Events for when Google can't be reached.
 - `src/lib/server/google/auth.ts`: signing in to Google and keeping the sign-in fresh.
 - `src/routes/setup/`: signing in, choosing whose each Calendar is, and choosing the Shopping list.
-- `src/lib/server/shopping/`: where the Shopping list comes from. `google.ts` reads and changes Google Tasks, `fake.ts` is the sample list.
+- `src/lib/server/shopping/`: where the Shopping list comes from. `google.ts` reads and changes Google Tasks, `fake.ts` is the sample list, and `queue.ts` holds changes made while Google can't be reached.
 - `src/lib/components/ShoppingList.svelte`: the list on the Today view and in the Shopping section, with ticking off, adding and removing.
 - `src/routes/api/shopping/`: the endpoint the screen calls to change the list.
 - `src/env.ts`: the environment variables the app reads.

@@ -1,10 +1,11 @@
 import { CALENDAR_SOURCE } from '$app/env/private';
 import type { CalendarEvent, CalendarStatus } from '#lib/calendar.ts';
 import { sampleHousehold, type Household } from '#lib/household.ts';
-import type { DayKey } from '#lib/time.ts';
+import { dayKey, type DayKey } from '#lib/time.ts';
 import { isConfigured, isSignedIn, SignInNeeded } from '../google/auth.ts';
 import { configuredHousehold } from '../household.ts';
 import { readSettings } from '../settings.ts';
+import { fromCache, readCache, saveRange } from './cache.ts';
 import { fakeCalendar } from './fake.ts';
 import { googleCalendar } from './google.ts';
 
@@ -14,9 +15,6 @@ export interface CalendarResult {
 	/** Who the Events belong to: the made-up Household for sample Events. */
 	household: Household;
 }
-
-// The last good answer for each range, shown if Google can't be reached.
-const lastGood = new Map<string, { events: CalendarEvent[]; at: string }>();
 
 /**
  * Events from Google once the Hub is signed in and set up, otherwise sample Events.
@@ -37,19 +35,19 @@ export async function loadCalendar(from: DayKey, to: DayKey): Promise<CalendarRe
 		};
 	}
 
-	const range = `${from}/${to}`;
 	try {
 		const events = await googleCalendar(calendars).listEvents(from, to);
 		const at = new Date().toISOString();
-		lastGood.set(range, { events, at });
+		await saveRange(from, to, events, at, dayKey(new Date()));
 		return { events, status: { kind: 'live', updatedAt: at }, household };
 	} catch (e) {
 		const reason = e instanceof SignInNeeded ? 'sign-in' : 'offline';
 		if (reason === 'offline') console.error('Calendar sync failed:', e);
-		const last = lastGood.get(range);
+		// The last good answer, shown if Google can't be reached.
+		const last = fromCache(await readCache(), from, to);
 		return {
-			events: last?.events ?? [],
-			status: { kind: 'stale', reason, updatedAt: last?.at ?? null },
+			events: last.events,
+			status: { kind: 'stale', reason, updatedAt: last.at },
 			household
 		};
 	}

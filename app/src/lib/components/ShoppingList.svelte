@@ -57,7 +57,7 @@
 				problem =
 					response.status === 401
 						? 'Google needs signing in again.'
-						: 'Couldn’t reach Google. Try again.';
+						: 'Google didn’t take that change. Try again.';
 				return false;
 			}
 			await invalidateAll();
@@ -124,7 +124,7 @@
 		{#if status.kind === 'stale' && status.reason === 'sign-in'}
 			<a class="chip problem" href="/setup">Sign in needed</a>
 		{:else if status.kind === 'stale'}
-			<span class="chip problem">Offline</span>
+			<span class="chip problem">{status.waiting > 0 ? `Offline · ${status.waiting} to send` : 'Offline'}</span>
 		{:else}
 			<span class="chip">{toGet} to get</span>
 		{/if}
