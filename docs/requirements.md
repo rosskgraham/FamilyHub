@@ -15,7 +15,7 @@ Alex, Sam, Maya and Leo. Everyone sees every Event and can use every Quick actio
 ## Hardware
 
 - Raspberry Pi 5 running the Hub full-screen in a browser ([ADR 0001](adr/0001-web-app-on-raspberry-pi.md)).
-- 15.6″ 1920×1080 touchscreen, landscape, wall-mounted near a socket, read from 1–3 metres. It must take touch over USB, have built-in speakers and VESA holes, and power its backlight down when the Pi stops sending a picture. Sleep behaviour is tested on the bench before anything is mounted.
+- A 1920×1080 touchscreen, landscape, wall-mounted near a socket, read from 1–3 metres. Provisionally a 21.5″ Waveshare capacitive touchscreen (519 × 301 mm), not bought yet: landscape, it fits the 600 mm-wide wall it's planned for. It must take touch over USB, have built-in speakers and VESA holes, and power its backlight down when the Pi stops sending a picture. Sleep behaviour is tested on the bench before anything is mounted.
 - Sound comes from the screen's speakers over HDMI.
 - Motion sensor wired to the Pi's GPIO pins (after v1).
 
