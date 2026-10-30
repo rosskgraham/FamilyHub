@@ -60,7 +60,7 @@ v1 is done when it's been on the wall for two weeks and nobody goes back to chec
 
 - **App:** [SvelteKit](https://svelte.dev/docs/kit) with strict TypeScript, providing both the screen and a small server behind it, in [`app/`](app/README.md).
 - **Data:** Google Calendar (read-only) and Google Tasks, signed in as the Household's one Google account. Weather from Open-Meteo.
-- **Hardware:** a Raspberry Pi 5 with a 15.6″ 1080p touchscreen, running the app full-screen in a browser ([why a Pi](docs/adr/0001-web-app-on-raspberry-pi.md)).
+- **Hardware:** a Raspberry Pi 5 with a 1080p touchscreen, provisionally a 21.5″ Waveshare (not bought yet), running the app full-screen in a browser ([why a Pi](docs/adr/0001-web-app-on-raspberry-pi.md)).
 - **Hosting:** none. Everything runs on the Pi and nothing is reachable from the internet ([ADR 0002](docs/adr/0002-everything-runs-on-the-pi.md)). The Pi will pull its own releases and roll back if one is unhealthy ([ADR 0004](docs/adr/0004-pi-pulls-releases.md)).
 - **Data:** Chores, the Hub's only data of its own, live in SQLite on the Pi, backed up nightly to Google Drive ([ADR 0006](docs/adr/0006-hub-owned-data-in-sqlite.md)).
 - **Monitoring:** OpenTelemetry to Azure Application Insights, with anything personal stripped before it leaves the house ([ADR 0005](docs/adr/0005-telemetry-via-otel-collector-to-app-insights.md)).
