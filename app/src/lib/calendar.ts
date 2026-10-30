@@ -31,3 +31,10 @@ export function eventsOn(events: CalendarEvent[], key: DayKey): DayEvents {
 			.sort((a, b) => a.start.localeCompare(b.start))
 	};
 }
+
+/** The next timed Event to start after `now`, if any. */
+export function nextEvent(events: CalendarEvent[], now: Date): CalendarEvent | undefined {
+	return events
+		.filter((e) => !e.allDay && new Date(e.start) > now)
+		.sort((a, b) => a.start.localeCompare(b.start))[0];
+}

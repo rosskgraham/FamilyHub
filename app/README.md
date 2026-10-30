@@ -15,6 +15,7 @@ Then open <http://localhost:5173>. The screen is designed at 1920×1080 and scal
 - `/` is the Today view.
 - `/week` is the Week view. `?week=1` shows next week, and `?week=-1` last week.
 - `?theme=evening` or `?theme=day` on any page shows that theme whatever the time. Otherwise the Day theme shows from sunrise to sunset and the Evening theme after.
+- From 22:00 to 06:30 the Hub shows Sleep: a dim clock and the next Event. A tap wakes it, and it goes back to Sleep two minutes after the last touch. The schedule is `sleepSchedule` in `src/lib/sleep.ts`, so changing it is a pull request.
 
 Until it's set up, it shows sample Events (a typical week repeated for every week) and a sample Shopping list kept in memory, which resets when the app restarts. The weather is a sample until home is set.
 
@@ -57,7 +58,7 @@ npm test
 
 ## Screenshot tests
 
-Playwright takes a screenshot of each view, in the Day theme and the Evening theme, and compares it with the one in `app/e2e/__screenshots__/`. It uses sample data and pretends it's 08:15 on Wednesday 28 October 2026, whatever is in `app/.env`. Screenshots differ slightly between operating systems, so they're always taken in the Playwright Linux image, which needs Docker running:
+Playwright takes a screenshot of each view, in the Day theme and the Evening theme, and of Sleep, and compares it with the one in `app/e2e/__screenshots__/`. It uses sample data and pretends it's 08:15 on Wednesday 28 October 2026, whatever is in `app/.env`. Screenshots differ slightly between operating systems, so they're always taken in the Playwright Linux image, which needs Docker running:
 
 ```
 npm run test:screenshots          # compare with the saved screenshots
@@ -72,6 +73,8 @@ GitHub Actions runs the type check, the unit tests and the screenshot tests on e
 
 - `src/lib/time.ts`: UK time handling. Everything is shown in Europe/London time, whatever the machine's own time zone.
 - `src/lib/household.ts`: Members and their colours.
+- `src/lib/theme.ts`: the Day and Evening themes, and when each shows.
+- `src/lib/sleep.ts`: the Sleep schedule, and whether the Hub is asleep. `src/lib/components/Sleep.svelte` is the Sleep screen.
 - `src/lib/calendar.ts`: the Event type and grouping Events by day.
 - `src/lib/server/calendar/`: where Events come from. `google.ts` reads Google Calendar, `fake.ts` is the sample week, and `index.ts` picks one and keeps the last good result for when Google can't be reached.
 - `src/lib/server/google/auth.ts`: signing in to Google and keeping the sign-in fresh.
