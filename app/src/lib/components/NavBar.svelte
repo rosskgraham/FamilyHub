@@ -59,7 +59,7 @@
 		justify-content: center;
 	}
 	nav a[aria-current='page'] {
-		background: var(--card);
+		background: var(--selected);
 		font-weight: 700;
 	}
 	.status {
@@ -77,7 +77,7 @@
 		border: 2px dashed var(--line);
 	}
 	.problem {
-		background: #ffddb8;
-		color: #6b2e00;
+		background: var(--warn-bg);
+		color: var(--warn-fg);
 	}
 </style>

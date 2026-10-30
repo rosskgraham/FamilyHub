@@ -80,8 +80,8 @@
 	.problem {
 		padding: 16px 24px;
 		border-radius: 16px;
-		background: #ffddb8;
-		color: #6b2e00;
+		background: var(--warn-bg);
+		color: var(--warn-fg);
 		font-weight: 600;
 	}
 	code {
@@ -130,7 +130,7 @@
 	.primary {
 		border: 0;
 		background: var(--ink);
-		color: #ffffff;
+		color: var(--on-ink);
 	}
 	.quiet {
 		border: 2px solid var(--line);

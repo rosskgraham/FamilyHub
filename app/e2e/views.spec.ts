@@ -21,4 +21,11 @@ for (const { name, path } of views) {
 		await page.evaluate(() => document.fonts.ready);
 		await expect(page).toHaveScreenshot(`${name}.png`);
 	});
+
+	// The same view after sunset.
+	test(`${name} view in the Evening theme`, async ({ page }) => {
+		await page.goto(`${path}${path.includes('?') ? '&' : '?'}theme=evening`);
+		await page.evaluate(() => document.fonts.ready);
+		await expect(page).toHaveScreenshot(`${name}-evening.png`);
+	});
 }

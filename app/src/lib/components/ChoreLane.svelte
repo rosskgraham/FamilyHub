@@ -86,8 +86,8 @@
 				<div class="group-head">
 					<h3>{group.routine.name}</h3>
 					{#if group.finished}
-						<span class="chip done" style:background={owner.solid}>
-							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+						<span class="chip done" style:background={owner.solid} style:color={owner.on}>
+							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" style:stroke={owner.on} stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
 							All done
 						</span>
 					{:else if group.now}
@@ -109,7 +109,7 @@
 							>
 								<span class="box" style:border-color={chore.ticked ? owner.solid : null} style:background={chore.ticked ? owner.solid : null}>
 									{#if chore.ticked}
-										<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+										<svg width="32" height="32" viewBox="0 0 24 24" fill="none" style:stroke={owner.on} stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
 									{/if}
 								</span>
 								<ChoreIcon icon={chore.icon} />
@@ -172,8 +172,8 @@
 		gap: 8px;
 		padding: 0 20px 0 14px;
 		border-radius: 28px;
-		background: #fff4d6;
-		color: #5c3d00;
+		background: var(--star-bg);
+		color: var(--star-fg);
 		font-size: 30px;
 		font-weight: 700;
 	}
@@ -181,7 +181,7 @@
 		margin: 0;
 		font-size: 22px;
 		font-weight: 600;
-		color: #a3201a;
+		color: var(--problem);
 	}
 	.group {
 		/* Shrinks, so its list scrolls, only when the lane is full. */
@@ -211,7 +211,7 @@
 		border-radius: 14px;
 		font-size: 20px;
 		font-weight: 700;
-		color: #ffffff;
+		color: var(--on-ink);
 	}
 	.now {
 		background: var(--ink);
@@ -258,9 +258,9 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		border: 3px solid #5b6676;
+		border: 3px solid var(--box);
 		border-radius: 14px;
-		background: #ffffff;
+		background: var(--card);
 	}
 	.text {
 		flex: 1;

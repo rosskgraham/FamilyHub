@@ -33,7 +33,7 @@
 		</div>
 		<h2 id="celebration-title">{routine} done, {owner.name}!</h2>
 		<p class="earned tabular"><Star size={48} />+{stars} {stars === 1 ? 'Star' : 'Stars'}</p>
-		<button class="close" style:background={owner.solid} onclick={onclose}>Nice one!</button>
+		<button class="close" style:background={owner.solid} style:color={owner.on} onclick={onclose}>Nice one!</button>
 	</div>
 </div>
 
@@ -95,7 +95,6 @@
 		padding: 0 56px;
 		border: 0;
 		border-radius: 44px;
-		color: #ffffff;
 		font-size: 36px;
 		font-weight: 700;
 	}

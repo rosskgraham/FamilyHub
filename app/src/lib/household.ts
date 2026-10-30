@@ -1,34 +1,40 @@
 // Who an Event belongs to: one Member, or Everyone for the Family calendar.
 // The real Household comes from app/household.json; sample data uses a made-up one.
+import type { MemberColours, memberColours } from './theme.ts';
+
 export type OwnerId = string;
 
 export const EVERYONE = 'everyone';
 
-export interface Owner {
+export interface Owner extends MemberColours {
 	id: OwnerId;
 	name: string;
 	initial: string;
-	/** Event background. */
-	bg: string;
-	/** Event text on `bg`. */
-	fg: string;
-	/** The badge behind the initial. */
-	solid: string;
 }
 
 export type Household = Record<OwnerId, Owner>;
 
-/** The colours a Member can have. Each pair passes WCAG AA. */
+// Each theme draws a colour differently, so a Member's colours point at the theme's CSS variables.
+function themed(colour: (typeof memberColours)[number]): MemberColours {
+	return {
+		bg: `var(--${colour}-bg)`,
+		fg: `var(--${colour}-fg)`,
+		solid: `var(--${colour}-solid)`,
+		on: `var(--${colour}-on)`
+	};
+}
+
+/** The colours a Member can have. */
 export const colours = {
-	blue: { bg: '#D6E4FF', fg: '#0F2F78', solid: '#2456C9' },
-	orange: { bg: '#FFDDB8', fg: '#6B2E00', solid: '#B85200' },
-	green: { bg: '#BDEBDD', fg: '#0A4136', solid: '#0B7A64' },
-	purple: { bg: '#E6D8FA', fg: '#46228A', solid: '#6C3FC4' }
+	blue: themed('blue'),
+	orange: themed('orange'),
+	green: themed('green'),
+	purple: themed('purple')
 };
 
 export type Colour = keyof typeof colours;
 
-const everyone: Owner = { id: EVERYONE, name: 'Everyone', initial: 'All', bg: '#E3E6EB', fg: '#1E2530', solid: '#4A5565' };
+const everyone: Owner = { id: EVERYONE, name: 'Everyone', initial: 'All', ...themed('everyone') };
 
 export interface MemberConfig {
 	id: string;

@@ -196,7 +196,7 @@
 	}
 	.today .head {
 		background: var(--ink);
-		color: #ffffff;
+		color: var(--on-ink);
 	}
 	.name {
 		font-size: 30px;
