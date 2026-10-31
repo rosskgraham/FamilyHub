@@ -32,6 +32,12 @@ jobs:
         run: npx playwright test
         env:
           HOME: /root
+      - name: Package a trial release, and check it starts
+        # The same as the release job below, without publishing, so a pull request shows it works.
+        run: |
+          VERSION=$(date +%Y.%m.%d).0
+          HUB_VERSION=$VERSION npm run build
+          node scripts/release.mjs $VERSION
       - name: Keep the screenshot differences
         if: failure()
         uses: actions/upload-artifact@v4
