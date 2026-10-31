@@ -42,8 +42,14 @@
 			const when = status.updatedAt ? `last updated ${time(status.updatedAt)}` : 'no prices yet';
 			return { text: `Octopus unreachable · ${when}`, problem: true };
 		}
-		if (status.kind === 'sample') return { text: 'Sample data', problem: false };
-		return energy.usageStatus.kind === 'sample' ? { text: 'Sample usage', problem: false } : null;
+		const usage = energy.usageStatus;
+		if (usage.kind === 'stale') {
+			const since = usage.updatedAt ? ` since ${time(usage.updatedAt)}` : '';
+			return { text: `Car charger not reporting${since}`, problem: true };
+		}
+		if (status.kind === 'sample' && usage.kind === 'sample') return { text: 'Sample data', problem: false };
+		if (status.kind === 'sample') return { text: 'Sample prices', problem: false };
+		return usage.kind === 'sample' ? { text: 'Sample usage', problem: false } : null;
 	});
 </script>
 
@@ -69,6 +75,9 @@
 				<div class="sub">{carText[energy.live.car]}</div>
 			{:else}
 				<div class="none">Not reporting</div>
+				{#if energy.usageStatus.kind === 'stale' && energy.usageStatus.updatedAt}
+					<div class="sub">Car charger quiet since {time(energy.usageStatus.updatedAt)}</div>
+				{/if}
 			{/if}
 		</section>
 

@@ -34,6 +34,8 @@ export default defineConfig({
 			HOME_LONGITUDE: '',
 			OCTOPUS_ACCOUNT: '',
 			OCTOPUS_API_KEY: '',
+			ZAPPI_GLO_SN: '',
+			ZAPPI_GLO_API_KEY: '',
 			HUB_NOW: NOW
 		}
 	}
