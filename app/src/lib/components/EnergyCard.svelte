@@ -16,8 +16,16 @@
 		rates,
 		slots,
 		live,
-		today
-	}: { rates: Rates | null; slots: Slot[]; live: Live | null; today: HalfHourUse[] } = $props();
+		today,
+		needsAlex
+	}: {
+		rates: Rates | null;
+		slots: Slot[];
+		live: Live | null;
+		today: HalfHourUse[];
+		/** When each sync started failing, once it's been an hour. */
+		needsAlex: { octopus: string | null; zappi: string | null };
+	} = $props();
 
 	const cheap = $derived(cheapNow(clock.now, slots));
 	// The Off-peak window never moves, so it's only worth a line when a Smart-charging slot is on or next.
@@ -29,6 +37,14 @@
 		!live ? 'Car charger not reporting' : charging ? 'Car charging' : plugged ? 'Car plugged in' : 'Car not plugged in'
 	);
 	const time = (iso: string) => formatTime(new Date(iso));
+	// A sync failing for an hour says so here, where everyone looks, instead of the slot.
+	const problem = $derived.by(() => {
+		const { octopus, zappi } = needsAlex;
+		if (octopus && zappi) return `Energy not updating since ${time(octopus < zappi ? octopus : zappi)}`;
+		if (octopus) return `Prices not updating since ${time(octopus)}`;
+		if (zappi) return `Car charger quiet since ${time(zappi)}`;
+		return null;
+	});
 </script>
 
 <!-- The Today view's glance at Energy: what the house is using, what today has cost, whether the car's plugged in,
@@ -61,7 +77,9 @@ and a Smart-charging slot when there is one. Opens the Energy Section. -->
 			<span class="dim">{spent ? 'today' : 'prices not known'}</span>
 		</span>
 	</div>
-	{#if slot}
+	{#if problem}
+		<div class="problem">{problem} · ask Alex</div>
+	{:else if slot}
 		<div class="cheap">
 			<span>Smart-charging slot</span>
 			<span class="tabular">{slot === cheap.current ? `now until ${time(slot.to)}` : `${time(slot.from)}–${time(slot.to)}`}</span>
@@ -146,6 +164,18 @@ and a Smart-charging slot when there is one. Opens the Energy Section. -->
 		border-radius: 18px;
 		background: var(--off-peak-bg);
 		color: var(--cheap-fg);
+		font-size: 24px;
+		font-weight: 700;
+	}
+	.problem {
+		height: 64px;
+		box-sizing: border-box;
+		display: flex;
+		align-items: center;
+		padding: 0 18px;
+		border-radius: 18px;
+		background: var(--warn-bg);
+		color: var(--warn-fg);
 		font-size: 24px;
 		font-weight: 700;
 	}
