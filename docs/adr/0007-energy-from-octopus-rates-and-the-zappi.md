@@ -17,7 +17,7 @@ Because the myenergi API is unofficial, it can change or stop without notice, an
 
 - Everything myenergi-specific sits behind one module, tested against recorded responses with the serial and key removed. A change means fixing one module.
 - Rates never depend on myenergi. If the Zappi stops reporting, the Energy Section still shows the price now, the next cheap time and the Best time to run, and replaces Live demand with a plain "Car charger not reporting since 14:02".
-- A failed Octopus or myenergi sync for over an hour alerts Alex, the same as a failed Google sync.
+- A failed Octopus or myenergi sync for over an hour says so on the Today view's Energy card, "Prices not updating since 14:02 · ask Alex", and logs one line for the run of failures. Once the Hub has telemetry (ADR 0005), that line alerts Alex, the same as a failed Google sync.
 
 The Hub only reads. It never changes the Zappi's mode, starts charging or asks Octopus for a slot; Octopus and the myenergi app keep doing that.
 

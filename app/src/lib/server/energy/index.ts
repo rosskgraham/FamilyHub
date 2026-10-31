@@ -3,12 +3,16 @@ import type { HalfHourUse, Live, OctopusStatus, Slot, UsageStatus } from '#lib/e
 import { addDays, dayKey, ukTime } from '#lib/time.ts';
 import { now } from '../now.ts';
 import { readJson, writeJson } from '../store.ts';
+import { Failing } from './failing.ts';
 import { Myenergi, toHalfHours, utcDays } from './myenergi.ts';
 import { merge, Octopus, UnsupportedTariff, type Tariff } from './octopus.ts';
 import { sampleSlots, sampleTariff, sampleUsage } from './sample.ts';
 import { openUsageStore, type UsageStore } from './usage-store.ts';
 
-export interface EnergyResult extends Rates, Usage {}
+export interface EnergyResult extends Rates, Usage {
+	/** When each sync started failing, once it's been failing for an hour. */
+	needsAlex: { octopus: string | null; zappi: string | null };
+}
 
 interface Rates {
 	/** Null when Octopus has never answered, or the account isn't on Intelligent Octopus Go. */
@@ -31,7 +35,7 @@ interface Usage {
 export async function loadEnergy(): Promise<EnergyResult> {
 	const at = now();
 	const [rates, usage] = await Promise.all([loadRates(at), loadUsage(at)]);
-	return { ...rates, ...usage };
+	return { ...rates, ...usage, needsAlex: { octopus: octopusFailing.needsAlex(), zappi: zappiFailing.needsAlex() } };
 }
 
 interface Kept<T> {
@@ -46,7 +50,9 @@ function due(kept: Kept<unknown>, ms: number, at: Date): boolean {
 // The rates are fixed for the tariff's term, so once a day is enough to notice a renewal.
 const TARIFF_MS = 24 * 3600_000;
 // Octopus reschedules slots through the day.
+// Octopus reschedules slots through the day, but only while the car is plugged in; unplugged, hourly is enough.
 const SLOTS_MS = 10 * 60_000;
+const SLOTS_UNPLUGGED_MS = 60 * 60_000;
 // Kept on disk so the Section survives a restart without internet, and past slots still cost yesterday.
 const TARIFF_FILE = 'energy-tariff.json';
 const SLOTS_FILE = 'energy-slots.json';
@@ -56,6 +62,7 @@ let tariff: Kept<Tariff> | null | undefined;
 let slots: Kept<Slot[]> | null | undefined;
 // The tariff's name, when it isn't one the Hub knows. Asked about again with the tariff, in case it changes.
 let unsupported: Kept<string> | null = null;
+const octopusFailing = new Failing('Octopus');
 
 /**
  * The tariff and Smart-charging slots from the Household's Octopus account once OCTOPUS_ACCOUNT and OCTOPUS_API_KEY are
@@ -82,11 +89,14 @@ async function loadRates(at: Date): Promise<Rates> {
 			unsupported = null;
 			await writeJson(TARIFF_FILE, tariff);
 		}
-		if (!slots || due(slots, SLOTS_MS, at)) {
+		// Until the Zappi has said, assume the car might be plugged in.
+		const unplugged = live?.value.car === 'unplugged';
+		if (!slots || due(slots, unplugged ? SLOTS_UNPLUGGED_MS : SLOTS_MS, at)) {
 			const fetched = await octopus.slots();
 			slots = { value: recent(merge(slots?.value ?? [], fetched, at)), at: new Date().toISOString() };
 			await writeJson(SLOTS_FILE, slots);
 		}
+		octopusFailing.ok();
 		return { tariff: tariff.value, slots: slots.value, status: { kind: 'live', updatedAt: oldest()! } };
 	} catch (e) {
 		if (e instanceof UnsupportedTariff) {
@@ -94,6 +104,7 @@ async function loadRates(at: Date): Promise<Rates> {
 			return { tariff: null, slots: [], status: { kind: 'unsupported', tariff: e.tariff } };
 		}
 		console.error('Octopus fetch failed:', e instanceof Error ? e.message : e);
+		octopusFailing.failed();
 		return {
 			tariff: tariff?.value ?? null,
 			slots: recent(slots?.value ?? []),
@@ -117,6 +128,7 @@ let live: Kept<Live> | null = null;
 let historyAt = 0;
 // UTC days whose whole history is already in the store.
 const settled = new Set<string>();
+const zappiFailing = new Failing('myenergi');
 
 /**
  * House use, Car charging and Live demand from the Zappi once ZAPPI_GLO_SN and ZAPPI_GLO_API_KEY are set, otherwise
@@ -131,10 +143,12 @@ async function loadUsage(at: Date): Promise<Usage> {
 	const midnight = ukTime(dayKey(at), '00:00');
 	const since = ukTime(addDays(dayKey(at), -1), '00:00');
 
+	let failed = false;
 	if (!live || Date.now() - new Date(live.at).getTime() > LIVE_MS) {
 		try {
 			live = { value: await myenergi.live(), at: new Date().toISOString() };
 		} catch (e) {
+			failed = true;
 			console.error('myenergi status failed:', e instanceof Error ? e.message : e);
 		}
 	}
@@ -146,10 +160,13 @@ async function loadUsage(at: Date): Promise<Usage> {
 			}
 			historyAt = Date.now();
 		} catch (e) {
-			// The chart misses the latest Half-hours until the next try; the status is what says the Zappi is down.
+			// The chart misses the latest Half-hours until the next try.
+			failed = true;
 			console.error('myenergi history failed:', e instanceof Error ? e.message : e);
 		}
 	}
+	if (failed) zappiFailing.failed();
+	else zappiFailing.ok();
 
 	const fresh = live !== null && Date.now() - new Date(live.at).getTime() < LIVE_STALE_MS;
 	return {
