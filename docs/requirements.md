@@ -34,7 +34,7 @@ Alex, Sam, Maya and Leo. Everyone sees every Event and can use every Quick actio
 ### Shopping
 
 - The Shopping list is a Google Tasks list in the Household's account, replacing the Keep note ([ADR 0003](adr/0003-shopping-list-in-google-tasks.md)).
-- At the Hub: add a Shopping item with the on-screen keyboard, Tick off with a tap (struck through until midnight, so it can be undone), and Remove with a swipe or long press.
+- At the Hub: add a Shopping item with the on-screen keyboard, Tick off with a tap (struck through for 10 minutes, so it can be undone; items ticked off in the shop don't come back on the wall), and Remove with a swipe or long press.
 - Phones use the Google Tasks app, which works offline in the shop.
 - A change made in the shop appears on the Hub within 1 minute.
 
