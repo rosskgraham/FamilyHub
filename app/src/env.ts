@@ -27,6 +27,14 @@ export const variables = defineEnvVars({
 		description: 'The Octopus account’s API key, for its rates and Smart-charging slots. It can see the account and its bills: never commit it.',
 		schema: optional
 	},
+	ZAPPI_GLO_SN: {
+		description: 'The Zappi’s serial number, for its usage from myenergi. Without it and ZAPPI_GLO_API_KEY the Hub shows sample usage.',
+		schema: optional
+	},
+	ZAPPI_GLO_API_KEY: {
+		description: 'The myenergi account’s API key, from myaccount.myenergi.com. Never commit it.',
+		schema: optional
+	},
 	HUB_NOW: {
 		description: 'Pretend it is this moment (an ISO time) on the server. Only for the screenshot tests.',
 		schema: optional

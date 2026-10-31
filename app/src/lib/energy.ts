@@ -26,8 +26,11 @@ export type OctopusStatus =
 	/** The account's tariff isn't Intelligent Octopus Go, so the Hub won't guess its times. */
 	| { kind: 'unsupported'; tariff: string };
 
-/** Where the usage came from. Sample until the Hub reads the Zappi. */
-export type UsageStatus = { kind: 'sample' };
+/** Where the usage came from: made up, fresh from the Zappi, or the Zappi hasn't reported since `updatedAt`. */
+export type UsageStatus =
+	| { kind: 'sample' }
+	| { kind: 'live'; updatedAt: string }
+	| { kind: 'stale'; updatedAt: string | null };
 
 /** What the Car is doing, from the Zappi. */
 export type CarState = 'unplugged' | 'plugged' | 'charging';
