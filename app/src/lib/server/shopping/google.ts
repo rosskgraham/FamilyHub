@@ -1,4 +1,3 @@
-import { dayKey } from '#lib/time.ts';
 import { googleGet, googleRequest } from '../google/auth.ts';
 import { toShoppingItems, type GoogleTask } from './from-google.ts';
 import type { ShoppingSource } from './source.ts';
@@ -32,7 +31,7 @@ export function googleShopping(listId: string): ShoppingSource {
 			const all: GoogleTask[] = [];
 			let pageToken: string | undefined;
 			do {
-				// Completed items are hidden by default; ask for them to show today's ticks.
+				// Completed items are hidden by default; ask for them to show ones just ticked off.
 				const params = new URLSearchParams({ showCompleted: 'true', showHidden: 'true', maxResults: '100' });
 				if (pageToken) params.set('pageToken', pageToken);
 				const response = await googleGet<TasksResponse>(`${tasks}?${params}`);
@@ -40,7 +39,7 @@ export function googleShopping(listId: string): ShoppingSource {
 				pageToken = response.nextPageToken;
 			} while (pageToken);
 
-			return toShoppingItems(all, dayKey(new Date()));
+			return toShoppingItems(all, new Date());
 		},
 		async add(text) {
 			const task = await googleRequest<GoogleTask>('POST', tasks, { title: text });

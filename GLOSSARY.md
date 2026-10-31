@@ -85,7 +85,7 @@ One thing on the Shopping list, either still to get or ticked off.
 _Avoid_: Entry, product, line
 
 **Tick off**:
-Mark a Shopping item as got. It stays on the list, struck through, until the end of the day, so a mis-tap can be undone.
+Mark a Shopping item as got, at the Hub or on a phone. It stays on the list, struck through, for 10 minutes, so a mis-tap can be undone, then drops off.
 _Avoid_: Complete, check, done
 
 **Remove**:
