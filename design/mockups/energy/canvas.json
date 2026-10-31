@@ -5,14 +5,12 @@
   "launch": { "view": "canvas" },
   "pages": [],
   "boards": {
-    "Main.dc.html": { "x": 0, "y": 0, "w": 1920, "h": 1080, "title": "A · Energy, prices first (chosen)" },
-    "Usage.dc.html": { "x": 2000, "y": 0, "w": 1920, "h": 1080, "title": "B · Energy, usage first (not chosen)" },
-    "Today.dc.html": { "x": 0, "y": 1500, "w": 1920, "h": 1080, "title": "C · Today view with an Energy card" }
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1920, "h": 1080, "title": "A · Energy on Intelligent Octopus Go" },
+    "Today.dc.html": { "x": 2000, "y": 0, "w": 1920, "h": 1080, "title": "C · Today view with an Energy card" }
   },
-  "order": ["Main.dc.html", "Usage.dc.html", "Today.dc.html"],
+  "order": ["Main.dc.html", "Today.dc.html"],
   "notes": {
-    "t1": { "x": 0, "y": -260, "text": "Energy Section: two ways in, prices first or usage first", "kind": "title1", "maxW": 3920 },
-    "t2": { "x": 0, "y": 1240, "text": "A glance on the Today view", "kind": "title1", "maxW": 1920 }
+    "t1": { "x": 0, "y": -260, "text": "Energy on Intelligent Octopus Go: two fixed rates and smart-charging slots", "kind": "title1", "maxW": 3920 }
   },
   "designSystems": []
 }

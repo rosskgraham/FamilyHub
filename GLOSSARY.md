@@ -112,24 +112,24 @@ _Avoid_: Extra chore, task
 
 ### Energy
 
-**Agile rate**:
-What Octopus charges per kWh, including VAT, for one Half-hour on the Agile tariff. Rates are published a day ahead, usually by 16:00, and can go below zero.
-_Avoid_: Unit rate, tariff (the whole product), price slot
+**Peak rate / Off-peak rate**:
+The two prices per kWh, including VAT, on the Household's Intelligent Octopus Go tariff. They're fixed for the tariff's term: the Off-peak rate in the Off-peak window and Smart-charging slots, the Peak rate at all other times.
+_Avoid_: Day rate, night rate, unit rate, tariff (the whole product)
+
+**Off-peak window**:
+23:30 to 05:30 every night, when the whole house pays the Off-peak rate.
+_Avoid_: Night, cheap hours, economy
+
+**Smart-charging slot**:
+A time Octopus schedules the car to charge through the Zappi, sometimes outside the Off-peak window. While it lasts, the whole house pays the Off-peak rate.
+_Avoid_: Dispatch (Octopus's word), boost, bonus slot
 
 **Half-hour**:
-One of the periods each day is priced and measured in, starting on the hour or half past: 48 a day, or 46 and 50 when the clocks change.
+One of the periods each day is measured and costed in, starting on the hour or half past: 48 a day, or 46 and 50 when the clocks change.
 _Avoid_: Slot, period, interval
 
-**Price band**:
-Whether a Half-hour's Agile rate is Cheap (the day's cheapest quarter), Peak (its dearest quarter) or Normal. Shown in colour and always named, never by colour alone.
-_Avoid_: Tier, level
-
-**Cheap window**:
-The run of Half-hours of a given length with the lowest average Agile rate, from now until the last published rate.
-_Avoid_: Off-peak (a fixed-time tariff idea), best time, cheap slot
-
 **Hungry appliance**:
-An appliance the Hub suggests a start time for: the dishwasher, washing machine or tumble drier, each listed in the repo with how long it runs.
+An appliance the Hub suggests when to start, so it finishes while electricity is cheap: the dishwasher, washing machine or tumble drier, each listed in the repo with how long it runs.
 _Avoid_: Device, load
 
 **Live demand**:

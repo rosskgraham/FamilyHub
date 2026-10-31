@@ -1,32 +1,31 @@
 # Energy: design notes
 
-A design for an Energy Section and a Today view card. No code yet. Mockups: [`canvas.json`](canvas.json) and the `.dc.html` files here, published at https://claude.ai/artifact/Bc4q9HusqZVHkW77NC8U7H.
+A design for an Energy Section and a Today view card. Mockups: [`canvas.json`](canvas.json) and the `.dc.html` files here, published at https://claude.ai/artifact/Bc4q9HusqZVHkW77NC8U7H.
 
 ## The idea
 
-The Household is on Octopus's Agile tariff, where the price changes every Half-hour. The Hub shows what electricity costs now and later today, when to run the dishwasher or washing machine, what the house is using right now, and what each day cost, split into House use and Car charging.
+The Household is on Octopus's **Intelligent Octopus Go 12M Fixed** tariff: two prices fixed for 12 months, an Off-peak rate from 23:30 to 05:30 and a Peak rate the rest of the day. Octopus also schedules the car's charging through the Zappi, and a Smart-charging slot outside the Off-peak window makes the whole house cheap while it lasts. The Hub shows whether electricity is cheap now, when it next will be, when to run the dishwasher, washing machine and tumble drier, what the house is using right now, and what each day cost, split into House use and Car charging.
 
-## Decided (31 October 2026)
+## Decided
 
-- **An Energy Section plus a card on the Today view.**
+- **An Energy Section plus a card on the Today view** (31 October 2026).
 - **The Car's share comes from the Zappi**, not from Octopus. Octopus only sees the meter, which can't tell the car from the kettle. The car's own app (Škoda) has no official API, and the unofficial one doesn't report energy charged, so it isn't used.
-- **No Home Mini.** Live demand comes from the Zappi's grid clamp instead, so one isn't needed.
-- **The Hub only reports.** It doesn't control the Zappi or schedule charging; the Zappi's own app does that.
-- **Prices first** (board A).
-- **Price bands are relative to the day:** Cheap is the day's cheapest quarter of Half-hours, and Peak its dearest quarter.
+- **No Home Mini.** Live demand comes from the Zappi's grid clamp instead.
+- **The Hub only reports.** It doesn't control the Zappi or the car's charging; Octopus and the myenergi app do that.
 - **Costs are usage only**, without the standing charge.
-- **Hungry appliances:** the dishwasher, washing machine and tumble drier.
+- **Hungry appliances:** the dishwasher (3 hours), washing machine (1 hour) and tumble drier (2 hours).
 - **Brought forward** to milestone 11, before the Pi, to build while the hardware is on order.
+- **Intelligent Octopus Go, not Agile** (31 October 2026). The first design assumed Agile, with a price for every Half-hour. With two fixed rates, a price chart and Price bands say nothing, so the Section now shows Peak and Off-peak times, Smart-charging slots and usage instead. The Agile design is in this folder's history.
 - **How the Hub talks to Octopus and myenergi:** [ADR 0007](../../../docs/adr/0007-energy-from-octopus-rates-and-the-zappi.md).
 
 ## Where the data comes from
 
 | What | From | Key needed | How fresh |
 | --- | --- | --- | --- |
-| Agile rates | Octopus REST API, the Agile product's standard unit rates for the home region | No | Published a day ahead, usually by 16:00 |
+| Peak and Off-peak rates, and when they apply | Octopus REST API: the account's current electricity agreement, then that tariff's unit rates | Yes: account number and API key | Fixed for the term; checked daily so a renewal is picked up |
+| Smart-charging slots | Octopus GraphQL API, signed in with the same API key | Yes | Rescheduled through the day; checked every few minutes while the car is plugged in |
 | Live demand, Car status | myenergi cloud API, the Zappi's status (`cgi-jstatus-Z`) | Yes: serial and API key | About a minute |
 | House use and Car charging per minute | myenergi cloud API, the Zappi's day history (`cgi-jday-Z…`) | Yes | Minutes |
-| Metered use, for checking against the bill | Octopus REST API, the meter's consumption | Yes: account API key | Often a day late |
 
 The myenergi API is unofficial: myenergi issues the key but publishes no documentation, so the endpoints come from community work and could change without notice. A test against the Household's real account on 31 October 2026 confirmed that the zappi GLO works with it, through a virtual hub on server `s18`:
 
@@ -34,36 +33,26 @@ The myenergi API is unofficial: myenergi issues the key but publishes no documen
 - **Day history** gives one row per minute, with grid import (`imp`) and energy delivered to the car (`h1d`) in joules. There's no solar, so `exp` and `gen` are absent. House use is `imp − h1d`.
 - **A normal day returned 1,441 rows**, one more than there are minutes. Adding up must not count a minute twice, and must cope with clock-change days (23 or 25 hours).
 
-Octopus's meter readings aren't needed for v1 of Energy. They could be added later to check the Zappi's totals against the bill.
-
 ## How it works at the wall
 
-- **Rates:** today's 48 Half-hours as bars, coloured by Price band (Cheap, Normal, Peak) and labelled in a legend, so colour is never the only cue. A negative Agile rate is a bar below the line. Past Half-hours are greyed, the current one is outlined, and the Cheap window is shaded. After about 16:00 the chart runs on into tomorrow.
-- **Best time to run:** for each Hungry appliance (Dishwasher, 2 hours), the start time of the Cheap window of that length, and its average rate.
-- **Live demand:** "Using 0.8 kW", refreshed about every minute, with the Car's state when it's plugged in.
-- **Each day:** House use and Car charging in kWh and £, each costed at the Agile rate of the Half-hour it happened in.
-
-## Two layouts for the Energy Section
-
-**A · Prices first (chosen).** Three tiles (price now, using now, cheapest left today), today's prices as a chart, Best time to run, and yesterday split into House and Car.
-- Answers the daily question, "when should I run it?", at a glance from across the kitchen.
-- Yesterday's cost is enough day to day; a week view can come later.
-
-**B · Usage first (not chosen).** The last 7 days as stacked House and Car bars with each day's cost, and a smaller price-now, Rest of today and Cheapest window panel.
-- Better for seeing what the car costs and spotting a heavy day.
-- The prices get less room, and the chart is too small to pick a start time from.
+- **Price now:** Peak or Off-peak and the rate, such as "27.4p · Peak".
+- **Next cheap:** the next Smart-charging slot if one comes before 23:30, otherwise the Off-peak window, with its rate. During a cheap time, when it ends.
+- **Using now:** Live demand, refreshed about every minute, with the Car's state when it's plugged in.
+- **Today:** a bar for each Half-hour so far, House use and Car charging stacked, over a strip showing which Half-hours were Peak, Off-peak or a Smart-charging slot, and today's cost so far.
+- **Best time to run:** for each Hungry appliance, when to start it so it finishes while it's cheap: in a Smart-charging slot long enough for it, otherwise between 23:30 and 05:30 minus its run time ("23:30–02:30" for the 3-hour dishwasher).
+- **Yesterday:** House use and Car charging in kWh and £, and how much of the House use was Off-peak.
 
 ## The Today view card (board C)
 
-Above the Shopping list: the price now, Live demand, and the start and average rate of the cheapest 2 hours left today. Tapping it opens the Energy Section. The Shopping list shows 4 items and "+2 more" to make room, as with the Chores card.
+Above the Shopping list: the price now, Peak or Off-peak, and the next cheap time with its rate. Tapping it opens the Energy Section. The Shopping list shows 4 items and "+N more" to make room.
 
 ## Settings
 
-- **The Household's Octopus region and Agile product code** go in `app/.env`, because the region gives away roughly where home is.
-- **The Zappi's serial and myenergi API key** are secrets, in Azure Key Vault like the others.
+- **The Octopus account number and API key**, and **the Zappi's serial and myenergi API key**, are secrets, in Azure Key Vault like the others, and in `app/.env` on the PC.
+- **The rates and the Off-peak window aren't settings.** They come from the account's current agreement, so a renewal at new prices needs no change.
 - **Hungry appliances and how long each runs** are in the repo, so changing them is a pull request.
 
 ## Still open
 
-1. **How long each Hungry appliance runs.** The mockup's 2, 3 and 1 hours are guesses, so check the programmes actually used.
-2. **Negative prices:** besides the bar below the line, should the price-now tile say "Paid 2.1p per kWh" when it happens? It's rare, mostly windy nights and sunny weekend afternoons.
+1. **Smart-charging slots in the bill:** Octopus says the whole house pays the Off-peak rate during a slot, but owners report exceptions, such as charging beyond six hours a day. The Hub will cost slots at the Off-peak rate and say so; checking against Octopus's own meter readings could come later.
+2. **The exact GraphQL query for Smart-charging slots** is checked against the Household's account when it's built, as Octopus documents it only in its schema.

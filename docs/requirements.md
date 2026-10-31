@@ -80,7 +80,7 @@ Alex, Sam, Maya and Leo. Everyone sees every Event and can use every Quick actio
 2. **Motion sensor:** wakes the Hub on approach, and lets it sleep in the daytime when nobody's around.
 3. **Alexa:** adding Shopping items by voice.
 4. **Chores**, after its first slice (milestone 7): a lane per child of Chores grouped into Routines, ticked off at the Hub on trust. Ticks earn Stars to swap for personal Rewards; a marble goes in the family jar on each day every child finishes; streaks survive one missed day; finishing a Routine plays a chime and an animation. Design and open questions: [chores notes](../design/mockups/chores/notes.md).
-5. **Energy**, brought forward to milestone 11 while the Pi is on order: an Energy Section and a Today view card for the Household's Octopus Agile tariff. Today's Agile rates, and tomorrow's from about 16:00, in Price bands relative to the day, with the Cheap window and the best time to run the dishwasher, washing machine and tumble drier; Live demand and the Car's state from the Zappi; and each day's House use and Car charging, costed at each Half-hour's Agile rate, usage only. Read-only: the Hub never controls the Zappi ([ADR 0007](adr/0007-energy-from-octopus-rates-and-the-zappi.md)). Design and open questions: [energy notes](../design/mockups/energy/notes.md).
+5. **Energy**, brought forward to milestone 11 while the Pi is on order: an Energy Section and a Today view card for the Household's Intelligent Octopus Go tariff. The price now, Peak or Off-peak; the next cheap time, whether the Off-peak window or a Smart-charging slot; when to run the dishwasher, washing machine and tumble drier so they finish while it's cheap; Live demand and the Car's state from the Zappi; and today's and each day's House use and Car charging, each Half-hour costed at the rate it fell in, usage only. Read-only: the Hub never controls the Zappi or the car's charging ([ADR 0007](adr/0007-energy-from-octopus-rates-and-the-zappi.md)). Design and open questions: [energy notes](../design/mockups/energy/notes.md).
 
 Parked: **portrait orientation**, with the screen mounted the tall way ([mockups and open questions](../design/mockups/portrait/notes.md)). Until it's decided, the screen and mount for v1 should be able to rotate, with touch that still works rotated.
 
@@ -95,11 +95,11 @@ Out of scope: Spotify (Alexa already handles it), the Month view, and creating o
 - **Releases:** every merge to `main` builds a versioned release. The Pi pulls it, checks it's healthy, and rolls back automatically if not ([ADR 0004](adr/0004-pi-pulls-releases.md)).
 - **Pi setup:** built entirely from Ansible scripts in the repo, so a dead SD card means re-running one command. The system disk is read-only so a power cut can't damage it, with a small writable partition for the Google sign-in and the Hub's own data, a watchdog restarts the app if it crashes or hangs, security updates are automatic, and SSH is by key only.
 - **Settings:** the repo is public, so settings are split by whether they're personal.
-  - Personal settings stay out of the repo: the Household's names and colours in `app/household.json`, and home's location and Octopus region in `app/.env`. The setup scripts copy them to the Pi from Alex's PC, alongside the secrets.
+  - Personal settings stay out of the repo: the Household's names and colours in `app/household.json`, and home's location in `app/.env`. The setup scripts copy them to the Pi from Alex's PC, alongside the secrets.
   - Whose each Google Calendar is, and which Tasks list is the Shopping list, are chosen on the Hub's setup page and kept on the Hub.
   - Everything else, such as the Sleep schedule, lives in the repo, so changing it is a pull request.
   - There's no settings screen in v1 apart from the Google setup page.
-- **Secrets:** stored in Azure Key Vault (Standard tier, which costs effectively nothing). The setup scripts run from Alex's PC, read the secrets with his Azure sign-in, and place them on the Pi. The Pi holds no Azure credentials apart from the Application Insights connection string. The Google sign-in token is created on the Hub and lives only there. Energy adds the Zappi's serial and myenergi API key; Agile rates need no key. No secret is ever in the repo.
+- **Secrets:** stored in Azure Key Vault (Standard tier, which costs effectively nothing). The setup scripts run from Alex's PC, read the secrets with his Azure sign-in, and place them on the Pi. The Pi holds no Azure credentials apart from the Application Insights connection string. The Google sign-in token is created on the Hub and lives only there. Energy adds the Octopus account number and API key, and the Zappi's serial and myenergi API key. No secret is ever in the repo.
 - **Monitoring:** the app uses OpenTelemetry for traces, metrics and logs, sent through an OpenTelemetry Collector on the Pi to Azure Application Insights ([ADR 0005](adr/0005-telemetry-via-otel-collector-to-app-insights.md)). The screen's browser code reports through the server. The Collector strips Event titles, Shopping items and names before anything leaves the house, and this is tested. Alerts go from Azure Monitor to Alex when a sync has failed for over an hour or the Hub stops reporting.
 
 ## Engineering practice
@@ -127,7 +127,7 @@ FamilyHub is held to the same engineering standards as production software at wo
 8. Sleep and the Day and Evening themes, on the PC.
 9. Offline resilience.
 10. Releases: every merge to `main` builds a versioned release.
-11. Energy, on the PC: Agile rates first, as they need no key, then the Zappi.
+11. Energy, on the PC: rates and Smart-charging slots from Octopus first, then usage from the Zappi.
 12. A Pi set up from scripts, showing the Hub full-screen, pulling releases, and powering the screen down for Sleep.
 13. Mounted on the wall: **v1**.
 14. Watch.

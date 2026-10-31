@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Energy, prices first</title>
+<title>Energy on Intelligent Octopus Go</title>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -41,35 +41,37 @@ button{font-family:inherit}
 
 <div style="height: 168px; flex: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px">
 <section style="box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 0 28px; border-radius: 28px; background: #161B22; color: #FFFFFF">
-<div style="font-size: 22px; font-weight: 700; letter-spacing: 0.08em; color: #AEB8C7">PRICE NOW · UNTIL 08:30</div>
+<div style="font-size: 22px; font-weight: 700; letter-spacing: 0.08em; color: #AEB8C7">PRICE NOW · PEAK</div>
 <div style="display: flex; align-items: baseline; gap: 14px">
-<span style="font-size: 80px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums">24.2p</span>
+<span style="font-size: 80px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums">27.4p</span>
 <span style="font-size: 26px; font-weight: 600; color: #D5DBE4">per kWh</span>
 </div>
 </section>
 <section style="box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 0 28px; border-radius: 28px; background: #FFFFFF">
 <div style="font-size: 22px; font-weight: 700; letter-spacing: 0.08em; color: #4A5565">USING NOW</div>
-<div style="display: flex; align-items: baseline; gap: 14px">
-<span style="font-size: 80px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums">0.8 kW</span>
-</div>
+<div style="font-size: 80px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums">0.8 kW</div>
 <div style="font-size: 24px; font-weight: 600; color: #4A5565">Car plugged in, not charging</div>
 </section>
 <section style="box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 0 28px; border-radius: 28px; background: #D6E4FF; color: #0F2F78">
-<div style="font-size: 22px; font-weight: 700; letter-spacing: 0.08em">CHEAPEST LEFT TODAY</div>
-<div style="font-size: 56px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums">13:00–15:00</div>
-<div style="font-size: 26px; font-weight: 600">8.9p average</div>
+<div style="font-size: 22px; font-weight: 700; letter-spacing: 0.08em">NEXT CHEAP · 7.5p</div>
+<div style="font-size: 56px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums">13:00–14:30</div>
+<div style="font-size: 24px; font-weight: 600">Smart-charging slot, then 23:30</div>
 </section>
 </div>
 
 <section style="flex: 1; min-height: 0; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px; padding: 24px 28px; border-radius: 28px; background: #FFFFFF">
 <div style="display: flex; align-items: baseline; justify-content: space-between">
-<div style="font-size: 36px; font-weight: 700">Today’s prices</div>
-<div style="font-size: 24px; font-weight: 600; color: #4A5565">Tomorrow’s arrive about 16:00</div>
+<div style="font-size: 36px; font-weight: 700">Today</div>
+<div style="display: flex; align-items: baseline; gap: 12px">
+<span style="font-size: 24px; font-weight: 600; color: #4A5565">So far</span>
+<span style="font-size: 36px; font-weight: 700; font-variant-numeric: tabular-nums">£1.12</span>
 </div>
-<div style="flex: 1; min-height: 0; display: flex; align-items: flex-end; gap: 4px">
+</div>
+<div style="flex: 1; min-height: 0; display: flex; gap: 4px">
 <sc-for list="{{slots}}" as="s" hint-placeholder-count="48">
-<div style="flex: 1 1 0; min-width: 0; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; justify-content: flex-end; border-radius: 6px; background: {{s.tint}}">
-<div style="height: {{s.h}}px; box-sizing: border-box; border-radius: 6px 6px 2px 2px; background: {{s.fill}}; border: {{s.ring}}"></div>
+<div style="flex: 1 1 0; min-width: 0; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; justify-content: flex-end; border-radius: 6px; background: {{s.tint}}; border-top: 6px solid {{s.band}}">
+<div style="height: {{s.car}}px; border-radius: 6px 6px 0 0; background: #2456C9"></div>
+<div style="height: {{s.house}}px; border-radius: {{s.houseRadius}}; background: #4A5565"></div>
 </div>
 </sc-for>
 </div>
@@ -79,11 +81,11 @@ button{font-family:inherit}
 </sc-for>
 </div>
 <div style="flex: none; display: flex; align-items: center; gap: 32px; font-size: 22px; font-weight: 600; color: #4A5565">
-<span style="display: flex; align-items: center; gap: 10px"><span style="width: 22px; height: 22px; border-radius: 5px; background: #2456C9"></span>Cheap: today’s cheapest quarter</span>
-<span style="display: flex; align-items: center; gap: 10px"><span style="width: 22px; height: 22px; border-radius: 5px; background: #8A95A5"></span>Normal</span>
-<span style="display: flex; align-items: center; gap: 10px"><span style="width: 22px; height: 22px; border-radius: 5px; background: #B85200"></span>Peak: dearest quarter</span>
-<span style="display: flex; align-items: center; gap: 10px"><span style="width: 22px; height: 22px; box-sizing: border-box; border-radius: 5px; border: 3px solid #161B22; background: #FFFFFF"></span>Now</span>
-<span style="display: flex; align-items: center; gap: 10px"><span style="width: 22px; height: 22px; border-radius: 5px; background: #D6E4FF"></span>Cheapest 2 hours</span>
+<span style="display: flex; align-items: center; gap: 10px"><span style="width: 22px; height: 22px; border-radius: 5px; background: #4A5565"></span>House</span>
+<span style="display: flex; align-items: center; gap: 10px"><span style="width: 22px; height: 22px; border-radius: 5px; background: #2456C9"></span>Car</span>
+<span style="display: flex; align-items: center; gap: 10px"><span style="width: 22px; height: 22px; box-sizing: border-box; border-radius: 5px; background: #D6E4FF; border-top: 6px solid #2456C9"></span>Off-peak, 7.5p</span>
+<span style="display: flex; align-items: center; gap: 10px"><span style="width: 22px; height: 22px; box-sizing: border-box; border-radius: 5px; background: #FFFFFF; border: 2px solid #C3CBD7; border-top: 6px solid #B85200"></span>Peak, 27.4p</span>
+<span style="display: flex; align-items: center; gap: 10px"><span style="width: 22px; height: 22px; box-sizing: border-box; border-radius: 5px; background: #E6EEFF; border-top: 6px dashed #2456C9"></span>Smart-charging slot</span>
 </div>
 </section>
 
@@ -101,7 +103,7 @@ button{font-family:inherit}
 </div>
 <div style="text-align: right">
 <div style="font-size: 34px; font-weight: 700; font-variant-numeric: tabular-nums">{{d.start}}</div>
-<div style="font-size: 22px; font-weight: 600; color: #4A5565">{{d.price}}</div>
+<div style="font-size: 22px; font-weight: 600; color: #4A5565">{{d.note}}</div>
 </div>
 </div>
 </sc-for>
@@ -110,7 +112,7 @@ button{font-family:inherit}
 <section style="flex: 1; min-height: 0; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px; padding: 24px 28px; border-radius: 28px; background: #FFFFFF">
 <div style="display: flex; align-items: baseline; justify-content: space-between">
 <div style="font-size: 36px; font-weight: 700">Yesterday</div>
-<div style="font-size: 36px; font-weight: 700; font-variant-numeric: tabular-nums">£5.02</div>
+<div style="font-size: 36px; font-weight: 700; font-variant-numeric: tabular-nums">£4.36</div>
 </div>
 <div style="height: 28px; flex: none; display: flex; border-radius: 14px; overflow: hidden; margin: 4px 0">
 <div style="width: 34%; background: #4A5565"></div>
@@ -120,15 +122,15 @@ button{font-family:inherit}
 <span style="width: 22px; height: 22px; border-radius: 5px; background: #4A5565"></span>
 <span style="flex: 1; font-size: 28px; font-weight: 600">House</span>
 <span style="font-size: 26px; font-weight: 600; color: #4A5565; font-variant-numeric: tabular-nums">11.4 kWh</span>
-<span style="width: 96px; text-align: right; font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums">£2.31</span>
+<span style="width: 96px; text-align: right; font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums">£2.66</span>
 </div>
 <div style="height: 56px; display: flex; align-items: center; gap: 14px">
 <span style="width: 22px; height: 22px; border-radius: 5px; background: #2456C9"></span>
 <span style="flex: 1; font-size: 28px; font-weight: 600">Car</span>
 <span style="font-size: 26px; font-weight: 600; color: #4A5565; font-variant-numeric: tabular-nums">22.6 kWh</span>
-<span style="width: 96px; text-align: right; font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums">£2.71</span>
+<span style="width: 96px; text-align: right; font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums">£1.70</span>
 </div>
-<div style="font-size: 22px; font-weight: 600; color: #4A5565">Car charged at 12.0p average. Usage only, without the standing charge.</div>
+<div style="font-size: 22px; font-weight: 600; color: #4A5565">House 21% off-peak. Usage only, without the standing charge.</div>
 </section>
 
 </aside>
@@ -152,30 +154,30 @@ button{font-family:inherit}
 <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1920,"height":1080}}'>
 class Component extends DCLogic {
   renderVals() {
-    var prices = [14.1, 13.6, 12.9, 12.4, 11.8, 11.2, 10.9, 10.6, 10.9, 11.5, 12.8, 14.2, 17.9, 20.4, 23.1, 24.8,
-      24.2, 22.6, 20.1, 18.7, 16.9, 15.2, 13.4, 12.1, 10.8, 9.6, 8.9, 8.4, 8.7, 9.5, 11.9, 14.8,
-      29.6, 33.4, 36.2, 35.1, 31.8, 27.3, 22.4, 20.9, 19.6, 18.2, 17.4, 16.1, 15.3, 14.6, 14.0, 13.2];
-    var now = 16;
-    var sorted = prices.slice().sort(function (a, b) { return a - b; });
-    var cheap = sorted[11];
-    var peak = sorted[36];
-    var slots = prices.map(function (p, i) {
-      var fill = p <= cheap ? '#2456C9' : p >= peak ? '#B85200' : '#8A95A5';
-      if (i < now) fill = '#D3D9E2';
-      return {
-        h: Math.round(p * 9),
-        fill: fill,
-        ring: i === now ? '4px solid #161B22' : 'none',
-        tint: i >= 26 && i < 30 ? '#D6E4FF' : 'transparent',
+    // kWh per Half-hour so far today, house and car. The car charged overnight, off-peak.
+    var house = [0.18, 0.15, 0.14, 0.14, 0.13, 0.13, 0.14, 0.13, 0.13, 0.14, 0.15, 0.16, 0.32, 0.45, 0.52, 0.48, 0.21];
+    var car = [3.4, 3.4, 3.4, 3.4, 3.4, 3.4, 1.2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    var slots = [];
+    for (var i = 0; i < 48; i++) {
+      var offPeak = i < 11 || i >= 47;
+      var smart = i >= 26 && i < 29;
+      var h = i < house.length ? house[i] : 0;
+      var c = i < car.length ? car[i] : 0;
+      slots.push({
+        house: Math.round(h * 80),
+        car: Math.round(c * 80),
+        houseRadius: c > 0 ? '0' : '6px 6px 0 0',
+        tint: offPeak ? '#D6E4FF' : smart ? '#E6EEFF' : 'transparent',
+        band: offPeak || smart ? '#2456C9' : '#B85200',
         label: i % 6 === 0 ? String(i / 2).padStart(2, '0') + ':00' : ''
-      };
-    });
+      });
+    }
     return {
       slots: slots,
       devices: [
-        { name: 'Dishwasher', length: '2 hours', start: '13:00', price: '8.9p average' },
-        { name: 'Washing machine', length: '3 hours', start: '12:30', price: '9.5p average' },
-        { name: 'Tumble drier', length: '1 hour', start: '13:30', price: '8.6p average' }
+        { name: 'Dishwasher', length: '3 hours', start: '23:30–02:30', note: 'start between, off-peak' },
+        { name: 'Washing machine', length: '1 hour', start: '13:00–13:30', note: 'smart-charging slot' },
+        { name: 'Tumble drier', length: '2 hours', start: '23:30–03:30', note: 'start between, off-peak' }
       ]
     };
   }
