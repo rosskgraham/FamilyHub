@@ -10,10 +10,12 @@
 	import NavBar from '#lib/components/NavBar.svelte';
 	import Sleep from '#lib/components/Sleep.svelte';
 	import { clock } from '#lib/clock.svelte.ts';
+	import { returnsToToday } from '#lib/idle.ts';
 	import { isAsleep, sleepPalette } from '#lib/sleep.ts';
 	import { cssVariables, palettes } from '#lib/theme.ts';
 	import { browser } from '$app/env';
-	import { invalidateAll } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
+	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import type { LayoutProps } from './$types';
 
@@ -36,6 +38,14 @@
 	function touched() {
 		if (!asleep) lastTouch = new Date();
 	}
+
+	// Two minutes untouched, the Hub goes back to the Today view, keeping a `?theme=` preview.
+	const loadedAt = new Date();
+	$effect(() => {
+		if (!browser || !returnsToToday(page.url.pathname, clock.now, lastTouch ?? loadedAt)) return;
+		const theme = page.url.searchParams.get('theme');
+		goto(theme ? `/?theme=${theme}` : '/');
+	});
 
 	// Check for changes every minute.
 	onMount(() => {

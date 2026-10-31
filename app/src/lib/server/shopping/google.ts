@@ -43,7 +43,8 @@ export function googleShopping(listId: string): ShoppingSource {
 			return toShoppingItems(all, dayKey(new Date()));
 		},
 		async add(text) {
-			await googleRequest('POST', tasks, { title: text });
+			const task = await googleRequest<GoogleTask>('POST', tasks, { title: text });
+			return task.id;
 		},
 		async setTickedOff(id, tickedOff) {
 			await googleRequest(

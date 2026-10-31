@@ -34,7 +34,9 @@ export const fakeShopping: ShoppingSource = {
 		);
 	},
 	async add(text) {
-		items.unshift(item(text));
+		const added = item(text);
+		items.unshift(added);
+		return added.id;
 	},
 	async setTickedOff(id, tickedOff) {
 		const found = items.find((i) => i.id === id);

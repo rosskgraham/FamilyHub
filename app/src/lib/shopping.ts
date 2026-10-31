@@ -8,7 +8,7 @@ export interface ShoppingItem {
 export type ShoppingStatus =
 	| { kind: 'sample'; setUp: boolean }
 	| { kind: 'live'; updatedAt: string }
-	| { kind: 'stale'; reason: 'sign-in' | 'offline'; updatedAt: string | null };
+	| { kind: 'stale'; reason: 'sign-in' | 'offline'; updatedAt: string | null; /** Changes waiting to be sent. */ waiting: number };
 
 /** What the screen asks the server to change. */
 export type ShoppingChange =
