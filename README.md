@@ -12,7 +12,7 @@ FamilyHub is a personal project, built by one family for its own kitchen. Buildi
 
 - **Shows everyone's day at a glance.** It reads the Household's Google Calendars: one per person, plus a shared Family calendar. Each person has a colour and an initial, so you can tell whose an Event is from across the room.
 - **Keeps the shopping list on the wall.** Add or tick off items on the screen, and in the shop on your phone. The list lives in Google Tasks, so phones need nothing new. Tap to tick off, long-press to remove.
-- **Makes chores a game for the kids.** Each child has a lane of Chores for the morning, after school and the evening, ticks them off at the screen, and earns Stars. Bonus jobs are up for grabs for extra Stars. Finishing a Routine gets a chime and a burst of stars.
+- **Makes chores a game for the kids.** Each child has a lane of Chores for the morning, after school and the evening, ticks them off at the screen, and earns Stars. Bonus jobs are up for grabs for extra Stars, and children who do one together each get them. Finishing a Routine gets a chime and a burst of stars.
 - **Fits a busy day without scrolling.** Busy days switch to compact rows, and anything that still doesn't fit goes behind a "+N more" that opens the full day. Nothing is cut off silently.
 - **Looks after itself.** It keeps showing the last plan if the Wi-Fi drops, says when it last updated, and tells the family in plain words when it needs attention.
 - **Stays at home.** It runs on a Raspberry Pi in the kitchen, and nothing on the internet can reach it.
@@ -26,7 +26,7 @@ FamilyHub is a personal project, built by one family for its own kitchen. Buildi
 
 | Chores | Finishing a Routine |
 |---|---|
-| ![The Chores section: a lane each for Maya and Leo with their Morning Chores ticked off and their Stars, and Up for grabs beside them with the dishwasher done by Leo](docs/images/chores-view.png) | ![A celebration over the Chores section: "Morning done, Maya!" with her badge in a ring of stars and "+3 Stars"](docs/images/chores-celebration.png) |
+| ![The Chores section: a lane each for Maya and Leo with their Morning Chores ticked off and their Stars, and Up for grabs beside them with the dishwasher done by Leo and Maya together](docs/images/chores-view.png) | ![A celebration over the Chores section: "Morning done, Maya!" with her badge in a ring of stars and "+3 Stars"](docs/images/chores-celebration.png) |
 | A lane per child, with the Routine whose time it is open and the rest folded away. A tap ticks a Chore off and earns its Stars. Bonus jobs are up for grabs for whoever does them first. | Ticking off the last Chore of a Routine plays a chime and shows a burst of stars, which closes by itself. |
 
 The screenshots use the app's built-in sample week and sample Chores, and are taken by the screenshot tests. On the real Hub, the corner shows when the Calendars last updated instead of "Sample data".

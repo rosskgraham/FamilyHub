@@ -30,7 +30,7 @@ export interface Chore {
 	days?: Weekday[];
 }
 
-/** A job any child can do for extra Stars, once a day, first come. */
+/** A job any child can do for extra Stars, once a day. Children who do it together each get its Stars. */
 export interface BonusJob {
 	id: string;
 	name: string;
@@ -98,12 +98,12 @@ export function bonusOn(config: ChoreConfig, day: DayKey): BonusJob[] {
 	return config.bonus.filter((b) => b.days === undefined || b.days.includes(today));
 }
 
-/** Who has done each Bonus job on a day. */
-export function bonusDoneBy(events: ChoreEvent[], day: DayKey): Map<string, OwnerId> {
+/** Who has done each Bonus job on a day: one child, or several who did it together. */
+export function bonusDoneBy(events: ChoreEvent[], day: DayKey): Map<string, OwnerId[]> {
 	const latest = new Map<string, ChoreEvent>();
 	for (const e of events) if (e.day === day && e.routine === UP_FOR_GRABS) latest.set(`${e.child}/${e.chore}`, e);
-	const doneBy = new Map<string, OwnerId>();
-	for (const e of latest.values()) if (e.ticked && !doneBy.has(e.chore)) doneBy.set(e.chore, e.child);
+	const doneBy = new Map<string, OwnerId[]>();
+	for (const e of latest.values()) if (e.ticked) doneBy.set(e.chore, [...(doneBy.get(e.chore) ?? []), e.child]);
 	return doneBy;
 }
 
@@ -141,7 +141,8 @@ export function currentRoutine(routines: Routine[], hhmm: string): Routine | und
 
 /** A Bonus job as the Chores section shows it. */
 export interface BonusView extends Pick<BonusJob, 'id' | 'name' | 'stars'> {
-	doneBy: OwnerId | null;
+	/** Nobody yet, one child, or several who did it together. */
+	doneBy: OwnerId[];
 }
 
 /** What a child's lane shows: their Routines today, with what's ticked off. */

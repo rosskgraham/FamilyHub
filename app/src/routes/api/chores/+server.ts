@@ -15,6 +15,6 @@ function parse(body: unknown): ChoreTick | null {
 export const POST: RequestHandler = async ({ request }) => {
 	const tick = parse(await request.json().catch(() => null));
 	if (!tick) error(400, 'Not a Chore tick');
-	if (!recordTick(await choresSetup(), tick)) error(409, 'Not one of that child’s Chores today, or someone else has done it');
+	if (!recordTick(await choresSetup(), tick)) error(409, 'Not one of that child’s Chores today, or they’ve already done it');
 	return json({ ok: true });
 };

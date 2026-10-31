@@ -111,17 +111,28 @@ describe('Bonus jobs', () => {
 
 	it('belong to whoever did them that day', () => {
 		const done = bonusDoneBy([grab(WED, 'leo', 'dishwasher')], WED);
-		expect(Object.fromEntries(done)).toEqual({ dishwasher: 'leo' });
+		expect(Object.fromEntries(done)).toEqual({ dishwasher: ['leo'] });
 		expect(bonusDoneBy([grab(WED, 'leo', 'dishwasher')], THU).size).toBe(0);
 	});
 
 	it('go back up for grabs when undone', () => {
-		const events = [grab(WED, 'leo', 'dishwasher'), grab(WED, 'leo', 'dishwasher', false), grab(WED, 'maya', 'dishwasher')];
-		expect(bonusDoneBy(events, WED).get('dishwasher')).toBe('maya');
+		const events = [grab(WED, 'leo', 'dishwasher'), grab(WED, 'leo', 'dishwasher', false)];
+		expect(bonusDoneBy(events, WED).has('dishwasher')).toBe(false);
+	});
+
+	it('can be done together, by several children', () => {
+		const events = [grab(WED, 'leo', 'dishwasher'), grab(WED, 'maya', 'dishwasher')];
+		expect(bonusDoneBy(events, WED).get('dishwasher')).toEqual(['leo', 'maya']);
+		expect(bonusDoneBy([...events, grab(WED, 'leo', 'dishwasher', false)], WED).get('dishwasher')).toEqual(['maya']);
 	});
 
 	it('add to the Stars of whoever did them', () => {
 		expect(starTotals([grab(WED, 'leo', 'dishwasher'), event(WED, 'leo', 'teeth', 'morning')]).get('leo')).toBe(3);
+	});
+
+	it('give everyone who did them together the full Stars', () => {
+		const totals = starTotals([grab(WED, 'leo', 'dishwasher'), grab(WED, 'maya', 'dishwasher')]);
+		expect([totals.get('leo'), totals.get('maya')]).toEqual([2, 2]);
 	});
 
 	it('don’t count as a Routine’s Chores', () => {
