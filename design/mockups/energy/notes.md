@@ -15,7 +15,7 @@ The Household is on Octopus's Agile tariff, where the price changes every Half-h
 - **Prices first** (board A).
 - **Price bands are relative to the day:** Cheap is the day's cheapest quarter of Half-hours, and Peak its dearest quarter.
 - **Costs are usage only**, without the standing charge.
-- **Hungry appliances:** the dishwasher, washing machine and tumble drier.
+- **Hungry appliances:** the dishwasher (3 hours), washing machine (1 hour) and tumble drier (2 hours).
 - **Brought forward** to milestone 11, before the Pi, to build while the hardware is on order.
 - **How the Hub talks to Octopus and myenergi:** [ADR 0007](../../../docs/adr/0007-energy-from-octopus-rates-and-the-zappi.md).
 
@@ -65,5 +65,4 @@ Above the Shopping list: the price now, Live demand, and the start and average r
 
 ## Still open
 
-1. **How long each Hungry appliance runs.** The mockup's 2, 3 and 1 hours are guesses, so check the programmes actually used.
-2. **Negative prices:** besides the bar below the line, should the price-now tile say "Paid 2.1p per kWh" when it happens? It's rare, mostly windy nights and sunny weekend afternoons.
+1. **Negative prices:** besides the bar below the line, should the price-now tile say "Paid 2.1p per kWh" when it happens? It's rare, mostly windy nights and sunny weekend afternoons.

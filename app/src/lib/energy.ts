@@ -25,9 +25,9 @@ export interface Appliance {
 }
 
 export const appliances: Appliance[] = [
-	{ name: 'Dishwasher', halfHours: 4 },
-	{ name: 'Washing machine', halfHours: 6 },
-	{ name: 'Tumble drier', halfHours: 2 }
+	{ name: 'Dishwasher', halfHours: 6 },
+	{ name: 'Washing machine', halfHours: 2 },
+	{ name: 'Tumble drier', halfHours: 4 }
 ];
 
 /** How long the Cheap window on the Today view and the Energy tiles is. */
