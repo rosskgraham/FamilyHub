@@ -25,7 +25,7 @@ The wall-mounted touchscreen in the kitchen, and the product as a whole.
 _Avoid_: Screen, display, dashboard, tablet
 
 **Section**:
-One of the Hub's top-level areas, each for one job: Calendar, Shopping, Chores or Watch.
+One of the Hub's top-level areas, each for one job: Calendar, Shopping, Chores, Watch or Energy.
 _Avoid_: App, tab, page, mode, screen
 
 **Today view**:
@@ -109,3 +109,37 @@ _Avoid_: Points, score
 **Bonus job**:
 An extra job, shown as Up for grabs, that any child can do for Stars. It can be done once a day, by one child or by several together, and each child who did it gets its Stars.
 _Avoid_: Extra chore, task
+
+### Energy
+
+**Agile rate**:
+What Octopus charges per kWh, including VAT, for one Half-hour on the Agile tariff. Rates are published a day ahead, usually by 16:00, and can go below zero.
+_Avoid_: Unit rate, tariff (the whole product), price slot
+
+**Half-hour**:
+One of the periods each day is priced and measured in, starting on the hour or half past: 48 a day, or 46 and 50 when the clocks change.
+_Avoid_: Slot, period, interval
+
+**Price band**:
+Whether a Half-hour's Agile rate is Cheap (the day's cheapest quarter), Peak (its dearest quarter) or Normal. Shown in colour and always named, never by colour alone.
+_Avoid_: Tier, level
+
+**Cheap window**:
+The run of Half-hours of a given length with the lowest average Agile rate, from now until the last published rate.
+_Avoid_: Off-peak (a fixed-time tariff idea), best time, cheap slot
+
+**Hungry appliance**:
+An appliance the Hub suggests a start time for: the dishwasher, washing machine or tumble drier, each listed in the repo with how long it runs.
+_Avoid_: Device, load
+
+**Live demand**:
+The power the house is drawing from the grid right now, measured by the Zappi's grid clamp.
+_Avoid_: Usage now, load, consumption
+
+**Car charging**:
+Electricity the Zappi delivered to the car.
+_Avoid_: EV usage, charger load
+
+**House use**:
+Electricity the house drew from the grid, less Car charging.
+_Avoid_: Home usage, consumption, base load
