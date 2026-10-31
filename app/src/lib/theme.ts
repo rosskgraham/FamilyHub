@@ -81,6 +81,8 @@ export interface Palette {
 	offPeakBg: string;
 	slotBg: string;
 	cheapFg: string;
+	/** The car icon on the Today view's Energy card when the car is plugged in. */
+	plugged: string;
 	members: Record<(typeof memberColours)[number], MemberColours>;
 }
 
@@ -118,6 +120,7 @@ export const palettes: Record<Theme, Palette> = {
 		offPeakBg: '#D6E4FF',
 		slotBg: '#E6EEFF',
 		cheapFg: '#0F2F78',
+		plugged: '#B07D00',
 		members: {
 			blue: { bg: '#D6E4FF', fg: '#0F2F78', solid: '#2456C9', on: '#FFFFFF' },
 			orange: { bg: '#FFDDB8', fg: '#6B2E00', solid: '#B85200', on: '#FFFFFF' },
@@ -159,6 +162,7 @@ export const palettes: Record<Theme, Palette> = {
 		offPeakBg: '#1C2B52',
 		slotBg: '#1A2438',
 		cheapFg: '#C4D6FF',
+		plugged: '#F5B400',
 		members: {
 			blue: { bg: '#1C2B52', fg: '#C4D6FF', solid: '#7FA8FF', on: '#0B1A3F' },
 			orange: { bg: '#4A2A0E', fg: '#FFD8B0', solid: '#FFA85C', on: '#3A1800' },

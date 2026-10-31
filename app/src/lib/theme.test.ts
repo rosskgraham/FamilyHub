@@ -69,6 +69,8 @@ const shapes = (p: Palette): [string, string, string][] => [
 	['empty tick box', p.box, p.card],
 	['star outline', p.starLine, p.card],
 	['Peak line', p.peak, p.card],
+	['car plugged in', p.plugged, p.card],
+	['car unplugged', p.dim, p.card],
 	...(['card', 'offPeakBg', 'slotBg'] as const).flatMap((bg): [string, string, string][] => [
 		[`House bar on ${bg}`, p.house, p[bg]],
 		[`Car bar on ${bg}`, p.car, p[bg]],

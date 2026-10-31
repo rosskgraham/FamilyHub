@@ -21,6 +21,6 @@ export const load: PageServerLoad = async () => {
 		calendarStatus: calendar.status,
 		owners: calendar.household,
 		shopping,
-		energy: { rates: energy.tariff?.rates ?? null, slots: energy.slots, live: energy.live }
+		energy: { rates: energy.tariff?.rates ?? null, slots: energy.slots, live: energy.live, today: energy.today }
 	};
 };
