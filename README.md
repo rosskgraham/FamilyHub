@@ -1,8 +1,8 @@
 # FamilyHub
 
-**A family wall display for the kitchen.** One glance at a touchscreen by the kettle shows what's on today and who it's for, the week ahead, and the shopping list. Nobody has to ask, shout up the stairs, or check four phones.
+**A family wall display for the kitchen.** One glance at a touchscreen by the kettle shows what's on today and who it's for, the week ahead, the shopping list, and what the electricity is costing. Nobody has to ask, shout up the stairs, or check four phones.
 
-![The Today view: the next Event with a countdown, the rest of today, the next four days, and the shopping list](docs/images/today-view.png)
+![The Today view: the next Event with a countdown, the rest of today, the next four days, an Energy card with what the house is using, today's cost so far, a plug for the car and a Smart-charging slot, and the shopping list](docs/images/today-view.png)
 
 <sub>The Today view, running on a PC with sample data.</sub>
 
@@ -13,6 +13,7 @@ FamilyHub is a personal project, built by one family for its own kitchen. Buildi
 - **Shows everyone's day at a glance.** It reads the Household's Google Calendars: one per person, plus a shared Family calendar. Each person has a colour and an initial, so you can tell whose an Event is from across the room.
 - **Keeps the shopping list on the wall.** Add or tick off items on the screen, and in the shop on your phone. The list lives in Google Tasks, so phones need nothing new. Tap to tick off, long-press to remove.
 - **Makes chores a game for the kids.** Each child has a lane of Chores for the morning, after school and the evening, ticks them off at the screen, and earns Stars. Bonus jobs are up for grabs for extra Stars, and children who do one together each get them. Finishing a Routine gets a chime and a burst of stars.
+- **Shows when electricity is cheap, and where it goes.** It reads the Household's Intelligent Octopus Go rates and Smart-charging slots from Octopus, and the Zappi car charger's usage from myenergi. It shows what the house is using now, what today has cost, and when to start the dishwasher, washing machine and tumble drier so they finish while it's cheap. Each half-hour is split into the house and the car.
 - **Fits a busy day without scrolling.** Busy days switch to compact rows, and anything that still doesn't fit goes behind a "+N more" that opens the full day. Nothing is cut off silently.
 - **Looks after itself.** It keeps showing the last plan if the Wi-Fi drops, says when it last updated, and tells the family in plain words when it needs attention.
 - **Stays at home.** It runs on a Raspberry Pi in the kitchen, and nothing on the internet can reach it.
@@ -29,7 +30,12 @@ FamilyHub is a personal project, built by one family for its own kitchen. Buildi
 | ![The Chores section: a lane each for Maya and Leo with their Morning Chores ticked off and their Stars, and Up for grabs beside them with the dishwasher done by Leo and Maya together](docs/images/chores-view.png) | ![A celebration over the Chores section: "Morning done, Maya!" with her badge in a ring of stars and "+3 Stars"](docs/images/chores-celebration.png) |
 | A lane per child, with the Routine whose time it is open and the rest folded away. A tap ticks a Chore off and earns its Stars. Bonus jobs are up for grabs for whoever does them first. | Ticking off the last Chore of a Routine plays a chime and shows a burst of stars, which closes by itself. |
 
-The screenshots use the app's built-in sample week and sample Chores, and are taken by the screenshot tests. On the real Hub, the corner shows when the Calendars last updated instead of "Sample data".
+| Energy |
+|---|
+| ![The Energy section: the price now, what the house is using with the car plugged in, and the next cheap time, a chart of today's half-hours with the car's overnight charging over Peak, Off-peak and a Smart-charging slot, the best time to run three appliances, and yesterday's cost split into house and car](docs/images/energy-view.png) |
+| The price now, what the house is using, and the next cheap time. Today's half-hours show the car's charging stacked on the house's use, over which were Peak, Off-peak or a Smart-charging slot. Each appliance gets a window to start in so it finishes while it's cheap, and yesterday's cost is split into the house and the car. |
+
+The screenshots use the app's built-in sample week, sample Chores and sample energy, and are taken by the screenshot tests. On the real Hub, the corner shows when the Calendars last updated instead of "Sample data".
 
 ## Where it's going
 
