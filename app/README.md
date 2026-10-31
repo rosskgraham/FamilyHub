@@ -43,6 +43,12 @@ The sign-in and the Calendar choices are kept in `app/data/`, which Git ignores.
 
 Put home's latitude and longitude in `app/.env`, for example `HOME_LATITUDE=51.50` and `HOME_LONGITUDE=-0.12`. Two decimal places is close enough. The header then shows the current weather from [Open-Meteo](https://open-meteo.com/), which needs no key, and the highest chance of rain in the next three hours. It asks again every 10 minutes, and takes today's sunrise and sunset from the same forecast to switch between the Day and Evening themes. Until it has them, or with sample weather, it uses 07:05 and 16:40. If Open-Meteo can't be reached, the header keeps the last forecast for up to three hours, then hides the weather rather than show a stale forecast.
 
+## Show the real Agile rates
+
+Put the Household's Agile product and home's electricity region in `app/.env`, for example `OCTOPUS_AGILE_PRODUCT=AGILE-24-10-01` and `OCTOPUS_REGION=C`. The product is on the Octopus account's tariff page. The region is a letter from A to P, and Octopus's public API gives it for a postcode: `https://api.octopus.energy/v1/industry/grid-supply-points/?postcode=SW1A1AA` answers with `_C` for region C. Neither needs a key.
+
+The Energy section and the Today view's Energy card then show the real rates. The Hub asks Octopus hourly, every 10 minutes after 16:00 until tomorrow's rates are published, and keeps the last ones in `app/data/energy-rates.json`, so they still show after a restart without internet, with "Octopus unreachable · last updated 14:02". Price bands are relative to each day: its cheapest quarter of Half-hours is Cheap and its dearest quarter Peak. The Hungry appliances and how long each runs are in `src/lib/energy.ts`. `CALENDAR_SOURCE=sample` shows sample rates too.
+
 ## Set up the real Chores
 
 Copy `app/chores.example.json` to `app/chores.json`, which Git ignores, and put in the Household's Routines and Chores:

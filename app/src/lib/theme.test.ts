@@ -56,6 +56,7 @@ const text = (p: Palette): [string, string, string][] => [
 	['warning', p.warnFg, p.warnBg],
 	['problem', p.problem, p.card],
 	['danger', p.onDanger, p.danger],
+	['Cheap window', p.windowFg, p.windowBg],
 	...memberColours.flatMap((m): [string, string, string][] => [
 		[`${m} Event`, p.members[m].fg, p.members[m].bg],
 		[`${m} all-day Event`, p.members[m].fg, p.card],
@@ -67,6 +68,10 @@ const text = (p: Palette): [string, string, string][] => [
 const shapes = (p: Palette): [string, string, string][] => [
 	['empty tick box', p.box, p.card],
 	['star outline', p.starLine, p.card],
+	...(['cheap', 'normal', 'peak'] as const).flatMap((band): [string, string, string][] => [
+		[`${band} bar`, p[band], p.card],
+		[`${band} bar in the Cheap window`, p[band], p.windowBg]
+	]),
 	...memberColours.map((m): [string, string, string] => [`${m} badge`, p.members[m].solid, p.card])
 ];
 

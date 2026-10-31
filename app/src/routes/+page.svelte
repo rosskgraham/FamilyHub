@@ -3,6 +3,7 @@
 	import { clock } from '#lib/clock.svelte.ts';
 	import Badge from '#lib/components/Badge.svelte';
 	import Banner from '#lib/components/Banner.svelte';
+	import EnergyCard from '#lib/components/EnergyCard.svelte';
 	import ShoppingList from '#lib/components/ShoppingList.svelte';
 	import { fitColumn } from '#lib/fit.ts';
 	import { addDays, dayOfMonth, formatIn, formatTime, formatWeekday } from '#lib/time.ts';
@@ -127,7 +128,8 @@
 </div>
 
 <aside>
-	<ShoppingList items={data.shopping.items} status={data.shopping.status} rows={7} moreHref="/shopping" />
+	<EnergyCard rates={data.rates} />
+	<ShoppingList items={data.shopping.items} status={data.shopping.status} rows={5} moreHref="/shopping" />
 </aside>
 
 <style>
@@ -297,5 +299,7 @@
 		flex: none;
 		margin-left: 24px;
 		display: flex;
+		flex-direction: column;
+		gap: 16px;
 	}
 </style>

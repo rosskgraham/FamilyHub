@@ -72,6 +72,14 @@ export interface Palette {
 	/** A button that removes something. */
 	danger: string;
 	onDanger: string;
+	/** Agile rate bars in each Price band, and a Half-hour that's gone. */
+	cheap: string;
+	normal: string;
+	peak: string;
+	pastBar: string;
+	/** The Cheap window, behind its bars and on its tile. */
+	windowBg: string;
+	windowFg: string;
 	members: Record<(typeof memberColours)[number], MemberColours>;
 }
 
@@ -102,6 +110,12 @@ export const palettes: Record<Theme, Palette> = {
 		problem: '#A3201A',
 		danger: '#B42318',
 		onDanger: '#FFFFFF',
+		cheap: '#2456C9',
+		normal: '#6B7586',
+		peak: '#B85200',
+		pastBar: '#D3D9E2',
+		windowBg: '#D6E4FF',
+		windowFg: '#0F2F78',
 		members: {
 			blue: { bg: '#D6E4FF', fg: '#0F2F78', solid: '#2456C9', on: '#FFFFFF' },
 			orange: { bg: '#FFDDB8', fg: '#6B2E00', solid: '#B85200', on: '#FFFFFF' },
@@ -136,6 +150,12 @@ export const palettes: Record<Theme, Palette> = {
 		problem: '#FF9C94',
 		danger: '#C4362C',
 		onDanger: '#FFFFFF',
+		cheap: '#7FA8FF',
+		normal: '#7D8899',
+		peak: '#FFA85C',
+		pastBar: '#2A313C',
+		windowBg: '#1C2B52',
+		windowFg: '#C4D6FF',
 		members: {
 			blue: { bg: '#1C2B52', fg: '#C4D6FF', solid: '#7FA8FF', on: '#0B1A3F' },
 			orange: { bg: '#4A2A0E', fg: '#FFD8B0', solid: '#FFA85C', on: '#3A1800' },

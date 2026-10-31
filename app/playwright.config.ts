@@ -32,6 +32,8 @@ export default defineConfig({
 			GOOGLE_CLIENT_SECRET: '',
 			HOME_LATITUDE: '',
 			HOME_LONGITUDE: '',
+			OCTOPUS_AGILE_PRODUCT: '',
+			OCTOPUS_REGION: '',
 			HUB_NOW: NOW
 		}
 	}

@@ -1,4 +1,5 @@
 import { loadCalendar } from '#lib/server/calendar/index.ts';
+import { loadRates } from '#lib/server/energy/index.ts';
 import { loadShopping } from '#lib/server/shopping/index.ts';
 import { now } from '#lib/server/now.ts';
 import { addDays, dayKey } from '#lib/time.ts';
@@ -9,6 +10,10 @@ const DAYS = 5;
 
 export const load: PageServerLoad = async () => {
 	const today = dayKey(now());
-	const [calendar, shopping] = await Promise.all([loadCalendar(today, addDays(today, DAYS)), loadShopping()]);
-	return { today, events: calendar.events, calendarStatus: calendar.status, owners: calendar.household, shopping };
+	const [calendar, shopping, energy] = await Promise.all([
+		loadCalendar(today, addDays(today, DAYS)),
+		loadShopping(),
+		loadRates()
+	]);
+	return { today, events: calendar.events, calendarStatus: calendar.status, owners: calendar.household, shopping, rates: energy.rates };
 };

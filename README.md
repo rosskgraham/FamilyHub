@@ -47,7 +47,7 @@ The plan is in [docs/requirements.md](docs/requirements.md). Progress so far:
 | ✅ | Overnight sleep, and a Day and Evening theme | Done, on a PC |
 | ✅ | Offline resilience | Done, on a PC |
 | ✅ | A versioned release built on every merge | Done |
-| ⬜ | Home energy: Agile prices, when to run the dishwasher, and the car's share ([design](design/mockups/energy/notes.md)) | Next, on a PC |
+| ⬜ | Home energy: Agile prices, when to run the dishwasher, and the car’s share ([design](design/mockups/energy/notes.md)) | In progress: Agile rates done, on a PC |
 | ⬜ | A Raspberry Pi set up from scripts, showing the Hub full-screen | When the hardware arrives |
 | ⬜ | On the kitchen wall: **v1** | |
 | ⬜ | Recipe videos from a YouTube playlist | After v1 |
