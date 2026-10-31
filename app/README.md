@@ -43,6 +43,12 @@ The sign-in and the Calendar choices are kept in `app/data/`, which Git ignores.
 
 Put home's latitude and longitude in `app/.env`, for example `HOME_LATITUDE=51.50` and `HOME_LONGITUDE=-0.12`. Two decimal places is close enough. The header then shows the current weather from [Open-Meteo](https://open-meteo.com/), which needs no key, and the highest chance of rain in the next three hours. It asks again every 10 minutes, and takes today's sunrise and sunset from the same forecast to switch between the Day and Evening themes. Until it has them, or with sample weather, it uses 07:05 and 16:40. If Open-Meteo can't be reached, the header keeps the last forecast for up to three hours, then hides the weather rather than show a stale forecast.
 
+## Show the real energy prices
+
+Put the Household's Octopus account number and API key in `app/.env`, as `OCTOPUS_ACCOUNT=A-1234ABCD` and `OCTOPUS_API_KEY=sk_live_…`. The key is on the Octopus account under Personal details, then API access. It can see the account and its bills, so keep it out of chats and commits.
+
+The Energy section and the Today view's Energy card then show the account's Intelligent Octopus Go rates and Smart-charging slots, read from Octopus's GraphQL API ([ADR 0007](../docs/adr/0007-energy-from-octopus-rates-and-the-zappi.md)). The Hub asks for the rates once a day, so a renewal at new prices is picked up, and for slots every 10 minutes. It keeps both in `app/data/energy-tariff.json` and `app/data/energy-slots.json`, so they still show after a restart without internet, with "Octopus unreachable · last updated 14:02". The Off-peak window, 23:30 to 05:30, is part of the tariff and written into `src/lib/energy.ts`, with the Hungry appliances and how long each runs. If the account moves to another tariff, the Section says so instead of guessing its times. House use, Car charging and Live demand are sample figures until the Hub reads the Zappi. `CALENDAR_SOURCE=sample` shows sample energy too.
+
 ## Set up the real Chores
 
 Copy `app/chores.example.json` to `app/chores.json`, which Git ignores, and put in the Household's Routines and Chores:
