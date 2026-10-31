@@ -2,7 +2,7 @@
 
 **A family wall display for the kitchen.** One glance at a touchscreen by the kettle shows what's on today and who it's for, the week ahead, the shopping list, and what the electricity is costing. Nobody has to ask, shout up the stairs, or check four phones.
 
-![The Today view: the next Event with a countdown, the rest of today, the next four days, an Energy card with what the house is using, today's cost so far, a plug for the car and a Smart-charging slot, and the shopping list](docs/images/today-view.png)
+![The Today view: the next Event with a countdown, the rest of today, the next four days, an Energy card with what the house is using, today's cost so far, a car icon showing it plugged in, and a Smart-charging slot, and the shopping list](docs/images/today-view.png)
 
 <sub>The Today view, running on a PC with sample data.</sub>
 

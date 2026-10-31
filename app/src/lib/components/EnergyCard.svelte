@@ -24,7 +24,10 @@
 	const slot = $derived(cheap.current ? (cheap.current.slot ? cheap.current : null) : cheap.next.slot ? cheap.next : null);
 	const spent = $derived(rates && totals(today, rates, slots));
 	const plugged = $derived(live !== null && live.car !== 'unplugged');
-	const carLabel = $derived(!live ? 'Car charger not reporting' : plugged ? 'Car plugged in' : 'Car not plugged in');
+	const charging = $derived(live?.car === 'charging');
+	const carLabel = $derived(
+		!live ? 'Car charger not reporting' : charging ? 'Car charging' : plugged ? 'Car plugged in' : 'Car not plugged in'
+	);
 	const time = (iso: string) => formatTime(new Date(iso));
 </script>
 
@@ -34,12 +37,17 @@ and a Smart-charging slot when there is one. Opens the Energy Section. -->
 	<div class="head">
 		<span class="title">Energy</span>
 		{#if live}
-			<!-- A plug: blue when the car's plugged in, struck through when it isn't. -->
-			<svg class="plug" class:plugged width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label={carLabel}>
-				<title>{carLabel}</title>
-				<path d="M12 22v-5" /><path d="M9 8V2" /><path d="M15 8V2" /><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z" />
-				{#if !plugged}<line x1="3" y1="3" x2="21" y2="21" />{/if}
-			</svg>
+			<!-- The car: grey when it's unplugged, amber when it's plugged in, with a pulsing bolt while it charges. -->
+			<span class="car" class:plugged role="img" aria-label={carLabel} title={carLabel}>
+				{#if charging}
+					<svg class="bolt" width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+						<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" />
+					</svg>
+				{/if}
+				<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+					<path d="m21 8-2 2-1.5-3.7A2 2 0 0 0 15.646 5H8.4a2 2 0 0 0-1.903 1.257L5 10 3 8" /><path d="M7 14h.01" /><path d="M17 14h.01" /><rect width="18" height="8" x="3" y="10" rx="2" /><path d="M5 18v2" /><path d="M19 18v2" />
+				</svg>
+			</span>
 		{/if}
 		<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
 	</div>
@@ -84,11 +92,28 @@ and a Smart-charging slot when there is one. Opens the Energy Section. -->
 		font-weight: 700;
 		color: var(--ink);
 	}
-	.plug {
+	.car {
+		display: flex;
+		align-items: center;
+		gap: 2px;
 		margin-right: 6px;
 	}
-	.plug.plugged {
-		color: var(--car);
+	.car.plugged {
+		color: var(--plugged);
+	}
+	.bolt {
+		animation: flow 1.6s ease-in-out infinite;
+	}
+	@keyframes flow {
+		50% {
+			opacity: 0.35;
+			transform: translateY(2px);
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.bolt {
+			animation: none;
+		}
 	}
 	.figures {
 		display: flex;

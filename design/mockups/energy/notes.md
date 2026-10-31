@@ -51,7 +51,7 @@ A test against the Household's Octopus account on 31 October 2026 found:
 
 ## The Today view card (board C)
 
-Above the Shopping list: Live demand, today's cost so far, and a plug icon, blue when the car is plugged in and struck through when it isn't. A Smart-charging slot gets a line when one is on or next; the Off-peak window doesn't, as it never moves. Tapping the card opens the Energy Section. The Shopping list shows 3 items and "+N more" to make room.
+Above the Shopping list: Live demand, today's cost so far, and a car icon: grey when it's unplugged, amber when it's plugged in, and amber with a pulsing bolt while it charges. A Smart-charging slot gets a line when one is on or next; the Off-peak window doesn't, as it never moves. Tapping the card opens the Energy Section. The Shopping list shows 3 items and "+N more" to make room.
 
 Built differently from board C, which showed the price now and the next cheap time (31 October 2026): with two fixed rates and a fixed window, those say the same thing every day, while usage, cost and the car change.
 
