@@ -32,6 +32,12 @@ jobs:
         run: npx playwright test
         env:
           HOME: /root
+      - name: Package a trial release, and check it starts
+        # The same as the release job below, without publishing, so a pull request shows it works.
+        run: |
+          VERSION=$(date +%Y.%m.%d).0
+          HUB_VERSION=$VERSION npm run build
+          node scripts/release.mjs $VERSION
       - name: Keep the screenshot differences
         if: failure()
         uses: actions/upload-artifact@v4
@@ -41,3 +47,44 @@ jobs:
             app/playwright-report
             app/test-results
           retention-days: 14
+
+  # Every merge to main that passes the checks becomes a release the Pi can pull (ADR 0004).
+  release:
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # One at a time, in order, so the newest merge is always the latest release.
+    concurrency:
+      group: release
+      cancel-in-progress: false
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci
+      - name: Name the version
+        id: version
+        # The UK date, then the run number, so versions sort in the order they were made.
+        run: echo "name=$(TZ=Europe/London date +%Y.%m.%d).${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+      - name: Build
+        run: npm run build
+        env:
+          HUB_VERSION: ${{ steps.version.outputs.name }}
+      - name: Package, and check the package starts
+        run: node scripts/release.mjs ${{ steps.version.outputs.name }}
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.name }}
+        run: >
+          gh release create "v$VERSION"
+          "release/familyhub-$VERSION.tar.gz" "release/familyhub-$VERSION.tar.gz.sha256"
+          --target "$GITHUB_SHA" --title "FamilyHub $VERSION" --generate-notes --latest
