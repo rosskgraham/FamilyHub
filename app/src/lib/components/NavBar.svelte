@@ -8,7 +8,8 @@
 		{ href: '/day', label: 'Day' },
 		{ href: '/week', label: 'Week' },
 		{ href: '/shopping', label: 'Shopping' },
-		{ href: '/chores', label: 'Chores' }
+		{ href: '/chores', label: 'Chores' },
+		{ href: '/energy', label: 'Energy' }
 	];
 
 	const status = $derived(page.data.calendarStatus as CalendarStatus | undefined);

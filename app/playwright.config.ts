@@ -32,6 +32,8 @@ export default defineConfig({
 			GOOGLE_CLIENT_SECRET: '',
 			HOME_LATITUDE: '',
 			HOME_LONGITUDE: '',
+			OCTOPUS_ACCOUNT: '',
+			OCTOPUS_API_KEY: '',
 			HUB_NOW: NOW
 		}
 	}

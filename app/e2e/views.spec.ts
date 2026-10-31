@@ -12,7 +12,8 @@ const views = [
 	// A busy Saturday, with more Events than fit.
 	{ name: 'day-busy', path: '/day?date=2026-10-31' },
 	{ name: 'week', path: '/week' },
-	{ name: 'shopping', path: '/shopping' }
+	{ name: 'shopping', path: '/shopping' },
+	{ name: 'energy', path: '/energy' }
 ];
 
 for (const { name, path } of views) {

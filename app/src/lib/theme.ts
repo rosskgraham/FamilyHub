@@ -72,6 +72,15 @@ export interface Palette {
 	/** A button that removes something. */
 	danger: string;
 	onDanger: string;
+	/** Energy: House use and Car charging bars, and the line along the top of a cheap or Peak Half-hour. */
+	house: string;
+	car: string;
+	cheap: string;
+	peak: string;
+	/** Behind an Off-peak Half-hour or a Smart-charging slot, the Next cheap tile, and its text. */
+	offPeakBg: string;
+	slotBg: string;
+	cheapFg: string;
 	members: Record<(typeof memberColours)[number], MemberColours>;
 }
 
@@ -102,6 +111,13 @@ export const palettes: Record<Theme, Palette> = {
 		problem: '#A3201A',
 		danger: '#B42318',
 		onDanger: '#FFFFFF',
+		house: '#4A5565',
+		car: '#2456C9',
+		cheap: '#2456C9',
+		peak: '#B85200',
+		offPeakBg: '#D6E4FF',
+		slotBg: '#E6EEFF',
+		cheapFg: '#0F2F78',
 		members: {
 			blue: { bg: '#D6E4FF', fg: '#0F2F78', solid: '#2456C9', on: '#FFFFFF' },
 			orange: { bg: '#FFDDB8', fg: '#6B2E00', solid: '#B85200', on: '#FFFFFF' },
@@ -136,6 +152,13 @@ export const palettes: Record<Theme, Palette> = {
 		problem: '#FF9C94',
 		danger: '#C4362C',
 		onDanger: '#FFFFFF',
+		house: '#A6B0BF',
+		car: '#7FA8FF',
+		cheap: '#7FA8FF',
+		peak: '#FFA85C',
+		offPeakBg: '#1C2B52',
+		slotBg: '#1A2438',
+		cheapFg: '#C4D6FF',
 		members: {
 			blue: { bg: '#1C2B52', fg: '#C4D6FF', solid: '#7FA8FF', on: '#0B1A3F' },
 			orange: { bg: '#4A2A0E', fg: '#FFD8B0', solid: '#FFA85C', on: '#3A1800' },

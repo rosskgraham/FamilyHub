@@ -19,12 +19,20 @@ export const variables = defineEnvVars({
 		description: 'Where home is, for the weather.',
 		schema: optional
 	},
+	OCTOPUS_ACCOUNT: {
+		description: 'The Household’s Octopus account number, such as A-1234ABCD. Without it and OCTOPUS_API_KEY the Hub shows sample rates.',
+		schema: optional
+	},
+	OCTOPUS_API_KEY: {
+		description: 'The Octopus account’s API key, for its rates and Smart-charging slots. It can see the account and its bills: never commit it.',
+		schema: optional
+	},
 	HUB_NOW: {
 		description: 'Pretend it is this moment (an ISO time) on the server. Only for the screenshot tests.',
 		schema: optional
 	},
 	CALENDAR_SOURCE: {
-		description: 'Set to `sample` to show sample Events, a sample Shopping list and sample weather even when Google and home are set up.',
+		description: 'Set to `sample` to show sample Events, a sample Shopping list, sample weather and sample energy even when Google, home and Octopus are set up.',
 		schema: (value) => (value === 'sample' ? 'sample' : undefined)
 	}
 });
