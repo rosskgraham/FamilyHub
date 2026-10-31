@@ -4,7 +4,7 @@ A design for an Energy Section and a Today view card. Mockups: [`canvas.json`](c
 
 ## The idea
 
-The Household is on Octopus's **Intelligent Octopus Go 12M Fixed** tariff: two prices fixed for 12 months, an Off-peak rate from 23:30 to 05:30 and a Peak rate the rest of the day. Octopus also schedules the car's charging through the Zappi, and a Smart-charging slot outside the Off-peak window makes the whole house cheap while it lasts. The Hub shows whether electricity is cheap now, when it next will be, when to run the dishwasher, washing machine and tumble drier, what the house is using right now, and what each day cost, split into House use and Car charging.
+The Household is on Octopus's **Intelligent Octopus Go 12M Fixed** tariff: two prices fixed for 12 months, an Off-peak rate from 23:30 to 05:30 and a Peak rate the rest of the day. Octopus also schedules the car's charging, through Škoda's connection to the car, and a Smart-charging slot outside the Off-peak window makes the whole house cheap while it lasts. The Hub shows whether electricity is cheap now, when it next will be, when to run the dishwasher, washing machine and tumble drier, what the house is using right now, and what each day cost, split into House use and Car charging.
 
 ## Decided
 
@@ -22,8 +22,9 @@ The Household is on Octopus's **Intelligent Octopus Go 12M Fixed** tariff: two p
 
 | What | From | Key needed | How fresh |
 | --- | --- | --- | --- |
-| Peak and Off-peak rates, and when they apply | Octopus REST API: the account's current electricity agreement, then that tariff's unit rates | Yes: account number and API key | Fixed for the term; checked daily so a renewal is picked up |
-| Smart-charging slots | Octopus GraphQL API, signed in with the same API key | Yes | Rescheduled through the day; checked every few minutes while the car is plugged in |
+| Peak and Off-peak rates | Octopus GraphQL API: the account's current electricity agreement and its unit rates | Yes: account number and API key | Fixed for the term; checked daily so a renewal is picked up |
+| When the Off-peak window is | The tariff's rules, written into the Hub: 23:30 to 05:30 | No | Fixed |
+| Smart-charging slots | Octopus GraphQL API: `flexPlannedDispatches` for the car, `completedDispatches` for ones already past | Yes | Rescheduled through the day; checked every few minutes while the car is plugged in |
 | Live demand, Car status | myenergi cloud API, the Zappi's status (`cgi-jstatus-Z`) | Yes: serial and API key | About a minute |
 | House use and Car charging per minute | myenergi cloud API, the Zappi's day history (`cgi-jday-Z…`) | Yes | Minutes |
 
@@ -32,6 +33,12 @@ The myenergi API is unofficial: myenergi issues the key but publishes no documen
 - **Status** gives grid demand in watts (`grd`), whether the car is plugged in (`pst`), the charging state (`sta`) and energy this session (`che`, kWh).
 - **Day history** gives one row per minute, with grid import (`imp`) and energy delivered to the car (`h1d`) in joules. There's no solar, so `exp` and `gen` are absent. House use is `imp − h1d`.
 - **A normal day returned 1,441 rows**, one more than there are minutes. Adding up must not count a minute twice, and must cope with clock-change days (23 or 25 hours).
+
+A test against the Household's Octopus account on 31 October 2026 found:
+
+- **The rates come only from GraphQL.** Octopus's REST products list doesn't include the tariff, and its unit-rates endpoint returns nothing for it. The account's agreement returns the two rates, but not the times they apply.
+- **Octopus controls the car through Škoda, not the Zappi.** The account's smart device is the car itself, so slots show up only in Octopus.
+- **Past slots are listed too.** `completedDispatches` gives each slot's start and end, including Half-hours just outside the Off-peak window, so a Half-hour can be costed after its slot has gone.
 
 ## How it works at the wall
 
@@ -49,10 +56,10 @@ Above the Shopping list: the price now, Peak or Off-peak, and the next cheap tim
 ## Settings
 
 - **The Octopus account number and API key**, and **the Zappi's serial and myenergi API key**, are secrets, in Azure Key Vault like the others, and in `app/.env` on the PC.
-- **The rates and the Off-peak window aren't settings.** They come from the account's current agreement, so a renewal at new prices needs no change.
+- **The rates aren't settings.** They come from the account's current agreement, so a renewal at new prices needs no change. The Off-peak window is part of the tariff, written into the Hub.
 - **Hungry appliances and how long each runs** are in the repo, so changing them is a pull request.
 
 ## Still open
 
 1. **Smart-charging slots in the bill:** Octopus says the whole house pays the Off-peak rate during a slot, but owners report exceptions, such as charging beyond six hours a day. The Hub will cost slots at the Off-peak rate and say so; checking against Octopus's own meter readings could come later.
-2. **The exact GraphQL query for Smart-charging slots** is checked against the Household's account when it's built, as Octopus documents it only in its schema.
+2. **Whether the rates include VAT.** The account reports the same figure with and without VAT. The Hub shows the rates as Octopus reports them until a bill confirms which.

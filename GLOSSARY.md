@@ -113,7 +113,7 @@ _Avoid_: Extra chore, task
 ### Energy
 
 **Peak rate / Off-peak rate**:
-The two prices per kWh, including VAT, on the Household's Intelligent Octopus Go tariff. They're fixed for the tariff's term: the Off-peak rate in the Off-peak window and Smart-charging slots, the Peak rate at all other times.
+The two prices per kWh on the Household's Intelligent Octopus Go tariff. They're fixed for the tariff's term: the Off-peak rate in the Off-peak window and Smart-charging slots, the Peak rate at all other times.
 _Avoid_: Day rate, night rate, unit rate, tariff (the whole product)
 
 **Off-peak window**:
@@ -121,7 +121,7 @@ _Avoid_: Day rate, night rate, unit rate, tariff (the whole product)
 _Avoid_: Night, cheap hours, economy
 
 **Smart-charging slot**:
-A time Octopus schedules the car to charge through the Zappi, sometimes outside the Off-peak window. While it lasts, the whole house pays the Off-peak rate.
+A time Octopus schedules the car to charge, through Škoda's connection to the car, sometimes outside the Off-peak window. While it lasts, the whole house pays the Off-peak rate.
 _Avoid_: Dispatch (Octopus's word), boost, bonus slot
 
 **Half-hour**:
