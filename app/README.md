@@ -76,6 +76,20 @@ Commit updated screenshots with the change that caused them, so the pull request
 
 GitHub Actions runs the type check, the unit tests and the screenshot tests on every pull request, and `main` only accepts changes through a pull request that passes them.
 
+## Releases
+
+Every merge to `main` that passes CI becomes a [GitHub release](https://github.com/rosskgraham/FamilyHub/releases), which the Pi will pull ([ADR 0004](../docs/adr/0004-pi-pulls-releases.md)). Versions are the UK date and CI's run number, such as `2026.10.31.57`, so they sort in the order they were made.
+
+A release is `familyhub-<version>.tar.gz` and its SHA-256. It holds the built server and a `package.json`, and nothing else: the app has no runtime dependencies and no native code, so the same package runs on a PC and on the Pi. Before publishing, `scripts/release.mjs` unpacks it, starts it, and checks it answers with its version.
+
+To run one, unpack it and start it with Node 24 from that folder. It reads `household.json`, `chores.json` and `data/` from the folder it runs in, and its settings from the environment:
+
+```
+node --env-file=.env build
+```
+
+It listens on port 3000, or `PORT`. `/api/health` answers `{"status":"ok","version":"2026.10.31.57"}`, which is what the Pi checks after switching to a new release.
+
 ## Layout
 
 - `src/lib/time.ts`: UK time handling. Everything is shown in Europe/London time, whatever the machine's own time zone.

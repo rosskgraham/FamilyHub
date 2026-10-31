@@ -1,4 +1,4 @@
-import adapter from '@sveltejs/adapter-auto';
+import adapter from '@sveltejs/adapter-node';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vitest/config';
 
@@ -11,10 +11,10 @@ export default defineConfig({
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
 
-			// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
-			// If your environment is not supported, or you settled on a specific environment, switch out the adapter.
-			// See https://svelte.dev/docs/kit/adapters for more information about adapters.
-			adapter: adapter()
+			// A Node server, which is what runs on the Pi: `node build`.
+			adapter: adapter(),
+			// The release's version, set by CI (see scripts/release.mjs). Without it, the time of the build.
+			version: process.env.HUB_VERSION ? { name: process.env.HUB_VERSION } : undefined
 		})
 	],
 	test: {
