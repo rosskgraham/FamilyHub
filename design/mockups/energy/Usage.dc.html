@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Energy, usage first</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 1920px; height: 1080px; box-sizing: border-box; padding: 32px; background: #F3F5F8; font-family: 'Figtree', system-ui, sans-serif; color: #161B22; display: flex; flex-direction: column; gap: 24px">
+
+<header style="height: 128px; flex: none; display: flex; align-items: center; justify-content: space-between; gap: 32px">
+<div style="display: flex; align-items: center; gap: 28px">
+<div style="font-size: 112px; font-weight: 600; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums">08:15</div>
+<div>
+<div style="font-size: 44px; font-weight: 600; line-height: 1.1">Wednesday</div>
+<div style="font-size: 28px; color: #4A5565; margin-top: 4px">28 October</div>
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 16px">
+<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#161B22" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 16.6A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"/><line x1="8" y1="19" x2="8" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="16" y1="19" x2="16" y2="21"/></svg>
+<div style="font-size: 56px; font-weight: 600; line-height: 1">11°</div>
+<div>
+<div style="font-size: 24px; font-weight: 600">Light rain</div>
+<div style="font-size: 22px; color: #4A5565">High 13° · Low 8°</div>
+<div style="font-size: 22px; color: #4A5565">Rain 70% next 3 hours</div>
+</div>
+</div>
+</header>
+
+<main style="flex: 1; min-height: 0; display: flex; gap: 24px">
+
+<section style="flex: 1 1 0; min-width: 0; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px; padding: 24px 28px; border-radius: 28px; background: #FFFFFF">
+<div style="display: flex; align-items: baseline; justify-content: space-between">
+<div style="font-size: 36px; font-weight: 700">Last 7 days</div>
+<div style="display: flex; align-items: baseline; gap: 12px">
+<span style="font-size: 24px; font-weight: 600; color: #4A5565">Total</span>
+<span style="font-size: 36px; font-weight: 700; font-variant-numeric: tabular-nums">£31.48</span>
+</div>
+</div>
+<div style="flex: none; display: flex; align-items: center; gap: 32px; font-size: 22px; font-weight: 600; color: #4A5565">
+<span style="display: flex; align-items: center; gap: 10px"><span style="width: 22px; height: 22px; border-radius: 5px; background: #4A5565"></span>House</span>
+<span style="display: flex; align-items: center; gap: 10px"><span style="width: 22px; height: 22px; border-radius: 5px; background: #2456C9"></span>Car</span>
+</div>
+<div style="flex: 1; min-height: 0; display: flex; align-items: flex-end; gap: 28px; padding-top: 12px">
+<sc-for list="{{days}}" as="d" hint-placeholder-count="7">
+<div style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: stretch; gap: 8px">
+<div style="text-align: center; font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums">{{d.cost}}</div>
+<div style="text-align: center; font-size: 22px; font-weight: 600; color: #4A5565; font-variant-numeric: tabular-nums">{{d.kwh}}</div>
+<div style="height: {{d.car}}px; border-radius: 10px 10px 2px 2px; background: #2456C9"></div>
+<div style="height: {{d.house}}px; border-radius: 2px; background: #4A5565"></div>
+</div>
+</sc-for>
+</div>
+<div style="flex: none; display: flex; gap: 28px">
+<sc-for list="{{days}}" as="d" hint-placeholder-count="7">
+<div style="flex: 1 1 0; min-width: 0; text-align: center; font-size: 26px; font-weight: 700">{{d.day}} <span style="font-weight: 600; color: #4A5565">{{d.date}}</span></div>
+</sc-for>
+</div>
+</section>
+
+<aside style="width: 560px; flex: none; display: flex; flex-direction: column; gap: 16px">
+
+<section style="height: 168px; flex: none; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; border-radius: 28px; background: #161B22; color: #FFFFFF">
+<div>
+<div style="font-size: 22px; font-weight: 700; letter-spacing: 0.08em; color: #AEB8C7">PRICE NOW</div>
+<div style="font-size: 80px; font-weight: 600; line-height: 1; margin-top: 6px; font-variant-numeric: tabular-nums">24.2p</div>
+</div>
+<div style="text-align: right">
+<div style="font-size: 22px; font-weight: 700; letter-spacing: 0.08em; color: #AEB8C7">USING NOW</div>
+<div style="font-size: 56px; font-weight: 600; line-height: 1; margin-top: 6px; font-variant-numeric: tabular-nums">0.8 kW</div>
+</div>
+</section>
+
+<section style="flex: 1; min-height: 0; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; padding: 24px 28px; border-radius: 28px; background: #FFFFFF">
+<div style="font-size: 36px; font-weight: 700">Rest of today</div>
+<div style="height: 120px; flex: none; display: flex; align-items: flex-end; gap: 3px">
+<sc-for list="{{slots}}" as="s" hint-placeholder-count="32">
+<div style="flex: 1 1 0; min-width: 0; height: {{s.h}}px; border-radius: 3px 3px 1px 1px; background: {{s.fill}}"></div>
+</sc-for>
+</div>
+<div style="flex: none; display: flex; justify-content: space-between; font-size: 20px; font-weight: 600; color: #4A5565; font-variant-numeric: tabular-nums">
+<span>08:00</span><span>12:00</span><span>16:00</span><span>20:00</span><span>24:00</span>
+</div>
+<div style="height: 76px; flex: none; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; margin-top: 8px; border-radius: 20px; background: #D6E4FF; color: #0F2F78">
+<span style="font-size: 26px; font-weight: 700">Cheapest 2 hours</span>
+<span style="font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums">13:00 · 8.9p</span>
+</div>
+<div style="height: 76px; flex: none; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-radius: 20px; background: #FFE3CC; color: #6B2E00">
+<span style="font-size: 26px; font-weight: 700">Peak, avoid</span>
+<span style="font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums">16:00–19:00</span>
+</div>
+</section>
+
+</aside>
+
+</main>
+
+<footer style="height: 96px; flex: none; display: flex; align-items: center; justify-content: space-between">
+<nav aria-label="Views" style="display: flex; padding: 6px; gap: 6px; border-radius: 26px; background: #E3E8F0">
+<a href="Today.dc.html" style="width: 132px; height: 64px; border-radius: 20px; color: #161B22; text-decoration: none; font-size: 24px; font-weight: 600; display: flex; align-items: center; justify-content: center">Today</a>
+<a href="#" style="width: 132px; height: 64px; border-radius: 20px; color: #161B22; text-decoration: none; font-size: 24px; font-weight: 600; display: flex; align-items: center; justify-content: center">Day</a>
+<a href="#" style="width: 132px; height: 64px; border-radius: 20px; color: #161B22; text-decoration: none; font-size: 24px; font-weight: 600; display: flex; align-items: center; justify-content: center">Week</a>
+<a href="#" style="width: 132px; height: 64px; border-radius: 20px; color: #161B22; text-decoration: none; font-size: 24px; font-weight: 600; display: flex; align-items: center; justify-content: center">Shopping</a>
+<a href="#" style="width: 132px; height: 64px; border-radius: 20px; color: #161B22; text-decoration: none; font-size: 24px; font-weight: 600; display: flex; align-items: center; justify-content: center">Chores</a>
+<a href="Usage.dc.html" aria-current="page" style="width: 132px; height: 64px; border-radius: 20px; background: #FFFFFF; color: #161B22; text-decoration: none; font-size: 24px; font-weight: 700; display: flex; align-items: center; justify-content: center">Energy</a>
+</nav>
+<span style="height: 56px; padding: 0 22px; box-sizing: border-box; border-radius: 28px; display: flex; align-items: center; font-size: 22px; font-weight: 600; color: #4A5565">Updated 08:15</span>
+</footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1920,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var week = [
+      ['Wed', '21', 10.9, 0, '£2.38'], ['Thu', '22', 12.3, 18.4, '£4.92'], ['Fri', '23', 11.6, 0, '£2.51'],
+      ['Sat', '24', 14.8, 31.2, '£7.22'], ['Sun', '25', 15.2, 0, '£3.47'], ['Mon', '26', 11.1, 19.8, '£5.21'],
+      ['Tue', '27', 11.4, 22.6, '£5.02']
+    ];
+    var days = week.map(function (w) {
+      return {
+        day: w[0], date: w[1], cost: w[4],
+        kwh: (w[2] + w[3]).toFixed(1) + ' kWh',
+        house: Math.round(w[2] * 8), car: Math.round(w[3] * 8)
+      };
+    });
+    var rest = [24.2, 22.6, 20.1, 18.7, 16.9, 15.2, 13.4, 12.1, 10.8, 9.6, 8.9, 8.4, 8.7, 9.5, 11.9, 14.8,
+      29.6, 33.4, 36.2, 35.1, 31.8, 27.3, 22.4, 20.9, 19.6, 18.2, 17.4, 16.1, 15.3, 14.6, 14.0, 13.2];
+    var slots = rest.map(function (p, i) {
+      return {
+        h: Math.round(p * 3.2),
+        fill: i === 0 ? '#161B22' : p <= 12 ? '#2456C9' : p >= 25 ? '#B85200' : '#8A95A5'
+      };
+    });
+    return { days: days, slots: slots };
+  }
+}
+</script>
+</body>
+</html>
