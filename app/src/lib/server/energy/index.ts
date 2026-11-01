@@ -3,6 +3,7 @@ import type { HalfHourUse, Live, OctopusStatus, Slot, UsageStatus } from '#lib/e
 import { addDays, dayKey, ukTime } from '#lib/time.ts';
 import { orElse } from '../fallback.ts';
 import { now } from '../now.ts';
+import { dataPath } from '../paths.ts';
 import { readJson, writeJson } from '../store.ts';
 import { createSync, type Kept, type Snapshot, type Sync } from '../sync.ts';
 import { Myenergi, toHalfHours, utcDays } from './myenergi.ts';
@@ -132,7 +133,7 @@ const LIVE_STALE_MS = 5 * 60_000;
 const HISTORY_MS = 15 * 60_000;
 // myenergi takes a little while to finish a day's history.
 const SETTLED_MS = 60 * 60_000;
-const DATABASE = 'data/energy.db';
+const DATABASE = 'energy.db';
 
 let zappi: { live: Sync<Live>; history: Sync<true>; store: UsageStore } | undefined;
 // The Zappi's last status, which also says how often to ask Octopus for slots.
@@ -142,7 +143,7 @@ let lastLive: Snapshot<Live> | null = null;
 function zappiSyncs(serial: string, apiKey: string) {
 	if (zappi) return zappi;
 	const client = new Myenergi(serial, apiKey);
-	const store = openUsageStore(DATABASE);
+	const store = openUsageStore(dataPath(DATABASE));
 	// UTC days whose whole history is already in the store.
 	const settled = new Set<string>();
 	const live = createSync({ name: 'Zappi status', fetch: () => client.live(), everyMs: LIVE_MS });

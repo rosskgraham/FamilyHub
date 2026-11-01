@@ -2,6 +2,7 @@ import { error } from '@sveltejs/kit';
 import { readFile } from 'node:fs/promises';
 import { CHORE_ICONS, WEEKDAYS, type BonusJob, type Chore, type ChoreConfig, type Routine } from '#lib/chores.ts';
 import { EVERYONE, type Household } from '#lib/household.ts';
+import { configPath } from '../paths.ts';
 
 // The real Chores stay out of Git beside household.json; chores.example.json shows the shape.
 const CHORES_FILE = 'chores.json';
@@ -30,11 +31,11 @@ export const sampleChores: ChoreConfig = {
 	]
 };
 
-/** The Chores from app/chores.json, or null if there's no file. Read on every call, so edits show without a restart. */
+/** The Chores from chores.json, or null if there's no file. Read on every call, so edits show without a restart. */
 export async function configuredChores(household: Household): Promise<ChoreConfig | null> {
 	let text: string;
 	try {
-		text = await readFile(CHORES_FILE, 'utf8');
+		text = await readFile(configPath(CHORES_FILE), 'utf8');
 	} catch (e) {
 		if ((e as NodeJS.ErrnoException).code === 'ENOENT') return null;
 		throw e;

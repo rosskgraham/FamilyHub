@@ -1,18 +1,19 @@
 import { error } from '@sveltejs/kit';
 import { readFile } from 'node:fs/promises';
+import { configPath } from './paths.ts';
 import { colours, EVERYONE, household, sampleHousehold, type Household, type MemberConfig } from '#lib/household.ts';
 
 // The real Household's names stay out of Git; household.example.json shows the shape.
 const HOUSEHOLD_FILE = 'household.json';
 
 /**
- * The Household from app/household.json, or the sample one if there's no file.
+ * The Household from household.json, or the sample one if there's no file.
  * Read on every call, so edits show without a restart.
  */
 export async function configuredHousehold(): Promise<{ household: Household; fromFile: boolean }> {
 	let text: string;
 	try {
-		text = await readFile(HOUSEHOLD_FILE, 'utf8');
+		text = await readFile(configPath(HOUSEHOLD_FILE), 'utf8');
 	} catch (e) {
 		if ((e as NodeJS.ErrnoException).code === 'ENOENT') return { household: sampleHousehold, fromFile: false };
 		throw e;
