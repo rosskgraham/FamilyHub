@@ -12,7 +12,8 @@ const CACHE_FILE = 'calendar-cache.json';
 const KEEP_DAYS = 7;
 const REWRITE_MS = 60 * 60_000;
 
-function touches(e: CalendarEvent, from: DayKey, to: DayKey): boolean {
+/** Whether an Event falls on any of the days from `from` up to `to`. */
+export function touches(e: CalendarEvent, from: DayKey, to: DayKey): boolean {
 	if (e.allDay) return e.start < to && e.end > from;
 	return new Date(e.start) < ukTime(to, '00:00') && new Date(e.end) > ukTime(from, '00:00');
 }

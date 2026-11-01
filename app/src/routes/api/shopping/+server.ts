@@ -1,7 +1,7 @@
 import { error, json } from '@sveltejs/kit';
 import type { ShoppingChange } from '#lib/shopping.ts';
 import { GoogleRefused, SignInNeeded } from '#lib/server/google/auth.ts';
-import { shoppingSource } from '#lib/server/shopping/index.ts';
+import { refreshShopping, shoppingSource } from '#lib/server/shopping/index.ts';
 import { addToQueue, QUEUED_ID, readQueue, sendQueue } from '#lib/server/shopping/queue.ts';
 import type { RequestHandler } from './$types';
 
@@ -32,6 +32,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	if (live && ((change.action !== 'add' && change.id.startsWith(QUEUED_ID)) || (await readQueue()).length > 0)) {
 		await addToQueue(change);
 		const waiting = await sendQueue(source);
+		if (waiting.length === 0) await refreshShopping();
 		return json({ ok: true }, { status: waiting.length > 0 ? 202 : 200 });
 	}
 	try {
@@ -48,5 +49,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		await addToQueue(change);
 		return json({ ok: true }, { status: 202 });
 	}
+	// So the page the screen loads next shows the change.
+	await refreshShopping();
 	return json({ ok: true });
 };
