@@ -1,6 +1,7 @@
 import { CALENDAR_SOURCE, HOME_LATITUDE, HOME_LONGITUDE } from '$app/env/private';
 import { sampleSun, type SunTimes } from '#lib/theme.ts';
 import type { Weather } from '#lib/weather.ts';
+import { orElse } from '../fallback.ts';
 import { createSync, type Sync } from '../sync.ts';
 import { fetchForecast, type Forecast } from './open-meteo.ts';
 
@@ -19,7 +20,11 @@ let lastSun: SunTimes | null = null;
  * The weather at home from Open-Meteo once HOME_LATITUDE and HOME_LONGITUDE are set, otherwise sample weather.
  * CALENDAR_SOURCE=sample forces sample weather too. Null when there's been no forecast for a while.
  */
-export async function loadWeather(): Promise<Weather | null> {
+export function loadWeather(): Promise<Weather | null> {
+	return orElse('Weather', loadForecast, null);
+}
+
+async function loadForecast(): Promise<Weather | null> {
 	if (CALENDAR_SOURCE === 'sample' || !HOME_LATITUDE || !HOME_LONGITUDE) return sampleWeather;
 	forecast ??= createSync({
 		name: 'Weather',

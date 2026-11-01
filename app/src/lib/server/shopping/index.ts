@@ -1,6 +1,7 @@
 import { CALENDAR_SOURCE } from '$app/env/private';
 import type { ShoppingItem, ShoppingStatus } from '#lib/shopping.ts';
 import { isConfigured, isSignedIn, SignInNeeded } from '../google/auth.ts';
+import { orElse } from '../fallback.ts';
 import { readSettings } from '../settings.ts';
 import { readJson, writeJson } from '../store.ts';
 import { createSync, type Kept, type Sync } from '../sync.ts';
@@ -59,7 +60,14 @@ export async function shoppingSource(): Promise<{
 	return { source: googleShopping(shoppingList!), live: true, setUp, listId: shoppingList };
 }
 
-export async function loadShopping(): Promise<ShoppingResult> {
+export function loadShopping(): Promise<ShoppingResult> {
+	return orElse('Shopping list', loadList, {
+		items: [],
+		status: { kind: 'stale', reason: 'offline', updatedAt: null, waiting: 0 }
+	});
+}
+
+async function loadList(): Promise<ShoppingResult> {
 	const { source, live, setUp, listId } = await shoppingSource();
 	if (!live) return { items: await source.list(), status: { kind: 'sample', setUp } };
 	const [{ value, at, error }, waiting] = await Promise.all([listSync(listId!, source).read(), readQueue()]);

@@ -1,22 +1,63 @@
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, open, readFile, rename, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 
 // What the Hub keeps on its own disk: the Google sign-in and local settings.
 // Git ignores this folder, so nothing here can reach the repo.
 const DATA_DIR = 'data';
 
-export async function readJson<T>(name: string): Promise<T | null> {
+/** The file, or null if there isn't one. A damaged one is moved aside and read as missing, so the Hub carries on. */
+export async function readJson<T>(name: string, dir = DATA_DIR): Promise<T | null> {
+	const path = join(dir, name);
+	let text: string;
 	try {
-		return JSON.parse(await readFile(join(DATA_DIR, name), 'utf8')) as T;
+		text = await readFile(path, 'utf8');
 	} catch (e) {
 		if ((e as NodeJS.ErrnoException).code === 'ENOENT') return null;
 		throw e;
 	}
+	try {
+		return JSON.parse(text) as T;
+	} catch {
+		// Kept rather than deleted, in case there's something in it worth getting back.
+		const aside = `${name}.damaged-${new Date().toISOString().replace(/[-:]|\.\d+/g, '')}`;
+		await rename(path, join(dir, aside));
+		console.error(`${name} was damaged, so it was moved to ${aside} and the Hub carried on without it`);
+		return null;
+	}
 }
 
-export async function writeJson(name: string, value: unknown): Promise<void> {
-	await mkdir(DATA_DIR, { recursive: true });
-	await writeFile(join(DATA_DIR, name), JSON.stringify(value, null, '\t'), { mode: 0o600 });
+let saves = 0;
+
+/**
+ * Saves the file in full or not at all: it's written alongside, flushed to the disk, then swapped in, so a power cut
+ * leaves either the old file or the new one.
+ */
+export async function writeJson(name: string, value: unknown, dir = DATA_DIR): Promise<void> {
+	await mkdir(dir, { recursive: true });
+	const path = join(dir, name);
+	const temp = `${path}.saving-${process.pid}-${saves++}`;
+	const file = await open(temp, 'w', 0o600);
+	try {
+		await file.writeFile(JSON.stringify(value, null, '\t'));
+		await file.sync();
+	} finally {
+		await file.close();
+	}
+	await rename(temp, path);
+	await syncFolder(dir);
+}
+
+/** Flushes the swap itself to the disk. Linux allows this; Windows, where the Hub only runs in development, doesn't. */
+async function syncFolder(dir: string): Promise<void> {
+	let folder;
+	try {
+		folder = await open(dir, 'r');
+		await folder.sync();
+	} catch {
+		// Not possible here.
+	} finally {
+		await folder?.close();
+	}
 }
 
 export async function remove(name: string): Promise<void> {

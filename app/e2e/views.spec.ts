@@ -13,7 +13,9 @@ const views = [
 	{ name: 'day-busy', path: '/day?date=2026-10-31' },
 	{ name: 'week', path: '/week' },
 	{ name: 'shopping', path: '/shopping' },
-	{ name: 'energy', path: '/energy' }
+	{ name: 'energy', path: '/energy' },
+	// The Hub's own error page, which a page that can't load shows too.
+	{ name: 'not-found', path: '/no-such-page' }
 ];
 
 for (const { name, path } of views) {

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en-GB">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>FamilyHub</title>
+		<style>
+			body {
+				margin: 0;
+				height: 100vh;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				gap: 16px;
+				background: #0e1116;
+				color: #f2f4f8;
+				font: 32px system-ui, sans-serif;
+				text-align: center;
+			}
+			h1 {
+				margin: 0;
+				font-size: 56px;
+			}
+			p {
+				margin: 0;
+				color: #a6b0bf;
+			}
+		</style>
+	</head>
+	<body>
+		<!-- The last resort, when even the Hub's frame couldn't load. Plain, and needs nothing from the Hub to show. -->
+		<h1>The Hub hit a problem</h1>
+		<p>It will try again shortly.</p>
+		<p>%sveltekit.status% · %sveltekit.error.message%</p>
+		<script>
+			// Reloads once the Hub answers, so a reload never lands on the browser's own "can't connect" page.
+			setInterval(async () => {
+				try {
+					if ((await fetch('/api/health', { cache: 'no-store' })).ok) location.reload();
+				} catch {
+					// Not answering yet.
+				}
+			}, 30_000);
+		</script>
+	</body>
+</html>
