@@ -28,12 +28,23 @@ let sample: ChoreStore | undefined;
 export async function choresSetup(): Promise<ChoresSetup> {
 	const { household } = await configuredHousehold();
 	const config = CALENDAR_SOURCE === 'sample' ? null : await configuredChores(household);
-	if (config) return { config, household, store: (real ??= openChoreStore(dataPath(DATABASE))), sample: false };
+	if (config) return { config, household, store: openReal(), sample: false };
 	if (!sample) {
 		sample = openChoreStore(':memory:');
 		for (const event of sampleHistory(dayKey(now()))) sample.record(event);
 	}
 	return { config: sampleChores, household: sampleHousehold, store: sample, sample: true };
+}
+
+function openReal(): ChoreStore {
+	return (real ??= openChoreStore(dataPath(DATABASE)));
+}
+
+/** The real Chores' database, for backing up, or null when there are only sample Chores, which aren't kept. */
+export async function realChoreStore(): Promise<ChoreStore | null> {
+	if (CALENDAR_SOURCE === 'sample') return null;
+	const { household } = await configuredHousehold();
+	return (await configuredChores(household)) ? openReal() : null;
 }
 
 /**

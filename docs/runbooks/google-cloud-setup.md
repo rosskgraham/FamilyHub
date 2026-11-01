@@ -10,11 +10,12 @@ Do this once, signed in to the Household's Google account. It takes about 30 min
 2. Open the project picker at the top, choose **New project**, name it `FamilyHub`, and create it.
 3. Check that `FamilyHub` is selected in the project picker before going on.
 
-## 2. Turn on the two APIs
+## 2. Turn on the three APIs
 
 1. Go to **APIs & Services → Library**.
 2. Search for **Google Calendar API**, open it, and choose **Enable**.
 3. Do the same for **Google Tasks API**.
+4. Do the same for **Google Drive API**, for the nightly Chores backups.
 
 ## 3. Set up the sign-in screen
 
@@ -22,9 +23,10 @@ This is under **Google Auth Platform** (older consoles call it **OAuth consent s
 
 1. **Branding:** app name `FamilyHub`, and the Household's address as the support and developer contact email.
 2. **Audience:** user type **External**.
-3. **Data Access → Add or remove scopes:** add exactly these two:
+3. **Data Access → Add or remove scopes:** add exactly these three:
    - `https://www.googleapis.com/auth/calendar.readonly` (read Calendars, never change them)
    - `https://www.googleapis.com/auth/tasks` (read and change the Shopping list)
+   - `https://www.googleapis.com/auth/drive.file` (only the files the Hub creates itself: the Chores backups, in a "FamilyHub backups" folder)
 4. **Audience → Test users → Add users:** add the Household's Google account. While the app is in **Testing**, only listed test users can sign in.
 
 > [!NOTE]
@@ -72,3 +74,7 @@ Calendar IDs aren't secret, but they're the Household's. Note them for now. They
 - **The sign-in stops working after a week:** expected while the app is in Testing. Sign in again.
 - **"Access blocked: FamilyHub has not completed the Google verification process":** the account signing in isn't a test user. Add it (step 3.4).
 - **"Access denied" with no warning screen:** the signed-in Google account isn't the Household's account.
+
+## Adding the Drive permission to an existing setup
+
+The Chores backups need the third scope. If the Hub was set up before it, turn on the **Google Drive API** (step 2), add the `drive.file` scope (step 3), then on the Hub's setup page choose **Sign out of Google** and sign in again. Until then, the setup page says the backups need a fresh sign-in, and everything else carries on as before.
