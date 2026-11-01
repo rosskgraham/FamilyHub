@@ -1,5 +1,8 @@
 import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from '$app/env/private';
 import { readJson, remove, writeJson } from '../store.ts';
+import { googleError, SignInNeeded } from './errors.ts';
+
+export { GoogleRefused, SignInNeeded } from './errors.ts';
 
 // Read Calendars, never change them; read and change the Shopping list.
 const SCOPES = [
@@ -12,23 +15,6 @@ const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const TOKEN_FILE = 'google-token.json';
 // A request that hangs is as good as none, and holds up the page while it waits.
 const TIMEOUT_MS = 10_000;
-
-/** Google has ended the Hub's sign-in, or it never signed in. */
-export class SignInNeeded extends Error {
-	constructor() {
-		super('Google sign-in needed');
-	}
-}
-
-/** Google answered, but turned the request down, for example because the item is gone. Trying again won't help. */
-export class GoogleRefused extends Error {
-	readonly status: number;
-
-	constructor(status: number, message: string) {
-		super(message);
-		this.status = status;
-	}
-}
 
 interface StoredToken {
 	refreshToken: string;
@@ -130,12 +116,8 @@ export async function googleRequest<T>(
 			cached = null;
 			continue;
 		}
-		const message = `Google API request failed: ${response.status} ${method} ${url.split('?')[0]}`;
-		// 408 and 429 mean try later, like a server error.
-		if (response.status >= 400 && response.status < 500 && response.status !== 408 && response.status !== 429) {
-			throw new GoogleRefused(response.status, message);
-		}
-		throw new Error(message);
+		const said = await response.json().catch(() => null);
+		throw googleError(response.status, said, `Google API request failed, ${method} ${url.split('?')[0]}`);
 	}
 	throw new SignInNeeded();
 }

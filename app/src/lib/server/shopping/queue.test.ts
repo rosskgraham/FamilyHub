@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { GoogleRefused } from '../google/auth.ts';
+import { googleError } from '../google/errors.ts';
 import { enqueue, send, withQueue, type QueuedChange } from './queue.ts';
 import type { ShoppingSource } from './source.ts';
 
@@ -89,5 +90,13 @@ describe('send', () => {
 		const google = source((call) => (call === 'tick eggs true' ? new GoogleRefused(404, 'gone') : null));
 		expect(await send(queue, google.list)).toEqual([]);
 		expect(google.calls).toEqual(['add Bread', 'tick id-Bread true', 'remove milk']);
+	});
+
+	it.each([
+		['to slow down, which it sends as a 403', googleError(403, { error: { errors: [{ reason: 'rateLimitExceeded' }] } }, 'failed')],
+		['for a fresh sign-in', googleError(403, { error: { errors: [{ reason: 'insufficientPermissions' }] } }, 'failed')]
+	])('keeps a change when Google asks %s', async (_, error) => {
+		const google = source((call) => (call === 'tick eggs true' ? error : null));
+		expect(await send(queue, google.list)).toEqual(queue.slice(1));
 	});
 });
