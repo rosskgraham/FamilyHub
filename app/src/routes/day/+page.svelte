@@ -45,7 +45,7 @@
 	{#if day.allDay.length > 0}
 		<div class="banners">
 			{#each day.allDay as event (event.id)}
-				<Banner owner={data.owners[event.owner]} title={event.title} height={56} badge={36} fontSize={26} />
+				<Banner owner={data.owners[event.owner]} title={event.title} bin={event.bin} height={56} badge={36} fontSize={26} />
 			{/each}
 		</div>
 	{/if}

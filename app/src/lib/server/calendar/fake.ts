@@ -1,3 +1,4 @@
+import { asBinDay } from '#lib/bins.ts';
 import type { CalendarEvent } from '#lib/calendar.ts';
 import type { OwnerId } from '#lib/household.ts';
 import { addDays, ukTime, weekday, type DayKey } from '#lib/time.ts';
@@ -16,7 +17,8 @@ const typicalWeek: Template[][] = [
 		['16:30', 'Piano lesson', 'maya'],
 		['19:00', 'Book club', 'sam']
 	],
-	[[null, 'Bin day', 'everyone'], ['17:00', 'Swimming', 'maya'], ['18:00', 'Five-a-side', 'alex']],
+	// On Alex's Calendar, like the real recurring one; it shows as everyone's.
+	[[null, 'Blue bin collection day', 'alex'], ['17:00', 'Swimming', 'maya'], ['18:00', 'Five-a-side', 'alex']],
 	[['15:30', 'Dentist', 'leo'], ['19:30', 'Takeaway night', 'everyone']],
 	// A busy Saturday, more than a Week view column holds, to show the overflow.
 	[
@@ -43,7 +45,7 @@ export const fakeCalendar: CalendarSource = {
 			typicalWeek[weekday(key)]!.forEach(([time, title, owner], i) => {
 				const id = `fake-${key}-${i}`;
 				if (time === null) {
-					events.push({ id, title, owner, allDay: true, start: key, end: addDays(key, 1) });
+					events.push(asBinDay({ id, title, owner, allDay: true, start: key, end: addDays(key, 1) }));
 				} else {
 					const start = ukTime(key, time);
 					const end = new Date(start.getTime() + 60 * 60_000);

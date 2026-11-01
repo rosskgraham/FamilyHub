@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { binColours } from './bins.ts';
 import { sleepPalette } from './sleep.ts';
 import { memberColours, palettes, themeAt, themes, type Palette } from './theme.ts';
 
@@ -71,6 +72,13 @@ const shapes = (p: Palette): [string, string, string][] => [
 	['Peak line', p.peak, p.card],
 	['car plugged in', p.plugged, p.card],
 	['car unplugged', p.dim, p.card],
+	...binColours.flatMap((bin): [string, string, string][] => {
+		const colour = p[`bin${bin[0]!.toUpperCase()}${bin.slice(1)}` as keyof Palette] as string;
+		return [
+			[`${bin} bin`, colour, p.card],
+			[`${bin} bin on a past day`, colour, p.past]
+		];
+	}),
 	...(['card', 'offPeakBg', 'slotBg'] as const).flatMap((bg): [string, string, string][] => [
 		[`House bar on ${bg}`, p.house, p[bg]],
 		[`Car bar on ${bg}`, p.car, p[bg]],

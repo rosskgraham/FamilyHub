@@ -1,3 +1,4 @@
+import type { BinColour } from './bins.ts';
 import type { OwnerId } from './household.ts';
 import { dayKey, type DayKey } from './time.ts';
 
@@ -10,6 +11,8 @@ export interface CalendarEvent {
 	start: string;
 	/** An ISO instant for a timed Event; the DayKey after the last day for an all-day one. */
 	end: string;
+	/** Set on a bin day, which shows a bin in this colour instead of a badge. */
+	bin?: BinColour;
 }
 
 /** Where the Events on screen came from, and how fresh they are. */
