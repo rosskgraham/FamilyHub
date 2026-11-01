@@ -30,8 +30,15 @@ describe('asBinDay', () => {
 		}
 	);
 
-	it('leaves a timed Event alone, even with the name', () => {
-		const timed = { ...allDay('Blue bin collection day'), allDay: false, start: '2026-10-29T07:00:00.000Z' };
-		expect(asBinDay(timed)).toBe(timed);
+	it('shows a timed bin day, as the council’s calendar sends them, as all day on its day', () => {
+		const at = '2026-10-29T07:00:00.000Z';
+		const timed = { ...allDay('Blue bin collection day'), allDay: false, start: at, end: at };
+		expect(asBinDay(timed)).toEqual({ ...allDay('Blue bin'), owner: 'everyone', bin: 'blue' });
+	});
+
+	it('puts a timed bin day on its UK day, not its UTC one', () => {
+		const at = '2026-07-01T23:30:00.000Z';
+		const timed = { ...allDay('Grey bin collection day'), allDay: false, start: at, end: at };
+		expect(asBinDay(timed)).toMatchObject({ allDay: true, start: '2026-07-02', end: '2026-07-03' });
 	});
 });
