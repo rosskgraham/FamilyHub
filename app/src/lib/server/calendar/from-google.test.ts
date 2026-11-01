@@ -33,6 +33,11 @@ describe('toEvents', () => {
 		expect(toEvents([bins], 'everyone')[0]).toMatchObject({ allDay: true, start: '2026-10-29', end: '2026-10-30' });
 	});
 
+	it('makes a bin day on a personal Calendar the Household’s, with its bin', () => {
+		const bins = { id: 'bins', summary: 'Blue bin collection day', start: { date: '2026-10-29' }, end: { date: '2026-10-30' } };
+		expect(toEvents([bins], 'alex')[0]).toMatchObject({ title: 'Blue bin', owner: 'everyone', bin: 'blue' });
+	});
+
 	it('falls back to the event id and a placeholder title', () => {
 		const bare = { id: 'x1', start: meeting.start, end: meeting.end };
 		expect(toEvents([bare], 'sam')[0]).toMatchObject({ id: 'x1', title: '(No title)' });

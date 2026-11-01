@@ -1,16 +1,19 @@
 <script lang="ts">
+	import type { BinColour } from '#lib/bins.ts';
 	import type { Owner } from '#lib/household.ts';
 	import Badge from './Badge.svelte';
+	import BinIcon from './BinIcon.svelte';
 
 	// An all-day Event: outlined in its owner's colour, with no time, so it
-	// never looks like a timed Event, which is filled and leads with its time.
+	// never looks like a timed Event, which is filled and leads with its time. A bin day shows its bin instead of a badge.
 	let {
 		owner,
 		title,
 		height,
 		badge = 26,
-		fontSize = 20
-	}: { owner: Owner; title: string; height: number; badge?: number; fontSize?: number } = $props();
+		fontSize = 20,
+		bin
+	}: { owner: Owner; title: string; height: number; badge?: number; fontSize?: number; bin?: BinColour } = $props();
 </script>
 
 <div
@@ -20,7 +23,7 @@
 	style:color={owner.fg}
 	style:font-size="{fontSize}px"
 >
-	<Badge {owner} size={badge} />
+	{#if bin}<BinIcon colour={bin} size={badge} />{:else}<Badge {owner} size={badge} />{/if}
 	<span class="title">{title}</span>
 </div>
 

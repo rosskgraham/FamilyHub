@@ -83,6 +83,11 @@ export interface Palette {
 	cheapFg: string;
 	/** The car icon on the Today view's Energy card when the car is plugged in. */
 	plugged: string;
+	/** Each bin's colour, for its icon on a bin day. */
+	binBlue: string;
+	binGrey: string;
+	binBrown: string;
+	binPurple: string;
 	members: Record<(typeof memberColours)[number], MemberColours>;
 }
 
@@ -121,6 +126,10 @@ export const palettes: Record<Theme, Palette> = {
 		slotBg: '#E6EEFF',
 		cheapFg: '#0F2F78',
 		plugged: '#B07D00',
+		binBlue: '#2456C9',
+		binGrey: '#6B7586',
+		binBrown: '#7A4A1E',
+		binPurple: '#6C3FC4',
 		members: {
 			blue: { bg: '#D6E4FF', fg: '#0F2F78', solid: '#2456C9', on: '#FFFFFF' },
 			orange: { bg: '#FFDDB8', fg: '#6B2E00', solid: '#B85200', on: '#FFFFFF' },
@@ -163,6 +172,10 @@ export const palettes: Record<Theme, Palette> = {
 		slotBg: '#1A2438',
 		cheapFg: '#C4D6FF',
 		plugged: '#F5B400',
+		binBlue: '#7FA8FF',
+		binGrey: '#A6B0BF',
+		binBrown: '#C98F55',
+		binPurple: '#B99BFF',
 		members: {
 			blue: { bg: '#1C2B52', fg: '#C4D6FF', solid: '#7FA8FF', on: '#0B1A3F' },
 			orange: { bg: '#4A2A0E', fg: '#FFD8B0', solid: '#FFA85C', on: '#3A1800' },

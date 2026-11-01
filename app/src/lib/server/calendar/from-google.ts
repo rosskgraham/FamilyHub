@@ -1,3 +1,4 @@
+import { asBinDay } from '#lib/bins.ts';
 import type { CalendarEvent } from '#lib/calendar.ts';
 import type { OwnerId } from '#lib/household.ts';
 
@@ -16,7 +17,7 @@ export interface GoogleEvent {
 	attendees?: { self?: boolean; responseStatus?: string }[];
 }
 
-/** One Calendar's Google events as Events for `owner`, leaving out cancelled and declined ones. */
+/** One Calendar's Google events as Events for `owner`, leaving out cancelled and declined ones. Bin days are everyone's. */
 export function toEvents(items: GoogleEvent[], owner: OwnerId): CalendarEvent[] {
 	return items
 		.filter((item) => item.status !== 'cancelled')
@@ -31,7 +32,8 @@ export function toEvents(items: GoogleEvent[], owner: OwnerId): CalendarEvent[] 
 				start: allDay ? item.start.date! : new Date(item.start.dateTime!).toISOString(),
 				end: allDay ? item.end.date! : new Date(item.end.dateTime!).toISOString()
 			};
-		});
+		})
+		.map(asBinDay);
 }
 
 /**
