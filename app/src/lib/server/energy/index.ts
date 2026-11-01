@@ -1,6 +1,7 @@
 import { CALENDAR_SOURCE, OCTOPUS_ACCOUNT, OCTOPUS_API_KEY, ZAPPI_GLO_API_KEY, ZAPPI_GLO_SN } from '$app/env/private';
 import type { HalfHourUse, Live, OctopusStatus, Slot, UsageStatus } from '#lib/energy.ts';
 import { addDays, dayKey, ukTime } from '#lib/time.ts';
+import { orElse } from '../fallback.ts';
 import { now } from '../now.ts';
 import { readJson, writeJson } from '../store.ts';
 import { createSync, type Kept, type Snapshot, type Sync } from '../sync.ts';
@@ -31,7 +32,10 @@ type Usage = Pick<EnergyResult, 'today' | 'yesterday' | 'live' | 'usageStatus'> 
 /** Octopus's rates and slots, and the Zappi's usage. Each falls back on its own, so one failing leaves the other. */
 export async function loadEnergy(): Promise<EnergyResult> {
 	const at = now();
-	const [rates, usage] = await Promise.all([loadRates(at), loadUsage(at)]);
+	const [rates, usage] = await Promise.all([
+		orElse('Octopus', () => loadRates(at), noRates),
+		orElse('Zappi', () => loadUsage(at), noUsage)
+	]);
 	return {
 		tariff: rates.tariff,
 		slots: rates.slots,
@@ -43,6 +47,9 @@ export async function loadEnergy(): Promise<EnergyResult> {
 		needsAlex: { octopus: rates.needsAlex, zappi: usage.needsAlex }
 	};
 }
+
+const noRates: Rates = { tariff: null, slots: [], status: { kind: 'stale', updatedAt: null }, needsAlex: null };
+const noUsage: Usage = { today: [], yesterday: [], live: null, usageStatus: { kind: 'stale', updatedAt: null }, needsAlex: null };
 
 /** The earlier of two runs of failures that need Alex. */
 function earlier(a: string | null, b: string | null): string | null {

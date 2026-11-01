@@ -4,6 +4,7 @@ import { sampleHousehold, type Household } from '#lib/household.ts';
 import { addDays, dayKey, startOfWeek, type DayKey } from '#lib/time.ts';
 import { isConfigured, isSignedIn, SignInNeeded } from '../google/auth.ts';
 import { configuredHousehold } from '../household.ts';
+import { orElse } from '../fallback.ts';
 import { readSettings } from '../settings.ts';
 import { createSync, type Sync } from '../sync.ts';
 import { fromCache, readCache, saveRange, touches } from './cache.ts';
@@ -50,7 +51,16 @@ function eventsSync(calendars: Record<string, string>, today: DayKey) {
  * Set CALENDAR_SOURCE=sample to force sample Events. Days near today come from the background sync at once; others are
  * asked for there and then.
  */
-export async function loadCalendar(from: DayKey, to: DayKey): Promise<CalendarResult> {
+export function loadCalendar(from: DayKey, to: DayKey): Promise<CalendarResult> {
+	return orElse('Calendar', () => loadEvents(from, to), {
+		events: [],
+		status: { kind: 'stale', reason: 'offline', updatedAt: null },
+		// With no Events, whose they would be doesn't matter.
+		household: sampleHousehold
+	});
+}
+
+async function loadEvents(from: DayKey, to: DayKey): Promise<CalendarResult> {
 	const { household } = await configuredHousehold();
 	// Calendars chosen for someone no longer in the Household are left out.
 	const calendars = Object.fromEntries(
