@@ -35,6 +35,14 @@ export const variables = defineEnvVars({
 		description: 'The myenergi account’s API key, from myaccount.myenergi.com. Never commit it.',
 		schema: optional
 	},
+	HUB_DATA_DIR: {
+		description: 'The folder for what the Hub writes itself: the Google sign-in, settings, saved answers and databases. On the Pi, a folder on the data partition outside the releases. Defaults to app/data.',
+		schema: optional
+	},
+	HUB_CONFIG_DIR: {
+		description: 'The folder holding household.json and chores.json. On the Pi, a folder on the data partition outside the releases. Defaults to app.',
+		schema: optional
+	},
 	HUB_NOW: {
 		description: 'Pretend it is this moment (an ISO time) on the server. Only for the screenshot tests.',
 		schema: optional

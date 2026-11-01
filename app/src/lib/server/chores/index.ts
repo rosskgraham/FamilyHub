@@ -4,10 +4,11 @@ import { sampleHousehold, type Household } from '#lib/household.ts';
 import { addDays, dayKey, formatTime, type DayKey } from '#lib/time.ts';
 import { configuredHousehold } from '../household.ts';
 import { now } from '../now.ts';
+import { dataPath } from '../paths.ts';
 import { sampleChores, configuredChores } from './config.ts';
 import { openChoreStore, type ChoreStore } from './store.ts';
 
-const DATABASE = 'data/hub.db';
+const DATABASE = 'hub.db';
 
 export interface ChoresSetup {
 	config: ChoreConfig;
@@ -20,14 +21,14 @@ let real: ChoreStore | undefined;
 let sample: ChoreStore | undefined;
 
 /**
- * The Chores from app/chores.json with the real Household and database, or sample Chores,
+ * The Chores from chores.json with the real Household and database, or sample Chores,
  * the sample Household and a sample record kept in memory, which resets when the app restarts.
  * CALENDAR_SOURCE=sample forces the sample.
  */
 export async function choresSetup(): Promise<ChoresSetup> {
 	const { household } = await configuredHousehold();
 	const config = CALENDAR_SOURCE === 'sample' ? null : await configuredChores(household);
-	if (config) return { config, household, store: (real ??= openChoreStore(DATABASE)), sample: false };
+	if (config) return { config, household, store: (real ??= openChoreStore(dataPath(DATABASE))), sample: false };
 	if (!sample) {
 		sample = openChoreStore(':memory:');
 		for (const event of sampleHistory(dayKey(now()))) sample.record(event);

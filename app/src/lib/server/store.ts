@@ -1,12 +1,12 @@
 import { mkdir, open, readFile, rename, rm } from 'node:fs/promises';
 import { join } from 'node:path';
+import { dataPath } from './paths.ts';
 
-// What the Hub keeps on its own disk: the Google sign-in and local settings.
-// Git ignores this folder, so nothing here can reach the repo.
-const DATA_DIR = 'data';
+// What the Hub keeps on its own disk: the Google sign-in, local settings and saved answers.
+// On the PC this is app/data, which Git ignores, so nothing here can reach the repo.
 
 /** The file, or null if there isn't one. A damaged one is moved aside and read as missing, so the Hub carries on. */
-export async function readJson<T>(name: string, dir = DATA_DIR): Promise<T | null> {
+export async function readJson<T>(name: string, dir = dataPath()): Promise<T | null> {
 	const path = join(dir, name);
 	let text: string;
 	try {
@@ -32,7 +32,7 @@ let saves = 0;
  * Saves the file in full or not at all: it's written alongside, flushed to the disk, then swapped in, so a power cut
  * leaves either the old file or the new one.
  */
-export async function writeJson(name: string, value: unknown, dir = DATA_DIR): Promise<void> {
+export async function writeJson(name: string, value: unknown, dir = dataPath()): Promise<void> {
 	await mkdir(dir, { recursive: true });
 	const path = join(dir, name);
 	const temp = `${path}.saving-${process.pid}-${saves++}`;
@@ -61,5 +61,5 @@ async function syncFolder(dir: string): Promise<void> {
 }
 
 export async function remove(name: string): Promise<void> {
-	await rm(join(DATA_DIR, name), { force: true });
+	await rm(dataPath(name), { force: true });
 }
