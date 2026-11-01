@@ -3,6 +3,7 @@ import type { ShoppingItem, ShoppingStatus } from '#lib/shopping.ts';
 import { isConfigured, isSignedIn, SignInNeeded } from '../google/auth.ts';
 import { readSettings } from '../settings.ts';
 import { readJson, writeJson } from '../store.ts';
+import { createSync, type Kept, type Sync } from '../sync.ts';
 import { fakeShopping } from './fake.ts';
 import { googleShopping } from './google.ts';
 import { readQueue, sendQueue, withQueue } from './queue.ts';
@@ -15,54 +16,64 @@ export interface ShoppingResult {
 
 // The last good list, shown if Google can't be reached. It's kept on disk too, for when the Hub restarts offline.
 const CACHE_FILE = 'shopping-cache.json';
-const REWRITE_MS = 60 * 60_000;
-type Cached = { items: ShoppingItem[]; at: string };
-let lastGood: Cached | null | undefined;
-let written = 0;
+// Changes at the Hub refresh it straight away; this is for changes made on phones.
+const REFRESH_MS = 60_000;
 
-async function remembered(): Promise<Cached | null> {
-	if (lastGood === undefined) lastGood = await readJson<Cached>(CACHE_FILE);
-	return lastGood;
-}
+let sync: { listId: string; list: Sync<ShoppingItem[]> } | undefined;
 
-async function remember(items: ShoppingItem[]): Promise<Cached> {
-	const changed = JSON.stringify((await remembered())?.items) !== JSON.stringify(items);
-	lastGood = { items, at: new Date().toISOString() };
-	// When the list changes, and otherwise hourly to keep the time fresh: every minute would wear out the Pi's SD card.
-	if (changed || Date.now() - written > REWRITE_MS) {
-		await writeJson(CACHE_FILE, lastGood);
-		written = Date.now();
+/** The background sync for one Google Tasks list, started again if a different list is chosen. */
+function listSync(listId: string, source: ShoppingSource): Sync<ShoppingItem[]> {
+	if (sync?.listId !== listId) {
+		const list = createSync({
+			name: 'Shopping list',
+			fetch: async () => {
+				// Changes made while offline go first, so the list Google sends back includes them.
+				await sendQueue(source);
+				return source.list();
+			},
+			everyMs: REFRESH_MS,
+			load: async () => {
+				const cached = await readJson<{ items: ShoppingItem[]; at: string }>(CACHE_FILE);
+				return cached && { value: cached.items, at: cached.at };
+			},
+			save: (k: Kept<ShoppingItem[]>) => writeJson(CACHE_FILE, { items: k.value, at: k.at })
+		});
+		sync = { listId, list };
 	}
-	return lastGood;
+	return sync.list;
 }
 
 /**
  * The Google Tasks list once the Hub is signed in and a list is chosen, otherwise the sample list.
  * CALENDAR_SOURCE=sample forces the sample list too.
  */
-export async function shoppingSource(): Promise<{ source: ShoppingSource; live: boolean; setUp: boolean }> {
+export async function shoppingSource(): Promise<{
+	source: ShoppingSource;
+	live: boolean;
+	setUp: boolean;
+	listId?: string;
+}> {
 	const { shoppingList } = await readSettings();
 	const setUp = isConfigured() && shoppingList !== undefined && (await isSignedIn());
 	if (CALENDAR_SOURCE === 'sample' || !setUp) return { source: fakeShopping, live: false, setUp };
-	return { source: googleShopping(shoppingList!), live: true, setUp };
+	return { source: googleShopping(shoppingList!), live: true, setUp, listId: shoppingList };
 }
 
 export async function loadShopping(): Promise<ShoppingResult> {
-	const { source, live, setUp } = await shoppingSource();
+	const { source, live, setUp, listId } = await shoppingSource();
 	if (!live) return { items: await source.list(), status: { kind: 'sample', setUp } };
-	try {
-		// Changes made while offline go first, so the list Google sends back includes them.
-		const waiting = await sendQueue(source);
-		const { items, at } = await remember(await source.list());
-		if (waiting.length === 0) return { items, status: { kind: 'live', updatedAt: at } };
-		return { items: withQueue(items, waiting), status: { kind: 'stale', reason: 'offline', updatedAt: at, waiting: waiting.length } };
-	} catch (e) {
-		const reason = e instanceof SignInNeeded ? 'sign-in' : 'offline';
-		if (reason === 'offline') console.error('Shopping list sync failed:', e);
-		const [last, waiting] = await Promise.all([remembered(), readQueue()]);
-		return {
-			items: withQueue(last?.items ?? [], waiting),
-			status: { kind: 'stale', reason, updatedAt: last?.at ?? null, waiting: waiting.length }
-		};
+	const [{ value, at, error }, waiting] = await Promise.all([listSync(listId!, source).read(), readQueue()]);
+	const items = withQueue(value ?? [], waiting);
+	if (error) {
+		const reason = error instanceof SignInNeeded ? 'sign-in' : 'offline';
+		return { items, status: { kind: 'stale', reason, updatedAt: at, waiting: waiting.length } };
 	}
+	if (waiting.length > 0) return { items, status: { kind: 'stale', reason: 'offline', updatedAt: at, waiting: waiting.length } };
+	return { items, status: { kind: 'live', updatedAt: at! } };
+}
+
+/** Fetches the list again now, after a change at the Hub, so the screen shows it straight away. */
+export async function refreshShopping(): Promise<void> {
+	const { source, live, listId } = await shoppingSource();
+	if (live) await listSync(listId!, source).refresh();
 }
