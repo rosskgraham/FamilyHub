@@ -8,6 +8,8 @@ export interface Settings {
 	calendars: Record<OwnerId, string>;
 	/** The Google Tasks list that is the Shopping list. */
 	shoppingList?: string;
+	/** The Google Calendar of friends' and family's birthdays, shown as everyone's. */
+	birthdays?: string;
 }
 
 const SETTINGS_FILE = 'settings.json';

@@ -1,6 +1,7 @@
 import { CALENDAR_SOURCE } from '$app/env/private';
+import { asBirthday } from '#lib/birthdays.ts';
 import type { CalendarEvent, CalendarStatus } from '#lib/calendar.ts';
-import { sampleHousehold, type Household } from '#lib/household.ts';
+import { EVERYONE, sampleHousehold, type Household } from '#lib/household.ts';
 import { addDays, dayKey, startOfWeek, type DayKey } from '#lib/time.ts';
 import { isConfigured, isSignedIn, SignInNeeded } from '../google/auth.ts';
 import { configuredHousehold } from '../household.ts';
@@ -10,6 +11,7 @@ import { createSync, type Sync } from '../sync.ts';
 import { fromCache, readCache, saveRange, touches } from './cache.ts';
 import { fakeCalendar } from './fake.ts';
 import { googleCalendar } from './google.ts';
+import type { CalendarSource } from './source.ts';
 
 export interface CalendarResult {
 	events: CalendarEvent[];
@@ -25,15 +27,29 @@ const WINDOW_DAYS = 14;
 
 let windowSync: { key: string; from: DayKey; to: DayKey; events: Sync<CalendarEvent[]> } | undefined;
 
+/** The chosen Calendars, and the Birthdays calendar if there is one, its Events shown as birthdays. */
+function chosenCalendars(calendars: Record<string, string>, birthdays: string | undefined): CalendarSource {
+	return {
+		async listEvents(from, to) {
+			const [events, birthdayEvents] = await Promise.all([
+				googleCalendar(calendars).listEvents(from, to),
+				birthdays ? googleCalendar({ [EVERYONE]: birthdays }).listEvents(from, to) : []
+			]);
+			return [...events, ...birthdayEvents.map(asBirthday)];
+		}
+	};
+}
+
 /** The background sync for the Calendars' window of days, started again when the week or the chosen Calendars change. */
-function eventsSync(calendars: Record<string, string>, today: DayKey) {
+function eventsSync(calendars: Record<string, string>, birthdays: string | undefined, today: DayKey) {
 	const from = startOfWeek(today);
 	const to = addDays(from, WINDOW_DAYS);
-	const key = `${from}|${JSON.stringify(calendars)}`;
+	const key = `${from}|${JSON.stringify(calendars)}|${birthdays}`;
 	if (windowSync?.key !== key) {
+		const source = chosenCalendars(calendars, birthdays);
 		const events = createSync({
 			name: 'Calendar',
-			fetch: () => googleCalendar(calendars).listEvents(from, to),
+			fetch: () => source.listEvents(from, to),
 			everyMs: REFRESH_MS,
 			load: async () => {
 				const last = fromCache(await readCache(), from, to);
@@ -63,9 +79,8 @@ export function loadCalendar(from: DayKey, to: DayKey): Promise<CalendarResult> 
 async function loadEvents(from: DayKey, to: DayKey): Promise<CalendarResult> {
 	const { household } = await configuredHousehold();
 	// Calendars chosen for someone no longer in the Household are left out.
-	const calendars = Object.fromEntries(
-		Object.entries((await readSettings()).calendars).filter(([owner]) => owner in household)
-	);
+	const settings = await readSettings();
+	const calendars = Object.fromEntries(Object.entries(settings.calendars).filter(([owner]) => owner in household));
 	const setUp = isConfigured() && Object.keys(calendars).length > 0 && (await isSignedIn());
 	if (CALENDAR_SOURCE === 'sample' || !setUp) {
 		return {
@@ -75,7 +90,7 @@ async function loadEvents(from: DayKey, to: DayKey): Promise<CalendarResult> {
 		};
 	}
 
-	const window = eventsSync(calendars, dayKey(new Date()));
+	const window = eventsSync(calendars, settings.birthdays, dayKey(new Date()));
 	if (window.from <= from && to <= window.to) {
 		const { value, at, error } = await window.events.read();
 		const events = (value ?? []).filter((e) => touches(e, from, to));
@@ -85,7 +100,7 @@ async function loadEvents(from: DayKey, to: DayKey): Promise<CalendarResult> {
 	}
 
 	try {
-		const events = await googleCalendar(calendars).listEvents(from, to);
+		const events = await chosenCalendars(calendars, settings.birthdays).listEvents(from, to);
 		const at = new Date().toISOString();
 		await saveRange(from, to, events, at, dayKey(new Date()));
 		return { events, status: { kind: 'live', updatedAt: at }, household };

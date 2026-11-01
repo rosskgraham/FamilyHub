@@ -71,7 +71,7 @@
 					<span class="num tabular">{dayOfMonth(key)}</span>
 				</a>
 				{#each fit.allDay as event (event.id)}
-					<Banner owner={data.owners[event.owner]} title={event.title} bin={event.bin} height={SPACE.row} />
+					<Banner owner={data.owners[event.owner]} title={event.title} bin={event.bin} birthday={event.birthday} height={SPACE.row} />
 				{/each}
 				{#if fit.earlier > 0}
 					<a class="line" href="/day?date={key}" style:height="{SPACE.row}px">{fit.earlier} earlier</a>

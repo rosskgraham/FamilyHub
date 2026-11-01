@@ -3,17 +3,27 @@
 	import type { Owner } from '#lib/household.ts';
 	import Badge from './Badge.svelte';
 	import BinIcon from './BinIcon.svelte';
+	import CakeIcon from './CakeIcon.svelte';
 
 	// An all-day Event: outlined in its owner's colour, with no time, so it
-	// never looks like a timed Event, which is filled and leads with its time. A bin day shows its bin instead of a badge.
+	// never looks like a timed Event, which is filled and leads with its time. A bin day shows its bin instead of a badge, and a birthday a cake.
 	let {
 		owner,
 		title,
 		height,
 		badge = 26,
 		fontSize = 20,
-		bin
-	}: { owner: Owner; title: string; height: number; badge?: number; fontSize?: number; bin?: BinColour } = $props();
+		bin,
+		birthday = false
+	}: {
+		owner: Owner;
+		title: string;
+		height: number;
+		badge?: number;
+		fontSize?: number;
+		bin?: BinColour;
+		birthday?: boolean;
+	} = $props();
 </script>
 
 <div
@@ -23,7 +33,7 @@
 	style:color={owner.fg}
 	style:font-size="{fontSize}px"
 >
-	{#if bin}<BinIcon colour={bin} size={badge} />{:else}<Badge {owner} size={badge} />{/if}
+	{#if bin}<BinIcon colour={bin} size={badge} />{:else if birthday}<CakeIcon size={badge} />{:else}<Badge {owner} size={badge} />{/if}
 	<span class="title">{title}</span>
 </div>
 

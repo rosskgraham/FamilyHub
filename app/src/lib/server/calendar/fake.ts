@@ -1,3 +1,4 @@
+import { asBirthday } from '#lib/birthdays.ts';
 import { asBinDay } from '#lib/bins.ts';
 import type { CalendarEvent } from '#lib/calendar.ts';
 import type { OwnerId } from '#lib/household.ts';
@@ -5,8 +6,8 @@ import { addDays, ukTime, weekday, type DayKey } from '#lib/time.ts';
 import type { CalendarSource } from './source.ts';
 
 // A typical week, from the mockups, repeated for every week asked for.
-// A null time is an all-day Event.
-type Template = [time: string | null, title: string, owner: OwnerId];
+// A null time is an all-day Event; an owner of 'birthdays' puts it on the Birthdays calendar.
+type Template = [time: string | null, title: string, owner: OwnerId | 'birthdays'];
 
 const typicalWeek: Template[][] = [
 	[['16:00', 'Swimming', 'maya'], ['18:30', 'Cubs', 'leo']],
@@ -19,7 +20,7 @@ const typicalWeek: Template[][] = [
 	],
 	// On Alex's Calendar, like the real recurring one; it shows as everyone's.
 	[[null, 'Blue bin collection day', 'alex'], ['17:00', 'Swimming', 'maya'], ['18:00', 'Five-a-side', 'alex']],
-	[['15:30', 'Dentist', 'leo'], ['19:30', 'Takeaway night', 'everyone']],
+	[[null, 'Grandad’s birthday', 'birthdays'], ['15:30', 'Dentist', 'leo'], ['19:30', 'Takeaway night', 'everyone']],
 	// A busy Saturday, more than a Week view column holds, to show the overflow.
 	[
 		['08:00', 'Parkrun', 'alex'],
@@ -44,7 +45,9 @@ export const fakeCalendar: CalendarSource = {
 		for (let key: DayKey = from; key < to; key = addDays(key, 1)) {
 			typicalWeek[weekday(key)]!.forEach(([time, title, owner], i) => {
 				const id = `fake-${key}-${i}`;
-				if (time === null) {
+				if (owner === 'birthdays') {
+					events.push(asBirthday({ id, title, owner: 'everyone', allDay: true, start: key, end: addDays(key, 1) }));
+				} else if (time === null) {
 					events.push(asBinDay({ id, title, owner, allDay: true, start: key, end: addDays(key, 1) }));
 				} else {
 					const start = ukTime(key, time);

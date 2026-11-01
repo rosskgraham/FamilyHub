@@ -38,6 +38,7 @@ export const load: PageServerLoad = async ({ url }) => {
 	}));
 	const shoppingList =
 		settings.shoppingList ?? taskLists.find((l) => l.title.toLowerCase().includes('shopping'))?.id ?? '';
+	const birthdays = settings.birthdays ?? calendars.find((c) => c.summary.toLowerCase().includes('birthday'))?.id ?? '';
 	return {
 		step: 'calendars' as const,
 		problem,
@@ -46,6 +47,7 @@ export const load: PageServerLoad = async ({ url }) => {
 		choices,
 		taskLists,
 		shoppingList,
+		birthdays,
 		saved: Object.keys(settings.calendars).length > 0
 	};
 };
@@ -60,8 +62,11 @@ export const actions = {
 			if (typeof value === 'string' && value !== '') calendars[id] = value;
 		}
 		if (Object.keys(calendars).length === 0) return fail(400, { message: 'Choose at least one Calendar.' });
-		const list = form.get('shoppingList');
-		await writeSettings({ calendars, shoppingList: typeof list === 'string' && list !== '' ? list : undefined });
+		const chosen = (name: string) => {
+			const value = form.get(name);
+			return typeof value === 'string' && value !== '' ? value : undefined;
+		};
+		await writeSettings({ calendars, shoppingList: chosen('shoppingList'), birthdays: chosen('birthdays') });
 		redirect(303, '/');
 	},
 	signOut: async () => {

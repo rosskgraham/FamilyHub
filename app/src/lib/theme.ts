@@ -88,6 +88,9 @@ export interface Palette {
 	binGrey: string;
 	binBrown: string;
 	binPurple: string;
+	/** The cake on a birthday, and its candle's flame. */
+	cake: string;
+	flame: string;
 	members: Record<(typeof memberColours)[number], MemberColours>;
 }
 
@@ -130,6 +133,8 @@ export const palettes: Record<Theme, Palette> = {
 		binGrey: '#6B7586',
 		binBrown: '#7A4A1E',
 		binPurple: '#6C3FC4',
+		cake: '#C2306B',
+		flame: '#B86200',
 		members: {
 			blue: { bg: '#D6E4FF', fg: '#0F2F78', solid: '#2456C9', on: '#FFFFFF' },
 			orange: { bg: '#FFDDB8', fg: '#6B2E00', solid: '#B85200', on: '#FFFFFF' },
@@ -176,6 +181,8 @@ export const palettes: Record<Theme, Palette> = {
 		binGrey: '#A6B0BF',
 		binBrown: '#C98F55',
 		binPurple: '#B99BFF',
+		cake: '#FF85B4',
+		flame: '#FFB547',
 		members: {
 			blue: { bg: '#1C2B52', fg: '#C4D6FF', solid: '#7FA8FF', on: '#0B1A3F' },
 			orange: { bg: '#4A2A0E', fg: '#FFD8B0', solid: '#FFA85C', on: '#3A1800' },

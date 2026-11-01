@@ -1,6 +1,6 @@
 import type { BinColour } from './bins.ts';
 import type { OwnerId } from './household.ts';
-import { dayKey, type DayKey } from './time.ts';
+import { addDays, dayKey, type DayKey } from './time.ts';
 
 export interface CalendarEvent {
 	id: string;
@@ -13,6 +13,15 @@ export interface CalendarEvent {
 	end: string;
 	/** Set on a bin day, which shows a bin in this colour instead of a badge. */
 	bin?: BinColour;
+	/** Set on someone's birthday, which shows a cake instead of a badge. */
+	birthday?: true;
+}
+
+/** The Event as all day: a timed one on its UK day, for Events where only the day matters, such as bin days. */
+export function allDayOn(event: CalendarEvent): CalendarEvent {
+	if (event.allDay) return event;
+	const day = dayKey(new Date(event.start));
+	return { ...event, allDay: true, start: day, end: addDays(day, 1) };
 }
 
 /** Where the Events on screen came from, and how fresh they are. */

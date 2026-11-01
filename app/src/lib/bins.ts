@@ -1,7 +1,6 @@
 // Bin days: Events named like "Blue bin collection day", shown all day as the Household's, with a bin in its colour.
-import type { CalendarEvent } from './calendar.ts';
+import { allDayOn, type CalendarEvent } from './calendar.ts';
 import { EVERYONE } from './household.ts';
-import { addDays, dayKey } from './time.ts';
 
 /** The council's bins. A colour not listed here isn't treated as a bin day. */
 export const binColours = ['blue', 'grey', 'brown', 'purple'] as const;
@@ -18,14 +17,5 @@ export function asBinDay(event: CalendarEvent): CalendarEvent {
 	const match = BIN_DAY.exec(event.title);
 	if (!match) return event;
 	const colour = match[1]!.toLowerCase().replace('gray', 'grey') as BinColour;
-	const day = event.allDay ? event.start : dayKey(new Date(event.start));
-	return {
-		...event,
-		title: `${colour[0]!.toUpperCase()}${colour.slice(1)} bin`,
-		owner: EVERYONE,
-		bin: colour,
-		allDay: true,
-		start: day,
-		end: event.allDay ? event.end : addDays(day, 1)
-	};
+	return { ...allDayOn(event), title: `${colour[0]!.toUpperCase()}${colour.slice(1)} bin`, owner: EVERYONE, bin: colour };
 }
