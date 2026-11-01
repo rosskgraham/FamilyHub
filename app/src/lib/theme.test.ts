@@ -79,6 +79,10 @@ const shapes = (p: Palette): [string, string, string][] => [
 			[`${bin} bin on a past day`, colour, p.past]
 		];
 	}),
+	['birthday cake', p.cake, p.card],
+	['birthday cake on a past day', p.cake, p.past],
+	['birthday candle', p.flame, p.card],
+	['birthday candle on a past day', p.flame, p.past],
 	...(['card', 'offPeakBg', 'slotBg'] as const).flatMap((bg): [string, string, string][] => [
 		[`House bar on ${bg}`, p.house, p[bg]],
 		[`Car bar on ${bg}`, p.car, p[bg]],

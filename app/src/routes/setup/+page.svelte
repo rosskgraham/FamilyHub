@@ -42,6 +42,16 @@
 					</select>
 				</label>
 			{/each}
+			<p class="section">Choose the Calendar of friends’ and family’s birthdays, if there is one. They show as everyone’s, with a cake.</p>
+			<label>
+				<span class="who">Birthdays</span>
+				<select name="birthdays" value={data.birthdays}>
+					<option value="">Not shown</option>
+					{#each data.calendars as calendar (calendar.id)}
+						<option value={calendar.id}>{calendar.summary}</option>
+					{/each}
+				</select>
+			</label>
 			<p class="section">Choose the Google Tasks list that is the Shopping list.</p>
 			<label>
 				<span class="who">Shopping</span>

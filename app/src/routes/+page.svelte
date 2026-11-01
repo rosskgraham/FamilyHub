@@ -77,7 +77,7 @@
 	{#if today.allDay.length > 0}
 		<div class="banners" style:height="{BANNER}px">
 			{#each today.allDay as event (event.id)}
-				<Banner owner={data.owners[event.owner]} title={event.title} bin={event.bin} height={BANNER} badge={36} fontSize={26} />
+				<Banner owner={data.owners[event.owner]} title={event.title} bin={event.bin} birthday={event.birthday} height={BANNER} badge={36} fontSize={26} />
 			{/each}
 		</div>
 	{/if}
@@ -109,7 +109,7 @@
 						<span class="day-num tabular">{dayOfMonth(key)}</span>
 					</a>
 					{#each fit.allDay as event (event.id)}
-						<Banner owner={data.owners[event.owner]} title={event.title} bin={event.bin} height={CHIP} badge={24} fontSize={21} />
+						<Banner owner={data.owners[event.owner]} title={event.title} bin={event.bin} birthday={event.birthday} height={CHIP} badge={24} fontSize={21} />
 					{/each}
 					{#each fit.timed as event (event.id)}
 						{@const owner = data.owners[event.owner]}
