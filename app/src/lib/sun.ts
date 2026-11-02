@@ -20,7 +20,8 @@ export function sunTimesOn(day: DayKey, latitude: number, longitude: number): Su
 	const n = Math.round(noon - J2000 + 0.0008);
 	const meanNoon = n - longitude / 360;
 	const anomaly = (357.5291 + 0.98560028 * meanNoon) % 360;
-	const centre = 1.9148 * Math.sin(rad(anomaly)) + 0.02 * Math.sin(rad(2 * anomaly)) + 0.0003 * Math.sin(rad(3 * anomaly));
+	const centre =
+		1.9148 * Math.sin(rad(anomaly)) + 0.02 * Math.sin(rad(2 * anomaly)) + 0.0003 * Math.sin(rad(3 * anomaly));
 	const eclipticLongitude = (anomaly + centre + 180 + 102.9372) % 360;
 	const transit = J2000 + meanNoon + 0.0053 * Math.sin(rad(anomaly)) - 0.0069 * Math.sin(rad(2 * eclipticLongitude));
 	const declination = Math.asin(Math.sin(rad(eclipticLongitude)) * Math.sin(rad(TILT)));

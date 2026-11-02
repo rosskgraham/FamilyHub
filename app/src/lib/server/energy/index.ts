@@ -68,7 +68,13 @@ function fromSettings(): EnergySources {
 }
 
 const noRates: Rates = { tariff: null, slots: [], status: { kind: 'stale', updatedAt: null }, needsAlex: null };
-const noUsage: Usage = { today: [], yesterday: [], live: null, usageStatus: { kind: 'stale', updatedAt: null }, needsAlex: null };
+const noUsage: Usage = {
+	today: [],
+	yesterday: [],
+	live: null,
+	usageStatus: { kind: 'stale', updatedAt: null },
+	needsAlex: null
+};
 
 /** The earlier of two runs of failures that need Alex. */
 function earlier(a: string | null, b: string | null): string | null {
@@ -139,7 +145,8 @@ export function createEnergy({ octopus, zappi, openStore, files, clock }: Energy
 	}
 
 	async function loadRates(when: Date): Promise<Rates> {
-		if (!octopus) return { tariff: sampleTariff, slots: sampleSlots(when), status: { kind: 'sample' }, needsAlex: null };
+		if (!octopus)
+			return { tariff: sampleTariff, slots: sampleSlots(when), status: { kind: 'sample' }, needsAlex: null };
 		octopusSyncs ??= startOctopus(octopus);
 		const [tariff, slots] = await Promise.all([octopusSyncs.tariff.read(), octopusSyncs.slots.read()]);
 		const needsAlex = earlier(tariff.needsAlex, slots.needsAlex);

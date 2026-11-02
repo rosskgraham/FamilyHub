@@ -11,9 +11,14 @@ const workflow = readFileSync(resolve(repo, '.github/workflows/ci.yml'), 'utf8')
 const image = workflow.match(/image: (mcr\.microsoft\.com\/playwright:\S+)/)?.[1];
 if (!image) throw new Error('No Playwright image found in .github/workflows/ci.yml');
 
-const args = process.argv.slice(2).map((a) => `'${a.replace(/'/g, `'\''`)}'`).join(' ');
+const args = process.argv
+	.slice(2)
+	.map((a) => `'${a.replace(/'/g, `'\\''`)}'`)
+	.join(' ');
 const result = spawnSync(
 	'docker',
+	// Kept as flag and value pairs, which Prettier would put a line each.
+	// prettier-ignore
 	[
 		'run', '--rm', '--ipc=host',
 		'-v', `${repo}:/work`,

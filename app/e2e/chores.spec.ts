@@ -63,7 +63,9 @@ test('an Up for grabs job done together gives everyone who did it the Stars', as
 	await expect(page).toHaveScreenshot('chores-up-for-grabs.png');
 
 	// Each child gets a Bonus job's Stars once a day.
-	const again = await request.post('/api/chores', { data: { child: 'maya', chore: 'dishwasher', routine: '', ticked: true } });
+	const again = await request.post('/api/chores', {
+		data: { child: 'maya', chore: 'dishwasher', routine: '', ticked: true }
+	});
 	expect(again.status()).toBe(409);
 
 	await grabs.getByRole('button', { name: 'Done by Leo and Maya. Undo?' }).click();

@@ -9,6 +9,8 @@ if (browser) {
 
 export const clock = {
 	get now(): Date {
+		// Replaced every second, never changed, so it doesn't need to be a SvelteDate.
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		return browser ? current : new Date();
 	}
 };

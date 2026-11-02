@@ -30,7 +30,10 @@ describe('googleError', () => {
 
 	it.each([
 		['the sign-in missing a permission', legacy(403, 'insufficientPermissions')],
-		['the sign-in missing a permission, newer style', modern(403, 'PERMISSION_DENIED', 'ACCESS_TOKEN_SCOPE_INSUFFICIENT')]
+		[
+			'the sign-in missing a permission, newer style',
+			modern(403, 'PERMISSION_DENIED', 'ACCESS_TOKEN_SCOPE_INSUFFICIENT')
+		]
 	])('asks for a fresh sign-in after %s', (_, body) => {
 		expect(googleError(403, body, 'Google API request failed')).toBeInstanceOf(SignInNeeded);
 	});

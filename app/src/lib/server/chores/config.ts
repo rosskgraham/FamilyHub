@@ -15,11 +15,26 @@ export const sampleChores: ChoreConfig = {
 		{ id: 'evening', name: 'Evening', from: '18:00' }
 	],
 	chores: [
-		{ id: 'teeth', name: 'Brush your teeth', icon: 'teeth', stars: 1, routines: ['morning', 'evening'], who: ['maya', 'leo'] },
+		{
+			id: 'teeth',
+			name: 'Brush your teeth',
+			icon: 'teeth',
+			stars: 1,
+			routines: ['morning', 'evening'],
+			who: ['maya', 'leo']
+		},
 		{ id: 'bed', name: 'Make your bed', icon: 'bed', stars: 1, routines: ['morning'], who: ['maya', 'leo'] },
 		{ id: 'dressed', name: 'Get dressed', icon: 'shirt', stars: 1, routines: ['morning'], who: ['maya', 'leo'] },
 		{ id: 'room', name: 'Tidy your room', icon: 'home', stars: 2, routines: ['after-school'], who: ['maya'] },
-		{ id: 'piano', name: 'Piano practice', icon: 'music', stars: 2, routines: ['after-school'], who: ['maya'], days: ['Mon', 'Wed', 'Fri'] },
+		{
+			id: 'piano',
+			name: 'Piano practice',
+			icon: 'music',
+			stars: 2,
+			routines: ['after-school'],
+			who: ['maya'],
+			days: ['Mon', 'Wed', 'Fri']
+		},
 		{ id: 'reading', name: 'Reading, 10 minutes', icon: 'book', stars: 2, routines: ['after-school'], who: ['leo'] },
 		{ id: 'bins', name: 'Put the bins out', icon: 'bin', stars: 3, routines: ['evening'], who: ['leo'], days: ['Wed'] },
 		{ id: 'pyjamas', name: 'Pyjamas on', icon: 'shirt', stars: 1, routines: ['evening'], who: ['maya', 'leo'] }
@@ -56,7 +71,8 @@ export function parseChores(text: string, household: Household): ChoreConfig {
 	if (!Array.isArray(json?.routines) || json.routines.length === 0) {
 		error(500, `${CHORES_FILE} needs a "routines" list with at least one Routine.`);
 	}
-	if (json.bonus !== undefined && !Array.isArray(json.bonus)) error(500, `"bonus" in ${CHORES_FILE} needs to be a list.`);
+	if (json.bonus !== undefined && !Array.isArray(json.bonus))
+		error(500, `"bonus" in ${CHORES_FILE} needs to be a list.`);
 	if (!Array.isArray(json.chores) || json.chores.length === 0) {
 		error(500, `${CHORES_FILE} needs a "chores" list with at least one Chore.`);
 	}
@@ -73,7 +89,10 @@ export function parseChores(text: string, household: Household): ChoreConfig {
 		return { id: r.id, name: r.name.trim(), from: r.from };
 	});
 	if (routines.some((r, i) => i > 0 && r.from <= routines[i - 1]!.from)) {
-		error(500, `The Routines in ${CHORES_FILE} need to be in the order they happen, each starting later than the one before.`);
+		error(
+			500,
+			`The Routines in ${CHORES_FILE} need to be in the order they happen, each starting later than the one before.`
+		);
 	}
 
 	const choreIds = new Set<string>();
@@ -97,7 +116,8 @@ export function parseChores(text: string, household: Household): ChoreConfig {
 		}
 		// A Member by their name or id, whatever the capitals.
 		const who = c.who.map((w) => {
-			const found = typeof w === 'string' && members.find((m) => [m.id, m.name.toLowerCase()].includes(w.trim().toLowerCase()));
+			const found =
+				typeof w === 'string' && members.find((m) => [m.id, m.name.toLowerCase()].includes(w.trim().toLowerCase()));
 			if (!found) error(500, `${where} is for "${w}", who isn't in household.json. Members are ${names}.`);
 			return found.id;
 		});
@@ -116,9 +136,13 @@ export function parseChores(text: string, household: Household): ChoreConfig {
 
 	// Bonus jobs share ids with Chores, so the two can't clash in the record.
 	const bonus = ((json.bonus ?? []) as Partial<BonusJob>[]).map((b, i): BonusJob => {
-		const where = typeof b?.id === 'string' ? `Bonus job "${b.id}" in ${CHORES_FILE}` : `Bonus job ${i + 1} in ${CHORES_FILE}`;
+		const where =
+			typeof b?.id === 'string' ? `Bonus job "${b.id}" in ${CHORES_FILE}` : `Bonus job ${i + 1} in ${CHORES_FILE}`;
 		if (typeof b?.id !== 'string' || !ID.test(b.id) || choreIds.has(b.id)) {
-			error(500, `${where} needs an "id" of lower-case letters, digits and dashes, different from every Chore and Bonus job.`);
+			error(
+				500,
+				`${where} needs an "id" of lower-case letters, digits and dashes, different from every Chore and Bonus job.`
+			);
 		}
 		if (typeof b.name !== 'string' || b.name.trim() === '') error(500, `${where} needs a "name".`);
 		if (!Number.isInteger(b.stars) || b.stars! < 1 || b.stars! > 3) error(500, `${where} needs "stars" from 1 to 3.`);
@@ -130,7 +154,10 @@ export function parseChores(text: string, household: Household): ChoreConfig {
 }
 
 function checkDays(days: unknown, where: string) {
-	if (days !== undefined && (!Array.isArray(days) || days.length === 0 || !days.every((d) => (WEEKDAYS as readonly string[]).includes(d)))) {
+	if (
+		days !== undefined &&
+		(!Array.isArray(days) || days.length === 0 || !days.every((d) => (WEEKDAYS as readonly string[]).includes(d)))
+	) {
 		error(500, `${where} has "days" that aren't ${WEEKDAYS.join(', ')}.`);
 	}
 }

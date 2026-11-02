@@ -33,7 +33,10 @@
 	style:color={owner.fg}
 	style:font-size="{fontSize}px"
 >
-	{#if bin}<BinIcon colour={bin} size={badge} />{:else if birthday}<CakeIcon size={badge} />{:else}<Badge {owner} size={badge} />{/if}
+	{#if bin}<BinIcon colour={bin} size={badge} />{:else if birthday}<CakeIcon size={badge} />{:else}<Badge
+			{owner}
+			size={badge}
+		/>{/if}
 	<span class="title">{title}</span>
 </div>
 

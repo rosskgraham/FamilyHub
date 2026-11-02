@@ -12,7 +12,11 @@ interface FakeItem {
 }
 
 let nextId = 1;
-const item = (text: string, tickedOffAt: Date | null = null): FakeItem => ({ id: `sample-${nextId++}`, text, tickedOffAt });
+const item = (text: string, tickedOffAt: Date | null = null): FakeItem => ({
+	id: `sample-${nextId++}`,
+	text,
+	tickedOffAt
+});
 
 const items: FakeItem[] = [
 	item('Milk'),
@@ -29,9 +33,11 @@ export const fakeShopping: ShoppingSource = {
 		const today = dayKey(now());
 		const toGet = items.filter((i) => !i.tickedOffAt);
 		const ticked = items.filter((i) => i.tickedOffAt && dayKey(i.tickedOffAt) === today);
-		return [...toGet, ...ticked].map(
-			(i): ShoppingItem => ({ id: i.id, text: i.text, tickedOff: i.tickedOffAt !== null })
-		);
+		return [...toGet, ...ticked].map((i): ShoppingItem => ({
+			id: i.id,
+			text: i.text,
+			tickedOff: i.tickedOffAt !== null
+		}));
 	},
 	async add(text) {
 		const added = item(text);

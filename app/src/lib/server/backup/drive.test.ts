@@ -21,7 +21,10 @@ describe('backupFolder', () => {
 		const [find, create, upload] = drive.calls;
 		expect(find!.method).toBe('GET');
 		expect(new URL(find!.url).searchParams.get('q')).toContain(`name = '${FOLDER_NAME}'`);
-		expect(create).toMatchObject({ method: 'POST', body: { name: FOLDER_NAME, mimeType: 'application/vnd.google-apps.folder' } });
+		expect(create).toMatchObject({
+			method: 'POST',
+			body: { name: FOLDER_NAME, mimeType: 'application/vnd.google-apps.folder' }
+		});
 		expect(upload!.url).toContain('uploadType=multipart');
 		const text = Buffer.from((upload!.body as RawBody).data).toString('latin1');
 		expect(text).toContain('"name":"chores-2026-11-02-0200.db","parents":["folder-1"]');
@@ -40,7 +43,9 @@ describe('backupFolder', () => {
 	it('deletes a backup by its id', async () => {
 		const drive = fakeDrive([undefined]);
 		await backupFolder(drive.request).remove('file/1');
-		expect(drive.calls).toEqual([{ method: 'DELETE', url: 'https://www.googleapis.com/drive/v3/files/file%2F1', body: undefined }]);
+		expect(drive.calls).toEqual([
+			{ method: 'DELETE', url: 'https://www.googleapis.com/drive/v3/files/file%2F1', body: undefined }
+		]);
 	});
 });
 
@@ -58,7 +63,10 @@ describe('multipart', () => {
 
 describe('beyond', () => {
 	it('picks all but the newest backups to delete', () => {
-		const files = ['2026-11-01', '2026-11-03', '2026-10-30', '2026-11-02'].map((d) => ({ id: d, name: `chores-${d}-0200.db` }));
+		const files = ['2026-11-01', '2026-11-03', '2026-10-30', '2026-11-02'].map((d) => ({
+			id: d,
+			name: `chores-${d}-0200.db`
+		}));
 		expect(beyond(files, 2).map((f) => f.id)).toEqual(['2026-11-01', '2026-10-30']);
 		expect(beyond(files, 14)).toEqual([]);
 	});

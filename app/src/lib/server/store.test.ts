@@ -52,6 +52,8 @@ describe('the data folder', () => {
 		expect(others).toEqual([]);
 		expect(aside).toMatch(/^settings\.json\.damaged-\d{8}T\d{6}Z$/);
 		expect(await readFile(join(dir, aside!), 'utf8')).toBe(text);
-		expect(console.error).toHaveBeenCalledWith(expect.stringContaining(`settings.json was damaged, so it was moved to ${aside}`));
+		expect(console.error).toHaveBeenCalledWith(
+			expect.stringContaining(`settings.json was damaged, so it was moved to ${aside}`)
+		);
 	});
 });

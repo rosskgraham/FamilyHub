@@ -26,6 +26,8 @@ jobs:
       - run: npm ci
       - name: Check types
         run: npm run check
+      - name: Check formatting and lint
+        run: npm run lint
       - name: Unit tests
         run: npm test
       - name: Screenshot tests

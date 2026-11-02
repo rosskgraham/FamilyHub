@@ -11,7 +11,14 @@
 		ended: 'Google has ended the Hub’s sign-in. Sign in again.'
 	};
 	const when = (iso: string) =>
-		new Date(iso).toLocaleString('en-GB', { timeZone: 'Europe/London', weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+		new Date(iso).toLocaleString('en-GB', {
+			timeZone: 'Europe/London',
+			weekday: 'long',
+			day: 'numeric',
+			month: 'long',
+			hour: '2-digit',
+			minute: '2-digit'
+		});
 	const problem = $derived(data.problem ? (problems[data.problem] ?? null) : null);
 </script>
 
@@ -22,13 +29,20 @@
 	{#if form?.message}<p class="problem">{form.message}</p>{/if}
 
 	{#if data.step === 'credentials'}
-		<p>The Hub doesn’t have its Google credentials yet. Put <code>GOOGLE_CLIENT_ID</code> and <code>GOOGLE_CLIENT_SECRET</code> in <code>app/.env</code> and restart it.</p>
+		<p>
+			The Hub doesn’t have its Google credentials yet. Put <code>GOOGLE_CLIENT_ID</code> and
+			<code>GOOGLE_CLIENT_SECRET</code>
+			in <code>app/.env</code> and restart it.
+		</p>
 	{:else if data.step === 'sign-in'}
 		<p>Sign in with the Household’s Google account. Google will warn that the app isn’t verified; that’s expected.</p>
 		<a class="primary" href="/auth/google" data-sveltekit-reload>Sign in with Google</a>
 	{:else}
 		{#if !data.householdFromFile}
-			<p class="problem">These are sample names. List the Household in <code>app/household.json</code> (copy <code>household.example.json</code>), then reload this page.</p>
+			<p class="problem">
+				These are sample names. List the Household in <code>app/household.json</code> (copy
+				<code>household.example.json</code>), then reload this page.
+			</p>
 		{/if}
 		<p>Choose whose each Calendar is. Events show in that person’s colour.</p>
 		<form method="POST" action="?/save">
@@ -44,7 +58,9 @@
 					</select>
 				</label>
 			{/each}
-			<p class="section">Choose the Calendar of friends’ and family’s birthdays, if there is one. They show as everyone’s, with a cake.</p>
+			<p class="section">
+				Choose the Calendar of friends’ and family’s birthdays, if there is one. They show as everyone’s, with a cake.
+			</p>
 			<label>
 				<span class="who">Birthdays</span>
 				<select name="birthdays" value={data.birthdays}>
@@ -66,7 +82,9 @@
 			</label>
 			<p class="section">
 				{#if data.backup?.needsSignIn}
-					<span class="problem">Chores backups need the Hub signed in to Google again, to add Google Drive. Sign out, then sign in.</span>
+					<span class="problem"
+						>Chores backups need the Hub signed in to Google again, to add Google Drive. Sign out, then sign in.</span
+					>
 				{:else if data.backup?.failingSince}
 					<span class="problem">Chores backups have been failing since {when(data.backup.failingSince)}.</span>
 				{:else if data.backup?.lastAt}

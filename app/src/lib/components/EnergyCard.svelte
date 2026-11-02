@@ -29,7 +29,9 @@
 
 	const cheap = $derived(cheapNow(clock.now, slots));
 	// The Off-peak window never moves, so it's only worth a line when a Smart-charging slot is on or next.
-	const slot = $derived(cheap.current ? (cheap.current.slot ? cheap.current : null) : cheap.next.slot ? cheap.next : null);
+	const slot = $derived(
+		cheap.current ? (cheap.current.slot ? cheap.current : null) : cheap.next.slot ? cheap.next : null
+	);
 	const spent = $derived(rates && totals(today, rates, slots));
 	const plugged = $derived(live !== null && live.car !== 'unplugged');
 	const charging = $derived(live?.car === 'charging');
@@ -57,15 +59,41 @@ and a Smart-charging slot when there is one. Opens the Energy Section. -->
 			<span class="car" class:plugged role="img" aria-label={carLabel} title={carLabel}>
 				{#if charging}
 					<svg class="bolt" width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-						<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" />
+						<path
+							d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"
+						/>
 					</svg>
 				{/if}
-				<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-					<path d="m21 8-2 2-1.5-3.7A2 2 0 0 0 15.646 5H8.4a2 2 0 0 0-1.903 1.257L5 10 3 8" /><path d="M7 14h.01" /><path d="M17 14h.01" /><rect width="18" height="8" x="3" y="10" rx="2" /><path d="M5 18v2" /><path d="M19 18v2" />
+				<svg
+					width="40"
+					height="40"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					aria-hidden="true"
+				>
+					<path d="m21 8-2 2-1.5-3.7A2 2 0 0 0 15.646 5H8.4a2 2 0 0 0-1.903 1.257L5 10 3 8" /><path
+						d="M7 14h.01"
+					/><path d="M17 14h.01" /><rect width="18" height="8" x="3" y="10" rx="2" /><path d="M5 18v2" /><path
+						d="M19 18v2"
+					/>
 				</svg>
 			</span>
 		{/if}
-		<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
+		<svg
+			width="22"
+			height="22"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2.6"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg
+		>
 	</div>
 	<div class="figures">
 		<span class="figure">
@@ -82,7 +110,9 @@ and a Smart-charging slot when there is one. Opens the Energy Section. -->
 	{:else if slot}
 		<div class="cheap">
 			<span>Smart-charging slot</span>
-			<span class="tabular">{slot === cheap.current ? `now until ${time(slot.to)}` : `${time(slot.from)}–${time(slot.to)}`}</span>
+			<span class="tabular"
+				>{slot === cheap.current ? `now until ${time(slot.to)}` : `${time(slot.from)}–${time(slot.to)}`}</span
+			>
 		</div>
 	{/if}
 </a>

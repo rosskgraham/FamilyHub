@@ -7,7 +7,14 @@ import { orElse } from '../fallback.ts';
 import { createSync, type Sync } from '../sync.ts';
 import { fetchForecast } from './open-meteo.ts';
 
-export const sampleWeather: Weather = { temperature: 11, summary: 'Light rain', icon: 'rain', high: 13, low: 8, rainChance: 70 };
+export const sampleWeather: Weather = {
+	temperature: 11,
+	summary: 'Light rain',
+	icon: 'rain',
+	high: 13,
+	low: 8,
+	rainChance: 70
+};
 
 // Open-Meteo updates every 15 minutes, so there's no point asking more often than this.
 const REFRESH_MS = 10 * 60_000;

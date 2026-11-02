@@ -12,20 +12,20 @@
 
 <!-- The Chores section: a lane per child, each ticking off their own Chores, and Bonus jobs beside them. -->
 <div class="chores">
-<div class="lanes">
-	{#each data.lanes as lane (lane.child)}
-		<ChoreLane
-			{lane}
-			owner={data.owners[lane.child]!}
-			ondone={(routine, stars) => (celebrating = { child: lane.child, routine, stars })}
-		/>
-	{/each}
-</div>
-{#if data.bonus.length > 0}
-	<aside>
-		<UpForGrabs jobs={data.bonus} owners={data.owners} kids={data.lanes.map((l) => l.child)} />
-	</aside>
-{/if}
+	<div class="lanes">
+		{#each data.lanes as lane (lane.child)}
+			<ChoreLane
+				{lane}
+				owner={data.owners[lane.child]!}
+				ondone={(routine, stars) => (celebrating = { child: lane.child, routine, stars })}
+			/>
+		{/each}
+	</div>
+	{#if data.bonus.length > 0}
+		<aside>
+			<UpForGrabs jobs={data.bonus} owners={data.owners} kids={data.lanes.map((l) => l.child)} />
+		</aside>
+	{/if}
 </div>
 
 {#if celebrating}

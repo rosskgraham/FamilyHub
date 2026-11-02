@@ -47,7 +47,12 @@ export interface MemberConfig {
 export function household(members: MemberConfig[]): Household {
 	const result: Household = {};
 	for (const m of members) {
-		result[m.id] = { id: m.id, name: m.name, initial: m.initial ?? m.name.charAt(0).toUpperCase(), ...colours[m.colour] };
+		result[m.id] = {
+			id: m.id,
+			name: m.name,
+			initial: m.initial ?? m.name.charAt(0).toUpperCase(),
+			...colours[m.colour]
+		};
 	}
 	result[EVERYONE] = everyone;
 	return result;

@@ -21,8 +21,16 @@
 <div class="day">
 	<div class="nav">
 		<a class="step" href="?date={addDays(data.date, -1)}" aria-label="Previous day">
-			<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
-				><polyline points="15 18 9 12 15 6" /></svg
+			<svg
+				width="32"
+				height="32"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2.2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg
 			>
 		</a>
 		<div class="label">
@@ -33,8 +41,16 @@
 			</div>
 		</div>
 		<a class="step" href="?date={addDays(data.date, 1)}" aria-label="Next day">
-			<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
-				><polyline points="9 18 15 12 9 6" /></svg
+			<svg
+				width="32"
+				height="32"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2.2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg
 			>
 		</a>
 		{#if data.date !== data.today}
@@ -45,7 +61,15 @@
 	{#if day.allDay.length > 0}
 		<div class="banners">
 			{#each day.allDay as event (event.id)}
-				<Banner owner={data.owners[event.owner]} title={event.title} bin={event.bin} birthday={event.birthday} height={56} badge={36} fontSize={26} />
+				<Banner
+					owner={data.owners[event.owner]}
+					title={event.title}
+					bin={event.bin}
+					birthday={event.birthday}
+					height={56}
+					badge={36}
+					fontSize={26}
+				/>
 			{/each}
 		</div>
 	{/if}

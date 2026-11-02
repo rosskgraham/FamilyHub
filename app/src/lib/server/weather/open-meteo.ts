@@ -39,35 +39,63 @@ export function toWeather(forecast: ForecastResponse): Weather {
 	};
 }
 
-
 // WMO weather codes, as Open-Meteo documents them.
 function describe(code: number, isDay: boolean): [string, WeatherIcon] {
 	const clear: WeatherIcon = isDay ? 'sun' : 'moon';
 	switch (code) {
-		case 0: return ['Clear', clear];
-		case 1: return ['Mostly clear', clear];
-		case 2: return ['Partly cloudy', isDay ? 'partly' : 'cloud'];
-		case 3: return ['Cloudy', 'cloud'];
-		case 45: case 48: return ['Fog', 'fog'];
-		case 51: return ['Light drizzle', 'rain'];
-		case 53: return ['Drizzle', 'rain'];
-		case 55: return ['Heavy drizzle', 'rain'];
-		case 56: case 57: return ['Freezing drizzle', 'rain'];
-		case 61: return ['Light rain', 'rain'];
-		case 63: return ['Rain', 'rain'];
-		case 65: return ['Heavy rain', 'rain'];
-		case 66: case 67: return ['Freezing rain', 'rain'];
-		case 71: return ['Light snow', 'snow'];
-		case 73: return ['Snow', 'snow'];
-		case 75: return ['Heavy snow', 'snow'];
-		case 77: return ['Snow grains', 'snow'];
-		case 80: return ['Light showers', 'rain'];
-		case 81: return ['Showers', 'rain'];
-		case 82: return ['Heavy showers', 'rain'];
-		case 85: return ['Light snow showers', 'snow'];
-		case 86: return ['Snow showers', 'snow'];
-		case 95: return ['Thunderstorm', 'storm'];
-		case 96: case 99: return ['Thunderstorm with hail', 'storm'];
-		default: return ['Unknown', 'cloud'];
+		case 0:
+			return ['Clear', clear];
+		case 1:
+			return ['Mostly clear', clear];
+		case 2:
+			return ['Partly cloudy', isDay ? 'partly' : 'cloud'];
+		case 3:
+			return ['Cloudy', 'cloud'];
+		case 45:
+		case 48:
+			return ['Fog', 'fog'];
+		case 51:
+			return ['Light drizzle', 'rain'];
+		case 53:
+			return ['Drizzle', 'rain'];
+		case 55:
+			return ['Heavy drizzle', 'rain'];
+		case 56:
+		case 57:
+			return ['Freezing drizzle', 'rain'];
+		case 61:
+			return ['Light rain', 'rain'];
+		case 63:
+			return ['Rain', 'rain'];
+		case 65:
+			return ['Heavy rain', 'rain'];
+		case 66:
+		case 67:
+			return ['Freezing rain', 'rain'];
+		case 71:
+			return ['Light snow', 'snow'];
+		case 73:
+			return ['Snow', 'snow'];
+		case 75:
+			return ['Heavy snow', 'snow'];
+		case 77:
+			return ['Snow grains', 'snow'];
+		case 80:
+			return ['Light showers', 'rain'];
+		case 81:
+			return ['Showers', 'rain'];
+		case 82:
+			return ['Heavy showers', 'rain'];
+		case 85:
+			return ['Light snow showers', 'snow'];
+		case 86:
+			return ['Snow showers', 'snow'];
+		case 95:
+			return ['Thunderstorm', 'storm'];
+		case 96:
+		case 99:
+			return ['Thunderstorm with hail', 'storm'];
+		default:
+			return ['Unknown', 'cloud'];
 	}
 }

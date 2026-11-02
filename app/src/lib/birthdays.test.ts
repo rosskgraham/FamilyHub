@@ -2,7 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { asBirthday } from './birthdays.ts';
 import type { CalendarEvent } from './calendar.ts';
 
-const event: CalendarEvent = { id: 'e1', title: 'Gran’s birthday', owner: 'alex', allDay: true, start: '2026-10-30', end: '2026-10-31' };
+const event: CalendarEvent = {
+	id: 'e1',
+	title: 'Gran’s birthday',
+	owner: 'alex',
+	allDay: true,
+	start: '2026-10-30',
+	end: '2026-10-31'
+};
 
 describe('asBirthday', () => {
 	it('shows a birthday as the Household’s, with a cake, keeping its title', () => {

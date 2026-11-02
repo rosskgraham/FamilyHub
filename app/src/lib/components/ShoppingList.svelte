@@ -40,9 +40,7 @@
 	const ordered = $derived([...shown.filter((i) => !i.tickedOff), ...shown.filter((i) => i.tickedOff)]);
 	const toGet = $derived(shown.filter((i) => !i.tickedOff).length);
 	const capacity = $derived(rows * columns);
-	const visible = $derived(
-		moreHref && ordered.length > capacity ? ordered.slice(0, capacity - 1) : ordered
-	);
+	const visible = $derived(moreHref && ordered.length > capacity ? ordered.slice(0, capacity - 1) : ordered);
 	const more = $derived(ordered.length - visible.length);
 
 	async function send(change: ShoppingChange): Promise<boolean> {
@@ -55,9 +53,7 @@
 			});
 			if (!response.ok) {
 				problem =
-					response.status === 401
-						? 'Google needs signing in again.'
-						: 'Google didn’t take that change. Try again.';
+					response.status === 401 ? 'Google needs signing in again.' : 'Google didn’t take that change. Try again.';
 				return false;
 			}
 			await invalidateAll();
@@ -159,8 +155,16 @@
 					>
 						<span class="mark">
 							{#if item.tickedOff}
-								<svg width="26" height="26" viewBox="0 0 24 24" fill="none" style="stroke: var(--on-ink)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
-									><polyline points="20 6 9 17 4 12" /></svg
+								<svg
+									width="26"
+									height="26"
+									viewBox="0 0 24 24"
+									fill="none"
+									style="stroke: var(--on-ink)"
+									stroke-width="3"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg
 								>
 							{/if}
 						</span>
@@ -182,8 +186,15 @@
 		</form>
 	{:else}
 		<button class="add-button" onclick={() => (adding = true)}>
-			<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"
-				><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg
+			<svg
+				width="26"
+				height="26"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2.6"
+				stroke-linecap="round"
+				aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg
 			>
 			Add item
 		</button>

@@ -5,12 +5,8 @@
 	import Badge from './Badge.svelte';
 	import Star from './Star.svelte';
 
-	let {
-		owner,
-		routine,
-		stars,
-		onclose
-	}: { owner: Owner; routine: string; stars: number; onclose: () => void } = $props();
+	let { owner, routine, stars, onclose }: { owner: Owner; routine: string; stars: number; onclose: () => void } =
+		$props();
 
 	// It closes by itself, so the next child isn't kept waiting.
 	const SHOW_MS = 6000;

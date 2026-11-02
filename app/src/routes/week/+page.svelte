@@ -45,8 +45,16 @@
 <div class="week">
 	<div class="nav">
 		<a class="step" href="?week={data.offset - 1}" aria-label="Previous week">
-			<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
-				><polyline points="15 18 9 12 15 6" /></svg
+			<svg
+				width="32"
+				height="32"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2.2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg
 			>
 		</a>
 		<div class="label">
@@ -54,8 +62,16 @@
 			<div class="label-range">{range}</div>
 		</div>
 		<a class="step" href="?week={data.offset + 1}" aria-label="Next week">
-			<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
-				><polyline points="9 18 15 12 9 6" /></svg
+			<svg
+				width="32"
+				height="32"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2.2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg
 			>
 		</a>
 		{#if data.offset !== 0}
@@ -71,7 +87,13 @@
 					<span class="num tabular">{dayOfMonth(key)}</span>
 				</a>
 				{#each fit.allDay as event (event.id)}
-					<Banner owner={data.owners[event.owner]} title={event.title} bin={event.bin} birthday={event.birthday} height={SPACE.row} />
+					<Banner
+						owner={data.owners[event.owner]}
+						title={event.title}
+						bin={event.bin}
+						birthday={event.birthday}
+						height={SPACE.row}
+					/>
 				{/each}
 				{#if fit.earlier > 0}
 					<a class="line" href="/day?date={key}" style:height="{SPACE.row}px">{fit.earlier} earlier</a>

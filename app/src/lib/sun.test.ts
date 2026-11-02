@@ -25,6 +25,9 @@ describe('sunTimesOn', () => {
 	});
 
 	it('gives times as HH:mm', () => {
-		expect(sunTimesOn('2026-12-21', 51.5074, -0.1278)).toEqual({ sunrise: expect.stringMatching(/^\d\d:\d\d$/), sunset: expect.stringMatching(/^\d\d:\d\d$/) });
+		expect(sunTimesOn('2026-12-21', 51.5074, -0.1278)).toEqual({
+			sunrise: expect.stringMatching(/^\d\d:\d\d$/),
+			sunset: expect.stringMatching(/^\d\d:\d\d$/)
+		});
 	});
 });
