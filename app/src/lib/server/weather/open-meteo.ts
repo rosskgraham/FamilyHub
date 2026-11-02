@@ -1,5 +1,4 @@
 import { RAIN_HOURS, type Weather, type WeatherIcon } from '#lib/weather.ts';
-import type { SunTimes } from '#lib/theme.ts';
 import { TIME_ZONE } from '#lib/time.ts';
 
 const API = 'https://api.open-meteo.com/v1/forecast';
@@ -7,30 +6,24 @@ const API = 'https://api.open-meteo.com/v1/forecast';
 export interface ForecastResponse {
 	current: { temperature_2m: number; weather_code: number; is_day: number };
 	hourly: { precipitation_probability: (number | null)[] };
-	/** Sunrise and sunset are local times, such as `2026-10-28T07:05`. */
-	daily: { temperature_2m_max: number[]; temperature_2m_min: number[]; sunrise: string[]; sunset: string[] };
+	daily: { temperature_2m_max: number[]; temperature_2m_min: number[] };
 }
 
-export interface Forecast {
-	weather: Weather;
-	sun: SunTimes;
-}
-
-export async function fetchForecast(latitude: string, longitude: string): Promise<Forecast> {
+export async function fetchForecast(latitude: string, longitude: string): Promise<Weather> {
 	const params = new URLSearchParams({
 		latitude,
 		longitude,
 		current: 'temperature_2m,weather_code,is_day',
 		hourly: 'precipitation_probability',
 		forecast_hours: String(RAIN_HOURS),
-		daily: 'temperature_2m_max,temperature_2m_min,sunrise,sunset',
+		daily: 'temperature_2m_max,temperature_2m_min',
 		forecast_days: '1',
 		timezone: TIME_ZONE
 	});
 	const response = await fetch(`${API}?${params}`, { signal: AbortSignal.timeout(10_000) });
 	if (!response.ok) throw new Error(`Open-Meteo answered ${response.status}`);
 	const forecast = (await response.json()) as ForecastResponse;
-	return { weather: toWeather(forecast), sun: toSun(forecast) };
+	return toWeather(forecast);
 }
 
 export function toWeather(forecast: ForecastResponse): Weather {
@@ -46,9 +39,6 @@ export function toWeather(forecast: ForecastResponse): Weather {
 	};
 }
 
-export function toSun(forecast: ForecastResponse): SunTimes {
-	return { sunrise: forecast.daily.sunrise[0]!.slice(11, 16), sunset: forecast.daily.sunset[0]!.slice(11, 16) };
-}
 
 // WMO weather codes, as Open-Meteo documents them.
 function describe(code: number, isDay: boolean): [string, WeatherIcon] {

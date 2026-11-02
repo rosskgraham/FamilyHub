@@ -1,9 +1,11 @@
 import { CALENDAR_SOURCE, HOME_LATITUDE, HOME_LONGITUDE } from '$app/env/private';
+import { sunTimesOn } from '#lib/sun.ts';
 import { sampleSun, type SunTimes } from '#lib/theme.ts';
+import { dayKey } from '#lib/time.ts';
 import type { Weather } from '#lib/weather.ts';
 import { orElse } from '../fallback.ts';
 import { createSync, type Sync } from '../sync.ts';
-import { fetchForecast, type Forecast } from './open-meteo.ts';
+import { fetchForecast } from './open-meteo.ts';
 
 export const sampleWeather: Weather = { temperature: 11, summary: 'Light rain', icon: 'rain', high: 13, low: 8, rainChance: 70 };
 
@@ -12,9 +14,7 @@ const REFRESH_MS = 10 * 60_000;
 // Past this, an old forecast is more misleading than none.
 const GIVE_UP_MS = 3 * 60 * 60_000;
 
-let forecast: Sync<Forecast> | undefined;
-// Sunrise and sunset move by a few minutes a day, so old ones are still good enough for the theme.
-let lastSun: SunTimes | null = null;
+let forecast: Sync<Weather> | undefined;
 
 /**
  * The weather at home from Open-Meteo once HOME_LATITUDE and HOME_LONGITUDE are set, otherwise sample weather.
@@ -33,11 +33,14 @@ async function loadForecast(): Promise<Weather | null> {
 	});
 	const { value, at } = await forecast.read();
 	if (!value || !at) return null;
-	lastSun = value.sun;
-	return Date.now() - Date.parse(at) < GIVE_UP_MS ? value.weather : null;
+	return Date.now() - Date.parse(at) < GIVE_UP_MS ? value : null;
 }
 
-/** Today's sunrise and sunset at home, from the last forecast. Sample times until there is one. */
-export function sunTimes(): SunTimes {
-	return lastSun ?? sampleSun;
+/**
+ * Sunrise and sunset at home on the day of `at`, worked out from where home is, so the theme is right even after a
+ * restart with no internet. Sample times when home isn't set, or with CALENDAR_SOURCE=sample.
+ */
+export function sunTimes(at: Date): SunTimes {
+	if (CALENDAR_SOURCE === 'sample' || !HOME_LATITUDE || !HOME_LONGITUDE) return sampleSun;
+	return sunTimesOn(dayKey(at), Number(HOME_LATITUDE), Number(HOME_LONGITUDE));
 }
