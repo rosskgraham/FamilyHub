@@ -115,5 +115,7 @@ export function startBackups(): void {
 	});
 	const check = () => backups.check().catch((e) => console.error('Chores backup check failed:', e));
 	check();
-	setInterval(check, CHECK_MS);
+	// Never what keeps the Hub running, so it can stop when it's told to, such as for a new release.
+	const timer = setInterval(check, CHECK_MS).unref();
+	process.once('sveltekit:shutdown', () => clearInterval(timer));
 }
