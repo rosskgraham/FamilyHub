@@ -19,10 +19,13 @@ const typicalWeek: Template[][] = [
 		['17:30', 'Football training', 'leo']
 	],
 	[
+		// A busy day: a birthday and three things later, which squeezes the Today view.
+		[null, 'Auntie Jo’s birthday', 'birthdays'],
 		['07:45', 'School run', 'sam'],
 		['10:00', 'Boiler service', 'sam'],
 		['16:30', 'Piano lesson', 'maya'],
-		['19:00', 'Book club', 'sam']
+		['19:00', 'Book club', 'sam'],
+		['20:00', 'Parents evening', 'alex']
 	],
 	// On Alex's Calendar, like the real recurring one; it shows as everyone's.
 	[
