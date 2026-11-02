@@ -1,0 +1,14 @@
+# Made by tools, not written by hand.
+package-lock.json
+.svelte-kit/
+build/
+release/
+test-results/
+playwright-report/
+e2e/__screenshots__/
+
+# The Hub's own data and the Household's settings: never rewritten by a tool.
+data/
+household.json
+chores.json
+.env
