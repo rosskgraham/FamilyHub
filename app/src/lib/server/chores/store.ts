@@ -1,6 +1,6 @@
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { DatabaseSync } from 'node:sqlite';
+import { backup, DatabaseSync } from 'node:sqlite';
 import type { ChoreEvent } from '#lib/chores.ts';
 
 // The Hub's own data, as ADR 0006 describes: a record of what happened, in SQLite.
@@ -9,6 +9,8 @@ export interface ChoreStore {
 	/** Everything that's happened, oldest first. */
 	events(): ChoreEvent[];
 	record(event: ChoreEvent): void;
+	/** Copies the whole database to `path`, consistent even while Chores are being ticked. */
+	backup(path: string): Promise<void>;
 	close(): void;
 }
 
@@ -54,6 +56,9 @@ export function openChoreStore(path: string): ChoreStore {
 		},
 		record(e) {
 			insert.run(e.at, e.day, e.child, e.chore, e.routine, e.ticked ? 1 : 0, e.stars);
+		},
+		async backup(path) {
+			await backup(db, path);
 		},
 		close() {
 			db.close();

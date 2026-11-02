@@ -7,7 +7,9 @@ export { GoogleRefused, SignInNeeded } from './errors.ts';
 // Read Calendars, never change them; read and change the Shopping list.
 const SCOPES = [
 	'https://www.googleapis.com/auth/calendar.readonly',
-	'https://www.googleapis.com/auth/tasks'
+	'https://www.googleapis.com/auth/tasks',
+	// Only the files the Hub creates itself: the Chores backups (ADR 0006).
+	'https://www.googleapis.com/auth/drive.file'
 ];
 
 const AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
@@ -95,19 +97,28 @@ async function accessToken(): Promise<string> {
 	return remember(await requestToken({ grant_type: 'refresh_token', refresh_token: stored.refreshToken }));
 }
 
+/** A body sent as it is, such as a file, rather than as JSON. */
+export interface RawBody {
+	contentType: string;
+	data: Uint8Array<ArrayBuffer>;
+}
+
+export type GoogleRequest = <T>(method: 'GET' | 'POST' | 'PATCH' | 'DELETE', url: string, body?: unknown) => Promise<T>;
+
 /** Call a Google API, signed in as the Household. Resolves to undefined for an empty response. */
 export async function googleRequest<T>(
 	method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
 	url: string,
 	body?: unknown
 ): Promise<T> {
+	const raw = body instanceof Object && 'contentType' in body && 'data' in body ? (body as RawBody) : null;
 	for (let attempt = 0; attempt < 2; attempt++) {
 		const headers: Record<string, string> = { authorization: `Bearer ${await accessToken()}` };
-		if (body !== undefined) headers['content-type'] = 'application/json';
+		if (body !== undefined) headers['content-type'] = raw ? raw.contentType : 'application/json';
 		const response = await fetch(url, {
 			method,
 			headers,
-			body: body === undefined ? undefined : JSON.stringify(body),
+			body: raw ? raw.data : body === undefined ? undefined : JSON.stringify(body),
 			signal: AbortSignal.timeout(TIMEOUT_MS)
 		});
 		if (response.ok) return (response.status === 204 ? undefined : await response.json()) as T;

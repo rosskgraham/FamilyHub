@@ -10,6 +10,8 @@
 		failed: 'Google turned the sign-in down. Check the runbook’s “If something goes wrong”.',
 		ended: 'Google has ended the Hub’s sign-in. Sign in again.'
 	};
+	const when = (iso: string) =>
+		new Date(iso).toLocaleString('en-GB', { timeZone: 'Europe/London', weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
 	const problem = $derived(data.problem ? (problems[data.problem] ?? null) : null);
 </script>
 
@@ -62,6 +64,17 @@
 					{/each}
 				</select>
 			</label>
+			<p class="section">
+				{#if data.backup?.needsSignIn}
+					<span class="problem">Chores backups need the Hub signed in to Google again, to add Google Drive. Sign out, then sign in.</span>
+				{:else if data.backup?.failingSince}
+					<span class="problem">Chores backups have been failing since {when(data.backup.failingSince)}.</span>
+				{:else if data.backup?.lastAt}
+					Chores were last backed up to Google Drive {when(data.backup.lastAt)}.
+				{:else}
+					Chores are backed up to Google Drive every night, once the Hub runs on the Pi.
+				{/if}
+			</p>
 			<div class="actions">
 				<button class="primary" type="submit">{data.saved ? 'Save' : 'Save and show the calendar'}</button>
 				<button class="quiet" type="submit" formaction="?/signOut">Sign out of Google</button>

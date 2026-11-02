@@ -40,4 +40,16 @@ describe('openChoreStore', () => {
 		expect(again.events()).toEqual([tick]);
 		again.close();
 	});
+
+	it('backs up everything to a copy that opens on its own', async () => {
+		folder = mkdtempSync(join(tmpdir(), 'familyhub-'));
+		const store = openChoreStore(join(folder, 'hub.db'));
+		store.record(tick);
+		store.record(untick);
+		await store.backup(join(folder, 'copy.db'));
+		store.close();
+		const copy = openChoreStore(join(folder, 'copy.db'));
+		expect(copy.events()).toEqual([tick, untick]);
+		copy.close();
+	});
 });
