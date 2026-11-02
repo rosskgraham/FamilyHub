@@ -27,7 +27,10 @@ export function backupFolder(request: GoogleRequest): BackupFolder {
 	async function folder(): Promise<string> {
 		if (folderId) return folderId;
 		const q = `name = '${FOLDER_NAME}' and mimeType = '${FOLDER_TYPE}' and trashed = false`;
-		const found = await request<{ files: DriveFile[] }>('GET', `${API}?${new URLSearchParams({ q, fields: 'files(id,name)' })}`);
+		const found = await request<{ files: DriveFile[] }>(
+			'GET',
+			`${API}?${new URLSearchParams({ q, fields: 'files(id,name)' })}`
+		);
 		folderId =
 			found.files[0]?.id ?? (await request<DriveFile>('POST', API, { name: FOLDER_NAME, mimeType: FOLDER_TYPE })).id;
 		return folderId;

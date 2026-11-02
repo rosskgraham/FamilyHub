@@ -23,7 +23,11 @@ export function touches(e: CalendarEvent, from: DayKey, to: DayKey): boolean {
  * ranges overlapping it held. Days no range covered are simply missing. `at` is the oldest of the
  * answers used, so the Hub never claims to be fresher than it is.
  */
-export function fromCache(cache: CalendarCache, from: DayKey, to: DayKey): { events: CalendarEvent[]; at: string | null } {
+export function fromCache(
+	cache: CalendarCache,
+	from: DayKey,
+	to: DayKey
+): { events: CalendarEvent[]; at: string | null } {
 	const exact = cache[`${from}/${to}`];
 	if (exact) return exact;
 	const used = Object.entries(cache)
@@ -46,7 +50,14 @@ export function fromCache(cache: CalendarCache, from: DayKey, to: DayKey): { eve
 }
 
 /** The cache with a fresh answer for one range, less any range that ended a week ago. */
-export function remember(cache: CalendarCache, from: DayKey, to: DayKey, events: CalendarEvent[], at: string, today: DayKey): CalendarCache {
+export function remember(
+	cache: CalendarCache,
+	from: DayKey,
+	to: DayKey,
+	events: CalendarEvent[],
+	at: string,
+	today: DayKey
+): CalendarCache {
 	const oldest = addDays(today, -KEEP_DAYS);
 	const kept = Object.entries(cache).filter(([range]) => range.split('/')[1]! >= oldest);
 	return Object.fromEntries([...kept, [`${from}/${to}`, { events, at }]]);
@@ -60,7 +71,13 @@ export async function readCache(): Promise<CalendarCache> {
 	return cache;
 }
 
-export async function saveRange(from: DayKey, to: DayKey, events: CalendarEvent[], at: string, today: DayKey): Promise<void> {
+export async function saveRange(
+	from: DayKey,
+	to: DayKey,
+	events: CalendarEvent[],
+	at: string,
+	today: DayKey
+): Promise<void> {
 	const before = await readCache();
 	const changed = JSON.stringify(before[`${from}/${to}`]?.events) !== JSON.stringify(events);
 	cache = remember(before, from, to, events, at, today);

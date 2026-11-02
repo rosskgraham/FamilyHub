@@ -39,7 +39,10 @@ export function parseHousehold(text: string): MemberConfig[] {
 		if (typeof m.colour !== 'string' || !(m.colour in colours)) {
 			error(500, `${where} needs a "colour": one of ${Object.keys(colours).join(', ')}.`);
 		}
-		const id = m.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
+		const id = m.name
+			.trim()
+			.toLowerCase()
+			.replace(/[^a-z0-9]+/g, '-');
 		if (id === EVERYONE || ids.has(id)) error(500, `${where} needs a different name.`);
 		ids.add(id);
 		const initial = typeof m.initial === 'string' && m.initial !== '' ? m.initial : undefined;

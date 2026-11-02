@@ -42,7 +42,9 @@
 	);
 	const openGroup = $derived(groups.find((g) => g.routine.id === open));
 	const progress = $derived(
-		openGroup ? `${openGroup.routine.name}: ${openGroup.finished ? 'all done' : `${openGroup.done} of ${openGroup.chores.length} done`}` : ''
+		openGroup
+			? `${openGroup.routine.name}: ${openGroup.finished ? 'all done' : `${openGroup.done} of ${openGroup.chores.length} done`}`
+			: ''
 	);
 
 	async function toggle(routine: string, chore: { id: string; ticked: boolean }) {
@@ -51,7 +53,11 @@
 		const finishing = ticked && group.done === group.chores.length - 1;
 		pending[`${routine}/${chore.id}`] = ticked;
 		problem = null;
-		if (finishing) ondone(group.routine.name, group.chores.reduce((sum, c) => sum + c.stars, 0));
+		if (finishing)
+			ondone(
+				group.routine.name,
+				group.chores.reduce((sum, c) => sum + c.stars, 0)
+			);
 		const tick: ChoreTick = { child: lane.child, chore: chore.id, routine, ticked };
 		try {
 			const response = await fetch('/api/chores', {
@@ -87,7 +93,17 @@
 					<h3>{group.routine.name}</h3>
 					{#if group.finished}
 						<span class="chip done" style:background={owner.solid} style:color={owner.on}>
-							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" style:stroke={owner.on} stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+							<svg
+								width="18"
+								height="18"
+								viewBox="0 0 24 24"
+								fill="none"
+								style:stroke={owner.on}
+								stroke-width="3"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg
+							>
 							All done
 						</span>
 					{:else if group.now}
@@ -107,9 +123,23 @@
 								aria-label="{chore.ticked ? 'Untick' : 'Tick off'} {chore.name}"
 								onclick={() => toggle(group.routine.id, chore)}
 							>
-								<span class="box" style:border-color={chore.ticked ? owner.solid : null} style:background={chore.ticked ? owner.solid : null}>
+								<span
+									class="box"
+									style:border-color={chore.ticked ? owner.solid : null}
+									style:background={chore.ticked ? owner.solid : null}
+								>
 									{#if chore.ticked}
-										<svg width="32" height="32" viewBox="0 0 24 24" fill="none" style:stroke={owner.on} stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+										<svg
+											width="32"
+											height="32"
+											viewBox="0 0 24 24"
+											fill="none"
+											style:stroke={owner.on}
+											stroke-width="3"
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg
+										>
 									{/if}
 								</span>
 								<ChoreIcon icon={chore.icon} />
@@ -124,7 +154,11 @@
 			<button class="folded" onclick={() => (chosen = group.routine.id)}>
 				<span class="folded-name">{group.routine.name}</span>
 				<span class="summary">
-					{group.finished ? 'All done' : group.done > 0 ? `${group.done} of ${group.chores.length} done` : `${group.chores.length} ${group.chores.length === 1 ? 'job' : 'jobs'}`}
+					{group.finished
+						? 'All done'
+						: group.done > 0
+							? `${group.done} of ${group.chores.length} done`
+							: `${group.chores.length} ${group.chores.length === 1 ? 'job' : 'jobs'}`}
 				</span>
 				{#if group.later}<span class="when">From {group.routine.from}</span>{/if}
 			</button>

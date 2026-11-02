@@ -10,8 +10,14 @@ import type { CalendarSource } from './source.ts';
 type Template = [time: string | null, title: string, owner: OwnerId | 'birthdays'];
 
 const typicalWeek: Template[][] = [
-	[['16:00', 'Swimming', 'maya'], ['18:30', 'Cubs', 'leo']],
-	[['09:00', 'Team offsite', 'alex'], ['17:30', 'Football training', 'leo']],
+	[
+		['16:00', 'Swimming', 'maya'],
+		['18:30', 'Cubs', 'leo']
+	],
+	[
+		['09:00', 'Team offsite', 'alex'],
+		['17:30', 'Football training', 'leo']
+	],
 	[
 		['07:45', 'School run', 'sam'],
 		['10:00', 'Boiler service', 'sam'],
@@ -19,8 +25,16 @@ const typicalWeek: Template[][] = [
 		['19:00', 'Book club', 'sam']
 	],
 	// On Alex's Calendar, like the real recurring one; it shows as everyone's.
-	[[null, 'Blue bin collection day', 'alex'], ['17:00', 'Swimming', 'maya'], ['18:00', 'Five-a-side', 'alex']],
-	[[null, 'Grandad’s birthday', 'birthdays'], ['15:30', 'Dentist', 'leo'], ['19:30', 'Takeaway night', 'everyone']],
+	[
+		[null, 'Blue bin collection day', 'alex'],
+		['17:00', 'Swimming', 'maya'],
+		['18:00', 'Five-a-side', 'alex']
+	],
+	[
+		[null, 'Grandad’s birthday', 'birthdays'],
+		['15:30', 'Dentist', 'leo'],
+		['19:30', 'Takeaway night', 'everyone']
+	],
 	// A busy Saturday, more than a Week view column holds, to show the overflow.
 	[
 		['08:00', 'Parkrun', 'alex'],
@@ -36,7 +50,10 @@ const typicalWeek: Template[][] = [
 		['17:00', 'Gaming with Jack', 'leo'],
 		['19:00', 'Date night', 'alex']
 	],
-	[['12:30', 'Lunch at Gran’s', 'everyone'], ['16:00', 'Garden tidy', 'sam']]
+	[
+		['12:30', 'Lunch at Gran’s', 'everyone'],
+		['16:00', 'Garden tidy', 'sam']
+	]
 ];
 
 export const fakeCalendar: CalendarSource = {

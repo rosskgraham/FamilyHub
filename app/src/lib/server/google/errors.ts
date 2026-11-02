@@ -18,7 +18,13 @@ export class GoogleRefused extends Error {
 }
 
 // Google sends some of its "slow down" answers as 403, not 429. They pass, so a change waiting to be sent must wait.
-const SLOW_DOWN = new Set(['rateLimitExceeded', 'userRateLimitExceeded', 'quotaExceeded', 'dailyLimitExceeded', 'RATE_LIMIT_EXCEEDED']);
+const SLOW_DOWN = new Set([
+	'rateLimitExceeded',
+	'userRateLimitExceeded',
+	'quotaExceeded',
+	'dailyLimitExceeded',
+	'RATE_LIMIT_EXCEEDED'
+]);
 // The sign-in doesn't include what the request needs, which signing in again fixes.
 const MISSING_PERMISSION = new Set(['insufficientPermissions', 'ACCESS_TOKEN_SCOPE_INSUFFICIENT']);
 

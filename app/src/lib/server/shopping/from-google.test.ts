@@ -2,12 +2,26 @@ import { describe, expect, it } from 'vitest';
 import { toShoppingItems, type GoogleTask } from './from-google.ts';
 
 const now = new Date('2026-10-28T08:15:00Z');
-const toGet = (id: string, position: string, title = id): GoogleTask => ({ id, title, position, status: 'needsAction' });
-const ticked = (id: string, completed: string): GoogleTask => ({ id, title: id, status: 'completed', completed, position: '0' });
+const toGet = (id: string, position: string, title = id): GoogleTask => ({
+	id,
+	title,
+	position,
+	status: 'needsAction'
+});
+const ticked = (id: string, completed: string): GoogleTask => ({
+	id,
+	title: id,
+	status: 'completed',
+	completed,
+	position: '0'
+});
 
 describe('toShoppingItems', () => {
 	it('lists items to get in the list’s order, then items just ticked off', () => {
-		const items = toShoppingItems([ticked('Bread', '2026-10-28T08:10:00Z'), toGet('Eggs', '2'), toGet('Milk', '1')], now);
+		const items = toShoppingItems(
+			[ticked('Bread', '2026-10-28T08:10:00Z'), toGet('Eggs', '2'), toGet('Milk', '1')],
+			now
+		);
 		expect(items).toEqual([
 			{ id: 'Milk', text: 'Milk', tickedOff: false },
 			{ id: 'Eggs', text: 'Eggs', tickedOff: false },

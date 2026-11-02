@@ -24,7 +24,11 @@ describe('toEvents', () => {
 	});
 
 	it('normalises offsets to UTC instants', () => {
-		const summer = { ...meeting, start: { dateTime: '2026-07-01T09:00:00+01:00' }, end: { dateTime: '2026-07-01T10:00:00+01:00' } };
+		const summer = {
+			...meeting,
+			start: { dateTime: '2026-07-01T09:00:00+01:00' },
+			end: { dateTime: '2026-07-01T10:00:00+01:00' }
+		};
 		expect(toEvents([summer], 'sam')[0]!.start).toBe('2026-07-01T08:00:00.000Z');
 	});
 
@@ -34,7 +38,12 @@ describe('toEvents', () => {
 	});
 
 	it('makes a bin day on a personal Calendar the Household’s, with its bin', () => {
-		const bins = { id: 'bins', summary: 'Blue bin collection day', start: { date: '2026-10-29' }, end: { date: '2026-10-30' } };
+		const bins = {
+			id: 'bins',
+			summary: 'Blue bin collection day',
+			start: { date: '2026-10-29' },
+			end: { date: '2026-10-30' }
+		};
 		expect(toEvents([bins], 'alex')[0]).toMatchObject({ title: 'Blue bin', owner: 'everyone', bin: 'blue' });
 	});
 
@@ -46,7 +55,10 @@ describe('toEvents', () => {
 	it('leaves out cancelled events and ones the owner declined', () => {
 		const cancelled = { ...meeting, status: 'cancelled' };
 		const declined = { ...meeting, attendees: [{ self: true, responseStatus: 'declined' }] };
-		const someoneElseDeclined = { ...meeting, attendees: [{ responseStatus: 'declined' }, { self: true, responseStatus: 'accepted' }] };
+		const someoneElseDeclined = {
+			...meeting,
+			attendees: [{ responseStatus: 'declined' }, { self: true, responseStatus: 'accepted' }]
+		};
 		expect(toEvents([cancelled, declined], 'sam')).toEqual([]);
 		expect(toEvents([someoneElseDeclined], 'sam')).toHaveLength(1);
 	});
@@ -59,7 +71,11 @@ describe('withoutDuplicates', () => {
 	});
 
 	it('keeps each occurrence of a repeating Event', () => {
-		const nextWeek = { ...meeting, start: { dateTime: '2026-11-04T18:00:00Z' }, end: { dateTime: '2026-11-04T19:00:00Z' } };
+		const nextWeek = {
+			...meeting,
+			start: { dateTime: '2026-11-04T18:00:00Z' },
+			end: { dateTime: '2026-11-04T19:00:00Z' }
+		};
 		expect(withoutDuplicates(toEvents([meeting, nextWeek], 'alex'))).toHaveLength(2);
 	});
 });

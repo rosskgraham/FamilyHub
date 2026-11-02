@@ -57,9 +57,7 @@ export function ukTime(key: DayKey, hhmm: string): Date {
 	const [year, month, day] = key.split('-').map(Number) as [number, number, number];
 	const [hour, minute] = hhmm.split(':').map(Number) as [number, number];
 	const guess = Date.UTC(year, month - 1, day, hour, minute);
-	const parts = Object.fromEntries(
-		partsFormat.formatToParts(new Date(guess)).map((part) => [part.type, part.value])
-	);
+	const parts = Object.fromEntries(partsFormat.formatToParts(new Date(guess)).map((part) => [part.type, part.value]));
 	const shown = Date.UTC(
 		Number(parts.year),
 		Number(parts.month) - 1,
@@ -80,9 +78,7 @@ export function formatWeekday(key: DayKey, style: 'long' | 'short'): string {
 
 /** For example "21 October". */
 export function formatDayMonth(key: DayKey): string {
-	return new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', day: 'numeric', month: 'long' }).format(
-		noonUtc(key)
-	);
+	return new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', day: 'numeric', month: 'long' }).format(noonUtc(key));
 }
 
 export function dayOfMonth(key: DayKey): number {

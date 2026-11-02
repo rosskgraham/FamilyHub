@@ -2,7 +2,14 @@ import { describe, expect, it } from 'vitest';
 import type { CalendarEvent } from '#lib/calendar.ts';
 import { fromCache, remember, type CalendarCache } from './cache.ts';
 
-const timed = (id: string, start: string, end: string): CalendarEvent => ({ id, title: id, owner: 'alex', allDay: false, start, end });
+const timed = (id: string, start: string, end: string): CalendarEvent => ({
+	id,
+	title: id,
+	owner: 'alex',
+	allDay: false,
+	start,
+	end
+});
 const allDay = (id: string, start: string, end: string): CalendarEvent => ({ ...timed(id, start, end), allDay: true });
 
 const swim = timed('swim', '2026-10-29T17:00:00.000Z', '2026-10-29T18:00:00.000Z');

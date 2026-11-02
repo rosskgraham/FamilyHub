@@ -70,7 +70,11 @@ export function createBackups({ store, folder, files, snapshotPath, clock }: Bac
 			await chores.backup(snapshotPath);
 			await folder.upload(backupName(now), new Uint8Array(await readFile(snapshotPath)));
 			for (const old of beyond(await folder.list(), KEEP)) await folder.remove(old.id);
-			await files.write(STATUS_FILE, { lastAt: now.toISOString(), failingSince: null, needsSignIn: false } satisfies BackupStatus);
+			await files.write(STATUS_FILE, {
+				lastAt: now.toISOString(),
+				failingSince: null,
+				needsSignIn: false
+			} satisfies BackupStatus);
 		} catch (e) {
 			const failingSince = status.failingSince ?? now.toISOString();
 			console.error('Chores backup failed:', e instanceof Error ? e.message : e);
@@ -78,7 +82,11 @@ export function createBackups({ store, folder, files, snapshotPath, clock }: Bac
 				// The line telemetry will turn into an alert for Alex (ADR 0005).
 				console.error(`Chores backup failing, last one ${status.lastAt ?? 'never'}`);
 			}
-			await files.write(STATUS_FILE, { ...status, failingSince, needsSignIn: e instanceof SignInNeeded } satisfies BackupStatus);
+			await files.write(STATUS_FILE, {
+				...status,
+				failingSince,
+				needsSignIn: e instanceof SignInNeeded
+			} satisfies BackupStatus);
 		} finally {
 			await rm(snapshotPath, { force: true });
 		}
@@ -87,7 +95,11 @@ export function createBackups({ store, folder, files, snapshotPath, clock }: Bac
 	return {
 		async check(): Promise<void> {
 			if (running || clock() - lastTry < RETRY_MS) return;
-			const status = (await files.read<BackupStatus>(STATUS_FILE)) ?? { lastAt: null, failingSince: null, needsSignIn: false };
+			const status = (await files.read<BackupStatus>(STATUS_FILE)) ?? {
+				lastAt: null,
+				failingSince: null,
+				needsSignIn: false
+			};
 			if (!backupDue(new Date(clock()), status.lastAt)) return;
 			running = true;
 			lastTry = clock();

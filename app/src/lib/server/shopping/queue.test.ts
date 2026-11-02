@@ -83,7 +83,10 @@ describe('send', () => {
 
 	it('never adds an item twice when only its tick failed', async () => {
 		const google = source((call) => (call === 'tick id-Bread true' ? new TypeError('fetch failed') : null));
-		expect(await send(queue, google.list)).toEqual([{ action: 'tick', id: 'id-Bread', tickedOff: true }, ...queue.slice(1)]);
+		expect(await send(queue, google.list)).toEqual([
+			{ action: 'tick', id: 'id-Bread', tickedOff: true },
+			...queue.slice(1)
+		]);
 	});
 
 	it('drops a change Google turns down, such as ticking off an item deleted on a phone', async () => {
@@ -93,7 +96,10 @@ describe('send', () => {
 	});
 
 	it.each([
-		['to slow down, which it sends as a 403', googleError(403, { error: { errors: [{ reason: 'rateLimitExceeded' }] } }, 'failed')],
+		[
+			'to slow down, which it sends as a 403',
+			googleError(403, { error: { errors: [{ reason: 'rateLimitExceeded' }] } }, 'failed')
+		],
 		['for a fresh sign-in', googleError(403, { error: { errors: [{ reason: 'insufficientPermissions' }] } }, 'failed')]
 	])('keeps a change when Google asks %s', async (_, error) => {
 		const google = source((call) => (call === 'tick eggs true' ? error : null));

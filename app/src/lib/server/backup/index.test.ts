@@ -78,7 +78,15 @@ describe('createBackups', () => {
 		now = Date.parse('2026-11-02T02:05:00Z');
 		dir = mkdtempSync(join(tmpdir(), 'familyhub-backup-'));
 		chores = openChoreStore(join(dir, 'hub.db'));
-		chores.record({ at: '2026-11-01T08:00:00.000Z', day: '2026-11-01', child: 'maya', chore: 'bed', routine: 'morning', ticked: true, stars: 1 });
+		chores.record({
+			at: '2026-11-01T08:00:00.000Z',
+			day: '2026-11-01',
+			child: 'maya',
+			chore: 'bed',
+			routine: 'morning',
+			ticked: true,
+			stars: 1
+		});
 		folder = fakeFolder();
 		saved = new Map();
 		vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -91,9 +99,15 @@ describe('createBackups', () => {
 
 	it('uploads a snapshot of the Chores, and notes when', async () => {
 		await backups().check();
-		expect(folder.files).toEqual([{ id: 'chores-2026-11-02-0205.db', name: 'chores-2026-11-02-0205.db', size: expect.any(Number) }]);
+		expect(folder.files).toEqual([
+			{ id: 'chores-2026-11-02-0205.db', name: 'chores-2026-11-02-0205.db', size: expect.any(Number) }
+		]);
 		expect(folder.files[0]!.size).toBeGreaterThan(0);
-		expect(saved.get('backup.json')).toEqual({ lastAt: '2026-11-02T02:05:00.000Z', failingSince: null, needsSignIn: false });
+		expect(saved.get('backup.json')).toEqual({
+			lastAt: '2026-11-02T02:05:00.000Z',
+			failingSince: null,
+			needsSignIn: false
+		});
 	});
 
 	it('cleans up the snapshot after uploading it', async () => {
@@ -134,7 +148,11 @@ describe('createBackups', () => {
 		const b = backups();
 		folder.failWith = new TypeError('fetch failed');
 		await b.check();
-		expect(saved.get('backup.json')).toEqual({ lastAt: null, failingSince: '2026-11-02T02:05:00.000Z', needsSignIn: false });
+		expect(saved.get('backup.json')).toEqual({
+			lastAt: null,
+			failingSince: '2026-11-02T02:05:00.000Z',
+			needsSignIn: false
+		});
 		folder.failWith = null;
 		now += RETRY_MS - 60_000;
 		await b.check();

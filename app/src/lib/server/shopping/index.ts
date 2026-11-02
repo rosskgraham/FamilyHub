@@ -76,7 +76,8 @@ async function loadList(): Promise<ShoppingResult> {
 		const reason = error instanceof SignInNeeded ? 'sign-in' : 'offline';
 		return { items, status: { kind: 'stale', reason, updatedAt: at, waiting: waiting.length } };
 	}
-	if (waiting.length > 0) return { items, status: { kind: 'stale', reason: 'offline', updatedAt: at, waiting: waiting.length } };
+	if (waiting.length > 0)
+		return { items, status: { kind: 'stale', reason: 'offline', updatedAt: at, waiting: waiting.length } };
 	return { items, status: { kind: 'live', updatedAt: at! } };
 }
 

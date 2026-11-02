@@ -31,7 +31,10 @@ const cost = (rows: number, height: number, space: Space) => rows * (height + sp
 
 export function fitColumn({ allDay, timed }: DayEvents, space: Space, now?: Date): ColumnFit {
 	// 1. Full cards, if they all fit.
-	if (space.card !== undefined && cost(allDay.length, space.row, space) + cost(timed.length, space.card, space) <= space.height) {
+	if (
+		space.card !== undefined &&
+		cost(allDay.length, space.row, space) + cost(timed.length, space.card, space) <= space.height
+	) {
 		return { compact: false, allDay, earlier: 0, timed, more: 0 };
 	}
 

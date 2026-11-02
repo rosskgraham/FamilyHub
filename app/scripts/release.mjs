@@ -72,7 +72,8 @@ try {
 		throw new Error(`The release answered ${health.body}, not version ${version}`);
 	}
 	const today = await get('/');
-	if (today.status !== 200 || !today.body.includes('Coming up')) throw new Error(`The Today view answered ${today.status}`);
+	if (today.status !== 200 || !today.body.includes('Coming up'))
+		throw new Error(`The Today view answered ${today.status}`);
 	console.log(`Checked: the release starts and answers as ${version}`);
 } finally {
 	server.kill();

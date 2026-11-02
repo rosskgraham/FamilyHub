@@ -202,8 +202,12 @@ describe('createEnergy', () => {
 			zappi.history.set('2026-10-27', used('2026-10-27T19:00:00.000Z'));
 			zappi.history.set('2026-10-28', used('2026-10-28T07:30:00.000Z'));
 			const result = await energy()();
-			expect(result.yesterday).toEqual([{ from: '2026-10-27T19:00:00.000Z', house: expect.closeTo(0.4), car: expect.closeTo(0.6) }]);
-			expect(result.today).toEqual([{ from: '2026-10-28T07:30:00.000Z', house: expect.closeTo(0.4), car: expect.closeTo(0.6) }]);
+			expect(result.yesterday).toEqual([
+				{ from: '2026-10-27T19:00:00.000Z', house: expect.closeTo(0.4), car: expect.closeTo(0.6) }
+			]);
+			expect(result.today).toEqual([
+				{ from: '2026-10-28T07:30:00.000Z', house: expect.closeTo(0.4), car: expect.closeTo(0.6) }
+			]);
 			expect(result.live).toEqual({ watts: 800, car: 'plugged' });
 			expect(result.usageStatus).toEqual({ kind: 'live', updatedAt: '2026-10-28T08:15:00.000Z' });
 		});

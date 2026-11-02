@@ -27,7 +27,9 @@ export function toShoppingItems(tasks: GoogleTask[], now: Date): ShoppingItem[] 
 	const ticked = usable
 		.filter((t) => t.status === 'completed' && t.completed && now.getTime() - Date.parse(t.completed) < TICKED_MS)
 		.sort(byPosition);
-	return [...toGet, ...ticked].map(
-		(t): ShoppingItem => ({ id: t.id, text: t.title!.trim(), tickedOff: t.status === 'completed' })
-	);
+	return [...toGet, ...ticked].map((t): ShoppingItem => ({
+		id: t.id,
+		text: t.title!.trim(),
+		tickedOff: t.status === 'completed'
+	}));
 }

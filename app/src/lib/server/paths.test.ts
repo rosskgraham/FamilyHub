@@ -1,7 +1,10 @@
 import { join, resolve } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-const env = vi.hoisted(() => ({ HUB_DATA_DIR: undefined as string | undefined, HUB_CONFIG_DIR: undefined as string | undefined }));
+const env = vi.hoisted(() => ({
+	HUB_DATA_DIR: undefined as string | undefined,
+	HUB_CONFIG_DIR: undefined as string | undefined
+}));
 vi.mock('$app/env/private', () => env);
 
 const { configPath, dataPath } = await import('./paths.ts');

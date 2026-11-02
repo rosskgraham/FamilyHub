@@ -17,5 +17,10 @@ export function asBinDay(event: CalendarEvent): CalendarEvent {
 	const match = BIN_DAY.exec(event.title);
 	if (!match) return event;
 	const colour = match[1]!.toLowerCase().replace('gray', 'grey') as BinColour;
-	return { ...allDayOn(event), title: `${colour[0]!.toUpperCase()}${colour.slice(1)} bin`, owner: EVERYONE, bin: colour };
+	return {
+		...allDayOn(event),
+		title: `${colour[0]!.toUpperCase()}${colour.slice(1)} bin`,
+		owner: EVERYONE,
+		bin: colour
+	};
 }

@@ -106,7 +106,11 @@
 			<h2>Today</h2>
 			{#if note}<span class="note" class:problem={note.problem}>{note.text}</span>{/if}
 			{#if today}
-				<span class="so-far"><span class="dim">So far</span><span class="cost tabular">{formatPounds(today.houseCost + today.carCost)}</span></span>
+				<span class="so-far"
+					><span class="dim">So far</span><span class="cost tabular"
+						>{formatPounds(today.houseCost + today.carCost)}</span
+					></span
+				>
 			{/if}
 		</div>
 		<UsageChart day={dayKey(clock.now)} use={energy.today} slots={energy.slots} priced={rates !== null} />
@@ -135,7 +139,11 @@
 					{#if rates}
 						<div class="time tabular">{formatStarts(start, clock.now)}</div>
 						<div class="sub dim">
-							{start.slot ? 'smart-charging slot' : start.earliest === start.latest ? 'start then, off-peak' : 'start between, off-peak'}
+							{start.slot
+								? 'smart-charging slot'
+								: start.earliest === start.latest
+									? 'start then, off-peak'
+									: 'start between, off-peak'}
 						</div>
 					{:else}
 						<div class="sub dim">Not known</div>

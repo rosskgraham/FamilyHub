@@ -89,9 +89,7 @@
 							Done
 						</button>
 					{:else}
-						<button class="take" aria-expanded={picking === job.id} onclick={() => pick(job.id)}>
-							Done it
-						</button>
+						<button class="take" aria-expanded={picking === job.id} onclick={() => pick(job.id)}> Done it </button>
 					{/if}
 				</div>
 

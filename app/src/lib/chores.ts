@@ -84,9 +84,7 @@ export function choresFor(config: ChoreConfig, child: OwnerId, day: DayKey): Rou
 			routine,
 			chores: config.chores.filter(
 				(c) =>
-					c.who.includes(child) &&
-					c.routines.includes(routine.id) &&
-					(c.days === undefined || c.days.includes(today))
+					c.who.includes(child) && c.routines.includes(routine.id) && (c.days === undefined || c.days.includes(today))
 			)
 		}))
 		.filter((g) => g.chores.length > 0);

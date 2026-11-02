@@ -1,5 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { bonusDoneBy, bonusOn, children, choresFor, currentRoutine, isTicked, starTotals, tickedOn, UP_FOR_GRABS, type ChoreConfig, type ChoreEvent } from './chores.ts';
+import {
+	bonusDoneBy,
+	bonusOn,
+	children,
+	choresFor,
+	currentRoutine,
+	isTicked,
+	starTotals,
+	tickedOn,
+	UP_FOR_GRABS,
+	type ChoreConfig,
+	type ChoreEvent
+} from './chores.ts';
 
 const config: ChoreConfig = {
 	routines: [
@@ -7,7 +19,14 @@ const config: ChoreConfig = {
 		{ id: 'evening', name: 'Evening', from: '18:00' }
 	],
 	chores: [
-		{ id: 'teeth', name: 'Brush your teeth', icon: 'teeth', stars: 1, routines: ['morning', 'evening'], who: ['maya', 'leo'] },
+		{
+			id: 'teeth',
+			name: 'Brush your teeth',
+			icon: 'teeth',
+			stars: 1,
+			routines: ['morning', 'evening'],
+			who: ['maya', 'leo']
+		},
 		{ id: 'bed', name: 'Make your bed', icon: 'bed', stars: 1, routines: ['morning'], who: ['maya'] },
 		{ id: 'bins', name: 'Put the bins out', icon: 'bin', stars: 3, routines: ['evening'], who: ['leo'], days: ['Wed'] }
 	],
@@ -41,7 +60,10 @@ describe('choresFor', () => {
 	});
 
 	it('only includes a Chore with days on those days', () => {
-		const evening = (day: string) => choresFor(config, 'leo', day).find((g) => g.routine.id === 'evening')!.chores.map((c) => c.id);
+		const evening = (day: string) =>
+			choresFor(config, 'leo', day)
+				.find((g) => g.routine.id === 'evening')!
+				.chores.map((c) => c.id);
 		expect(evening(WED)).toEqual(['teeth', 'bins']);
 		expect(evening(THU)).toEqual(['teeth']);
 	});
@@ -102,7 +124,8 @@ describe('starTotals', () => {
 });
 
 describe('Bonus jobs', () => {
-	const grab = (day: string, child: string, job: string, ticked = true) => event(day, child, job, UP_FOR_GRABS, ticked, 2);
+	const grab = (day: string, child: string, job: string, ticked = true) =>
+		event(day, child, job, UP_FOR_GRABS, ticked, 2);
 
 	it('are up for grabs on their days', () => {
 		expect(bonusOn(config, WED).map((b) => b.id)).toEqual(['dishwasher']);

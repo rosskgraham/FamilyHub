@@ -28,9 +28,7 @@ export type OctopusStatus =
 
 /** Where the usage came from: made up, fresh from the Zappi, or the Zappi hasn't reported since `updatedAt`. */
 export type UsageStatus =
-	| { kind: 'sample' }
-	| { kind: 'live'; updatedAt: string }
-	| { kind: 'stale'; updatedAt: string | null };
+	{ kind: 'sample' } | { kind: 'live'; updatedAt: string } | { kind: 'stale'; updatedAt: string | null };
 
 /** What the Car is doing, from the Zappi. */
 export type CarState = 'unplugged' | 'plugged' | 'charging';

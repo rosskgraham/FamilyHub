@@ -9,7 +9,10 @@ test('a page that couldn’t load is tried again within a minute', async ({ page
 	// The Week view's data fails to load on the server, answered the way SvelteKit answers it: every time, as the Hub
 	// also asks for it on hover.
 	const week = '**/week/__data.json*';
-	const failed = { type: 'data', nodes: [{ type: 'skip' }, { type: 'error', error: { message: 'Internal Error' }, status: 500 }] };
+	const failed = {
+		type: 'data',
+		nodes: [{ type: 'skip' }, { type: 'error', error: { message: 'Internal Error' }, status: 500 }]
+	};
 	await page.route(week, (route) => route.fulfill({ json: failed }));
 	await page.getByRole('link', { name: 'Week' }).click();
 	await expect(page.getByText('This page couldn’t load')).toBeVisible();

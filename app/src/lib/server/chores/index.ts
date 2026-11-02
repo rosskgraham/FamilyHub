@@ -1,5 +1,14 @@
 import { CALENDAR_SOURCE } from '$app/env/private';
-import { bonusDoneBy, bonusOn, children, choresFor, UP_FOR_GRABS, type ChoreConfig, type ChoreEvent, type ChoreTick } from '#lib/chores.ts';
+import {
+	bonusDoneBy,
+	bonusOn,
+	children,
+	choresFor,
+	UP_FOR_GRABS,
+	type ChoreConfig,
+	type ChoreEvent,
+	type ChoreTick
+} from '#lib/chores.ts';
 import { sampleHousehold, type Household } from '#lib/household.ts';
 import { addDays, dayKey, formatTime, type DayKey } from '#lib/time.ts';
 import { configuredHousehold } from '../household.ts';
@@ -96,7 +105,11 @@ function sampleHistory(today: DayKey): ChoreEvent[] {
 		}
 	}
 	// Bonus jobs on a few days.
-	for (const [back, child, job] of [[1, 'leo', 'dishwasher'], [2, 'maya', 'table'], [3, 'maya', 'dishwasher']] as const) {
+	for (const [back, child, job] of [
+		[1, 'leo', 'dishwasher'],
+		[2, 'maya', 'table'],
+		[3, 'maya', 'dishwasher']
+	] as const) {
 		const stars = sampleChores.bonus.find((b) => b.id === job)!.stars;
 		const day = addDays(today, -back);
 		events.push({ at: `${day}T17:00:00.000Z`, day, child, chore: job, routine: UP_FOR_GRABS, ticked: true, stars });
