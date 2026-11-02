@@ -13,7 +13,7 @@ describe('toEvents', () => {
 	it('turns a timed Google event into an Event for the owner', () => {
 		expect(toEvents([meeting], 'sam')).toEqual([
 			{
-				id: 'abc@google.com',
+				id: 'abc@google.com@2026-10-28T18:00:00.000Z',
 				title: 'Parents evening',
 				owner: 'sam',
 				allDay: false,
@@ -49,7 +49,17 @@ describe('toEvents', () => {
 
 	it('falls back to the event id and a placeholder title', () => {
 		const bare = { id: 'x1', start: meeting.start, end: meeting.end };
-		expect(toEvents([bare], 'sam')[0]).toMatchObject({ id: 'x1', title: '(No title)' });
+		expect(toEvents([bare], 'sam')[0]).toMatchObject({ id: 'x1@2026-10-28T18:00:00.000Z', title: '(No title)' });
+	});
+
+	it('gives each occurrence of a repeating event its own id, as the screen keys Events by it', () => {
+		const later = {
+			...meeting,
+			start: { dateTime: '2026-10-28T20:00:00Z' },
+			end: { dateTime: '2026-10-28T20:30:00Z' }
+		};
+		const [first, second] = toEvents([meeting, later], 'sam');
+		expect(first!.id).not.toBe(second!.id);
 	});
 
 	it('leaves out cancelled events and ones the owner declined', () => {

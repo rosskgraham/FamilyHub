@@ -37,8 +37,20 @@ export function googleError(status: number, body: unknown, message: string): Err
 	const error = (body as GoogleErrorBody | null)?.error;
 	const reasons = [...(error?.errors ?? []), ...(error?.details ?? [])].map((e) => e.reason);
 	const full = `${message}: ${status}`;
+	// Still turned down after the Hub fetched a new access token: the sign-in itself has ended.
+	if (status === 401) return new SignInNeeded();
 	if (status === 408 || status === 429 || status >= 500) return new Error(full);
 	if (error?.status === 'RESOURCE_EXHAUSTED' || reasons.some((r) => r && SLOW_DOWN.has(r))) return new Error(full);
 	if (reasons.some((r) => r && MISSING_PERMISSION.has(r))) return new SignInNeeded();
 	return new GoogleRefused(status, full);
+}
+/**
+ * A request's address, fit for the logs: no query, and no calendar ids, which are usually email addresses (ADR 0005).
+ */
+export function forLogs(url: string): string {
+	const [path] = url.split('?');
+	return path!
+		.split('/')
+		.map((part) => (/@|%40/.test(part) ? '…' : part))
+		.join('/');
 }
