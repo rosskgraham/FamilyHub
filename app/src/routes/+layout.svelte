@@ -66,7 +66,8 @@
 	<div class="stage" style:transform="translate({left}px, {top}px) scale({scale})">
 		<Header weather={data.weather} />
 		<main>{@render children()}</main>
-		<NavBar />
+		<!-- Setup isn't a Section, and has its own way back. -->
+		{#if !page.url.pathname.startsWith('/setup')}<NavBar />{/if}
 		{#if asleep}
 			<Sleep events={data.sleep.events} owners={data.sleep.owners} onwake={() => (lastTouch = new Date())} />
 		{/if}
