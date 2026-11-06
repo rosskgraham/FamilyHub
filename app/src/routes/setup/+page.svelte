@@ -23,7 +23,10 @@
 </script>
 
 <section class="setup">
-	<h1>Set up Google</h1>
+	<div class="head">
+		<h1>Set up Google</h1>
+		<a class="quiet" href="/">Back to Today</a>
+	</div>
 
 	{#if problem}<p class="problem">{problem}</p>{/if}
 	{#if form?.message}<p class="problem">{form.message}</p>{/if}
@@ -109,8 +112,14 @@
 		overflow-y: auto;
 		font-size: 28px;
 	}
-	h1 {
+	.head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
 		margin: 0 0 16px;
+	}
+	h1 {
+		margin: 0;
 		font-size: 44px;
 	}
 	p {
