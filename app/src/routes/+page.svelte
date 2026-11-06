@@ -7,24 +7,23 @@
 	import ShoppingList from '#lib/components/ShoppingList.svelte';
 	import { fitColumn } from '#lib/fit.ts';
 	import { addDays, dayOfMonth, formatIn, formatTime, formatWeekday } from '#lib/time.ts';
+	import {
+		BANNER,
+		CHIP,
+		CHIP_GAP,
+		DAY_HEAD,
+		DAY_PADDING,
+		HEADING_GAP,
+		LATER_GAP,
+		LATER_MAX,
+		LATER_ROW,
+		NEXT,
+		SECTION_GAP,
+		todayLayout
+	} from '#lib/today-layout.ts';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
-
-	// Fixed heights, so what fits is worked out rather than measured.
-	const MAIN = 744; // the stage between the header and the bottom bar
-	const NEXT = 168;
-	const BANNER = 56;
-	const SECTION_GAP = 16;
-	const HEADING = 34;
-	const HEADING_GAP = 10;
-	const LATER_ROW = 76;
-	const LATER_GAP = 10;
-	const LATER_MAX = 3;
-	const DAY_PADDING = 14;
-	const DAY_HEAD = 34;
-	const CHIP = 38;
-	const CHIP_GAP = 8;
 
 	const today = $derived(eventsOn(data.events, data.today));
 	const upcoming = $derived(today.timed.filter((e) => new Date(e.start) > clock.now));
@@ -35,21 +34,16 @@
 	const laterMore = $derived(rest.length - later.length);
 	const laterRows = $derived(later.length + (laterMore > 0 ? 1 : 0));
 
-	const comingHeight = $derived(
-		MAIN -
-			NEXT -
-			SECTION_GAP -
-			(today.allDay.length > 0 ? BANNER + SECTION_GAP : 0) -
-			(laterRows > 0 ? HEADING + HEADING_GAP + laterRows * LATER_ROW + (laterRows - 1) * LATER_GAP + SECTION_GAP : 0) -
-			HEADING -
-			HEADING_GAP -
-			2 * DAY_PADDING -
-			DAY_HEAD
-	);
+	// Fixed heights, so what fits is worked out rather than measured (see today-layout.ts).
+	const layout = $derived(todayLayout(today.allDay.length > 0, laterRows));
+	const slim = $derived(layout.laterRow < LATER_ROW);
 	const comingUp = $derived(
 		[1, 2, 3, 4].map((i) => {
 			const key = addDays(data.today, i);
-			return { key, fit: fitColumn(eventsOn(data.events, key), { height: comingHeight, gap: CHIP_GAP, row: CHIP }) };
+			return {
+				key,
+				fit: fitColumn(eventsOn(data.events, key), { height: layout.comingHeight, gap: CHIP_GAP, row: CHIP })
+			};
 		})
 	);
 </script>
@@ -94,14 +88,20 @@
 			<h2 style:margin-bottom="{HEADING_GAP - LATER_GAP}px">Later today</h2>
 			{#each later as event (event.id)}
 				{@const owner = data.owners[event.owner]}
-				<div class="row" style:height="{LATER_ROW}px" style:background={owner.bg} style:color={owner.fg}>
+				<div
+					class="row"
+					class:slim
+					style:height="{layout.laterRow}px"
+					style:background={owner.bg}
+					style:color={owner.fg}
+				>
 					<span class="row-time tabular">{formatTime(new Date(event.start))}</span>
-					<Badge {owner} size={44} />
+					<Badge {owner} size={slim ? 34 : 44} />
 					<span class="row-title">{event.title}</span>
 				</div>
 			{/each}
 			{#if laterMore > 0}
-				<a class="row more" href="/day" style:height="{LATER_ROW}px">+{laterMore} more today</a>
+				<a class="row more" class:slim href="/day" style:height="{layout.laterRow}px">+{laterMore} more today</a>
 			{/if}
 		</section>
 	{/if}
@@ -242,6 +242,19 @@
 		background: var(--soft);
 		font-size: 28px;
 		font-weight: 700;
+	}
+	/* Slimmer rows on a busy day, so Coming up still has room to show something. */
+	.row.slim {
+		border-radius: 16px;
+	}
+	.row.slim .row-time {
+		font-size: 26px;
+	}
+	.row.slim .row-title {
+		font-size: 28px;
+	}
+	.row.more.slim {
+		font-size: 24px;
 	}
 
 	.coming {
