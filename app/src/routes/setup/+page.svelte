@@ -102,9 +102,11 @@
 </section>
 
 <style>
+	/* Signed in, the choices are taller than the screen, so they scroll above the nav bar. */
 	.setup {
 		flex: 1;
 		max-width: 1100px;
+		overflow-y: auto;
 		font-size: 28px;
 	}
 	h1 {
