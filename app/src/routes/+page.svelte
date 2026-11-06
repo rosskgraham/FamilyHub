@@ -3,6 +3,7 @@
 	import { clock } from '#lib/clock.svelte.ts';
 	import Badge from '#lib/components/Badge.svelte';
 	import Banner from '#lib/components/Banner.svelte';
+	import BinIcon from '#lib/components/BinIcon.svelte';
 	import EnergyCard from '#lib/components/EnergyCard.svelte';
 	import ShoppingList from '#lib/components/ShoppingList.svelte';
 	import { fitColumn } from '#lib/fit.ts';
@@ -37,12 +38,16 @@
 	// Fixed heights, so what fits is worked out rather than measured (see today-layout.ts).
 	const layout = $derived(todayLayout(today.allDay.length > 0, laterRows));
 	const slim = $derived(layout.laterRow < LATER_ROW);
+	// A bin day shows as a bin by the date rather than a row, leaving the rows for Events.
 	const comingUp = $derived(
 		[1, 2, 3, 4].map((i) => {
 			const key = addDays(data.today, i);
+			const day = eventsOn(data.events, key);
+			const allDay = day.allDay.filter((e) => !e.bin);
 			return {
 				key,
-				fit: fitColumn(eventsOn(data.events, key), { height: layout.comingHeight, gap: CHIP_GAP, row: CHIP })
+				bins: day.allDay.flatMap((e) => (e.bin ? [e.bin] : [])),
+				fit: fitColumn({ ...day, allDay }, { height: layout.comingHeight, gap: CHIP_GAP, row: CHIP })
 			};
 		})
 	);
@@ -109,11 +114,16 @@
 	<section class="coming">
 		<h2 style:margin-bottom="{HEADING_GAP}px">Coming up</h2>
 		<div class="days">
-			{#each comingUp as { key, fit } (key)}
+			{#each comingUp as { key, bins, fit } (key)}
 				<div class="day" style:padding="{DAY_PADDING}px" style:gap="{CHIP_GAP}px">
 					<a class="day-head" href="/day?date={key}" style:height="{DAY_HEAD}px">
 						<span>{formatWeekday(key, 'short')}</span>
 						<span class="day-num tabular">{dayOfMonth(key)}</span>
+						{#if bins.length > 0}
+							<span class="day-bins">
+								{#each bins as colour (colour)}<BinIcon {colour} size={DAY_HEAD} />{/each}
+							</span>
+						{/if}
 					</a>
 					{#each fit.allDay as event (event.id)}
 						<Banner
@@ -292,6 +302,11 @@
 	.day-num {
 		font-weight: 600;
 		color: var(--dim);
+	}
+	.day-bins {
+		margin-left: auto;
+		display: flex;
+		gap: 4px;
 	}
 	.chip {
 		box-sizing: border-box;
