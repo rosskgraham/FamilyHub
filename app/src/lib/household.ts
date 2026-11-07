@@ -1,6 +1,6 @@
 // Who an Event belongs to: one Member, or Everyone for the Family calendar.
 // The real Household comes from app/household.json; sample data uses a made-up one.
-import type { MemberColours, memberColours } from './theme.ts';
+import { memberColours, type MemberColours } from './theme.ts';
 
 export type OwnerId = string;
 
@@ -24,17 +24,16 @@ function themed(colour: (typeof memberColours)[number]): MemberColours {
 	};
 }
 
-/** The colours a Member can have. */
-export const colours = {
-	blue: themed('blue'),
-	orange: themed('orange'),
-	green: themed('green'),
-	purple: themed('purple')
-};
+/** The colours a Member, or Everyone, can have. */
+export const colours = Object.fromEntries(memberColours.map((c) => [c, themed(c)])) as Record<
+	(typeof memberColours)[number],
+	MemberColours
+>;
 
 export type Colour = keyof typeof colours;
 
-const everyone: Owner = { id: EVERYONE, name: 'Everyone', initial: 'All', ...themed('everyone') };
+/** Everyone's colour, unless household.json chooses another. */
+export const EVERYONE_COLOUR: Colour = 'slate';
 
 export interface MemberConfig {
 	id: string;
@@ -44,7 +43,7 @@ export interface MemberConfig {
 }
 
 /** The Members, in order, then Everyone. */
-export function household(members: MemberConfig[]): Household {
+export function household(members: MemberConfig[], everyoneColour: Colour = EVERYONE_COLOUR): Household {
 	const result: Household = {};
 	for (const m of members) {
 		result[m.id] = {
@@ -54,7 +53,7 @@ export function household(members: MemberConfig[]): Household {
 			...colours[m.colour]
 		};
 	}
-	result[EVERYONE] = everyone;
+	result[EVERYONE] = { id: EVERYONE, name: 'Everyone', initial: 'All', ...colours[everyoneColour] };
 	return result;
 }
 

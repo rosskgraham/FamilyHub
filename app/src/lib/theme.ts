@@ -31,7 +31,8 @@ export interface MemberColours {
 	on: string;
 }
 
-export const memberColours = ['blue', 'orange', 'green', 'purple', 'everyone'] as const;
+// Slate was Everyone's grey before Everyone's colour could be chosen, and is still its colour unless one is.
+export const memberColours = ['blue', 'orange', 'green', 'purple', 'slate', 'pink', 'yellow', 'red'] as const;
 
 export interface Palette {
 	/** The page behind the cards. */
@@ -140,7 +141,10 @@ export const palettes: Record<Theme, Palette> = {
 			orange: { bg: '#FFDDB8', fg: '#6B2E00', solid: '#B85200', on: '#FFFFFF' },
 			green: { bg: '#BDEBDD', fg: '#0A4136', solid: '#0B7A64', on: '#FFFFFF' },
 			purple: { bg: '#E6D8FA', fg: '#46228A', solid: '#6C3FC4', on: '#FFFFFF' },
-			everyone: { bg: '#E3E6EB', fg: '#1E2530', solid: '#4A5565', on: '#FFFFFF' }
+			slate: { bg: '#E3E6EB', fg: '#1E2530', solid: '#4A5565', on: '#FFFFFF' },
+			pink: { bg: '#FBD9E7', fg: '#6E1640', solid: '#C2306B', on: '#FFFFFF' },
+			yellow: { bg: '#FFEFB0', fg: '#5C4300', solid: '#8A6500', on: '#FFFFFF' },
+			red: { bg: '#FFD8D4', fg: '#7A1A14', solid: '#C0362C', on: '#FFFFFF' }
 		}
 	},
 	// From the dark mockup (B · Lanes by person): dimmer, so it's easy on the eyes in a dark kitchen.
@@ -188,7 +192,10 @@ export const palettes: Record<Theme, Palette> = {
 			orange: { bg: '#4A2A0E', fg: '#FFD8B0', solid: '#FFA85C', on: '#3A1800' },
 			green: { bg: '#0F3B31', fg: '#A9EEDA', solid: '#5ED6B5', on: '#04281F' },
 			purple: { bg: '#33235F', fg: '#E0D2FF', solid: '#B99BFF', on: '#24104D' },
-			everyone: { bg: '#2A313C', fg: '#DCE1EA', solid: '#A6B0BF', on: '#0E1116' }
+			slate: { bg: '#2A313C', fg: '#DCE1EA', solid: '#A6B0BF', on: '#0E1116' },
+			pink: { bg: '#4A1830', fg: '#FFD0E3', solid: '#FF85B4', on: '#3A0A20' },
+			yellow: { bg: '#3D3208', fg: '#FFE9A3', solid: '#F5C842', on: '#2E2400' },
+			red: { bg: '#4A1714', fg: '#FFD0CC', solid: '#FF8A80', on: '#3A0805' }
 		}
 	}
 };
