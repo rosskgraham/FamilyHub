@@ -1,6 +1,6 @@
 # To-dos: design notes
 
-A design for a To-dos Section and a Today view card, with the Shopping list on the Today view slimmed to a card. No mockups yet.
+A design for a To-dos Section and a Today view card, with the Shopping list on the Today view slimmed to a card. Built on 7 November 2026; the screenshot tests show it (`app/e2e/__screenshots__/todos.png` and `today.png`).
 
 ## The idea
 
@@ -27,11 +27,15 @@ A test against "Family Task List" on 7 November 2026, with a task repeating dail
 - **Times are dropped.** Due dates come back as the date at midnight UTC (`2026-11-07T00:00:00.000Z`), without the 9:00. The Hub can say "due today", never "due at 9:00".
 - **Ticking off through the API is safe.** "Rpt1", ticked off by the Hub's API call, was marked `completed` with the same ID and due date. The phone still showed it repeating, with "Next: Tomorrow".
 - **Ticking off on a phone looks the same**, plus `"hidden": true`, which is how the app moves it into its Completed section. The Hub must treat any `completed` task as done, hidden or not.
+- **`completedMin` leaves out every task that isn't ticked off.** Asking for tasks completed in the last hour returned only the two ticked-off ones, so the Hub reads the whole list and drops old ticked-off To-dos itself.
 - **The next occurrence isn't listed yet.** After either kind of tick-off, the API showed no "Rpt1" or "Rpt2" for tomorrow. It most likely appears as a new task once it's due.
 
 So the Hub can show what's due and overdue, and one-off To-dos with future dates. It can't show a repeating To-do ahead of time.
 
 ## How it works at the wall
+
+- **The side column of the Today view:** the Energy card, then To-dos, then the Shopping card.
+- **Which list holds To-dos** is chosen on the setup page, like the Shopping list.
 
 - **Today view card:** To-dos due today or overdue, overdue first, each with how late it is ("2 days late"). Ticking off works on the card itself.
 - **To-dos Section:** overdue, today, and then what's coming, by date. One-off To-dos with a future date show there; repeating ones only once Google lists them. **+ Add** for a one-off To-do, with an optional due date.
@@ -39,7 +43,4 @@ So the Hub can show what's due and overdue, and one-off To-dos with future dates
 ## Open questions
 
 - **Check the IDs when the repeats come back (8 November 2026):** read "Family Task List" again, to see whether "Rpt1" and "Rpt2" are listed for 8 November, and whether each is a new task with a new ID or the same task with a new due date. That decides how the Hub tells "ticked off today" from "due again".
-- **To-dos without a due date:** on the Today view card, or only in the Section?
-- **Old completed To-dos:** Google keeps them. The Hub should only ask for recent ones (`completedMin`), so the list stays small.
-- **Where the card goes:** in the side column, where the Shopping list is now, above or below the Shopping card and the Energy card.
-- **Which list is "Family Task List"** is chosen on the setup page, like the Shopping list.
+- **To-dos without a due date** show only in the Section for now. Should they be on the Today view card too?

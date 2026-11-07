@@ -54,6 +54,7 @@ The plan is in [docs/requirements.md](docs/requirements.md). Progress so far:
 | ✅ | Offline resilience | Done, on a PC |
 | ✅ | A versioned release built on every merge | Done |
 | ✅ | Home energy: cheap and peak times, when to run the dishwasher, and the car’s share ([design](design/mockups/energy/notes.md)) | Done, on a PC |
+| ✅ | To-dos from Google Tasks, one-off and repeating ([design](design/mockups/todos/notes.md)) | Done, on a PC |
 | ⬜ | A Raspberry Pi set up from scripts, showing the Hub full-screen | When the hardware arrives |
 | ⬜ | On the kitchen wall: **v1** | |
 | ⬜ | Recipe videos from a YouTube playlist | After v1 |

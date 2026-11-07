@@ -18,14 +18,14 @@ Then open <http://localhost:5173>. The screen is designed at 1920×1080 and scal
 - After two minutes without a touch, the Hub goes back to the Today view, except from the setup page.
 - From 22:00 to 06:30 the Hub shows Sleep: a dim clock and the next Event. A tap wakes it, and it goes back to Sleep two minutes after the last touch. The schedule is `sleepSchedule` in `src/lib/sleep.ts`, so changing it is a pull request.
 
-Until it's set up, it shows sample Events (a typical week repeated for every week) and a sample Shopping list kept in memory, which resets when the app restarts. The weather is a sample until home is set.
+Until it's set up, it shows sample Events (a typical week repeated for every week) and a sample Shopping list and sample To-dos kept in memory, which reset when the app restarts. The weather is a sample until home is set.
 
-## Show the real Calendars and Shopping list
+## Show the real Calendars, Shopping list and To-dos
 
 1. Follow [the Google Cloud runbook](../docs/runbooks/google-cloud-setup.md), and put `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `app/.env`.
 2. Copy `app/household.example.json` to `app/household.json` and put in the Household's Members, each with a name and a colour: `blue`, `orange`, `green`, `purple`, `slate`, `pink`, `yellow` or `red`. An `initial` is optional; it's the first letter of the name otherwise. Git ignores this file. Everyone, for the Family calendar, is always there, in `slate` unless `"everyone": { "colour": "…" }` chooses another. Everyone can't share a Member's colour.
 3. Run the app, and choose **Sample data · set up Google** in the bottom corner (or go to <http://localhost:5173/setup>).
-4. Sign in with the Household's Google account, then choose each Member's Calendar and which Google Tasks list is the Shopping list.
+4. Sign in with the Household's Google account, then choose each Member's Calendar, which Google Tasks list is the Shopping list, and which holds the To-dos. Repeating To-dos are set up in the Google Tasks app on a phone; the Hub only adds one-off ones.
 
 To change a Calendar later, go back to <http://localhost:5173/setup>. Changes to `household.json` show on the next reload. Renaming a Member means choosing their Calendar again. Sample Events always use the made-up Household (Alex, Sam, Maya and Leo).
 
@@ -35,9 +35,9 @@ The sign-in and the Calendar choices are kept in `app/data/`, which Git ignores.
 
 ### When Google can't be reached
 
-- The Hub shows the last Events and Shopping list it loaded, and the bottom bar says "Offline · last updated 14:02". They're kept in `app/data/` too, so they still show after a restart, and on a new day the Calendar is pieced together from the days it loaded before. To spare the Pi's SD card, they're written when they change and otherwise hourly.
+- The Hub shows the last Events, Shopping list and To-dos it loaded, and the bottom bar says "Offline · last updated 14:02". They're kept in `app/data/` too, so they still show after a restart, and on a new day the Calendar is pieced together from the days it loaded before. To spare the Pi's SD card, they're written when they change and otherwise hourly.
 - Shopping changes wait in `app/data/shopping-queue.json` and show on screen straight away, with "Offline · 2 to send" on the list. They're sent in order once Google answers. One Google turns down, such as ticking off an item someone deleted on their phone, is dropped.
-- Google requests give up after 10 seconds, so a dead connection never holds up the screen. Set `CALENDAR_SOURCE=sample` in `app/.env` to show sample Events, a sample Shopping list and sample weather even when Google and home are set up.
+- Google requests give up after 10 seconds, so a dead connection never holds up the screen. Set `CALENDAR_SOURCE=sample` in `app/.env` to show sample Events, a sample Shopping list, sample To-dos and sample weather even when Google and home are set up.
 
 ## Show the real weather
 
@@ -111,8 +111,9 @@ It listens on port 3000, or `PORT`. `/api/health` answers `{"status":"ok","versi
 - `src/lib/calendar.ts`: the Event type and grouping Events by day.
 - `src/lib/server/calendar/`: where Events come from. `google.ts` reads Google Calendar, `fake.ts` is the sample week, `index.ts` picks one, and `cache.ts` keeps the last good Events for when Google can't be reached.
 - `src/lib/server/google/auth.ts`: signing in to Google and keeping the sign-in fresh.
-- `src/routes/setup/`: signing in, choosing whose each Calendar is, and choosing the Shopping list.
-- `src/lib/server/shopping/`: where the Shopping list comes from. `google.ts` reads and changes Google Tasks, `fake.ts` is the sample list, and `queue.ts` holds changes made while Google can't be reached.
+- `src/routes/setup/`: signing in, choosing whose each Calendar is, and choosing the Shopping list and the To-dos list.
+- `src/lib/server/tasks/`: what the Shopping list and To-dos share as Google Tasks lists. `google.ts` reads and changes a list, `queue.ts` holds changes made while Google can't be reached, and `feed.ts` keeps a list fresh, shows it from disk when Google can't be reached, and applies changes.
+- `src/lib/server/shopping/` and `src/lib/server/todos/`: each list's own reading of Google's tasks, and its sample list in `fake.ts`.
 - `src/lib/components/ShoppingList.svelte`: the list on the Today view and in the Shopping section, with ticking off, adding and removing.
 - `src/routes/api/shopping/`: the endpoint the screen calls to change the list.
 - `src/env.ts`: the environment variables the app reads.
