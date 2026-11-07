@@ -83,6 +83,16 @@
 					{/each}
 				</select>
 			</label>
+			<p class="section">Choose the Google Tasks list of the Household’s To-dos.</p>
+			<label>
+				<span class="who">To-dos</span>
+				<select name="todoList" value={data.todoList}>
+					<option value="">Sample To-dos</option>
+					{#each data.taskLists as list (list.id)}
+						<option value={list.id}>{list.title}</option>
+					{/each}
+				</select>
+			</label>
 			<p class="section">
 				{#if data.backup?.needsSignIn}
 					<span class="problem"

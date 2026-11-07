@@ -39,6 +39,9 @@ export const load: PageServerLoad = async ({ url }) => {
 	}));
 	const shoppingList =
 		settings.shoppingList ?? taskLists.find((l) => l.title.toLowerCase().includes('shopping'))?.id ?? '';
+	// "Family Task List", "To-dos" and the like, but never the Shopping list.
+	const todoList =
+		settings.todoList ?? taskLists.find((l) => l.id !== shoppingList && /task|to-?do/i.test(l.title))?.id ?? '';
 	const birthdays = settings.birthdays ?? calendars.find((c) => c.summary.toLowerCase().includes('birthday'))?.id ?? '';
 	return {
 		step: 'calendars' as const,
@@ -48,6 +51,7 @@ export const load: PageServerLoad = async ({ url }) => {
 		choices,
 		taskLists,
 		shoppingList,
+		todoList,
 		birthdays,
 		backup: await readBackupStatus(),
 		saved: Object.keys(settings.calendars).length > 0
@@ -68,7 +72,12 @@ export const actions = {
 			const value = form.get(name);
 			return typeof value === 'string' && value !== '' ? value : undefined;
 		};
-		await writeSettings({ calendars, shoppingList: chosen('shoppingList'), birthdays: chosen('birthdays') });
+		await writeSettings({
+			calendars,
+			shoppingList: chosen('shoppingList'),
+			todoList: chosen('todoList'),
+			birthdays: chosen('birthdays')
+		});
 		redirect(303, '/');
 	},
 	signOut: async () => {

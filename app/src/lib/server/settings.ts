@@ -8,6 +8,8 @@ export interface Settings {
 	calendars: Record<OwnerId, string>;
 	/** The Google Tasks list that is the Shopping list. */
 	shoppingList?: string;
+	/** The Google Tasks list of the Household's To-dos. */
+	todoList?: string;
 	/** The Google Calendar of friends' and family's birthdays, shown as everyone's. */
 	birthdays?: string;
 }
