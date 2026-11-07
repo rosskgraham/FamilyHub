@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { asBinDay } from './bins.ts';
+import { asBinDay, takeBins } from './bins.ts';
 import type { CalendarEvent } from './calendar.ts';
 
 const allDay = (title: string): CalendarEvent => ({
@@ -40,5 +40,17 @@ describe('asBinDay', () => {
 		const at = '2026-07-01T23:30:00.000Z';
 		const timed = { ...allDay('Grey bin collection day'), allDay: false, start: at, end: at };
 		expect(asBinDay(timed)).toMatchObject({ allDay: true, start: '2026-07-02', end: '2026-07-03' });
+	});
+});
+
+describe('takeBins', () => {
+	it('takes bin days out of a day’s all-day Events, keeping their colours', () => {
+		const bin = asBinDay(allDay('Blue bin collection day'));
+		const birthday = { ...allDay('Grandad’s birthday'), id: 'e2' };
+		const timed = { ...allDay('Swimming'), id: 'e3', allDay: false };
+		expect(takeBins({ allDay: [bin, birthday], timed: [timed] })).toEqual({
+			bins: ['blue'],
+			day: { allDay: [birthday], timed: [timed] }
+		});
 	});
 });

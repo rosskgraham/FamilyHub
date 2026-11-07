@@ -1,8 +1,10 @@
 <script lang="ts">
+	import { takeBins } from '#lib/bins.ts';
 	import { eventsOn } from '#lib/calendar.ts';
 	import { clock } from '#lib/clock.svelte.ts';
 	import Badge from '#lib/components/Badge.svelte';
 	import Banner from '#lib/components/Banner.svelte';
+	import BinIcon from '#lib/components/BinIcon.svelte';
 	import { fitColumn, type Space } from '#lib/fit.ts';
 	import { dayOfMonth, formatDayMonth, formatTime, formatWeekday, type DayKey } from '#lib/time.ts';
 	import type { PageProps } from './$types';
@@ -29,11 +31,12 @@
 			: `${formatDayMonth(first)} – ${formatDayMonth(last)}`;
 	});
 
+	// A bin day shows as a bin in the day's heading rather than a row, leaving the rows for Events.
 	const columns = $derived(
-		data.days.map((key) => ({
-			key,
-			fit: fitColumn(eventsOn(data.events, key), SPACE, key === data.today ? clock.now : undefined)
-		}))
+		data.days.map((key) => {
+			const { bins, day } = takeBins(eventsOn(data.events, key));
+			return { key, bins, fit: fitColumn(day, SPACE, key === data.today ? clock.now : undefined) };
+		})
 	);
 
 	function state(key: DayKey): 'past' | 'today' | 'future' {
@@ -80,10 +83,15 @@
 	</div>
 
 	<div class="columns">
-		{#each columns as { key, fit } (key)}
+		{#each columns as { key, bins, fit } (key)}
 			<section class="day {state(key)}" style:gap="{SPACE.gap}px">
 				<a class="head" href="/day?date={key}">
 					<span class="name">{formatWeekday(key, 'short')}</span>
+					{#if bins.length > 0}
+						<span class="bins">
+							{#each bins as colour (colour)}<BinIcon {colour} size={32} />{/each}
+						</span>
+					{/if}
 					<span class="num tabular">{dayOfMonth(key)}</span>
 				</a>
 				{#each fit.allDay as event (event.id)}
@@ -228,6 +236,15 @@
 		font-size: 44px;
 		font-weight: 600;
 		line-height: 1;
+	}
+	/* On the card colour, so a bin shows on today's dark heading too. */
+	.bins {
+		margin: 0 auto 0 10px;
+		display: flex;
+		gap: 2px;
+		padding: 4px;
+		border-radius: 10px;
+		background: var(--card);
 	}
 
 	.row,
