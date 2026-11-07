@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { toShoppingItems, type GoogleTask } from './from-google.ts';
+import type { GoogleTask } from '../tasks/google.ts';
+import { toShoppingItems } from './from-google.ts';
 
 const now = new Date('2026-10-28T08:15:00Z');
 const toGet = (id: string, position: string, title = id): GoogleTask => ({

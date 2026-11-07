@@ -1,20 +1,5 @@
 import type { ShoppingItem } from '#lib/shopping.ts';
-
-export interface GoogleTask {
-	id: string;
-	title?: string;
-	status: 'needsAction' | 'completed';
-	completed?: string;
-	position?: string;
-	deleted?: boolean;
-	parent?: string;
-}
-
-/**
- * How long a ticked-off item stays, struck through, so a mis-tap at the Hub can be undone. Not longer: items ticked off
- * in the shop on a phone are bought, and shouldn't fill the wall when everyone gets home.
- */
-export const TICKED_MS = 10 * 60_000;
+import { TICKED_MS, type GoogleTask } from '../tasks/google.ts';
 
 /**
  * Items still to get, in the list's order, then items ticked off in the last few minutes.

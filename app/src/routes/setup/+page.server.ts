@@ -3,7 +3,7 @@ import { EVERYONE, type Owner, type OwnerId } from '#lib/household.ts';
 import { isConfigured, isSignedIn, SignInNeeded, signOut } from '#lib/server/google/auth.ts';
 import { listCalendars, type GoogleCalendar } from '#lib/server/calendar/google.ts';
 import { configuredHousehold } from '#lib/server/household.ts';
-import { listTaskLists, type GoogleTaskList } from '#lib/server/shopping/google.ts';
+import { listTaskLists, type GoogleTaskList } from '#lib/server/tasks/google.ts';
 import { readBackupStatus } from '#lib/server/backup/index.ts';
 import { readSettings, writeSettings } from '#lib/server/settings.ts';
 import type { Actions, PageServerLoad } from './$types';

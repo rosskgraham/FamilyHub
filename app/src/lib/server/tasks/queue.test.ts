@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { GoogleRefused } from '../google/auth.ts';
 import { googleError } from '../google/errors.ts';
-import { enqueue, send, withQueue, type QueuedChange } from './queue.ts';
-import type { ShoppingSource } from './source.ts';
+import { enqueue, send, withQueue, type ChangeTarget, type QueuedChange } from './queue.ts';
+
+// The queue is shared; these tests use a Shopping list's changes, whose adds carry just the text.
+type Shopping = { text: string };
 
 describe('enqueue', () => {
 	it('gives an item added offline a made-up id', () => {
@@ -28,12 +30,21 @@ describe('enqueue', () => {
 });
 
 describe('withQueue', () => {
+	it('carries everything an add has, such as a To-do’s due date, onto the item it shows', () => {
+		const queue: QueuedChange<{ text: string; due: string | null }>[] = [
+			{ action: 'add', text: 'Enter meter readings', due: '2026-12-01', id: 'queued-1', tickedOff: false }
+		];
+		expect(withQueue([], queue)).toEqual([
+			{ id: 'queued-1', text: 'Enter meter readings', due: '2026-12-01', tickedOff: false }
+		]);
+	});
+
 	it('shows the list as it will be once the queue is sent', () => {
 		const items = [
 			{ id: 'eggs', text: 'Eggs', tickedOff: false },
 			{ id: 'milk', text: 'Milk', tickedOff: false }
 		];
-		const queue: QueuedChange[] = [
+		const queue: QueuedChange<Shopping>[] = [
 			{ action: 'add', text: 'Bread', id: 'queued-1', tickedOff: false },
 			{ action: 'tick', id: 'eggs', tickedOff: true },
 			{ action: 'remove', id: 'milk' }
@@ -53,9 +64,8 @@ function source(fail: (call: string) => Error | null = () => null) {
 		if (problem) throw problem;
 		calls.push(call);
 	};
-	const list: ShoppingSource = {
-		list: async () => [],
-		add: async (text) => (await record(`add ${text}`), `id-${text}`),
+	const list: ChangeTarget<Shopping> = {
+		add: async ({ text }) => (await record(`add ${text}`), `id-${text}`),
 		setTickedOff: (id, tickedOff) => record(`tick ${id} ${tickedOff}`),
 		remove: (id) => record(`remove ${id}`)
 	};
@@ -63,7 +73,7 @@ function source(fail: (call: string) => Error | null = () => null) {
 }
 
 describe('send', () => {
-	const queue: QueuedChange[] = [
+	const queue: QueuedChange<Shopping>[] = [
 		{ action: 'add', text: 'Bread', id: 'queued-1', tickedOff: true },
 		{ action: 'tick', id: 'eggs', tickedOff: true },
 		{ action: 'remove', id: 'milk' }
@@ -73,6 +83,24 @@ describe('send', () => {
 		const google = source();
 		expect(await send(queue, google.list)).toEqual([]);
 		expect(google.calls).toEqual(['add Bread', 'tick id-Bread true', 'tick eggs true', 'remove milk']);
+	});
+
+	it('sends everything an add has, such as a To-do’s due date', async () => {
+		const added: unknown[] = [];
+		const target: ChangeTarget<{ text: string; due: string | null }> = {
+			add: async (addition) => (added.push(addition), 'id-1'),
+			setTickedOff: async () => {},
+			remove: async () => {}
+		};
+		const todo = {
+			action: 'add',
+			text: 'Enter meter readings',
+			due: '2026-12-01',
+			id: 'queued-1',
+			tickedOff: false
+		} as const;
+		expect(await send([todo], target)).toEqual([]);
+		expect(added).toEqual([{ text: 'Enter meter readings', due: '2026-12-01' }]);
 	});
 
 	it('stops at the first change Google can’t be reached for, and keeps the rest', async () => {

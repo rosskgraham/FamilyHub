@@ -1,10 +1,7 @@
 import type { ShoppingItem } from '#lib/shopping.ts';
+import type { ChangeTarget } from '../tasks/queue.ts';
 
-export interface ShoppingSource {
+export interface ShoppingSource extends ChangeTarget<{ text: string }> {
 	/** Items still to get, then items ticked off today. Items ticked off before today are left out. */
 	list(): Promise<ShoppingItem[]>;
-	/** Resolves to the new item's id. */
-	add(text: string): Promise<string>;
-	setTickedOff(id: string, tickedOff: boolean): Promise<void>;
-	remove(id: string): Promise<void>;
 }
