@@ -23,7 +23,7 @@ Until it's set up, it shows sample Events (a typical week repeated for every wee
 ## Show the real Calendars and Shopping list
 
 1. Follow [the Google Cloud runbook](../docs/runbooks/google-cloud-setup.md), and put `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `app/.env`.
-2. Copy `app/household.example.json` to `app/household.json` and put in the Household's Members, each with a name and a colour (`blue`, `orange`, `green` or `purple`). An `initial` is optional; it's the first letter of the name otherwise. Git ignores this file. Everyone, for the Family calendar, is always there.
+2. Copy `app/household.example.json` to `app/household.json` and put in the Household's Members, each with a name and a colour: `blue`, `orange`, `green`, `purple`, `slate`, `pink`, `yellow` or `red`. An `initial` is optional; it's the first letter of the name otherwise. Git ignores this file. Everyone, for the Family calendar, is always there, in `slate` unless `"everyone": { "colour": "…" }` chooses another. Everyone can't share a Member's colour.
 3. Run the app, and choose **Sample data · set up Google** in the bottom corner (or go to <http://localhost:5173/setup>).
 4. Sign in with the Household's Google account, then choose each Member's Calendar and which Google Tasks list is the Shopping list.
 
