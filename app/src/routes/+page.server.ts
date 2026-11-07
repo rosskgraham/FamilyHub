@@ -2,6 +2,7 @@ import { loadCalendar } from '#lib/server/calendar/index.ts';
 import { loadEnergy } from '#lib/server/energy/index.ts';
 import { loadShopping } from '#lib/server/shopping/index.ts';
 import { now } from '#lib/server/now.ts';
+import { loadTodos } from '#lib/server/todos/index.ts';
 import { addDays, dayKey } from '#lib/time.ts';
 import type { PageServerLoad } from './$types';
 
@@ -10,9 +11,10 @@ const DAYS = 5;
 
 export const load: PageServerLoad = async () => {
 	const today = dayKey(now());
-	const [calendar, shopping, energy] = await Promise.all([
+	const [calendar, shopping, todos, energy] = await Promise.all([
 		loadCalendar(today, addDays(today, DAYS)),
 		loadShopping(),
+		loadTodos(),
 		loadEnergy()
 	]);
 	return {
@@ -21,6 +23,7 @@ export const load: PageServerLoad = async () => {
 		calendarStatus: calendar.status,
 		owners: calendar.household,
 		shopping,
+		todos,
 		energy: {
 			rates: energy.tariff?.rates ?? null,
 			slots: energy.slots,
