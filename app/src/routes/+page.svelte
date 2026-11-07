@@ -6,7 +6,8 @@
 	import Banner from '#lib/components/Banner.svelte';
 	import BinIcon from '#lib/components/BinIcon.svelte';
 	import EnergyCard from '#lib/components/EnergyCard.svelte';
-	import ShoppingList from '#lib/components/ShoppingList.svelte';
+	import ShoppingCard from '#lib/components/ShoppingCard.svelte';
+	import TodosCard from '#lib/components/TodosCard.svelte';
 	import { fitColumn } from '#lib/fit.ts';
 	import { addDays, dayOfMonth, formatIn, formatTime, formatWeekday } from '#lib/time.ts';
 	import {
@@ -150,7 +151,8 @@
 
 <aside>
 	<EnergyCard {...data.energy} />
-	<ShoppingList items={data.shopping.items} status={data.shopping.status} rows={4} moreHref="/shopping" />
+	<TodosCard todos={data.todos.items} status={data.todos.status} today={data.today} rows={3} />
+	<ShoppingCard items={data.shopping.items} status={data.shopping.status} />
 </aside>
 
 <style>

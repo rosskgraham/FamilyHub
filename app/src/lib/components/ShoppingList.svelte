@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
+	import { sendChange } from '#lib/quick-action.ts';
 	import type { ShoppingChange, ShoppingItem, ShoppingStatus } from '#lib/shopping.ts';
 
 	let {
@@ -44,24 +44,8 @@
 	const more = $derived(ordered.length - visible.length);
 
 	async function send(change: ShoppingChange): Promise<boolean> {
-		problem = null;
-		try {
-			const response = await fetch('/api/shopping', {
-				method: 'POST',
-				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify(change)
-			});
-			if (!response.ok) {
-				problem =
-					response.status === 401 ? 'Google needs signing in again.' : 'Google didn’t take that change. Try again.';
-				return false;
-			}
-			await invalidateAll();
-			return true;
-		} catch {
-			problem = 'Couldn’t reach the Hub. Try again.';
-			return false;
-		}
+		problem = await sendChange('/api/shopping', change);
+		return problem === null;
 	}
 
 	async function toggle(item: { id: string; tickedOff: boolean; pending: boolean }) {

@@ -39,7 +39,7 @@ export const fakeShopping: ShoppingSource = {
 			tickedOff: i.tickedOffAt !== null
 		}));
 	},
-	async add(text) {
+	async add({ text }) {
 		const added = item(text);
 		items.unshift(added);
 		return added.id;

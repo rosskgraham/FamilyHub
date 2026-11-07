@@ -1,22 +1,9 @@
-export interface ShoppingItem {
-	id: string;
-	text: string;
-	tickedOff: boolean;
-}
+import type { Change, Item, ListStatus } from './task-list.ts';
+
+export type ShoppingItem = Item<{ text: string }>;
 
 /** Where the Shopping list on screen came from, and how fresh it is. */
-export type ShoppingStatus =
-	| { kind: 'sample'; setUp: boolean }
-	| { kind: 'live'; updatedAt: string }
-	| {
-			kind: 'stale';
-			reason: 'sign-in' | 'offline';
-			updatedAt: string | null;
-			/** Changes waiting to be sent. */ waiting: number;
-	  };
+export type ShoppingStatus = ListStatus;
 
 /** What the screen asks the server to change. */
-export type ShoppingChange =
-	| { action: 'add'; text: string }
-	| { action: 'tick'; id: string; tickedOff: boolean }
-	| { action: 'remove'; id: string };
+export type ShoppingChange = Change<{ text: string }>;

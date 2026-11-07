@@ -3,7 +3,7 @@ import { EVERYONE, type Owner, type OwnerId } from '#lib/household.ts';
 import { isConfigured, isSignedIn, SignInNeeded, signOut } from '#lib/server/google/auth.ts';
 import { listCalendars, type GoogleCalendar } from '#lib/server/calendar/google.ts';
 import { configuredHousehold } from '#lib/server/household.ts';
-import { listTaskLists, type GoogleTaskList } from '#lib/server/shopping/google.ts';
+import { listTaskLists, type GoogleTaskList } from '#lib/server/tasks/google.ts';
 import { readBackupStatus } from '#lib/server/backup/index.ts';
 import { readSettings, writeSettings } from '#lib/server/settings.ts';
 import type { Actions, PageServerLoad } from './$types';
@@ -39,6 +39,9 @@ export const load: PageServerLoad = async ({ url }) => {
 	}));
 	const shoppingList =
 		settings.shoppingList ?? taskLists.find((l) => l.title.toLowerCase().includes('shopping'))?.id ?? '';
+	// "Family Task List", "To-dos" and the like, but never the Shopping list.
+	const todoList =
+		settings.todoList ?? taskLists.find((l) => l.id !== shoppingList && /task|to-?do/i.test(l.title))?.id ?? '';
 	const birthdays = settings.birthdays ?? calendars.find((c) => c.summary.toLowerCase().includes('birthday'))?.id ?? '';
 	return {
 		step: 'calendars' as const,
@@ -48,6 +51,7 @@ export const load: PageServerLoad = async ({ url }) => {
 		choices,
 		taskLists,
 		shoppingList,
+		todoList,
 		birthdays,
 		backup: await readBackupStatus(),
 		saved: Object.keys(settings.calendars).length > 0
@@ -68,7 +72,12 @@ export const actions = {
 			const value = form.get(name);
 			return typeof value === 'string' && value !== '' ? value : undefined;
 		};
-		await writeSettings({ calendars, shoppingList: chosen('shoppingList'), birthdays: chosen('birthdays') });
+		await writeSettings({
+			calendars,
+			shoppingList: chosen('shoppingList'),
+			todoList: chosen('todoList'),
+			birthdays: chosen('birthdays')
+		});
 		redirect(303, '/');
 	},
 	signOut: async () => {
