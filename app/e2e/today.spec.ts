@@ -13,3 +13,10 @@ test('a bin day in Coming up shows as a bin by the date, not a row', async ({ pa
 	await expect(thursday.locator('.day-head').getByRole('img', { name: 'blue bin' })).toBeVisible();
 	await expect(thursday.locator('.banner', { hasText: 'Blue bin' })).toHaveCount(0);
 });
+
+test('a bin day in the Week view shows as a bin in the day’s heading, not a row', async ({ page }) => {
+	await page.goto('/week');
+	const thursday = page.locator('.columns .day').filter({ has: page.locator('.head', { hasText: 'Thu' }) });
+	await expect(thursday.locator('.head').getByRole('img', { name: 'blue bin' })).toBeVisible();
+	await expect(thursday.locator('.banner', { hasText: 'Blue bin' })).toHaveCount(0);
+});

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { takeBins } from '#lib/bins.ts';
 	import { eventsOn } from '#lib/calendar.ts';
 	import { clock } from '#lib/clock.svelte.ts';
 	import Badge from '#lib/components/Badge.svelte';
@@ -42,13 +43,8 @@
 	const comingUp = $derived(
 		[1, 2, 3, 4].map((i) => {
 			const key = addDays(data.today, i);
-			const day = eventsOn(data.events, key);
-			const allDay = day.allDay.filter((e) => !e.bin);
-			return {
-				key,
-				bins: day.allDay.flatMap((e) => (e.bin ? [e.bin] : [])),
-				fit: fitColumn({ ...day, allDay }, { height: layout.comingHeight, gap: CHIP_GAP, row: CHIP })
-			};
+			const { bins, day } = takeBins(eventsOn(data.events, key));
+			return { key, bins, fit: fitColumn(day, { height: layout.comingHeight, gap: CHIP_GAP, row: CHIP }) };
 		})
 	);
 </script>
