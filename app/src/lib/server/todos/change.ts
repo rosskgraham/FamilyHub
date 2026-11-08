@@ -3,7 +3,7 @@ import { MAX_TEXT } from '../tasks/route.ts';
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
-/** A To-do change the screen sent, or null if it isn't one: an add with an optional due date, or a tick. */
+/** A To-do change the screen sent, or null if it isn't one: an add with an optional due date, a tick, or a remove. */
 export function parseTodoChange(body: unknown): TodoChange | null {
 	if (typeof body !== 'object' || body === null) return null;
 	const b = body as Record<string, unknown>;
@@ -15,5 +15,6 @@ export function parseTodoChange(body: unknown): TodoChange | null {
 	if (b.action === 'tick' && typeof b.id === 'string' && typeof b.tickedOff === 'boolean') {
 		return { action: 'tick', id: b.id, tickedOff: b.tickedOff };
 	}
+	if (b.action === 'remove' && typeof b.id === 'string') return { action: 'remove', id: b.id };
 	return null;
 }

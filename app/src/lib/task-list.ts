@@ -8,7 +8,7 @@ export interface Addition {
 /** An item on screen: what was added, with its id and whether it's ticked off. */
 export type Item<A extends Addition> = A & { id: string; tickedOff: boolean };
 
-/** What the screen asks the server to change. To-dos can't be removed, so they never send `remove`. */
+/** What the screen asks the server to change. */
 export type Change<A extends Addition> =
 	({ action: 'add' } & A) | { action: 'tick'; id: string; tickedOff: boolean } | { action: 'remove'; id: string };
 

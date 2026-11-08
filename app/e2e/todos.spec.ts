@@ -73,3 +73,34 @@ test('the Today view’s Shopping card adds an item without opening the list', a
 	letGo();
 	await expect(card.getByRole('link', { name: /Shopping/ })).toHaveAttribute('href', '/shopping');
 });
+
+test('a long press offers to remove a To-do, and Remove sends it', async ({ page }) => {
+	const { sent, letGo } = await catchChanges(page);
+	await page.goto('/todos');
+	const todo = page.getByRole('button', { name: 'Tick off Clean the oven' });
+	const box = (await todo.boundingBox())!;
+	await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+	await page.mouse.down();
+	await expect(page.getByRole('button', { name: 'Remove' })).toBeVisible();
+	await page.mouse.up();
+	// A long press never ticks the To-do off as well.
+	expect(sent).toEqual([]);
+	await page.getByRole('button', { name: 'Remove' }).click();
+	await expect.poll(() => sent).toEqual([{ action: 'remove', id: expect.stringMatching(/^sample-todo-/) }]);
+	await expect(page.getByText('Clean the oven')).toHaveCount(0);
+	letGo();
+});
+
+test('Keep closes the offer to remove without changing anything', async ({ page }) => {
+	const { sent } = await catchChanges(page);
+	await page.goto('/todos');
+	const todo = page.getByRole('button', { name: 'Tick off Clean the oven' });
+	const box = (await todo.boundingBox())!;
+	await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+	await page.mouse.down();
+	await expect(page.getByRole('button', { name: 'Keep' })).toBeVisible();
+	await page.mouse.up();
+	await page.getByRole('button', { name: 'Keep' }).click();
+	await expect(page.getByRole('button', { name: 'Tick off Clean the oven' })).toBeVisible();
+	expect(sent).toEqual([]);
+});

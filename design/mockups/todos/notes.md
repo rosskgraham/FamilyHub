@@ -16,6 +16,7 @@ To-dos aren't Chores. Chores are the children's, grouped into Routines, and earn
 - **To-dos are unassigned.** It's one shared list with no owner, so To-dos show without a Member's colour or initial.
 - **At the Hub, only one-off To-dos can be added**, with the on-screen keyboard, like Shopping items. Repeating ones are made on a phone, because the API can't create them.
 - **Tick off works as it does for Shopping:** struck through for 10 minutes so a mis-tap can be undone, then gone.
+- **Remove works as it does for Shopping too** (8 November 2026): a long press offers **Remove** or **Keep**. For a repeating To-do, removing skips that one occurrence, and the repeat carries on.
 - **A To-dos Section, and a card on the Today view.**
 - **The Today view's Shopping list becomes a card** with the count ("6 to get"), a quick **+ Add** button, and a tap through to the Shopping Section. The full list only ever showed its first few items there anyway, and the space goes to To-dos.
 
@@ -30,6 +31,7 @@ A test against "Family Task List" on 7 November 2026, with a task repeating dail
 - **`completedMin` leaves out every task that isn't ticked off.** Asking for tasks completed in the last hour returned only the two ticked-off ones, so the Hub reads the whole list and drops old ticked-off To-dos itself.
 - **The next occurrence isn't listed yet.** After either kind of tick-off, the API showed no "Rpt1" or "Rpt2" for tomorrow.
 - **Each occurrence is a new task with a new ID** (checked 8 November 2026). Just after midnight UTC on its due day, Google created the next occurrence of each daily repeat as a new task, due that day. The ticked-off occurrences from the day before weren't listed any more, even with completed and hidden tasks included. So "ticked off today" and "due again" are always different tasks, and ticking off at the Hub only ever affects one occurrence.
+- **Deleting skips one occurrence** (tested 8 November 2026). Deleting today's "Repeat Daily 10am" through the API answered 204, and Google listed tomorrow's straight away as a new task. The phone still showed it repeating, "Tomorrow at 10". Unlike ticking off, deleting lists the next occurrence at once.
 
 So the Hub can show what's due and overdue, and one-off To-dos with future dates. It can't show a repeating To-do ahead of time.
 

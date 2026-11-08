@@ -10,8 +10,11 @@ export type Todo = Item<TodoAddition>;
 
 export type TodosStatus = ListStatus;
 
-/** What the screen asks the server to change. To-dos can't be removed at the Hub, only ticked off. */
-export type TodoChange = Exclude<Change<TodoAddition>, { action: 'remove' }>;
+/**
+ * What the screen asks the server to change. Removing a repeating To-do skips that one occurrence: Google lists the next
+ * one straight away, and the repeat carries on (tested 8 November 2026).
+ */
+export type TodoChange = Change<TodoAddition>;
 
 /** Sooner due dates first, and no date last. */
 export function compareDue(a: DayKey | null, b: DayKey | null): number {
