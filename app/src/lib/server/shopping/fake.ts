@@ -1,6 +1,6 @@
 import type { ShoppingItem } from '#lib/shopping.ts';
-import { dayKey } from '#lib/time.ts';
 import { now } from '../now.ts';
+import { TICKED_MS } from '../tasks/google.ts';
 import type { ShoppingSource } from './source.ts';
 
 // A sample list kept in memory, so ticking, adding and removing can be tried
@@ -30,9 +30,9 @@ const items: FakeItem[] = [
 
 export const fakeShopping: ShoppingSource = {
 	async list() {
-		const today = dayKey(now());
+		// Ticked-off items go after 10 minutes, as Google's do.
 		const toGet = items.filter((i) => !i.tickedOffAt);
-		const ticked = items.filter((i) => i.tickedOffAt && dayKey(i.tickedOffAt) === today);
+		const ticked = items.filter((i) => i.tickedOffAt && now().getTime() - i.tickedOffAt.getTime() < TICKED_MS);
 		return [...toGet, ...ticked].map((i): ShoppingItem => ({
 			id: i.id,
 			text: i.text,

@@ -27,4 +27,15 @@ describe('openUsageStore', () => {
 		expect(store.between(new Date('2026-10-28T08:00:00Z'), new Date('2026-10-28T08:30:00Z'))[0]!.house).toBe(0.4);
 		store.close();
 	});
+
+	it('saves none of a batch that fails partway, and keeps saving afterwards', () => {
+		const store = openUsageStore(':memory:');
+		const broken = { ...half('08:30', 0.2), house: undefined as unknown as number };
+		expect(() => store.save([half('08:00', 0.4), broken])).toThrow();
+		store.save([half('09:00', 0.5)]);
+		expect(store.between(new Date('2026-10-28T08:00:00Z'), new Date('2026-10-28T10:00:00Z'))).toEqual([
+			{ from: '2026-10-28T09:00:00.000Z', house: 0.5, car: 0 }
+		]);
+		store.close();
+	});
 });

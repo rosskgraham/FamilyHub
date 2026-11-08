@@ -12,5 +12,10 @@ export const load: LayoutServerLoad = async ({ url }) => {
 	// `?theme=evening` or `?theme=day` shows that theme whatever the time, to try it on the PC.
 	const asked = url.searchParams.get('theme');
 	const theme = themes.find((t) => t === asked) ?? themeAt(now(), sunTimes(now()));
-	return { weather, theme, sleep: { events: calendar.events, owners: calendar.household } };
+	return {
+		weather,
+		theme,
+		calendarStatus: calendar.status,
+		sleep: { events: calendar.events, owners: calendar.household }
+	};
 };

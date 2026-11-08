@@ -20,7 +20,6 @@ export const load: PageServerLoad = async () => {
 	return {
 		today,
 		events: calendar.events,
-		calendarStatus: calendar.status,
 		owners: calendar.household,
 		shopping,
 		todos,

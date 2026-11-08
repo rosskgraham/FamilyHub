@@ -35,3 +35,10 @@ test('a long press on the status opens setup', async ({ page }) => {
 	await expect(page).toHaveURL('/setup');
 	await page.mouse.up();
 });
+
+test('every Section shows the status, so setup is a long press away from any of them', async ({ page }) => {
+	for (const path of ['/shopping', '/todos', '/chores', '/energy']) {
+		await page.goto(path);
+		await expect(page.locator('footer .status'), path).toBeVisible();
+	}
+});
