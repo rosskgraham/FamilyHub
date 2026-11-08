@@ -14,6 +14,10 @@ describe('parseTodoChange', () => {
 		[
 			{ action: 'tick', id: 't1', tickedOff: true },
 			{ action: 'tick', id: 't1', tickedOff: true }
+		],
+		[
+			{ action: 'remove', id: 't1' },
+			{ action: 'remove', id: 't1' }
 		]
 	])('reads %j', (body, change) => {
 		expect(parseTodoChange(body)).toEqual(change);
@@ -30,8 +34,8 @@ describe('parseTodoChange', () => {
 		['a blank To-do', { action: 'add', text: '  ', due: null }],
 		['an add without a due date', { action: 'add', text: 'Clean the oven' }],
 		['a due date that isn’t a day', { action: 'add', text: 'Clean the oven', due: 'tomorrow' }],
-		['removing, which To-dos can’t be', { action: 'remove', id: 't1' }],
-		['a tick without tickedOff', { action: 'tick', id: 't1' }]
+		['a tick without tickedOff', { action: 'tick', id: 't1' }],
+		['a remove without an id', { action: 'remove' }]
 	])('turns down %s', (_, body) => {
 		expect(parseTodoChange(body)).toBeNull();
 	});

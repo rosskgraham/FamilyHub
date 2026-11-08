@@ -95,7 +95,7 @@ _Avoid_: Delete, clear
 ### To-dos
 
 **To-do**:
-A job for the Household that isn't a Chore, such as entering the meter readings, from a shared Google Tasks list. It happens once or repeats, has no owner, earns no Stars, and is ticked off like a Shopping item.
+A job for the Household that isn't a Chore, such as entering the meter readings, from a shared Google Tasks list. It happens once or repeats, has no owner, earns no Stars, and is ticked off or removed like a Shopping item. Removing a repeating one skips just that occurrence.
 _Avoid_: Task (a Google Tasks item), chore, job
 
 ### Chores
