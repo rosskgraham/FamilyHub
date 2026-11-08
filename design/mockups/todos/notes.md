@@ -28,7 +28,8 @@ A test against "Family Task List" on 7 November 2026, with a task repeating dail
 - **Ticking off through the API is safe.** "Rpt1", ticked off by the Hub's API call, was marked `completed` with the same ID and due date. The phone still showed it repeating, with "Next: Tomorrow".
 - **Ticking off on a phone looks the same**, plus `"hidden": true`, which is how the app moves it into its Completed section. The Hub must treat any `completed` task as done, hidden or not.
 - **`completedMin` leaves out every task that isn't ticked off.** Asking for tasks completed in the last hour returned only the two ticked-off ones, so the Hub reads the whole list and drops old ticked-off To-dos itself.
-- **The next occurrence isn't listed yet.** After either kind of tick-off, the API showed no "Rpt1" or "Rpt2" for tomorrow. It most likely appears as a new task once it's due.
+- **The next occurrence isn't listed yet.** After either kind of tick-off, the API showed no "Rpt1" or "Rpt2" for tomorrow.
+- **Each occurrence is a new task with a new ID** (checked 8 November 2026). Just after midnight UTC on its due day, Google created the next occurrence of each daily repeat as a new task, due that day. The ticked-off occurrences from the day before weren't listed any more, even with completed and hidden tasks included. So "ticked off today" and "due again" are always different tasks, and ticking off at the Hub only ever affects one occurrence.
 
 So the Hub can show what's due and overdue, and one-off To-dos with future dates. It can't show a repeating To-do ahead of time.
 
@@ -42,5 +43,4 @@ So the Hub can show what's due and overdue, and one-off To-dos with future dates
 
 ## Open questions
 
-- **Check the IDs when the repeats come back (8 November 2026):** read "Family Task List" again, to see whether "Rpt1" and "Rpt2" are listed for 8 November, and whether each is a new task with a new ID or the same task with a new due date. That decides how the Hub tells "ticked off today" from "due again".
 - **To-dos without a due date** show only in the Section for now. Should they be on the Today view card too?
