@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import type { CalendarStatus } from '#lib/calendar.ts';
 	import { formatTime } from '#lib/time.ts';
 
 	const links = [
@@ -14,7 +13,7 @@
 		{ href: '/energy', label: 'Energy' }
 	];
 
-	const status = $derived(page.data.calendarStatus as CalendarStatus | undefined);
+	const status = $derived(page.data.calendarStatus);
 	const updated = (iso: string | null) => (iso ? `last updated ${formatTime(new Date(iso))}` : 'not loaded yet');
 
 	// A long press on the status opens setup. It's hidden like this because setup can sign the Hub out of Google.

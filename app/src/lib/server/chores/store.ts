@@ -2,6 +2,7 @@ import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { backup, DatabaseSync } from 'node:sqlite';
 import type { ChoreEvent } from '#lib/chores.ts';
+import { migrate } from '../sqlite.ts';
 
 // The Hub's own data, as ADR 0006 describes: a record of what happened, in SQLite.
 
@@ -35,13 +36,7 @@ export function openChoreStore(path: string): ChoreStore {
 	const db = new DatabaseSync(path);
 	// The write-ahead log and full syncing mean a power cut can't leave the data half-written.
 	db.exec('PRAGMA journal_mode = WAL; PRAGMA synchronous = FULL;');
-	const { user_version: version } = db.prepare('PRAGMA user_version').get() as { user_version: number };
-	for (let v = version; v < MIGRATIONS.length; v++) {
-		db.exec('BEGIN');
-		db.exec(MIGRATIONS[v]!);
-		db.exec(`PRAGMA user_version = ${v + 1}`);
-		db.exec('COMMIT');
-	}
+	migrate(db, MIGRATIONS);
 
 	const select = db.prepare('SELECT at, day, child, chore, routine, ticked, stars FROM chore_events ORDER BY id');
 	const insert = db.prepare(

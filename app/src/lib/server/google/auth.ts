@@ -1,6 +1,6 @@
 import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from '$app/env/private';
 import { readJson, remove, writeJson } from '../store.ts';
-import { googleError, SignInNeeded } from './errors.ts';
+import { forLogs, googleError, SignInNeeded } from './errors.ts';
 
 export { GoogleRefused, SignInNeeded } from './errors.ts';
 
@@ -112,7 +112,7 @@ export async function googleRequest<T>(
 	body?: unknown
 ): Promise<T> {
 	const raw = body instanceof Object && 'contentType' in body && 'data' in body ? (body as RawBody) : null;
-	for (let attempt = 0; attempt < 2; attempt++) {
+	for (let attempt = 0; ; attempt++) {
 		const headers: Record<string, string> = { authorization: `Bearer ${await accessToken()}` };
 		if (body !== undefined) headers['content-type'] = raw ? raw.contentType : 'application/json';
 		const response = await fetch(url, {
@@ -128,9 +128,8 @@ export async function googleRequest<T>(
 			continue;
 		}
 		const said = await response.json().catch(() => null);
-		throw googleError(response.status, said, `Google API request failed, ${method} ${url.split('?')[0]}`);
+		throw googleError(response.status, said, `Google API request failed, ${method} ${forLogs(url)}`);
 	}
-	throw new SignInNeeded();
 }
 
 export function googleGet<T>(url: string): Promise<T> {

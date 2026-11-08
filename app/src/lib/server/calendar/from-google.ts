@@ -24,12 +24,14 @@ export function toEvents(items: GoogleEvent[], owner: OwnerId): CalendarEvent[] 
 		.filter((item) => !item.attendees?.some((a) => a.self && a.responseStatus === 'declined'))
 		.map((item): CalendarEvent => {
 			const allDay = item.start.date !== undefined;
+			const start = allDay ? item.start.date! : new Date(item.start.dateTime!).toISOString();
 			return {
-				id: item.iCalUID ?? item.id,
+				// Every occurrence of a repeating event shares its iCalUID, and the screen keys Events by id.
+				id: `${item.iCalUID ?? item.id}@${start}`,
 				title: item.summary ?? '(No title)',
 				owner,
 				allDay,
-				start: allDay ? item.start.date! : new Date(item.start.dateTime!).toISOString(),
+				start,
 				end: allDay ? item.end.date! : new Date(item.end.dateTime!).toISOString()
 			};
 		})

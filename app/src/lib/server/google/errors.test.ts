@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { GoogleRefused, googleError, SignInNeeded } from './errors.ts';
+import { forLogs, GoogleRefused, googleError, SignInNeeded } from './errors.ts';
 
 /** Google's error body, as its older APIs such as Tasks and Calendar send it. */
 const legacy = (code: number, reason: string, status = 'PERMISSION_DENIED') => ({
@@ -38,6 +38,12 @@ describe('googleError', () => {
 		expect(googleError(403, body, 'Google API request failed')).toBeInstanceOf(SignInNeeded);
 	});
 
+	it('asks for a fresh sign-in when Google still won’t take the sign-in after a new access token', () => {
+		expect(googleError(401, legacy(401, 'authError', 'UNAUTHENTICATED'), 'Google API request failed')).toBeInstanceOf(
+			SignInNeeded
+		);
+	});
+
 	it.each([
 		['an item that’s gone', 404, legacy(404, 'notFound', 'NOT_FOUND')],
 		['an item deleted for good', 410, {}],
@@ -47,5 +53,22 @@ describe('googleError', () => {
 		const e = googleError(status, body, 'Google API request failed');
 		expect(e).toBeInstanceOf(GoogleRefused);
 		expect((e as GoogleRefused).status).toBe(status);
+	});
+});
+
+describe('forLogs', () => {
+	it('leaves out calendar ids, which are usually email addresses, and the query', () => {
+		expect(forLogs('https://www.googleapis.com/calendar/v3/calendars/someone%40gmail.com/events?timeMin=x')).toBe(
+			'https://www.googleapis.com/calendar/v3/calendars/…/events'
+		);
+		expect(forLogs('https://www.googleapis.com/calendar/v3/calendars/abc123@group.calendar.google.com/events')).toBe(
+			'https://www.googleapis.com/calendar/v3/calendars/…/events'
+		);
+	});
+
+	it('keeps addresses with nothing personal in them', () => {
+		expect(forLogs('https://tasks.googleapis.com/tasks/v1/lists/MTIz/tasks/abc')).toBe(
+			'https://tasks.googleapis.com/tasks/v1/lists/MTIz/tasks/abc'
+		);
 	});
 });
