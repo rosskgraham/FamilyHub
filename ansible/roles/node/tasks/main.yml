@@ -1,0 +1,44 @@
+# Node.js from NodeSource, since Debian's own is too old for the Hub.
+- name: Install what adding the NodeSource repository needs
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - python3-debian
+    state: present
+
+- name: Add the NodeSource repository
+  ansible.builtin.deb822_repository:
+    name: nodesource
+    types: deb
+    uris: "https://deb.nodesource.com/node_{{ hub_node_major }}.x"
+    suites: nodistro
+    components: main
+    signed_by: https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key
+
+- name: Prefer NodeSource's Node.js over Debian's
+  ansible.builtin.copy:
+    dest: /etc/apt/preferences.d/nodejs
+    content: |
+      Package: nodejs
+      Pin: origin deb.nodesource.com
+      Pin-Priority: 600
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Install Node.js
+  ansible.builtin.apt:
+    name: nodejs
+    state: present
+    update_cache: true
+
+- name: Read the Node.js version
+  ansible.builtin.command: node --version
+  register: node_version
+  changed_when: false
+
+- name: Check it's the Node.js the Hub needs
+  ansible.builtin.assert:
+    that: node_version.stdout.startswith('v' ~ hub_node_major ~ '.')
+    fail_msg: "Expected Node.js {{ hub_node_major }}, found {{ node_version.stdout }}"
+    quiet: true

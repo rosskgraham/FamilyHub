@@ -1,0 +1,84 @@
+# Checks the stand-in ended up as the Pi should.
+- name: Check the Pi is set up
+  hosts: hub
+  become: true
+  tasks:
+    - name: Read SSH's settings
+      ansible.builtin.command: sshd -T
+      register: sshd
+      changed_when: false
+
+    - name: Check SSH takes keys only, and never root
+      ansible.builtin.assert:
+        that:
+          - "'passwordauthentication no' in sshd.stdout_lines"
+          - "'kbdinteractiveauthentication no' in sshd.stdout_lines"
+          - "'permitrootlogin no' in sshd.stdout_lines"
+          - "'pubkeyauthentication yes' in sshd.stdout_lines"
+
+    - name: Read the firewall's state
+      ansible.builtin.command: ufw status verbose
+      register: ufw
+      changed_when: false
+
+    - name: Check the firewall is on and only lets SSH in
+      ansible.builtin.assert:
+        that:
+          - "'Status: active' in ufw.stdout"
+          - "'deny (incoming)' in ufw.stdout"
+          - "ufw.stdout is search('22/tcp +LIMIT IN')"
+          - "ufw.stdout_lines | select('search', 'ALLOW IN|LIMIT IN') | reject('search', '^22/tcp') | list | length == 0"
+
+    - name: Read apt's settings
+      ansible.builtin.command: apt-config dump
+      register: apt_config
+      changed_when: false
+
+    - name: Check updates install themselves and restart the Pi while the Hub sleeps
+      ansible.builtin.assert:
+        that:
+          - "'APT::Periodic::Unattended-Upgrade \"1\";' in apt_config.stdout_lines"
+          - "'Unattended-Upgrade::Automatic-Reboot \"true\";' in apt_config.stdout_lines"
+          - "'Unattended-Upgrade::Automatic-Reboot-Time \"03:30\";' in apt_config.stdout_lines"
+          - "apt_config.stdout is search('Origins-Pattern:: \"origin=Raspberry Pi Foundation')"
+
+    - name: Read the time zone
+      ansible.builtin.command: readlink -f /etc/localtime
+      register: localtime
+      changed_when: false
+
+    - name: Check the time zone is UK time
+      ansible.builtin.assert:
+        that: localtime.stdout == '/usr/share/zoneinfo/Europe/London'
+
+    - name: Read the Node.js version
+      ansible.builtin.command: node --version
+      register: node
+      changed_when: false
+
+    - name: Check Node.js is version 24
+      ansible.builtin.assert:
+        that: node.stdout.startswith('v24.')
+
+    - name: Read the Hub's user
+      ansible.builtin.getent:
+        database: passwd
+        key: familyhub
+
+    - name: Check the Hub's user can't log in
+      ansible.builtin.assert:
+        that: ansible_facts.getent_passwd.familyhub[5] == '/usr/sbin/nologin'
+
+    - name: Read the Hub's folders
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop: [/opt/familyhub/releases, /var/lib/familyhub, /etc/familyhub]
+      register: folders
+
+    - name: Check only the Hub can read its data, and it can't change its config
+      ansible.builtin.assert:
+        that:
+          - folders.results[0].stat.pw_name == 'familyhub'
+          - folders.results[1].stat.pw_name == 'familyhub' and folders.results[1].stat.mode == '0700'
+          - folders.results[2].stat.pw_name == 'root' and folders.results[2].stat.gr_name == 'familyhub'
+          - folders.results[2].stat.mode == '0750'

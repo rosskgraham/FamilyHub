@@ -90,6 +90,7 @@ Open <http://localhost:5173>. It starts with sample data. To show real Google Ca
 | Path | What's there |
 |---|---|
 | [`app/`](app/README.md) | The Hub itself |
+| [`ansible/`](ansible/README.md) | The scripts that set up the Pi |
 | [`docs/requirements.md`](docs/requirements.md) | Scope, quality bar, milestones, and what "v1 done" means |
 | [`GLOSSARY.md`](GLOSSARY.md) | The words the project uses for things, such as Hub, Member and Section |
 | [`docs/adr/`](docs/adr/) | Why the big decisions went the way they did |

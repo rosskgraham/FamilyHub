@@ -1,0 +1,8 @@
+# Sets up the Hub's Pi from a freshly flashed Raspberry Pi OS Lite. Safe to run again at any time.
+- name: Set up the Hub's Pi
+  hosts: hub
+  become: true
+  roles:
+    - base
+    - node
+    - hub_user
