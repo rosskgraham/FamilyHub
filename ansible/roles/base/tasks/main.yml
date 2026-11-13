@@ -1,0 +1,58 @@
+- name: Bring every package up to date
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+    upgrade: safe
+
+- name: Install the base packages
+  ansible.builtin.apt:
+    name:
+      - openssh-server
+      - ufw
+      - unattended-upgrades
+    state: present
+
+- name: Set the time zone
+  community.general.timezone:
+    name: "{{ hub_timezone }}"
+
+- name: Allow SSH by key only, and never as root
+  ansible.builtin.template:
+    src: sshd.conf.j2
+    # 00- so it's read first: in sshd_config.d the first value set wins.
+    dest: /etc/ssh/sshd_config.d/00-familyhub.conf
+    owner: root
+    group: root
+    mode: "0644"
+    validate: /usr/sbin/sshd -t -f %s
+  notify: Restart SSH
+
+- name: Turn on automatic updates
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    content: |
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Unattended-Upgrade "1";
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Choose which updates install themselves, and when the Pi restarts for them
+  ansible.builtin.template:
+    src: unattended-upgrades.conf.j2
+    dest: /etc/apt/apt.conf.d/52familyhub-unattended-upgrades
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Let SSH through the firewall
+  community.general.ufw:
+    rule: limit
+    port: "22"
+    proto: tcp
+
+- name: Turn the firewall on, refusing everything else that comes in
+  community.general.ufw:
+    state: enabled
+    default: deny
+    direction: incoming

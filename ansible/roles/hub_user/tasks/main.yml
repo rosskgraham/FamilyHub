@@ -1,0 +1,37 @@
+# The Hub runs as its own user, which can't log in and can't change the system.
+- name: Create the Hub's user
+  ansible.builtin.user:
+    name: "{{ hub_user }}"
+    system: true
+    home: "{{ hub_home }}"
+    create_home: false
+    shell: /usr/sbin/nologin
+
+- name: Create the Hub's home
+  ansible.builtin.file:
+    path: "{{ hub_home }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Create the folders the Hub writes to
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ hub_user }}"
+    group: "{{ hub_user }}"
+    mode: "{{ item.mode }}"
+  loop:
+    - { path: "{{ hub_releases_dir }}", mode: "0755" }
+    # The Google sign-in and the Chores database.
+    - { path: "{{ hub_data_dir }}", mode: "0700" }
+
+# household.json, chores.json and the secrets: the Hub reads them, and only the setup scripts change them.
+- name: Create the Hub's config folder
+  ansible.builtin.file:
+    path: "{{ hub_config_dir }}"
+    state: directory
+    owner: root
+    group: "{{ hub_user }}"
+    mode: "0750"

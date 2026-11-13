@@ -1,0 +1,7 @@
+# The Hub's Pi. Set FAMILYHUB_PI_HOST to its address if familyhub.local doesn't resolve,
+# as it doesn't from WSL; the runbook explains.
+hub:
+  hosts:
+    familyhub:
+      ansible_host: "{{ lookup('ansible.builtin.env', 'FAMILYHUB_PI_HOST', default='familyhub.local') }}"
+      ansible_user: hubadmin

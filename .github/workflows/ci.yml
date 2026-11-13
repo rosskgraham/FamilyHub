@@ -50,6 +50,14 @@ jobs:
             app/test-results
           retention-days: 14
 
+  # The Pi's setup scripts, run in a container standing in for the Pi.
+  pi:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint the setup scripts, run them twice, and check the result
+        run: ansible/tests/run.sh
+
   # Every merge to main that passes the checks becomes a release the Pi can pull (ADR 0004).
   release:
     needs: check
