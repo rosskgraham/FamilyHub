@@ -32,8 +32,9 @@ Restart=always
 RestartSec=5
 
 ProtectSystem=full
-ProtectHome=true
 PrivateTmp=true
+# No ProtectHome: it also hides /run/user, where cage has to make its Wayland socket, and cage then crashes
+# straight away. The home folders are 700, so the kiosk can't read them anyway.
 
 [Install]
 WantedBy=graphical.target

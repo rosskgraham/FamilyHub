@@ -153,4 +153,6 @@
           - screen_units.results[0].status.User == 'kiosk'
           - screen_units.results[0].status.ExecStart is search('/usr/bin/cage -s -- /usr/local/lib/familyhub/kiosk.sh')
           - screen_units.results[1].status.UnitFileState == 'masked'
+          # ProtectHome hides /run/user, where cage makes its Wayland socket.
+          - screen_units.results[0].status.ProtectHome == 'no'
           - default_target.stdout == 'graphical.target'

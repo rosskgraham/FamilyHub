@@ -79,3 +79,21 @@
     name: familyhub-kiosk.service
     state: started
   when: hub_kiosk_start
+
+# So the check below sees the kiosk as this run left it, not as it was before.
+- name: Restart the kiosk now if this run changed it
+  ansible.builtin.meta: flush_handlers
+
+# A kiosk that crashes is restarted every few seconds, so it can look started when it isn't. Fail the run
+# instead, so a blank screen never looks like success.
+- name: Check the kiosk stays up
+  ansible.builtin.shell: |
+    before=$(systemctl show --property=NRestarts --value familyhub-kiosk.service)
+    sleep 15
+    after=$(systemctl show --property=NRestarts --value familyhub-kiosk.service)
+    if [ "$before" != "$after" ] || ! systemctl is-active --quiet familyhub-kiosk.service; then
+      echo "The kiosk restarted $((after - before)) times in 15 seconds. See: journalctl -u familyhub-kiosk -b"
+      exit 1
+    fi
+  changed_when: false
+  when: hub_kiosk_start
