@@ -19,8 +19,10 @@ wait_until() {
   return 1
 }
 
-# The tests decide when the updater and the watchdog run.
+# The tests decide when the updater and the watchdog run. Stopping the timer doesn't stop a run it has just
+# started, which would have read "latest" already: a start below would join it and miss the new release.
 systemctl stop familyhub-update.timer familyhub-watchdog.timer
+while [[ $(systemctl is-active familyhub-update.service) == activating ]]; do sleep 1; done
 
 echo "A newer release is installed and started"
 publish 2026.01.02.2
