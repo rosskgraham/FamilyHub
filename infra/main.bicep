@@ -1,12 +1,11 @@
-// FamilyHub's Azure resources: a Key Vault for the setup scripts' secrets, and Log Analytics with
-// Application Insights for the Hub's telemetry (ADR 0005). Everything is on a free tier or inside a
-// free allowance, apart from Key Vault, which has no free tier and was approved at a few pence a year.
-// Deployed to an existing resource group by infra/azure-pipelines.yml.
+// Everything FamilyHub has in Azure, in its own FamilyHub subscription (ADR 0008): the rg-familyhub resource
+// group, and the resources in resources.bicep inside it. Deployed at subscription scope by
+// infra/azure-pipelines.yml, so nothing in Azure is made by hand.
 
-targetScope = 'resourceGroup'
+targetScope = 'subscription'
 
-@description('Where the resources live.')
-param location string = resourceGroup().location
+@description('Where the resource group and its resources live.')
+param location string = 'uksouth'
 
 @description('The Entra object ID of the person who runs the setup scripts. They can read and write the secrets.')
 param adminObjectId string
@@ -19,81 +18,26 @@ param dailyCapGb string = '0.15'
 @maxValue(31)
 param retentionDays int = 30
 
-// Key Vault names are global, so a short suffix from the resource group keeps this one unique.
-var suffix = take(uniqueString(resourceGroup().id), 6)
-var tags = {
-  project: 'familyhub'
-}
-
-// Built-in role: read and write secrets, nothing else.
-var keyVaultSecretsOfficer = 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7'
-
-resource vault 'Microsoft.KeyVault/vaults@2026-05-15' = {
-  name: 'kv-familyhub-${suffix}'
+resource group 'Microsoft.Resources/resourceGroups@2025-04-01' = {
+  name: 'rg-familyhub'
   location: location
-  tags: tags
-  properties: {
-    tenantId: subscription().tenantId
-    // Standard: per-operation billing, about 2p per 10,000 reads. Premium (HSM-backed) would be paid monthly.
-    sku: {
-      family: 'A'
-      name: 'standard'
-    }
-    enableRbacAuthorization: true
-    // Soft delete can't be turned off; the shortest window keeps a deleted vault's name free again soonest.
-    // No purge protection, so the vault can always be removed for good.
-    softDeleteRetentionInDays: 7
-    publicNetworkAccess: 'Enabled'
+  tags: {
+    project: 'familyhub'
   }
 }
 
-resource adminCanUseSecrets 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(vault.id, adminObjectId, keyVaultSecretsOfficer)
-  scope: vault
-  properties: {
-    principalId: adminObjectId
-    principalType: 'User'
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultSecretsOfficer)
+module resources 'resources.bicep' = {
+  name: 'familyhub-resources'
+  scope: group
+  params: {
+    location: location
+    adminObjectId: adminObjectId
+    dailyCapGb: dailyCapGb
+    retentionDays: retentionDays
   }
 }
 
-resource workspace 'Microsoft.OperationalInsights/workspaces@2026-03-01' = {
-  name: 'log-familyhub'
-  location: location
-  tags: tags
-  properties: {
-    // Pay-as-you-go is the only SKU new workspaces can have; the first 5 GB a month are free, and the cap keeps it there.
-    sku: {
-      name: 'PerGB2018'
-    }
-    retentionInDays: retentionDays
-    workspaceCapping: {
-      dailyQuotaGb: json(dailyCapGb)
-    }
-  }
-}
-
-resource insights 'Microsoft.Insights/components@2020-02-02' = {
-  name: 'appi-familyhub'
-  location: location
-  tags: tags
-  kind: 'other'
-  properties: {
-    Application_Type: 'other'
-    WorkspaceResourceId: workspace.id
-    RetentionInDays: retentionDays
-  }
-}
-
-// The setup scripts copy this to the Pi; it's the only Azure credential the Pi holds.
-resource insightsConnectionString 'Microsoft.KeyVault/vaults/secrets@2026-05-15' = {
-  parent: vault
-  name: 'appinsights-connection-string'
-  properties: {
-    value: insights.properties.ConnectionString
-  }
-}
-
-output keyVaultName string = vault.name
-output keyVaultUri string = vault.properties.vaultUri
-output appInsightsName string = insights.name
+output resourceGroupName string = group.name
+output keyVaultName string = resources.outputs.keyVaultName
+output keyVaultUri string = resources.outputs.keyVaultUri
+output appInsightsName string = resources.outputs.appInsightsName
