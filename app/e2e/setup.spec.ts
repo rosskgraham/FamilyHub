@@ -1,4 +1,11 @@
 import { expect, test } from '@playwright/test';
+import { NOW } from '../playwright.config.ts';
+
+test.beforeEach(async ({ page }) => {
+	// The browser's clock, to match the server's HUB_NOW. Without it, from 22:00 the Hub is asleep and setup
+	// can't be reached.
+	await page.clock.setFixedTime(new Date(NOW));
+});
 
 // Signed in, the setup page is taller than the screen. CI has no Google sign-in, so the test
 // makes the page tall itself, then checks its end can be scrolled into view.
