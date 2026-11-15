@@ -72,6 +72,7 @@ v1 is done when it's been on the wall for two weeks and nobody goes back to chec
 - **Hosting:** none. Everything runs on the Pi and nothing is reachable from the internet ([ADR 0002](docs/adr/0002-everything-runs-on-the-pi.md)). The Pi pulls its own releases and rolls back if one is unhealthy ([ADR 0004](docs/adr/0004-pi-pulls-releases.md)).
 - **Data:** Chores, the Hub's only data of its own, live in SQLite on the Pi, backed up nightly to Google Drive ([ADR 0006](docs/adr/0006-hub-owned-data-in-sqlite.md)).
 - **Monitoring:** OpenTelemetry to Azure Application Insights, with anything personal stripped before it leaves the house ([ADR 0005](docs/adr/0005-telemetry-via-otel-collector-to-app-insights.md)).
+- **Azure:** the Key Vault and Application Insights are built from Bicep by an Azure DevOps pipeline, on free tiers unless something billable has been approved ([ADR 0008](docs/adr/0008-azure-resources-from-bicep-through-azure-devops.md)).
 
 ## Run it yourself
 
@@ -91,6 +92,7 @@ Open <http://localhost:5173>. It starts with sample data. To show real Google Ca
 |---|---|
 | [`app/`](app/README.md) | The Hub itself |
 | [`ansible/`](ansible/README.md) | The scripts that set up the Pi |
+| [`infra/`](infra/README.md) | The Azure resources, in Bicep, and the pipeline that deploys them |
 | [`docs/requirements.md`](docs/requirements.md) | Scope, quality bar, milestones, and what "v1 done" means |
 | [`GLOSSARY.md`](GLOSSARY.md) | The words the project uses for things, such as Hub, Member and Section |
 | [`docs/adr/`](docs/adr/) | Why the big decisions went the way they did |

@@ -1,0 +1,78 @@
+# Set up Azure for the Hub
+
+The Hub's Azure resources are built by the pipeline in [`infra/`](../../infra/README.md) ([ADR 0008](../adr/0008-azure-resources-from-bicep-through-azure-devops.md)). This runbook covers the once-only setup around it: the resource group, the Azure DevOps service connection, and putting the secrets in the Key Vault.
+
+Do this signed in as Alex, with the Azure CLI on the PC (`az login`). It takes about 30 minutes. Azure DevOps renames its pages from time to time, so a heading may not match exactly.
+
+## What it costs
+
+| Resource | Tier | Expected cost |
+|---|---|---|
+| Key Vault | Standard. There's no free tier; about 2p per 10,000 reads | Under 1p a month |
+| Log Analytics workspace | Pay-as-you-go, with 5 GB a month free, capped at 0.15 GB a day | £0. Data past the cap is dropped, not charged |
+| Application Insights | Workspace-based, so it's billed through the workspace | £0 |
+| Azure DevOps | 1 free Microsoft-hosted parallel job (1,800 minutes a month) | £0 |
+
+Nothing else is added without Alex's approval. Alert rules have no free tier, so they come later, with their own approval.
+
+## 1. Create the resource group
+
+```
+az provider register --namespace Microsoft.KeyVault
+az provider register --namespace Microsoft.OperationalInsights
+az provider register --namespace Microsoft.Insights
+az group create --name rg-familyhub --location uksouth --tags project=familyhub
+```
+
+## 2. Connect Azure DevOps to GitHub and Azure
+
+In the Azure DevOps project:
+
+1. **Project settings → Service connections → New service connection → Azure Resource Manager.**
+   - Identity type: **App registration (automatic)**, with **Workload identity federation** as the credential.
+   - Scope: **Subscription**, then choose `rg-familyhub` as the resource group.
+   - Name: `familyhub-azure`. Leave **Grant access permission to all pipelines** off.
+
+   This gives the connection **Contributor** on `rg-familyhub` only, with no secret to rotate.
+
+2. Let the connection give out one role, and only that one: **Key Vault Secrets Officer**, which the deployment gives Alex on the vault. Find the connection's app ID under **Manage App registration**, then:
+
+   ```
+   rg=$(az group show --name rg-familyhub --query id --output tsv)
+   az role assignment create \
+     --assignee <the connection's app ID> \
+     --role "Role Based Access Control Administrator" \
+     --scope "$rg" \
+     --condition-version 2.0 \
+     --condition "((!(ActionMatches{'Microsoft.Authorization/roleAssignments/write'})) OR (@Request[Microsoft.Authorization/roleAssignments:RoleDefinitionId] ForAnyOfAnyValues:GuidEquals {b86a8fe4-44ce-4948-aee5-eccb2c155cd7})) AND ((!(ActionMatches{'Microsoft.Authorization/roleAssignments/delete'})) OR (@Resource[Microsoft.Authorization/roleAssignments:RoleDefinitionId] ForAnyOfAnyValues:GuidEquals {b86a8fe4-44ce-4948-aee5-eccb2c155cd7}))"
+   ```
+
+3. **Pipelines → Library → + Variable group.** Name it `familyhub`, and add `FAMILYHUB_ADMIN_OBJECT_ID` with the output of `az ad signed-in-user show --query id --output tsv`. It isn't secret, but the repo is public, so it's kept here.
+
+4. **Pipelines → Environments → New environment:** `familyhub-azure`, with no resources. Adding an **Approvals** check here makes every deploy wait for a click. That's optional.
+
+5. **Pipelines → New pipeline → GitHub (YAML)**, then choose the FamilyHub repo. If asked, install the Azure Pipelines app on that repo only. Choose **Existing Azure Pipelines YAML file**, and pick `/infra/azure-pipelines.yml`. Save it without running it, then rename it `familyhub-infra`.
+
+6. In that pipeline: **Edit → ⋮ → Triggers → Pull request validation**, and turn off **Build pull requests from forks of this repository**. The repo is public, and fork builds must never reach the subscription. The pipeline skips the what-if for forks too, as a second guard.
+
+7. Run the pipeline. The first run asks you to **Permit** the variable group, the service connection and the environment.
+
+If the run waits with "No hosted parallelism has been purchased or granted", the organisation hasn't got its free hosted job yet. Request it, for free, at <https://aka.ms/azpipelines-parallelism-request>. It takes a few working days.
+
+## 3. Put the secrets in the Key Vault
+
+The deployment's output gives `keyVaultName`, and the Application Insights connection string is already in the vault. Add the rest, one at a time. `read -rs` keeps each value out of the shell history and off the screen:
+
+```
+vault=<keyVaultName>
+for name in google-client-id google-client-secret octopus-account octopus-api-key zappi-glo-sn zappi-glo-api-key home-latitude home-longitude; do
+  read -rsp "$name: " value; echo
+  az keyvault secret set --vault-name "$vault" --name "$name" --value "$value" --output none
+done
+```
+
+The values are the ones in `app/.env` on the PC. The setup scripts copy them to the Pi (coming in a later change).
+
+## Changing the resources
+
+Change `infra/main.bicep` in a pull request. The pipeline's what-if lists what would change, and merging deploys it. Before adding anything billable, get Alex's approval and update the cost table above.
