@@ -1,0 +1,23 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Install the newest FamilyHub release
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/node /usr/local/lib/familyhub/update.mjs
+Environment=FAMILYHUB_RELEASES_URL={{ hub_releases_url }}
+Environment=FAMILYHUB_HOME={{ hub_home }}
+Environment=FAMILYHUB_HEALTH_URL=http://127.0.0.1:{{ hub_port }}/api/health
+Environment=FAMILYHUB_HEALTH_TIMEOUT_SECONDS={{ hub_health_timeout_seconds }}
+StateDirectory=familyhub-update
+TimeoutStartSec=15min
+
+# It runs as root so it can restart the Hub, but it can only write the releases.
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths={{ hub_home }}
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true

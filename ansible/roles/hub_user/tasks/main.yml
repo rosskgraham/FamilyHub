@@ -7,27 +7,29 @@
     create_home: false
     shell: /usr/sbin/nologin
 
-- name: Create the Hub's home
+- name: Create the Hub's home, and the folder its releases go in
   ansible.builtin.file:
-    path: "{{ hub_home }}"
+    path: "{{ item }}"
     state: directory
     owner: root
     group: root
     mode: "0755"
+  loop:
+    - "{{ hub_home }}"
+    # Releases belong to root: the Hub can read its own code but never change it. The updater writes them.
+    - "{{ hub_releases_dir }}"
 
-- name: Create the folders the Hub writes to
+# The Google sign-in and the Chores database.
+- name: Create the folder the Hub writes to
   ansible.builtin.file:
-    path: "{{ item.path }}"
+    path: "{{ hub_data_dir }}"
     state: directory
     owner: "{{ hub_user }}"
     group: "{{ hub_user }}"
-    mode: "{{ item.mode }}"
-  loop:
-    - { path: "{{ hub_releases_dir }}", mode: "0755" }
-    # The Google sign-in and the Chores database.
-    - { path: "{{ hub_data_dir }}", mode: "0700" }
+    mode: "0700"
 
-# household.json, chores.json and the secrets: the Hub reads them, and only the setup scripts change them.
+# household.json and chores.json: the Hub reads them, and only the setup scripts change them. The secrets
+# go here too, in hub.env, which only root can read: systemd hands them to the Hub when it starts.
 - name: Create the Hub's config folder
   ansible.builtin.file:
     path: "{{ hub_config_dir }}"

@@ -1,0 +1,36 @@
+# {{ ansible_managed }}
+[Unit]
+Description=FamilyHub
+After=network.target
+
+[Service]
+User={{ hub_user }}
+Group={{ hub_user }}
+WorkingDirectory={{ hub_home }}/current
+ExecStart=/usr/bin/node build
+Environment=NODE_ENV=production
+Environment=HOST=127.0.0.1
+Environment=PORT={{ hub_port }}
+Environment=ORIGIN=http://localhost:{{ hub_port }}
+Environment=HUB_DATA_DIR={{ hub_data_dir }}
+Environment=HUB_CONFIG_DIR={{ hub_config_dir }}
+# The secrets and home's location, placed by the setup scripts. Only root can read the file.
+EnvironmentFile=-{{ hub_config_dir }}/hub.env
+Restart=always
+RestartSec=5
+TimeoutStopSec=15
+
+# It can write its own data, and nothing else.
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths={{ hub_data_dir }}
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target

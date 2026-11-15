@@ -10,7 +10,7 @@ With Docker running:
 ansible/tests/run.sh
 ```
 
-This lints the scripts, runs them twice in a Debian 13 container standing in for the Pi, fails if the second run changes anything, and then checks the result with `tests/verify.yml`. CI runs it on every pull request.
+This lints the scripts, runs them twice in a Debian 13 container standing in for the Pi, fails if the second run changes anything, and then checks the result with `tests/verify.yml`. Then it unit-tests the updater, and `tests/releases.sh` plays out releases arriving: a working one, one that won't start, one that doesn't match its checksum, enough to prune old ones, and the Hub hanging and crashing. The releases come from `tests/fake_releases.py`, served inside the container, rather than GitHub. CI runs it all on every pull request.
 
 ## Layout
 
@@ -20,5 +20,21 @@ This lints the scripts, runs them twice in a Debian 13 container standing in for
 - `roles/base/`: updates, automatic security updates, UK time, SSH by key only, and the firewall.
 - `roles/node/`: Node.js 24 from NodeSource.
 - `roles/hub_user/`: the `familyhub` user the Hub runs as, and its release, data and config folders ([ADR 0004](../docs/adr/0004-pi-pulls-releases.md)).
+- `roles/hub/`: the Hub as a systemd service, and two timers ([ADR 0004](../docs/adr/0004-pi-pulls-releases.md)):
+  - `familyhub-update.timer` runs `files/update.mjs` every 5 minutes. It installs the newest GitHub release beside the current one, after checking its SHA-256, and switches the `/opt/familyhub/current` link to it. If the new release doesn't answer `/api/health` with its version within 90 seconds, it switches back and doesn't try that version again. It keeps the newest three releases.
+  - `familyhub-watchdog.timer` runs `files/watchdog.sh` every minute, and restarts the Hub if it hasn't answered for three checks in a row. systemd restarts it straight away if it crashes.
 - `requirements.txt` and `requirements.yml`: the pinned Ansible and collections, used by the PC and the tests alike.
-- `tests/`: the stand-in container, its inventory, and the checks.
+- `tests/`: the stand-in container, its inventory, the checks, and the release scenarios.
+
+## On the Pi
+
+| Path | What's there |
+|---|---|
+| `/opt/familyhub/releases/<version>/` | Each installed release, owned by root, so the Hub can't change its own code |
+| `/opt/familyhub/current` | A link to the release that's running |
+| `/var/lib/familyhub/` | What the Hub writes: the Google sign-in and the databases (`HUB_DATA_DIR`) |
+| `/etc/familyhub/` | `household.json`, `chores.json`, and the secrets in `hub.env` (`HUB_CONFIG_DIR`) |
+| `/var/lib/familyhub-update/failed.json` | Releases that failed their health check and won't be tried again |
+| `/usr/local/lib/familyhub/` | The updater and the watchdog |
+
+The Hub listens on `127.0.0.1:3000` only, as the `familyhub` user, and can't write anywhere but `/var/lib/familyhub`.

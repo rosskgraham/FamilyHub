@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Check FamilyHub is answering every minute
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=1min
+
+[Install]
+WantedBy=timers.target

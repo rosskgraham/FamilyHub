@@ -1,0 +1,75 @@
+# The Hub as a service, the updater that installs its releases (ADR 0004), and a watchdog.
+- name: Install what the updater and the watchdog need
+  ansible.builtin.apt:
+    name:
+      - curl
+      - tar
+    state: present
+
+- name: Create the folder for the updater and the watchdog
+  ansible.builtin.file:
+    path: /usr/local/lib/familyhub
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install the updater and the watchdog
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: /usr/local/lib/familyhub/{{ item }}
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - update.mjs
+    - watchdog.sh
+
+- name: Install the Hub's service
+  ansible.builtin.template:
+    src: familyhub.service.j2
+    dest: /etc/systemd/system/familyhub.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart the Hub
+
+- name: Install the updater's and the watchdog's services and timers
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: /etc/systemd/system/{{ item }}
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - familyhub-update.service
+    - familyhub-update.timer
+    - familyhub-watchdog.service
+    - familyhub-watchdog.timer
+
+- name: Start the Hub whenever the Pi starts
+  ansible.builtin.systemd_service:
+    name: familyhub.service
+    enabled: true
+    daemon_reload: true
+
+- name: Check for new releases, and that the Hub is answering
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop:
+    - familyhub-update.timer
+    - familyhub-watchdog.timer
+
+- name: See whether a release is installed
+  ansible.builtin.stat:
+    path: "{{ hub_home }}/current"
+  register: hub_current
+
+# Waits until it's installed and answering, and fails if it isn't.
+- name: Install the newest release, the first time
+  ansible.builtin.systemd_service:
+    name: familyhub-update.service
+    state: started
+  when: not hub_current.stat.exists
