@@ -8,7 +8,7 @@ const space: Space = { height: 220, gap: 4, card: 106, row: 40 };
 const event = (hour: number): CalendarEvent => ({
 	id: `e${hour}`,
 	title: `Event at ${hour}`,
-	owner: 'alex',
+	owner: 'ross',
 	allDay: false,
 	start: `2026-12-01T${String(hour).padStart(2, '0')}:00:00.000Z`,
 	end: `2026-12-01T${String(hour).padStart(2, '0')}:30:00.000Z`

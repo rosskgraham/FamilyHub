@@ -26,7 +26,7 @@ describe('createSync', () => {
 
 	it('waits for the first answer when there’s nothing to show', async () => {
 		const sync = createSync({ name: 'Test', fetch: async () => 'first', everyMs: 10 * MINUTE, clock });
-		expect(await sync.read()).toEqual({ value: 'first', at: '2026-10-28T08:00:00.000Z', error: null, needsAlex: null });
+		expect(await sync.read()).toEqual({ value: 'first', at: '2026-10-28T08:00:00.000Z', error: null, needsRoss: null });
 	});
 
 	it('answers at once after that, and fetches in the background when the answer is due', async () => {
@@ -102,7 +102,7 @@ describe('createSync', () => {
 		expect(await triesAfter(1_000)).toBe(5); // 2 min, its own interval, not 4
 	});
 
-	it('needs Alex once failures have run for an hour, and logs it once', async () => {
+	it('needs Ross once failures have run for an hour, and logs it once', async () => {
 		const error = vi.spyOn(console, 'error').mockImplementation(() => {});
 		let fail = true;
 		const sync = createSync({
@@ -119,13 +119,13 @@ describe('createSync', () => {
 			now += 10 * MINUTE;
 			await sync.refresh();
 		}
-		expect((await sync.read()).needsAlex).toBe('2026-10-28T08:00:00.000Z');
+		expect((await sync.read()).needsRoss).toBe('2026-10-28T08:00:00.000Z');
 		const hourLines = error.mock.calls.filter(([line]) => String(line).includes('over an hour'));
 		expect(hourLines).toEqual([['Octopus sync failing for over an hour, since 2026-10-28T08:00:00.000Z']]);
 
 		fail = false;
 		await sync.refresh();
-		expect((await sync.read()).needsAlex).toBeNull();
+		expect((await sync.read()).needsRoss).toBeNull();
 	});
 
 	it('shows what was kept on disk straight away after a restart, and checks for something newer', async () => {

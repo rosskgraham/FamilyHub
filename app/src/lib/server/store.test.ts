@@ -17,8 +17,8 @@ describe('the data folder', () => {
 	});
 
 	it('reads back what it wrote', async () => {
-		await writeJson('settings.json', { calendars: { alex: 'a@example.com' } }, dir);
-		expect(await readJson('settings.json', dir)).toEqual({ calendars: { alex: 'a@example.com' } });
+		await writeJson('settings.json', { calendars: { ross: 'a@example.com' } }, dir);
+		expect(await readJson('settings.json', dir)).toEqual({ calendars: { ross: 'a@example.com' } });
 	});
 
 	it('reads a missing file as null', async () => {
@@ -33,7 +33,7 @@ describe('the data folder', () => {
 
 	it('leaves nothing else behind, so a power cut mid-save can only leave the old file or the new one', async () => {
 		await writeJson('settings.json', { calendars: {} }, dir);
-		await writeJson('settings.json', { calendars: { alex: 'a' } }, dir);
+		await writeJson('settings.json', { calendars: { ross: 'a' } }, dir);
 		expect(await readdir(dir)).toEqual(['settings.json']);
 	});
 
@@ -44,8 +44,8 @@ describe('the data folder', () => {
 
 	it.each([
 		['an empty file', ''],
-		['half a file', '{"calendars": {"alex": "a@exa']
-	])('reads %s as missing, and moves it aside for Alex to look at', async (_, text) => {
+		['half a file', '{"calendars": {"ross": "a@exa']
+	])('reads %s as missing, and moves it aside for Ross to look at', async (_, text) => {
 		await writeFile(join(dir, 'settings.json'), text);
 		expect(await readJson('settings.json', dir)).toBeNull();
 		const [aside, ...others] = await readdir(dir);

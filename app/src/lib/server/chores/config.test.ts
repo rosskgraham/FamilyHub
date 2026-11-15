@@ -58,7 +58,7 @@ describe('parseChores', () => {
 		[
 			'someone not in the Household',
 			file([routine], [{ ...chore, who: ['Maya', 'Bob'] }]),
-			`is for "Bob", who isn't in household.json. Members are Alex, Sam, Maya, Leo.`
+			`is for "Bob", who isn't in household.json. Members are Ross, Sam, Maya, Leo.`
 		],
 		['Everyone doing a Chore', file([routine], [{ ...chore, who: ['everyone'] }]), 'is for "everyone"'],
 		['nobody doing a Chore', file([routine], [{ ...chore, who: [] }]), 'needs "who"'],

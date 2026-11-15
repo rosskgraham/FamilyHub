@@ -25,7 +25,7 @@ describe('orElse', () => {
 		);
 	});
 
-	it('still stops the page for a mistake Alex needs to see, such as in household.json', async () => {
+	it('still stops the page for a mistake Ross needs to see, such as in household.json', async () => {
 		const misconfigured = async () => error(500, 'household.json isn’t valid JSON.');
 		await expect(orElse('Calendar', misconfigured, null)).rejects.toMatchObject({
 			status: 500,

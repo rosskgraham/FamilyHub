@@ -17,14 +17,14 @@
 		slots,
 		live,
 		today,
-		needsAlex
+		needsRoss
 	}: {
 		rates: Rates | null;
 		slots: Slot[];
 		live: Live | null;
 		today: HalfHourUse[];
 		/** When each sync started failing, once it's been an hour. */
-		needsAlex: { octopus: string | null; zappi: string | null };
+		needsRoss: { octopus: string | null; zappi: string | null };
 	} = $props();
 
 	const cheap = $derived(cheapNow(clock.now, slots));
@@ -41,7 +41,7 @@
 	const time = (iso: string) => formatTime(new Date(iso));
 	// A sync failing for an hour says so here, where everyone looks, instead of the slot.
 	const problem = $derived.by(() => {
-		const { octopus, zappi } = needsAlex;
+		const { octopus, zappi } = needsRoss;
 		if (octopus && zappi) return `Energy not updating since ${time(octopus < zappi ? octopus : zappi)}`;
 		if (octopus) return `Prices not updating since ${time(octopus)}`;
 		if (zappi) return `Car charger quiet since ${time(zappi)}`;
@@ -106,7 +106,7 @@ and a Smart-charging slot when there is one. Opens the Energy Section. -->
 		</span>
 	</div>
 	{#if problem}
-		<div class="problem">{problem} · ask Alex</div>
+		<div class="problem">{problem} · ask Ross</div>
 	{:else if slot}
 		<div class="cheap">
 			<span>Smart-charging slot</span>

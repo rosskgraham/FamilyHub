@@ -2,7 +2,7 @@
 
 The Hub's Azure resources are built by the pipeline in [`infra/`](../../infra/README.md) ([ADR 0008](../adr/0008-azure-resources-from-bicep-through-azure-devops.md)). This runbook covers the once-only setup around it: the resource group, the Azure DevOps service connection, and putting the secrets in the Key Vault.
 
-Do this signed in as Alex, with the Azure CLI on the PC (`az login`). It takes about 30 minutes. Azure DevOps renames its pages from time to time, so a heading may not match exactly.
+Do this signed in as Ross, with the Azure CLI on the PC (`az login`). It takes about 30 minutes. Azure DevOps renames its pages from time to time, so a heading may not match exactly.
 
 ## What it costs
 
@@ -13,7 +13,7 @@ Do this signed in as Alex, with the Azure CLI on the PC (`az login`). It takes a
 | Application Insights | Workspace-based, so it's billed through the workspace | £0 |
 | Azure DevOps | 1 free Microsoft-hosted parallel job (1,800 minutes a month) | £0 |
 
-Nothing else is added without Alex's approval. Alert rules have no free tier, so they come later, with their own approval.
+Nothing else is added without Ross's approval. Alert rules have no free tier, so they come later, with their own approval.
 
 ## 1. Create the resource group
 
@@ -35,7 +35,7 @@ In the Azure DevOps project:
 
    This gives the connection **Contributor** on `rg-familyhub` only, with no secret to rotate.
 
-2. Let the connection give out one role, and only that one: **Key Vault Secrets Officer**, which the deployment gives Alex on the vault. Find the connection's app ID under **Manage App registration**, then:
+2. Let the connection give out one role, and only that one: **Key Vault Secrets Officer**, which the deployment gives Ross on the vault. Find the connection's app ID under **Manage App registration**, then:
 
    ```
    rg=$(az group show --name rg-familyhub --query id --output tsv)
@@ -75,4 +75,4 @@ The values are the ones in `app/.env` on the PC. The setup scripts copy them to 
 
 ## Changing the resources
 
-Change `infra/main.bicep` in a pull request. The pipeline's what-if lists what would change, and merging deploys it. Before adding anything billable, get Alex's approval and update the cost table above.
+Change `infra/main.bicep` in a pull request. The pipeline's what-if lists what would change, and merging deploys it. Before adding anything billable, get Ross's approval and update the cost table above.

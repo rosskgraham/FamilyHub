@@ -10,7 +10,7 @@ What the Hub must do, how well, and in what order. Terms are defined in the [glo
 
 ## The Household
 
-Alex, Sam, Maya and Leo. Everyone sees every Event and can use every Quick action; there are no PINs or adult-only features.
+Ross, Sam, Maya and Leo. Everyone sees every Event and can use every Quick action; there are no PINs or adult-only features.
 
 ## Hardware
 
@@ -71,7 +71,7 @@ Alex, Sam, Maya and Leo. Everyone sees every Event and can use every Quick actio
 ### When things go wrong
 
 - With no internet, the Hub keeps showing what it last loaded, labelled "last updated 14:02", and queues Quick actions until it reconnects.
-- If the Google sign-in is withdrawn or a sync has failed for a long time, the Hub shows a plain banner such as "Calendar needs signing in again, ask Alex" and alerts Alex.
+- If the Google sign-in is withdrawn or a sync has failed for a long time, the Hub shows a plain banner such as "Calendar needs signing in again, ask Ross" and alerts Ross.
 - The Household never sees raw error messages.
 
 ## After v1
@@ -103,13 +103,13 @@ Out of scope: Spotify (Alexa already handles it), the Month view, and creating o
 - **Releases:** every merge to `main` builds a versioned release. The Pi pulls it, checks it's healthy, and rolls back automatically if not ([ADR 0004](adr/0004-pi-pulls-releases.md)).
 - **Pi setup:** built entirely from Ansible scripts in the repo, so a dead SD card means re-running one command. The system disk is read-only so a power cut can't damage it, with a small writable partition for the Google sign-in and the Hub's own data, a watchdog restarts the app if it crashes or hangs, security updates are automatic, and SSH is by key only.
 - **Settings:** the repo is public, so settings are split by whether they're personal.
-  - Personal settings stay out of the repo: the Household's names and colours in `app/household.json`, and home's location in `app/.env`. The setup scripts copy them to the Pi from Alex's PC, alongside the secrets.
+  - Personal settings stay out of the repo: the Household's names and colours in `app/household.json`, and home's location in `app/.env`. The setup scripts copy them to the Pi from Ross's PC, alongside the secrets.
   - Whose each Google Calendar is, and which Tasks list is the Shopping list, are chosen on the Hub's setup page and kept on the Hub.
   - Everything else, such as the Sleep schedule, lives in the repo, so changing it is a pull request.
   - There's no settings screen in v1 apart from the Google setup page.
-- **Azure:** the Key Vault, Log Analytics and Application Insights are built from Bicep in the repo by an Azure DevOps pipeline ([ADR 0008](adr/0008-azure-resources-from-bicep-through-azure-devops.md)). Every resource uses a free tier or stays inside a free allowance unless Alex approves otherwise; Key Vault Standard is approved.
-- **Secrets:** stored in Azure Key Vault (Standard tier, which costs effectively nothing). The setup scripts run from Alex's PC, read the secrets with his Azure sign-in, and place them on the Pi. The Pi holds no Azure credentials apart from the Application Insights connection string. The Google sign-in token is created on the Hub and lives only there. Energy adds the Octopus account number and API key, and the Zappi's serial and myenergi API key. No secret is ever in the repo.
-- **Monitoring:** the app uses OpenTelemetry for traces, metrics and logs, sent through an OpenTelemetry Collector on the Pi to Azure Application Insights ([ADR 0005](adr/0005-telemetry-via-otel-collector-to-app-insights.md)). The screen's browser code reports through the server. The Collector strips Event titles, Shopping items and names before anything leaves the house, and this is tested. Alerts go from Azure Monitor to Alex when a sync has failed for over an hour or the Hub stops reporting.
+- **Azure:** the Key Vault, Log Analytics and Application Insights are built from Bicep in the repo by an Azure DevOps pipeline ([ADR 0008](adr/0008-azure-resources-from-bicep-through-azure-devops.md)). Every resource uses a free tier or stays inside a free allowance unless Ross approves otherwise; Key Vault Standard is approved.
+- **Secrets:** stored in Azure Key Vault (Standard tier, which costs effectively nothing). The setup scripts run from Ross's PC, read the secrets with his Azure sign-in, and place them on the Pi. The Pi holds no Azure credentials apart from the Application Insights connection string. The Google sign-in token is created on the Hub and lives only there. Energy adds the Octopus account number and API key, and the Zappi's serial and myenergi API key. No secret is ever in the repo.
+- **Monitoring:** the app uses OpenTelemetry for traces, metrics and logs, sent through an OpenTelemetry Collector on the Pi to Azure Application Insights ([ADR 0005](adr/0005-telemetry-via-otel-collector-to-app-insights.md)). The screen's browser code reports through the server. The Collector strips Event titles, Shopping items and names before anything leaves the house, and this is tested. Alerts go from Azure Monitor to Ross when a sync has failed for over an hour or the Hub stops reporting.
 
 ## Engineering practice
 

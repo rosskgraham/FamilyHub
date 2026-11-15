@@ -35,8 +35,8 @@ const STATUS_FILE = 'backup.json';
 const CHECK_MS = 10 * 60_000;
 // After a failure, how long until the next try, so a night offline doesn't mean a request every ten minutes.
 export const RETRY_MS = 60 * 60_000;
-// After this long without a backup, the Hub says it needs Alex.
-const NEEDS_ALEX_MS = 2 * 24 * 3600_000;
+// After this long without a backup, the Hub says it needs Ross.
+const NEEDS_ROSS_MS = 2 * 24 * 3600_000;
 const AT = '02:00';
 
 /** Whether a backup is due: none since the last 02:00 in the UK. */
@@ -78,8 +78,8 @@ export function createBackups({ store, folder, files, snapshotPath, clock }: Bac
 		} catch (e) {
 			const failingSince = status.failingSince ?? now.toISOString();
 			console.error('Chores backup failed:', e instanceof Error ? e.message : e);
-			if (clock() - Date.parse(status.lastAt ?? failingSince) >= NEEDS_ALEX_MS) {
-				// The line telemetry will turn into an alert for Alex (ADR 0005).
+			if (clock() - Date.parse(status.lastAt ?? failingSince) >= NEEDS_ROSS_MS) {
+				// The line telemetry will turn into an alert for Ross (ADR 0005).
 				console.error(`Chores backup failing, last one ${status.lastAt ?? 'never'}`);
 			}
 			await files.write(STATUS_FILE, {
