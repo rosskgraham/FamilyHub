@@ -1,0 +1,82 @@
+# Deploys FamilyHub's Azure resources from infra/main.bicep (ADR 0008). A pull request gets a lint and a
+# what-if, which lists what the merge would change; a merge to main deploys. Setup, including the service
+# connection, variable group and environment named below, is in docs/runbooks/azure-setup.md.
+
+trigger:
+  branches:
+    include: [main]
+  paths:
+    include: [infra]
+
+pr:
+  branches:
+    include: [main]
+  paths:
+    include: [infra]
+
+variables:
+  # FAMILYHUB_ADMIN_OBJECT_ID, which main.bicepparam reads. Kept out of the public repo.
+  - group: familyhub
+  - name: serviceConnection
+    value: familyhub-azure
+  - name: resourceGroup
+    value: rg-familyhub
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+  - stage: Check
+    jobs:
+      - job: Check
+        steps:
+          - checkout: self
+
+          - script: |
+              set -euo pipefail
+              az bicep install
+              az bicep lint --file infra/main.bicep
+              az bicep build-params --file infra/main.bicepparam --stdout > /dev/null
+            displayName: Lint the Bicep
+
+          # Pull requests from forks of the public repo never get near the subscription.
+          - task: AzureCLI@2
+            displayName: Show what deploying would change
+            condition: and(succeeded(), ne(variables['System.PullRequest.IsFork'], 'True'))
+            inputs:
+              azureSubscription: ${{ variables.serviceConnection }}
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                set -euo pipefail
+                az deployment group what-if \
+                  --resource-group "$(resourceGroup)" \
+                  --template-file infra/main.bicep \
+                  --parameters infra/main.bicepparam
+
+  - stage: Deploy
+    dependsOn: Check
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest'))
+    jobs:
+      - deployment: Deploy
+        environment: familyhub-azure
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+
+                - task: AzureCLI@2
+                  displayName: Deploy
+                  inputs:
+                    azureSubscription: ${{ variables.serviceConnection }}
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      set -euo pipefail
+                      az deployment group create \
+                        --name "familyhub-$(Build.BuildId)" \
+                        --resource-group "$(resourceGroup)" \
+                        --template-file infra/main.bicep \
+                        --parameters infra/main.bicepparam \
+                        --query properties.outputs --output yaml
