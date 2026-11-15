@@ -1,3 +1,15 @@
+# The home network hands out IPv6 addresses but doesn't always route IPv6 to the internet, and apt tries IPv6
+# first, so downloads fail. IPv4 always works. First, so every apt run after it, the automatic updates
+# included, uses IPv4.
+- name: Download packages over IPv4
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/10familyhub-ipv4
+    content: |
+      Acquire::ForceIPv4 "true";
+    owner: root
+    group: root
+    mode: "0644"
+
 - name: Bring every package up to date
   ansible.builtin.apt:
     update_cache: true
