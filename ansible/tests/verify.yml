@@ -42,6 +42,10 @@
           - "'Unattended-Upgrade::Automatic-Reboot-Time \"03:30\";' in apt_config.stdout_lines"
           - "apt_config.stdout is search('Origins-Pattern:: \"origin=Raspberry Pi Foundation')"
 
+    - name: Check apt downloads over IPv4
+      ansible.builtin.assert:
+        that: "'Acquire::ForceIPv4 \"true\";' in apt_config.stdout_lines"
+
     - name: Read the time zone
       ansible.builtin.command: readlink -f /etc/localtime
       register: localtime

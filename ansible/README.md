@@ -17,7 +17,7 @@ This lints the scripts, runs them twice in a Debian 13 container standing in for
 - `site.yml`: the playbook. It runs every role against the `hub` group.
 - `inventory.yml`: the Pi, at `familyhub.local` or `FAMILYHUB_PI_HOST`, as `hubadmin`.
 - `group_vars/all.yml`: settings the roles share, such as the Hub's user, its folders and when the Pi may restart.
-- `roles/base/`: updates, automatic security updates, UK time, SSH by key only, and the firewall.
+- `roles/base/`: updates (downloaded over IPv4, as the home network's IPv6 doesn't always reach the internet), automatic security updates, UK time, SSH by key only, and the firewall.
 - `roles/node/`: Node.js 24 from NodeSource.
 - `roles/hub_user/`: the `familyhub` user the Hub runs as, and its release, data and config folders ([ADR 0004](../docs/adr/0004-pi-pulls-releases.md)).
 - `roles/hub/`: the Hub as a systemd service, and two timers ([ADR 0004](../docs/adr/0004-pi-pulls-releases.md)):
