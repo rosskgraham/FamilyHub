@@ -10,3 +10,12 @@ hub_node_major: 24
 
 # Security updates install themselves, and the Pi restarts for them while the Hub is asleep (22:00 to 06:30).
 hub_reboot_time: "03:30"
+
+# The Hub listens on the Pi itself only (ADR 0002).
+hub_port: 3000
+
+# Where the updater looks for the newest release (ADR 0004), how often, and how long a new release has
+# to answer its health check before it's rolled back.
+hub_releases_url: https://api.github.com/repos/rosskgraham/FamilyHub/releases/latest
+hub_update_interval: 5min
+hub_health_timeout_seconds: 90

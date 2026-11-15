@@ -75,10 +75,42 @@
       loop: [/opt/familyhub/releases, /var/lib/familyhub, /etc/familyhub]
       register: folders
 
-    - name: Check only the Hub can read its data, and it can't change its config
+    - name: Check only the Hub can read its data, and it can't change its code or config
       ansible.builtin.assert:
         that:
-          - folders.results[0].stat.pw_name == 'familyhub'
+          - folders.results[0].stat.pw_name == 'root'
           - folders.results[1].stat.pw_name == 'familyhub' and folders.results[1].stat.mode == '0700'
           - folders.results[2].stat.pw_name == 'root' and folders.results[2].stat.gr_name == 'familyhub'
           - folders.results[2].stat.mode == '0750'
+
+    - name: Ask the Hub for its health
+      ansible.builtin.uri:
+        url: http://127.0.0.1:3000/api/health
+      register: health
+
+    - name: Check the Hub is running the release that was published
+      ansible.builtin.assert:
+        that: health.json.version == '2026.01.01.1'
+
+    - name: Read what's listening
+      ansible.builtin.command: ss --listening --tcp --numeric --no-header
+      register: listening
+      changed_when: false
+
+    - name: Check the Hub only listens on the Pi itself
+      ansible.builtin.assert:
+        that: listening.stdout_lines | select('search', ':3000 ') | map('split') | map(attribute=3) | list == ['127.0.0.1:3000']
+
+    - name: Read the Hub's, the updater's and the watchdog's units
+      ansible.builtin.systemd_service:
+        name: "{{ item }}"
+      loop: [familyhub.service, familyhub-update.timer, familyhub-watchdog.timer]
+      register: units
+
+    - name: Check the Hub runs as its own user, starts with the Pi, and the updater and watchdog run
+      ansible.builtin.assert:
+        that:
+          - units.results[0].status.User == 'familyhub'
+          - units.results[0].status.ActiveState == 'active'
+          - units.results | map(attribute='status.UnitFileState') | list == ['enabled', 'enabled', 'enabled']
+          - units.results[1:] | map(attribute='status.ActiveState') | list == ['active', 'active']

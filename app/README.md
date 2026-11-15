@@ -90,7 +90,7 @@ GitHub Actions runs the type check, the unit tests and the screenshot tests on e
 
 ## Releases
 
-Every merge to `main` that passes CI becomes a [GitHub release](https://github.com/rosskgraham/FamilyHub/releases), which the Pi will pull ([ADR 0004](../docs/adr/0004-pi-pulls-releases.md)). Versions are the UK date and CI's run number, such as `2026.10.31.57`, so they sort in the order they were made.
+Every merge to `main` that passes CI becomes a [GitHub release](https://github.com/rosskgraham/FamilyHub/releases), which the Pi installs within about five minutes, switching back if it doesn't answer its health check ([ADR 0004](../docs/adr/0004-pi-pulls-releases.md), [`ansible/roles/hub`](../ansible/README.md)). Versions are the UK date and CI's run number, such as `2026.10.31.57`, so they sort in the order they were made.
 
 A release is `familyhub-<version>.tar.gz` and its SHA-256. It holds the built server and a `package.json`, and nothing else: the app has no runtime dependencies and no native code, so the same package runs on a PC and on the Pi. Before publishing, `scripts/release.mjs` unpacks it, starts it, and checks it answers with its version.
 

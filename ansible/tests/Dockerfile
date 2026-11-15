@@ -1,8 +1,8 @@
 # A stand-in for the Pi: Debian 13, which Raspberry Pi OS is built on, running systemd,
-# with the same Ansible the PC uses.
+# with the same Ansible the PC uses. iproute2 is there because Raspberry Pi OS has it.
 FROM debian:trixie
 RUN apt-get update \
- && apt-get install -y --no-install-recommends systemd systemd-sysv python3 python3-venv git ca-certificates \
+ && apt-get install -y --no-install-recommends systemd systemd-sysv python3 python3-venv git ca-certificates iproute2 \
  && rm -rf /var/lib/apt/lists/*
 COPY requirements.txt requirements.yml /tmp/
 RUN python3 -m venv /opt/ansible \

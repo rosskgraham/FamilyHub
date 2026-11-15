@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Check for a new FamilyHub release every {{ hub_update_interval }}
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec={{ hub_update_interval }}
+RandomizedDelaySec=30s
+
+[Install]
+WantedBy=timers.target

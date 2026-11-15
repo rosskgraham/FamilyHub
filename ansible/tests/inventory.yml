@@ -1,6 +1,9 @@
-# The stand-in container plays the Pi, and runs the playbook on itself.
+# The stand-in container plays the Pi, and runs the playbook on itself. Releases come from
+# fake_releases.py, served inside the container, rather than GitHub.
 hub:
   hosts:
     familyhub:
       ansible_connection: local
       ansible_python_interpreter: /usr/bin/python3
+      hub_releases_url: http://127.0.0.1:8080/latest
+      hub_health_timeout_seconds: 10

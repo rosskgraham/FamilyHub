@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Lints the setup scripts, runs them twice in a container standing in for the Pi (the second run must
-# change nothing), then checks the result. Needs Docker. Works in Git Bash, WSL and CI.
+# change nothing), checks the result, then plays out new releases arriving. Needs Docker. Works in Git
+# Bash, WSL and CI.
 set -euo pipefail
 export MSYS_NO_PATHCONV=1  # stop Git Bash rewriting the container paths below
 
@@ -16,6 +17,10 @@ in_pi() { docker exec "$name" "$@"; }
 
 echo "Waiting for systemd"
 in_pi sh -c 'until systemctl is-system-running 2>/dev/null | grep -qE "running|degraded"; do sleep 1; done'
+
+echo "Publishing a pretend release"
+in_pi python3 tests/fake_releases.py 2026.01.01.1
+docker exec --detach "$name" python3 -m http.server 8080 --bind 127.0.0.1 --directory /srv/releases
 
 echo "Linting"
 in_pi ansible-lint
@@ -33,3 +38,9 @@ fi
 
 echo "Checking the result"
 in_pi ansible-playbook -i tests/inventory.yml tests/verify.yml
+
+echo "Unit testing the updater"
+in_pi node --test roles/hub/files/update.test.mjs
+
+echo "Playing out new releases"
+in_pi bash tests/releases.sh

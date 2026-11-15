@@ -2,7 +2,7 @@
 
 The Hub's Pi is built entirely by the Ansible scripts in [`ansible/`](../../ansible/README.md), run from Alex's PC. The only thing done by hand is writing Raspberry Pi OS to the SD card. A dead card means doing this runbook again from step 2.
 
-Each run brings the Pi up to date with the scripts, so it's safe to run again at any time. For now the scripts set up the basics: security updates that install themselves, SSH by key only, a firewall, UK time, Node.js 24, and the Hub's own user and folders. Installing the Hub, the full-screen browser and Sleep follow in later changes.
+Each run brings the Pi up to date with the scripts, so it's safe to run again at any time. So far the scripts set up the basics (security updates that install themselves, SSH by key only, a firewall, UK time and Node.js 24) and install the Hub, which then keeps itself up to date from GitHub releases. Personal settings and secrets, the full-screen browser and Sleep follow in later changes, so until then the Hub shows sample data, and only to the Pi itself.
 
 ## What you need
 
@@ -71,7 +71,24 @@ After this, the Pi:
 
 - only lets you in over SSH with the key: no passwords, and never as root,
 - turns away anything else that comes in, using `ufw`,
-- installs Debian's security updates and all of Raspberry Pi's and Node.js 24's updates by itself, and restarts at 03:30, while the Hub is asleep, when an update needs it.
+- installs Debian's security updates and all of Raspberry Pi's and Node.js 24's updates by itself, and restarts at 03:30, while the Hub is asleep, when an update needs it,
+- runs the newest release of the Hub, checks for a newer one every 5 minutes, and switches back if a new one doesn't answer its health check,
+- restarts the Hub if it crashes, or stops answering for three minutes.
+
+Check the Hub is running:
+
+```
+ssh hubadmin@$FAMILYHUB_PI_HOST curl -s localhost:3000/api/health
+```
+
+It answers `{"status":"ok","version":"…"}` with the newest release's version.
+
+## Looking after the Hub
+
+- **What it's been doing:** `ssh hubadmin@$FAMILYHUB_PI_HOST journalctl -u familyhub -u familyhub-update -u familyhub-watchdog --since today`
+- **Install a new release now, rather than within 5 minutes:** `ssh hubadmin@$FAMILYHUB_PI_HOST sudo systemctl start familyhub-update`
+- **A release was rolled back:** the journal says why. The updater won't try that version again, and installs the next release as normal. Once you've found the cause, fix it and merge, and the fix is the next release.
+- **Go back to an earlier release by hand:** the last three are in `/opt/familyhub/releases/`. First pause the updater, or it puts the newest release back within 5 minutes: `sudo systemctl stop familyhub-update.timer`. Then point the link at the release you want and restart, for example `sudo ln -sfn releases/2026.11.13.60 /opt/familyhub/current && sudo systemctl restart familyhub`. The pause lasts until the Pi next restarts or you run `sudo systemctl start familyhub-update.timer`.
 
 ## Changing the scripts
 

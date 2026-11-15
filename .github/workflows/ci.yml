@@ -53,6 +53,7 @@ jobs:
   # The Pi's setup scripts, run in a container standing in for the Pi.
   pi:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - name: Lint the setup scripts, run them twice, and check the result
