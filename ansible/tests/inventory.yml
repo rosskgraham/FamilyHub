@@ -1,0 +1,6 @@
+# The stand-in container plays the Pi, and runs the playbook on itself.
+hub:
+  hosts:
+    familyhub:
+      ansible_connection: local
+      ansible_python_interpreter: /usr/bin/python3

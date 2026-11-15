@@ -1,0 +1,13 @@
+// {{ ansible_managed }}
+// Debian's security updates are already allowed by 50unattended-upgrades. Raspberry Pi's own
+// archive (the kernel, firmware and Chromium) doesn't split out security updates, so take all of it.
+// NodeSource only carries Node.js {{ hub_node_major }}, whose patch releases are often security fixes;
+// the Hub picks up a new one when it next restarts.
+Unattended-Upgrade::Origins-Pattern {
+        "origin=Raspberry Pi Foundation,codename=${distro_codename},label=Raspberry Pi Foundation";
+        "origin=. nodistro,label=. nodistro";
+};
+Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
+Unattended-Upgrade::Remove-Unused-Dependencies "true";
+Unattended-Upgrade::Automatic-Reboot "true";
+Unattended-Upgrade::Automatic-Reboot-Time "{{ hub_reboot_time }}";

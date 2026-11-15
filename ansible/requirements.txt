@@ -1,0 +1,3 @@
+# What runs the setup scripts, on Alex's PC (in WSL) and in the tests.
+ansible-core==2.21.6
+ansible-lint==26.11.0

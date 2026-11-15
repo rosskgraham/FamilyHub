@@ -1,0 +1,12 @@
+# Who runs the Hub, and where it keeps things. Releases come and go (ADR 0004); data and config stay put.
+hub_user: familyhub
+hub_home: /opt/familyhub
+hub_releases_dir: /opt/familyhub/releases
+hub_data_dir: /var/lib/familyhub
+hub_config_dir: /etc/familyhub
+
+hub_timezone: Europe/London
+hub_node_major: 24
+
+# Security updates install themselves, and the Pi restarts for them while the Hub is asleep (22:00 to 06:30).
+hub_reboot_time: "03:30"
