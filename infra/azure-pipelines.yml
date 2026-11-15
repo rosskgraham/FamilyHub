@@ -1,6 +1,7 @@
-# Deploys FamilyHub's Azure resources from infra/main.bicep (ADR 0008). A pull request gets a lint and a
-# what-if, which lists what the merge would change; a merge to main deploys. Setup, including the service
-# connection, variable group and environment named below, is in docs/runbooks/azure-setup.md.
+# Deploys everything FamilyHub has in Azure from infra/main.bicep, at the scope of its own FamilyHub
+# subscription, resource group included (ADR 0008). A pull request gets a lint and a what-if, which lists what
+# the merge would change; a merge to main deploys. Setup, including the service connection, variable group and
+# environment named below, is in docs/runbooks/azure-setup.md.
 
 trigger:
   branches:
@@ -19,8 +20,8 @@ variables:
   - group: familyhub
   - name: serviceConnection
     value: familyhub-azure
-  - name: resourceGroup
-    value: rg-familyhub
+  - name: location
+    value: uksouth
 
 pool:
   vmImage: ubuntu-latest
@@ -49,8 +50,9 @@ stages:
               scriptLocation: inlineScript
               inlineScript: |
                 set -euo pipefail
-                az deployment group what-if \
-                  --resource-group "$(resourceGroup)" \
+                infra/register-providers.sh
+                az deployment sub what-if \
+                  --location "$(location)" \
                   --template-file infra/main.bicep \
                   --parameters infra/main.bicepparam
 
@@ -74,9 +76,10 @@ stages:
                     scriptLocation: inlineScript
                     inlineScript: |
                       set -euo pipefail
-                      az deployment group create \
+                      infra/register-providers.sh
+                      az deployment sub create \
                         --name "familyhub-$(Build.BuildId)" \
-                        --resource-group "$(resourceGroup)" \
+                        --location "$(location)" \
                         --template-file infra/main.bicep \
                         --parameters infra/main.bicepparam \
                         --query properties.outputs --output yaml

@@ -1,6 +1,6 @@
 # Set up Azure for the Hub
 
-The Hub's Azure resources are built by the pipeline in [`infra/`](../../infra/README.md) ([ADR 0008](../adr/0008-azure-resources-from-bicep-through-azure-devops.md)). This runbook covers the once-only setup around it: the resource group, the Azure DevOps service connection, and putting the secrets in the Key Vault.
+The Hub's Azure resources are built by the pipeline in [`infra/`](../../infra/README.md) ([ADR 0008](../adr/0008-azure-resources-from-bicep-through-azure-devops.md)). Everything in Azure, the resource group included, is made by the pipeline, never by hand. This runbook covers the once-only setup around it: FamilyHub's own subscription, the Azure DevOps side, and putting the secrets in the Key Vault.
 
 Do this signed in as Ross, with the Azure CLI on the PC (`az login`). It takes about 30 minutes. Azure DevOps renames its pages from time to time, so a heading may not match exactly.
 
@@ -15,14 +15,14 @@ Do this signed in as Ross, with the Azure CLI on the PC (`az login`). It takes a
 
 Nothing else is added without Ross's approval. Alert rules have no free tier, so they come later, with their own approval.
 
-## 1. Create the resource group
+## 1. Create FamilyHub's subscription
 
-```
-az provider register --namespace Microsoft.KeyVault
-az provider register --namespace Microsoft.OperationalInsights
-az provider register --namespace Microsoft.Insights
-az group create --name rg-familyhub --location uksouth --tags project=familyhub
-```
+FamilyHub has an Azure subscription of its own, so the pipeline can create its resource group, and its rights reach nothing else on the account. A subscription costs nothing; only what's in it is billed.
+
+1. In the Azure portal, **Subscriptions → + Add**, on the same billing account as the others.
+2. Rename it `FamilyHub` (**Subscriptions → the new one → Rename**).
+
+The pipeline turns on the Azure services it needs in it (`infra/register-providers.sh`), and creates `rg-familyhub` and everything in it.
 
 ## 2. Connect Azure DevOps to GitHub and Azure
 
@@ -30,19 +30,19 @@ In the Azure DevOps project:
 
 1. **Project settings → Service connections → New service connection → Azure Resource Manager.**
    - Identity type: **App registration (automatic)**, with **Workload identity federation** as the credential.
-   - Scope: **Subscription**, then choose `rg-familyhub` as the resource group.
+   - Scope: **Subscription**, then choose the `FamilyHub` subscription, and leave the resource group empty.
    - Name: `familyhub-azure`. Leave **Grant access permission to all pipelines** off.
 
-   This gives the connection **Contributor** on `rg-familyhub` only, with no secret to rotate.
+   This gives the connection **Contributor** on the `FamilyHub` subscription, with no secret to rotate. It can create the resource group, and can't reach any other subscription.
 
 2. Let the connection give out one role, and only that one: **Key Vault Secrets Officer**, which the deployment gives Ross on the vault. Find the connection's app ID under **Manage App registration**, then:
 
    ```
-   rg=$(az group show --name rg-familyhub --query id --output tsv)
+   sub=$(az account show --subscription FamilyHub --query id --output tsv)
    az role assignment create \
      --assignee <the connection's app ID> \
      --role "Role Based Access Control Administrator" \
-     --scope "$rg" \
+     --scope "/subscriptions/$sub" \
      --condition-version 2.0 \
      --condition "((!(ActionMatches{'Microsoft.Authorization/roleAssignments/write'})) OR (@Request[Microsoft.Authorization/roleAssignments:RoleDefinitionId] ForAnyOfAnyValues:GuidEquals {b86a8fe4-44ce-4948-aee5-eccb2c155cd7})) AND ((!(ActionMatches{'Microsoft.Authorization/roleAssignments/delete'})) OR (@Resource[Microsoft.Authorization/roleAssignments:RoleDefinitionId] ForAnyOfAnyValues:GuidEquals {b86a8fe4-44ce-4948-aee5-eccb2c155cd7}))"
    ```
