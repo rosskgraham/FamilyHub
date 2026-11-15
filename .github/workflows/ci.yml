@@ -38,8 +38,8 @@ jobs:
         # The same as the release job below, without publishing, so a pull request shows it works.
         run: |
           VERSION=$(date +%Y.%m.%d).0
-          HUB_VERSION=$VERSION npm run build
-          node scripts/release.mjs $VERSION
+          HUB_VERSION=$VERSION HUB_ORIGIN=http://localhost:3000 npm run build
+          HUB_ORIGIN=http://localhost:3000 node scripts/release.mjs $VERSION
       - name: Keep the screenshot differences
         if: failure()
         uses: actions/upload-artifact@v4
@@ -89,8 +89,12 @@ jobs:
         run: npm run build
         env:
           HUB_VERSION: ${{ steps.version.outputs.name }}
+          # Where the Pi's browser reaches the Hub (ADR 0002), built into the release.
+          HUB_ORIGIN: http://localhost:3000
       - name: Package, and check the package starts
         run: node scripts/release.mjs ${{ steps.version.outputs.name }}
+        env:
+          HUB_ORIGIN: http://localhost:3000
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}

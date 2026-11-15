@@ -17,6 +17,9 @@ const version = process.argv[2];
 if (!version || !/^\d{4}\.\d{2}\.\d{2}\.\d+$/.test(version)) {
 	throw new Error('Give the version as YYYY.MM.DD.N, for example 2026.10.31.57');
 }
+// The address the release is reached at, built in by `npm run build` (see vite.config.ts).
+const origin = process.env.HUB_ORIGIN;
+if (!origin) throw new Error('Build and package with HUB_ORIGIN set, for example http://localhost:3000');
 
 const name = `familyhub-${version}`;
 const out = join(app, 'release');
@@ -74,7 +77,17 @@ try {
 	const today = await get('/');
 	if (today.status !== 200 || !today.body.includes('Coming up'))
 		throw new Error(`The Today view answered ${today.status}`);
-	console.log(`Checked: the release starts and answers as ${version}`);
+	// A form posted from the release's own origin, as the Pi's browser posts it, mustn't be refused as cross-site.
+	const form = await fetch(`http://localhost:${port}/`, {
+		method: 'POST',
+		headers: { origin, 'content-type': 'application/x-www-form-urlencoded' },
+		body: 'check=1'
+	});
+	const formBody = await form.text();
+	if (form.status === 403 && formBody.includes('Cross-site')) {
+		throw new Error(`The release refuses forms from ${origin}, its own origin, as cross-site`);
+	}
+	console.log(`Checked: the release starts, answers as ${version}, and takes forms from ${origin}`);
 } finally {
 	server.kill();
 	rmSync(trial, { recursive: true, force: true, maxRetries: 5 });
