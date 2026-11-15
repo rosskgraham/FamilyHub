@@ -27,7 +27,7 @@ Until it's set up, it shows sample Events (a typical week repeated for every wee
 3. Run the app, and choose **Sample data · set up Google** in the bottom corner (or go to <http://localhost:5173/setup>).
 4. Sign in with the Household's Google account, then choose each Member's Calendar, which Google Tasks list is the Shopping list, and which holds the To-dos. Repeating To-dos are set up in the Google Tasks app on a phone; the Hub only adds one-off ones.
 
-To change a Calendar later, go back to <http://localhost:5173/setup>. Changes to `household.json` show on the next reload. Renaming a Member means choosing their Calendar again. Sample Events always use the made-up Household (Alex, Sam, Maya and Leo).
+To change a Calendar later, go back to <http://localhost:5173/setup>. Changes to `household.json` show on the next reload. Renaming a Member means choosing their Calendar again. Sample Events always use the made-up Household (Ross, Sam, Maya and Leo).
 
 The corner then shows when the Calendars last updated. It warns if the Hub is offline or Google needs it to sign in again (weekly while the Google app is in Testing).
 
@@ -47,7 +47,7 @@ Put home's latitude and longitude in `app/.env`, for example `HOME_LATITUDE=51.5
 
 Put the Household's Octopus account number and API key in `app/.env`, as `OCTOPUS_ACCOUNT=A-1234ABCD` and `OCTOPUS_API_KEY=sk_live_…`. The key is on the Octopus account under Personal details, then API access. It can see the account and its bills, so keep it out of chats and commits.
 
-The Energy section and the Today view's Energy card then show the account's Intelligent Octopus Go rates and Smart-charging slots, read from Octopus's GraphQL API ([ADR 0007](../docs/adr/0007-energy-from-octopus-rates-and-the-zappi.md)). The Hub asks for the rates once a day, so a renewal at new prices is picked up, and for slots every 10 minutes while the car is plugged in and hourly while it isn't. It keeps both in `app/data/energy-tariff.json` and `app/data/energy-slots.json`, so they still show after a restart without internet, with "Octopus unreachable · last updated 14:02". The Off-peak window, 23:30 to 05:30, is part of the tariff and written into `src/lib/energy.ts`, with the Hungry appliances and how long each runs. If the account moves to another tariff, the Section says so instead of guessing its times. If Octopus or myenergi has been failing for an hour, the Today view's Energy card says "ask Alex". `CALENDAR_SOURCE=sample` shows sample energy too.
+The Energy section and the Today view's Energy card then show the account's Intelligent Octopus Go rates and Smart-charging slots, read from Octopus's GraphQL API ([ADR 0007](../docs/adr/0007-energy-from-octopus-rates-and-the-zappi.md)). The Hub asks for the rates once a day, so a renewal at new prices is picked up, and for slots every 10 minutes while the car is plugged in and hourly while it isn't. It keeps both in `app/data/energy-tariff.json` and `app/data/energy-slots.json`, so they still show after a restart without internet, with "Octopus unreachable · last updated 14:02". The Off-peak window, 23:30 to 05:30, is part of the tariff and written into `src/lib/energy.ts`, with the Hungry appliances and how long each runs. If the account moves to another tariff, the Section says so instead of guessing its times. If Octopus or myenergi has been failing for an hour, the Today view's Energy card says "ask Ross". `CALENDAR_SOURCE=sample` shows sample energy too.
 
 ## Show the real usage from the Zappi
 

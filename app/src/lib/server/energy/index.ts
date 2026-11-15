@@ -24,7 +24,7 @@ export interface EnergyResult {
 	live: Live | null;
 	usageStatus: UsageStatus;
 	/** When each sync started failing, once it's been failing for an hour. */
-	needsAlex: { octopus: string | null; zappi: string | null };
+	needsRoss: { octopus: string | null; zappi: string | null };
 }
 
 /** Where the energy comes from, so tests can stand in for Octopus, the Zappi, the disk and the clock. */
@@ -41,8 +41,8 @@ export interface EnergySources {
 	clock: () => number;
 }
 
-type Rates = Pick<EnergyResult, 'tariff' | 'slots' | 'status'> & { needsAlex: string | null };
-type Usage = Pick<EnergyResult, 'today' | 'yesterday' | 'live' | 'usageStatus'> & { needsAlex: string | null };
+type Rates = Pick<EnergyResult, 'tariff' | 'slots' | 'status'> & { needsRoss: string | null };
+type Usage = Pick<EnergyResult, 'today' | 'yesterday' | 'live' | 'usageStatus'> & { needsRoss: string | null };
 
 let energy: (() => Promise<EnergyResult>) | undefined;
 
@@ -67,16 +67,16 @@ function fromSettings(): EnergySources {
 	};
 }
 
-const noRates: Rates = { tariff: null, slots: [], status: { kind: 'stale', updatedAt: null }, needsAlex: null };
+const noRates: Rates = { tariff: null, slots: [], status: { kind: 'stale', updatedAt: null }, needsRoss: null };
 const noUsage: Usage = {
 	today: [],
 	yesterday: [],
 	live: null,
 	usageStatus: { kind: 'stale', updatedAt: null },
-	needsAlex: null
+	needsRoss: null
 };
 
-/** The earlier of two runs of failures that need Alex. */
+/** The earlier of two runs of failures that need Ross. */
 function earlier(a: string | null, b: string | null): string | null {
 	return a && b ? (a < b ? a : b) : (a ?? b);
 }
@@ -146,12 +146,12 @@ export function createEnergy({ octopus, zappi, openStore, files, clock }: Energy
 
 	async function loadRates(when: Date): Promise<Rates> {
 		if (!octopus)
-			return { tariff: sampleTariff, slots: sampleSlots(when), status: { kind: 'sample' }, needsAlex: null };
+			return { tariff: sampleTariff, slots: sampleSlots(when), status: { kind: 'sample' }, needsRoss: null };
 		octopusSyncs ??= startOctopus(octopus);
 		const [tariff, slots] = await Promise.all([octopusSyncs.tariff.read(), octopusSyncs.slots.read()]);
-		const needsAlex = earlier(tariff.needsAlex, slots.needsAlex);
+		const needsRoss = earlier(tariff.needsRoss, slots.needsRoss);
 		if (tariff.error instanceof UnsupportedTariff) {
-			return { tariff: null, slots: [], status: { kind: 'unsupported', tariff: tariff.error.tariff }, needsAlex };
+			return { tariff: null, slots: [], status: { kind: 'unsupported', tariff: tariff.error.tariff }, needsRoss };
 		}
 		const since = ukTime(addDays(dayKey(when), -1), '00:00');
 		const recent = (slots.value ?? []).filter((s) => new Date(s.to) > since);
@@ -159,7 +159,7 @@ export function createEnergy({ octopus, zappi, openStore, files, clock }: Energy
 		const updatedAt = [tariff.at, slots.at].filter((t) => t !== null).sort()[0] ?? null;
 		const status: OctopusStatus =
 			tariff.error || slots.error || !updatedAt ? { kind: 'stale', updatedAt } : { kind: 'live', updatedAt };
-		return { tariff: tariff.value, slots: recent, status, needsAlex };
+		return { tariff: tariff.value, slots: recent, status, needsRoss };
 	}
 
 	let zappiSyncs: { live: Sync<Live>; history: Sync<true>; store: UsageStore } | undefined;
@@ -187,7 +187,7 @@ export function createEnergy({ octopus, zappi, openStore, files, clock }: Energy
 	}
 
 	async function loadUsage(when: Date): Promise<Usage> {
-		if (!zappi) return { ...sampleUsage(when), usageStatus: { kind: 'sample' }, needsAlex: null };
+		if (!zappi) return { ...sampleUsage(when), usageStatus: { kind: 'sample' }, needsRoss: null };
 		zappiSyncs ??= startZappi(zappi);
 		const [live, history] = await Promise.all([zappiSyncs.live.read(), zappiSyncs.history.read()]);
 		lastLive = live;
@@ -199,7 +199,7 @@ export function createEnergy({ octopus, zappi, openStore, files, clock }: Energy
 			yesterday: zappiSyncs.store.between(since, midnight),
 			live: fresh ? live.value : null,
 			usageStatus: fresh ? { kind: 'live', updatedAt: live.at! } : { kind: 'stale', updatedAt: live.at },
-			needsAlex: earlier(live.needsAlex, history.needsAlex)
+			needsRoss: earlier(live.needsRoss, history.needsRoss)
 		};
 	}
 
@@ -217,7 +217,7 @@ export function createEnergy({ octopus, zappi, openStore, files, clock }: Energy
 			yesterday: usage.yesterday,
 			live: usage.live,
 			usageStatus: usage.usageStatus,
-			needsAlex: { octopus: rates.needsAlex, zappi: usage.needsAlex }
+			needsRoss: { octopus: rates.needsRoss, zappi: usage.needsRoss }
 		};
 	};
 }

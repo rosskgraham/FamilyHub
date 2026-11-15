@@ -44,7 +44,7 @@ describe('toEvents', () => {
 			start: { date: '2026-10-29' },
 			end: { date: '2026-10-30' }
 		};
-		expect(toEvents([bins], 'alex')[0]).toMatchObject({ title: 'Blue bin', owner: 'everyone', bin: 'blue' });
+		expect(toEvents([bins], 'ross')[0]).toMatchObject({ title: 'Blue bin', owner: 'everyone', bin: 'blue' });
 	});
 
 	it('falls back to the event id and a placeholder title', () => {
@@ -76,8 +76,8 @@ describe('toEvents', () => {
 
 describe('withoutDuplicates', () => {
 	it('shows an Event on two Calendars once, under the first owner', () => {
-		const events = [...toEvents([meeting], 'alex'), ...toEvents([meeting], 'everyone')];
-		expect(withoutDuplicates(events).map((e) => e.owner)).toEqual(['alex']);
+		const events = [...toEvents([meeting], 'ross'), ...toEvents([meeting], 'everyone')];
+		expect(withoutDuplicates(events).map((e) => e.owner)).toEqual(['ross']);
 	});
 
 	it('keeps each occurrence of a repeating Event', () => {
@@ -86,6 +86,6 @@ describe('withoutDuplicates', () => {
 			start: { dateTime: '2026-11-04T18:00:00Z' },
 			end: { dateTime: '2026-11-04T19:00:00Z' }
 		};
-		expect(withoutDuplicates(toEvents([meeting, nextWeek], 'alex'))).toHaveLength(2);
+		expect(withoutDuplicates(toEvents([meeting, nextWeek], 'ross'))).toHaveLength(2);
 	});
 });

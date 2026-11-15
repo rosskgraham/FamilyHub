@@ -76,7 +76,7 @@ describe('choresFor', () => {
 
 describe('children', () => {
 	it('lists Members with any Chores, in Household order', () => {
-		expect(children(config, ['alex', 'sam', 'leo', 'maya'])).toEqual(['leo', 'maya']);
+		expect(children(config, ['ross', 'sam', 'leo', 'maya'])).toEqual(['leo', 'maya']);
 	});
 });
 

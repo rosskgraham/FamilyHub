@@ -5,7 +5,7 @@ import { fromCache, remember, type CalendarCache } from './cache.ts';
 const timed = (id: string, start: string, end: string): CalendarEvent => ({
 	id,
 	title: id,
-	owner: 'alex',
+	owner: 'ross',
 	allDay: false,
 	start,
 	end

@@ -9,7 +9,7 @@ export function dataPath(name = ''): string {
 	return resolve(HUB_DATA_DIR ?? 'data', name);
 }
 
-/** What Alex writes by hand: household.json and chores.json. */
+/** What Ross writes by hand: household.json and chores.json. */
 export function configPath(name: string): string {
 	return resolve(HUB_CONFIG_DIR ?? '.', name);
 }

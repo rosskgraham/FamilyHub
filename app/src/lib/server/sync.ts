@@ -3,7 +3,7 @@
 // Every source the Hub shows (the Calendars, the Shopping list, the weather, Octopus and the Zappi) works the same way:
 // a page asks for the latest answer and gets it at once, without waiting on the internet. If it's time for a fresh one,
 // one request goes out behind the scenes, and the page after next shows it. Failures are tried again sooner at first,
-// then less often, and after an hour of them the Hub says it needs Alex.
+// then less often, and after an hour of them the Hub says it needs Ross.
 
 /** An answer, and when it arrived. */
 export interface Kept<T> {
@@ -19,7 +19,7 @@ export interface Snapshot<T> {
 	/** Why the latest try failed, or null if it worked. */
 	error: unknown;
 	/** When the run of failures started, once it's lasted an hour; otherwise null. */
-	needsAlex: string | null;
+	needsRoss: string | null;
 }
 
 export interface SyncOptions<T> {
@@ -45,7 +45,7 @@ export interface Sync<T> {
 
 /** The first retry comes this soon after a failure, then twice as long each time, up to the source's own interval. */
 export const FIRST_RETRY_MS = 15_000;
-export const NEEDS_ALEX_MS = 60 * 60_000;
+export const NEEDS_ROSS_MS = 60 * 60_000;
 const REWRITE_MS = 60 * 60_000;
 
 export function createSync<T>(options: SyncOptions<T>): Sync<T> {
@@ -95,8 +95,8 @@ export function createSync<T>(options: SyncOptions<T>): Sync<T> {
 			failures += 1;
 			failingSince ??= lastTry;
 			console.error(`${options.name} sync failed:`, e instanceof Error ? e.message : e);
-			if (!logged && clock() - failingSince >= NEEDS_ALEX_MS) {
-				// The line telemetry will turn into an alert for Alex (ADR 0005).
+			if (!logged && clock() - failingSince >= NEEDS_ROSS_MS) {
+				// The line telemetry will turn into an alert for Ross (ADR 0005).
 				console.error(`${options.name} sync failing for over an hour, since ${new Date(failingSince).toISOString()}`);
 				logged = true;
 			}
@@ -128,9 +128,9 @@ export function createSync<T>(options: SyncOptions<T>): Sync<T> {
 				const fetching = refresh();
 				if (kept === null) await fetching;
 			}
-			const needsAlex =
-				failingSince !== null && clock() - failingSince >= NEEDS_ALEX_MS ? new Date(failingSince).toISOString() : null;
-			return { value: kept?.value ?? null, at: kept?.at ?? null, error, needsAlex };
+			const needsRoss =
+				failingSince !== null && clock() - failingSince >= NEEDS_ROSS_MS ? new Date(failingSince).toISOString() : null;
+			return { value: kept?.value ?? null, at: kept?.at ?? null, error, needsRoss };
 		},
 		async refresh() {
 			await load();

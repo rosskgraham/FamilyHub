@@ -75,7 +75,7 @@ What a child ticks off (and their Stars, streaks and marbles) is the Hub's first
 - **Reward**: something a child can swap Stars for, once a grown-up says yes.
 - **Bonus job**: a Chore anyone can claim for extra Stars ("Up for grabs").
 
-The sample Household's children are Maya and Leo; Alex and Sam are the grown-ups.
+The sample Household's children are Maya and Leo; Ross and Sam are the grown-ups.
 
 ## Still open
 

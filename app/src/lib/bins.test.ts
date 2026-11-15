@@ -5,7 +5,7 @@ import type { CalendarEvent } from './calendar.ts';
 const allDay = (title: string): CalendarEvent => ({
 	id: 'e1',
 	title,
-	owner: 'alex',
+	owner: 'ross',
 	allDay: true,
 	start: '2026-10-29',
 	end: '2026-10-30'

@@ -142,7 +142,7 @@ button{font-family:inherit}
 class Component extends DCLogic {
   renderVals() {
     var o = {
-      alex: { initial: 'A', solid: '#2456C9', bg: '#D6E4FF', fg: '#0F2F78' },
+      ross: { initial: 'R', solid: '#2456C9', bg: '#D6E4FF', fg: '#0F2F78' },
       sam: { initial: 'S', solid: '#B85200', bg: '#FFDDB8', fg: '#6B2E00' },
       maya: { initial: 'M', solid: '#0B7A64', bg: '#BDEBDD', fg: '#0A4136' },
       leo: { initial: 'L', solid: '#6C3FC4', bg: '#E6D8FA', fg: '#46228A' },
@@ -164,9 +164,9 @@ class Component extends DCLogic {
     return {
       later: [ev('sam', '10:00', 'Boiler service'), ev('maya', '16:30', 'Piano lesson'), ev('sam', '19:00', 'Book club')],
       coming: [
-        { day: 'Thu', date: '29', events: [ev('all', '', 'Bin day'), ev('maya', '17:00', 'Swimming'), ev('alex', '18:00', 'Five-a-side')] },
+        { day: 'Thu', date: '29', events: [ev('all', '', 'Bin day'), ev('maya', '17:00', 'Swimming'), ev('ross', '18:00', 'Five-a-side')] },
         { day: 'Fri', date: '30', events: [ev('leo', '15:30', 'Dentist'), ev('all', '19:30', 'Takeaway night')] },
-        { day: 'Sat', date: '31', events: [ev('alex', '08:00', 'Parkrun'), ev('maya', '09:00', 'Swimming'), ev('leo', '09:30', 'Football match')] },
+        { day: 'Sat', date: '31', events: [ev('ross', '08:00', 'Parkrun'), ev('maya', '09:00', 'Swimming'), ev('leo', '09:30', 'Football match')] },
         { day: 'Sun', date: '1', events: [ev('all', '12:30', 'Lunch at Gran’s'), ev('sam', '16:00', 'Garden tidy')] }
       ],
       kids: [maya, leo],

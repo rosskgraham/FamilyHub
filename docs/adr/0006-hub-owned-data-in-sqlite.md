@@ -14,4 +14,4 @@ Every night the Hub takes a consistent snapshot with SQLite's online backup and 
 - **Google Sheets as the store:** survives a dead Pi and is visible on phones, but needs the internet, so the Hub would still need a local copy and an offline queue. It also invites accidental edits to the children's data.
 - **Azure Table Storage or Cosmos DB:** managed and backed up, but it breaks ADR 0002, needs the internet, and needs Azure credentials on the Pi, which the requirements rule out.
 - **The browser's own storage:** no server work, but it's lost on a rebuild, invisible to the server, and can't be backed up.
-- **Backups pulled to Alex's PC over the home network:** no new cloud permission, but it only works while the PC is on and at home.
+- **Backups pulled to Ross's PC over the home network:** no new cloud permission, but it only works while the PC is on and at home.

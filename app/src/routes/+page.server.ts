@@ -28,7 +28,7 @@ export const load: PageServerLoad = async () => {
 			slots: energy.slots,
 			live: energy.live,
 			today: energy.today,
-			needsAlex: energy.needsAlex
+			needsRoss: energy.needsRoss
 		}
 	};
 };

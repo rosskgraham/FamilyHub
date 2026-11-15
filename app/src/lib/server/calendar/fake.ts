@@ -15,7 +15,7 @@ const typicalWeek: Template[][] = [
 		['18:30', 'Cubs', 'leo']
 	],
 	[
-		['09:00', 'Team offsite', 'alex'],
+		['09:00', 'Team offsite', 'ross'],
 		['17:30', 'Football training', 'leo']
 	],
 	[
@@ -25,13 +25,13 @@ const typicalWeek: Template[][] = [
 		['10:00', 'Boiler service', 'sam'],
 		['16:30', 'Piano lesson', 'maya'],
 		['19:00', 'Book club', 'sam'],
-		['20:00', 'Parents evening', 'alex']
+		['20:00', 'Parents evening', 'ross']
 	],
-	// On Alex's Calendar, like the real recurring one; it shows as everyone's.
+	// On Ross's Calendar, like the real recurring one; it shows as everyone's.
 	[
-		[null, 'Blue bin collection day', 'alex'],
+		[null, 'Blue bin collection day', 'ross'],
 		['17:00', 'Swimming', 'maya'],
-		['18:00', 'Five-a-side', 'alex']
+		['18:00', 'Five-a-side', 'ross']
 	],
 	[
 		[null, 'Grandad’s birthday', 'birthdays'],
@@ -40,18 +40,18 @@ const typicalWeek: Template[][] = [
 	],
 	// A busy Saturday, more than a Week view column holds, to show the overflow.
 	[
-		['08:00', 'Parkrun', 'alex'],
+		['08:00', 'Parkrun', 'ross'],
 		['09:00', 'Swimming lesson', 'maya'],
 		['09:30', 'Football match', 'leo'],
 		['10:30', 'Haircut', 'sam'],
 		['11:00', 'Big shop', 'everyone'],
 		['12:30', 'Drama club', 'maya'],
-		['13:00', 'Car to the garage', 'alex'],
+		['13:00', 'Car to the garage', 'ross'],
 		['14:00', 'Birthday party', 'maya'],
 		['15:00', 'Coffee with Sarah', 'sam'],
 		['16:30', 'Collect Maya', 'sam'],
 		['17:00', 'Gaming with Jack', 'leo'],
-		['19:00', 'Date night', 'alex']
+		['19:00', 'Date night', 'ross']
 	],
 	[
 		['12:30', 'Lunch at Gran’s', 'everyone'],

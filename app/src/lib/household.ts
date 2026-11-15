@@ -58,7 +58,7 @@ export function household(members: MemberConfig[], everyoneColour: Colour = EVER
 }
 
 export const sampleHousehold = household([
-	{ id: 'alex', name: 'Alex', colour: 'blue' },
+	{ id: 'ross', name: 'Ross', colour: 'blue' },
 	{ id: 'sam', name: 'Sam', colour: 'orange' },
 	{ id: 'maya', name: 'Maya', colour: 'green' },
 	{ id: 'leo', name: 'Leo', colour: 'purple' }

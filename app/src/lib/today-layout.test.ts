@@ -23,7 +23,7 @@ describe('todayLayout', () => {
 	});
 
 	it('then shows a busy day’s first Event in Coming up, not only “+N more”', () => {
-		const event = (i: number) => ({ id: `e${i}`, title: 'x', owner: 'alex', allDay: false, start: '', end: '' });
+		const event = (i: number) => ({ id: `e${i}`, title: 'x', owner: 'ross', allDay: false, start: '', end: '' });
 		const busy = { allDay: [], timed: [1, 2, 3, 4, 5].map(event) };
 		const fit = fitColumn(busy, { height: todayLayout(true, 3).comingHeight, gap: CHIP_GAP, row: CHIP });
 		expect(fit.timed.length).toBeGreaterThanOrEqual(1);
