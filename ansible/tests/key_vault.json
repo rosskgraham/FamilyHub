@@ -1,0 +1,11 @@
+{
+  "name": "kv-familyhub-test",
+  "secrets": {
+    "google-client-id": "test-client-id.apps.googleusercontent.com",
+    "google-client-secret": "GOCSPX-a\"tricky\\one $HOME `x` with spaces",
+    "home-latitude": "51.50",
+    "home-longitude": "-0.12",
+    "appinsights-connection-string": "InstrumentationKey=not-for-the-hub",
+    "household-json": "{\"members\": [{\"name\": \"Sam\", \"colour\": \"blue\"}], \"everyone\": {\"colour\": \"slate\"}}\n"
+  }
+}

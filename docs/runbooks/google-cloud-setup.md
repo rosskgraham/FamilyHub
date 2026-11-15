@@ -40,6 +40,7 @@ This is under **Google Auth Platform** (older consoles call it **OAuth consent s
 2. Application type: **Web application**. Name: `FamilyHub`.
 3. Under **Authorised redirect URIs**, add:
    - `http://localhost:5173/auth/google/callback` (the app running on your PC)
+   - `http://localhost:3000/auth/google/callback` (the Hub on the Pi, signed in through SSH from the PC: see [the Pi runbook](pi-setup.md), step 5)
 4. Create it, then copy the **Client ID** and **Client secret**.
 
 Put them in `app/.env`, which Git ignores. Never commit them, paste them into an issue, or put them anywhere else in the repo.
@@ -49,7 +50,7 @@ GOOGLE_CLIENT_ID=…
 GOOGLE_CLIENT_SECRET=…
 ```
 
-The Pi gets its own redirect address and its secrets come from Azure Key Vault. Both are set up in the Pi milestone.
+The Pi gets the same two from the Azure Key Vault, as `google-client-id` and `google-client-secret` ([the Azure runbook](azure-setup.md), step 3).
 
 ## 5. Note the Calendar IDs
 

@@ -1,0 +1,2 @@
+# Every secret the role asks the Key Vault for.
+hub_config_vault_names: "{{ (hub_env_secrets.values() | list) + (hub_config_files.values() | list) }}"

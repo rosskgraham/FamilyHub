@@ -1,0 +1,67 @@
+# The Hub's secrets and personal settings, from the Key Vault (ADR 0008) to /etc/familyhub on the Pi. The vault
+# is the one place they're kept: a secret that's gone from the vault is taken off the Pi too. Read on the PC,
+# signed in with `az login`, so nothing on the Pi can reach the vault. Tagged config, so a run before the vault
+# is set up can skip it with --skip-tags config.
+- name: Read the Hub's secrets and settings from the Key Vault
+  ansible.builtin.command:
+    argv: "{{ ['python3', role_path ~ '/files/read_key_vault.py'] + hub_config_vault_names }}"
+  delegate_to: localhost
+  become: false
+  run_once: true
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  no_log: true
+  register: hub_config_key_vault
+
+# The output above is hidden, as it holds the secrets. Problems go to stderr, which never does.
+- name: Stop if the Key Vault couldn't be read
+  ansible.builtin.fail:
+    msg: "{{ hub_config_key_vault.stderr }}"
+  when: hub_config_key_vault.rc != 0
+
+- name: Keep what the Key Vault has
+  ansible.builtin.set_fact:
+    hub_config_secrets: "{{ (hub_config_key_vault.stdout | from_json).secrets }}"
+  no_log: true
+
+- name: Say which vault the settings came from, and what it hasn't got
+  ansible.builtin.debug:
+    msg: >-
+      From {{ (hub_config_key_vault.stdout | from_json).vault }}.
+      Not in the vault, so left out: {{ missing if missing else 'nothing' }}.
+  vars:
+    missing: "{{ hub_config_vault_names | difference(hub_config_secrets.keys() | list) | sort }}"
+
+# systemd reads this as root and hands it to the Hub when it starts, so the Hub's own user can't read it.
+- name: Give the Hub its secrets
+  ansible.builtin.template:
+    src: hub.env.j2
+    dest: "{{ hub_config_dir }}/hub.env"
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+  notify: Restart the Hub
+
+- name: Give the Hub its Household and Chores
+  ansible.builtin.copy:
+    content: "{{ hub_config_secrets[item.value] }}"
+    dest: "{{ hub_config_dir }}/{{ item.key }}"
+    owner: root
+    group: "{{ hub_user }}"
+    mode: "0640"
+  loop: "{{ hub_config_files | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  when: item.value in hub_config_secrets
+  # It reads them on every request, so no restart is needed.
+
+- name: Take off the Pi what the Key Vault no longer has
+  ansible.builtin.file:
+    path: "{{ hub_config_dir }}/{{ item.key }}"
+    state: absent
+  loop: "{{ hub_config_files | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  when: item.value not in hub_config_secrets

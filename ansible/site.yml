@@ -6,5 +6,7 @@
     - base
     - node
     - hub_user
+    - role: hub_config
+      tags: [config]
     - hub
     - kiosk

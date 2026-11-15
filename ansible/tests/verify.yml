@@ -119,6 +119,51 @@
           - units.results | map(attribute='status.UnitFileState') | list == ['enabled', 'enabled', 'enabled']
           - units.results[1:] | map(attribute='status.ActiveState') | list == ['active', 'active']
 
+    - name: Read the pretend Key Vault the tests use
+      ansible.builtin.set_fact:
+        vault: "{{ lookup('ansible.builtin.file', 'key_vault.json') | from_json }}"
+
+    - name: Read the Hub's secrets file and settings
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop: [/etc/familyhub/hub.env, /etc/familyhub/household.json, /etc/familyhub/chores.json]
+      register: config_files
+
+    - name: Check only root can read the secrets, the Hub can read its Household, and Chores aren't made up
+      ansible.builtin.assert:
+        that:
+          - config_files.results[0].stat.pw_name == 'root' and config_files.results[0].stat.gr_name == 'root'
+          - config_files.results[0].stat.mode == '0600'
+          - config_files.results[1].stat.pw_name == 'root' and config_files.results[1].stat.gr_name == 'familyhub'
+          - config_files.results[1].stat.mode == '0640'
+          # Not in the vault, so not on the Pi: the Hub shows sample Chores.
+          - not config_files.results[2].stat.exists
+
+    - name: Read the Household the Hub was given
+      ansible.builtin.slurp:
+        path: /etc/familyhub/household.json
+      register: household
+
+    - name: Check the Household is exactly what the vault holds
+      ansible.builtin.assert:
+        that: household.content | b64decode == vault.secrets['household-json']
+
+    - name: Read the Hub's own environment
+      ansible.builtin.shell: tr '\0' '\n' < /proc/$(systemctl show --property=MainPID --value familyhub.service)/environ
+      register: hub_environment
+      changed_when: false
+      no_log: true
+
+    # What matters is what the Hub sees, after systemd has read hub.env's quoting.
+    - name: Check the Hub sees the vault's secrets exactly, and only the ones it uses
+      ansible.builtin.assert:
+        that:
+          - ('GOOGLE_CLIENT_ID=' ~ vault.secrets['google-client-id']) in hub_environment.stdout_lines
+          - ('GOOGLE_CLIENT_SECRET=' ~ vault.secrets['google-client-secret']) in hub_environment.stdout_lines
+          - "'HOME_LATITUDE=51.50' in hub_environment.stdout_lines"
+          - hub_environment.stdout is not search('OCTOPUS|ZAPPI|InstrumentationKey')
+        quiet: true
+
     - name: Read the kiosk's user
       ansible.builtin.getent:
         database: passwd

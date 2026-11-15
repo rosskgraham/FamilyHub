@@ -67,6 +67,8 @@ ansible-playbook site.yml -K
 
 `-K` asks for `hubadmin`'s password first (`BECOME password:`), because the scripts use `sudo` and Raspberry Pi OS asks for it. Nothing appears as you type or paste it. In the WSL terminal, paste with right-click or Ctrl+Shift+V, not Ctrl+V.
 
+The scripts also copy the Hub's secrets and settings from the Key Vault, which needs step 5's setup on the PC. Until that's done, leave that part out by adding `--skip-tags config`, and the Hub shows sample data.
+
 The first run takes about ten minutes, most of it spent on updates. At the end, `failed=0` means it worked. Run it again and it should say `changed=0`.
 
 After this, the Pi:
@@ -85,6 +87,37 @@ ssh hubadmin@$FAMILYHUB_PI_HOST curl -s localhost:3000/api/health
 ```
 
 It answers `{"status":"ok","version":"…"}` with the newest release's version.
+
+## 5. Give the Hub its secrets and settings
+
+The Google, Octopus and Zappi secrets, home's location, `household.json` and `chores.json` are kept in the Key Vault ([ADR 0008](../adr/0008-azure-resources-from-bicep-through-azure-devops.md)), never in the repo. Each run of the scripts reads them on the PC and writes them to `/etc/familyhub/` on the Pi: the secrets into `hub.env`, which only root can read, and the two settings files beside it. Whatever isn't in the vault is left out, or taken off the Pi, and the Hub shows sample data for it. The run says which vault it read and what it left out.
+
+1. Set up Azure and put the secrets in the Key Vault, following [the Azure runbook](azure-setup.md), steps 1 to 3.
+2. Install the Azure CLI in Ubuntu (WSL), then sign in as the person who can read the secrets:
+
+   ```
+   curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+   az login
+   ```
+
+   The sign-in lasts about three months. When it runs out, the scripts stop and say to run `az login` again.
+3. Run the scripts as in step 4, without `--skip-tags config`. To update only the secrets and settings, after changing them in the vault, add `--tags config` instead: it takes a few seconds.
+
+The scripts find the vault in `rg-familyhub`, in the `FamilyHub` subscription, by themselves, whichever subscription the Azure CLI uses by default. If there's ever more than one vault, set `FAMILYHUB_KEY_VAULT` to its name. If the subscription is ever renamed, set `FAMILYHUB_AZURE_SUBSCRIPTION`.
+
+### Sign the Hub in to Google
+
+The Pi signs in to Google once, and keeps the sign-in in `/var/lib/familyhub`.
+
+1. In Google Cloud, add the Pi's sign-in address to the Hub's client, as in [the Google Cloud runbook](google-cloud-setup.md), step 4: `http://localhost:3000/auth/google/callback`.
+2. The Hub only listens on the Pi itself, so reach it from the PC through SSH. In Ubuntu, leave this running:
+
+   ```
+   ssh -N -L 3000:localhost:3000 hubadmin@$FAMILYHUB_PI_HOST
+   ```
+
+3. In the PC's browser, open <http://localhost:3000/setup>, and sign in with the Household's Google account. The Hub on the wall picks it up within a minute.
+4. Stop the SSH command with Ctrl+C.
 
 ## Looking after the Hub
 

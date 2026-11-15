@@ -71,7 +71,14 @@ for name in google-client-id google-client-secret octopus-account octopus-api-ke
 done
 ```
 
-The values are the ones in `app/.env` on the PC. The setup scripts copy them to the Pi (coming in a later change).
+The values are the ones in `app/.env` on the PC. Then add the Household and Chores, which are personal, so they're kept here rather than in the public repo:
+
+```
+az keyvault secret set --vault-name "$vault" --name household-json --file household.json --output none
+az keyvault secret set --vault-name "$vault" --name chores-json --file chores.json --output none
+```
+
+The Pi's setup scripts copy them all to the Pi ([the Pi runbook](pi-setup.md), step 5). Any that are left out, the Hub shows sample data for. To change one later, set it again, then run the scripts with `--tags config`.
 
 ## Changing the resources
 
