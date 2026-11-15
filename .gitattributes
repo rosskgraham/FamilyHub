@@ -2,3 +2,5 @@
 *.sh text eol=lf
 # Files the setup scripts copy to the Pi as they are, byte for byte, such as PAM settings, which break on Windows line endings.
 ansible/roles/*/files/** text eol=lf
+# Test helpers run in the Linux stand-in, some through their #! line, which breaks on Windows line endings.
+ansible/tests/*.py text eol=lf

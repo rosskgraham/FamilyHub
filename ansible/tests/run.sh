@@ -22,6 +22,10 @@ echo "Publishing a pretend release"
 in_pi python3 tests/fake_releases.py 2026.01.01.1
 docker exec --detach "$name" python3 -m http.server 8080 --bind 127.0.0.1 --directory /srv/releases
 
+echo "Standing in for the Key Vault"
+in_pi ln -sf /ansible/tests/fake_az.py /usr/local/bin/az
+in_pi chmod +x /ansible/tests/fake_az.py
+
 echo "Linting"
 in_pi ansible-lint
 
