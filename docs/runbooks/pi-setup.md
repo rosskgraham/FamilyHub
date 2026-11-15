@@ -103,7 +103,7 @@ The Google, Octopus and Zappi secrets, home's location, `household.json` and `ch
    The sign-in lasts about three months. When it runs out, the scripts stop and say to run `az login` again.
 3. Run the scripts as in step 4, without `--skip-tags config`. To update only the secrets and settings, after changing them in the vault, add `--tags config` instead: it takes a few seconds.
 
-The scripts find the vault in `rg-familyhub` by themselves. If there's ever more than one, set `FAMILYHUB_KEY_VAULT` to its name.
+The scripts find the vault in `rg-familyhub`, in the `FamilyHub` subscription, by themselves, whichever subscription the Azure CLI uses by default. If there's ever more than one vault, set `FAMILYHUB_KEY_VAULT` to its name. If the subscription is ever renamed, set `FAMILYHUB_AZURE_SUBSCRIPTION`.
 
 ### Sign the Hub in to Google
 

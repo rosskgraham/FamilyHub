@@ -11,8 +11,12 @@ args = sys.argv[1:]
 
 
 def option(name: str) -> str:
-    return args[args.index(name) + 1]
+    return args[args.index(name) + 1] if name in args else ""
 
+
+# The PC's default subscription may be another project's, so every command has to name FamilyHub's.
+if option("--subscription") != "FamilyHub":
+    sys.exit(f"ERROR: fake az was asked about subscription {option('--subscription') or '(the default)'}, not FamilyHub")
 
 if args[:2] == ["keyvault", "list"]:
     answer = vault["name"]

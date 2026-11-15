@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Prints the named secrets from the Hub's Key Vault as one JSON object, leaving out any the vault hasn't got.
 
-Runs on the PC, never on the Pi, signed in with `az login` as the person ADR 0008 lets read the secrets. The vault
+Runs on the PC, never on the Pi, signed in with `az login` as the person ADR 0008 lets read the secrets. It looks in
+FamilyHub's own subscription, or $FAMILYHUB_AZURE_SUBSCRIPTION, whatever the PC's default subscription is. The vault
 is $FAMILYHUB_KEY_VAULT, or else the one in the rg-familyhub resource group. The values are secrets: the playbook
 hides this script's output.
 
@@ -15,11 +16,14 @@ import subprocess
 import sys
 
 RESOURCE_GROUP = "rg-familyhub"
+SUBSCRIPTION = os.environ.get("FAMILYHUB_AZURE_SUBSCRIPTION") or "FamilyHub"
 
 
 def az(*args: str):
     try:
-        result = subprocess.run(["az", *args, "--output", "json"], capture_output=True, text=True, check=False)
+        result = subprocess.run(
+            ["az", *args, "--subscription", SUBSCRIPTION, "--output", "json"], capture_output=True, text=True, check=False
+        )
     except FileNotFoundError:
         sys.exit("The Azure CLI isn't installed on this PC. See the Pi runbook, step 5.")
     if result.returncode != 0:
