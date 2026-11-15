@@ -1,2 +1,4 @@
 # Shell scripts run in Linux containers and WSL, so they keep Unix line endings even on Windows.
 *.sh text eol=lf
+# Files the setup scripts copy to the Pi as they are, byte for byte, such as PAM settings, which break on Windows line endings.
+ansible/roles/*/files/** text eol=lf

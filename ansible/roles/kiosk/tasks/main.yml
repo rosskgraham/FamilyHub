@@ -1,0 +1,81 @@
+# The Hub full-screen on the Pi's own screen: Chromium inside cage, which shows one app and nothing else,
+# so there's no desktop to fall into and no way out (ADR 0009). It starts with the Pi, as its own user.
+- name: Install cage and Chromium
+  ansible.builtin.apt:
+    name:
+      - cage
+      - chromium
+      - curl
+    state: present
+
+# It can use the screen, the GPU and the touchscreen, and nothing else. It can't log in.
+- name: Create the kiosk's user
+  ansible.builtin.user:
+    name: "{{ hub_kiosk_user }}"
+    system: true
+    home: /nonexistent
+    create_home: false
+    shell: /usr/sbin/nologin
+    groups: [video, render, input]
+    append: true
+
+- name: Create the folder for the kiosk's launcher
+  ansible.builtin.file:
+    path: /usr/local/lib/familyhub
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install the kiosk's launcher
+  ansible.builtin.copy:
+    src: kiosk.sh
+    dest: /usr/local/lib/familyhub/kiosk.sh
+    owner: root
+    group: root
+    mode: "0755"
+  notify: Restart the kiosk
+
+# The session systemd opens for the kiosk, which gives it the screen. It never asks for a password.
+- name: Install the kiosk's login session
+  ansible.builtin.copy:
+    src: familyhub-kiosk.pam
+    dest: /etc/pam.d/familyhub-kiosk
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart the kiosk
+
+- name: Install the kiosk's service
+  ansible.builtin.template:
+    src: familyhub-kiosk.service.j2
+    dest: /etc/systemd/system/familyhub-kiosk.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart the kiosk
+
+# The kiosk takes the first console, so it doesn't get a login prompt as well. The others still do, so the
+# Pi's own keyboard can get in with Ctrl+Alt+F2 if SSH ever breaks.
+- name: Stop the first console asking for a login
+  ansible.builtin.systemd_service:
+    name: getty@tty1.service
+    masked: true
+
+- name: Start the Pi with the screen
+  ansible.builtin.file:
+    src: /usr/lib/systemd/system/graphical.target
+    dest: /etc/systemd/system/default.target
+    state: link
+
+- name: Start the kiosk whenever the Pi starts
+  ansible.builtin.systemd_service:
+    name: familyhub-kiosk.service
+    enabled: true
+    daemon_reload: true
+
+- name: Show the Hub on the screen now
+  ansible.builtin.systemd_service:
+    name: familyhub-kiosk.service
+    state: started
+  when: hub_kiosk_start

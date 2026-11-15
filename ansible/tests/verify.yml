@@ -114,3 +114,39 @@
           - units.results[0].status.ActiveState == 'active'
           - units.results | map(attribute='status.UnitFileState') | list == ['enabled', 'enabled', 'enabled']
           - units.results[1:] | map(attribute='status.ActiveState') | list == ['active', 'active']
+
+    - name: Read the kiosk's user
+      ansible.builtin.getent:
+        database: passwd
+        key: kiosk
+
+    - name: Read the kiosk's groups
+      ansible.builtin.command: id --groups --name kiosk
+      register: kiosk_groups
+      changed_when: false
+
+    - name: Check the kiosk's user can't log in, and can use the screen, the GPU and the touchscreen
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.getent_passwd.kiosk[5] == '/usr/sbin/nologin'
+          - kiosk_groups.stdout.split() is superset(['video', 'render', 'input'])
+
+    - name: Read the kiosk's and the first console's units
+      ansible.builtin.systemd_service:
+        name: "{{ item }}"
+      loop: [familyhub-kiosk.service, getty@tty1.service]
+      register: screen_units
+
+    - name: Read what the Pi starts into
+      ansible.builtin.command: systemctl get-default
+      register: default_target
+      changed_when: false
+
+    - name: Check the Pi starts into the kiosk, as its own user, with no login prompt behind it
+      ansible.builtin.assert:
+        that:
+          - screen_units.results[0].status.UnitFileState == 'enabled'
+          - screen_units.results[0].status.User == 'kiosk'
+          - screen_units.results[0].status.ExecStart is search('/usr/bin/cage -s -- /usr/local/lib/familyhub/kiosk.sh')
+          - screen_units.results[1].status.UnitFileState == 'masked'
+          - default_target.stdout == 'graphical.target'

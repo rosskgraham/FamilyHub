@@ -7,3 +7,5 @@ hub:
       ansible_python_interpreter: /usr/bin/python3
       hub_releases_url: http://127.0.0.1:8080/latest
       hub_health_timeout_seconds: 10
+      # No screen to show it on.
+      hub_kiosk_start: false
