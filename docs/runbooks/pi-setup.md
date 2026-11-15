@@ -2,13 +2,13 @@
 
 The Hub's Pi is built entirely by the Ansible scripts in [`ansible/`](../../ansible/README.md), run from Ross's PC. The only thing done by hand is writing Raspberry Pi OS to the SD card. A dead card means doing this runbook again from step 2.
 
-Each run brings the Pi up to date with the scripts, so it's safe to run again at any time. So far the scripts set up the basics (security updates that install themselves, SSH by key only, a firewall, UK time and Node.js 24) and install the Hub, which then keeps itself up to date from GitHub releases. Personal settings and secrets, the full-screen browser and Sleep follow in later changes, so until then the Hub shows sample data, and only to the Pi itself.
+Each run brings the Pi up to date with the scripts, so it's safe to run again at any time. So far the scripts set up the basics (security updates that install themselves, SSH by key only, a firewall, UK time and Node.js 24), install the Hub, which then keeps itself up to date from GitHub releases, and show it full-screen on the Pi's screen ([ADR 0009](../adr/0009-kiosk-is-chromium-in-cage.md)). Personal settings and secrets, and Sleep, follow in later changes, so until then the Hub shows sample data. Typing a Shopping item or To-do at the Pi needs a USB keyboard until the Hub's own on-screen keyboard arrives.
 
 ## What you need
 
 - A Raspberry Pi 5 with the official 27W USB-C power supply and the Active Cooler.
 - A 32GB or larger A2 microSD card, and a way to plug it into the PC.
-- A screen with a micro-HDMI cable, for checking the first boot.
+- A screen with a micro-HDMI cable, in the HDMI port next to the power socket. Until the touchscreen arrives, any HDMI screen shows the Hub.
 - Ubuntu in WSL on the PC.
 
 ## 1. Get the PC ready (once)
@@ -75,9 +75,10 @@ After this, the Pi:
 - turns away anything else that comes in, using `ufw`,
 - installs Debian's security updates and all of Raspberry Pi's and Node.js 24's updates by itself, and restarts at 03:30, while the Hub is asleep, when an update needs it,
 - runs the newest release of the Hub, checks for a newer one every 5 minutes, and switches back if a new one doesn't answer its health check,
-- restarts the Hub if it crashes, or stops answering for three minutes.
+- restarts the Hub if it crashes, or stops answering for three minutes,
+- shows the Hub full-screen on the screen whenever it starts, with no desktop behind it and no login prompt, and opens it again if the browser closes.
 
-Check the Hub is running:
+The screen shows the Hub within a minute of the run finishing. Check the Hub is running:
 
 ```
 ssh hubadmin@$FAMILYHUB_PI_HOST curl -s localhost:3000/api/health
@@ -87,7 +88,9 @@ It answers `{"status":"ok","version":"…"}` with the newest release's version.
 
 ## Looking after the Hub
 
-- **What it's been doing:** `ssh hubadmin@$FAMILYHUB_PI_HOST journalctl -u familyhub -u familyhub-update -u familyhub-watchdog --since today`
+- **What it's been doing:** `ssh hubadmin@$FAMILYHUB_PI_HOST journalctl -u familyhub -u familyhub-update -u familyhub-watchdog -u familyhub-kiosk --since today`
+- **Start the screen again**, for example if it's showing something odd: `ssh -t hubadmin@$FAMILYHUB_PI_HOST sudo systemctl restart familyhub-kiosk`. It opens the Hub again with a fresh browser.
+- **Use the Pi's own keyboard:** Ctrl+Alt+F2 gives a login prompt for `hubadmin`, and Ctrl+Alt+F1 goes back to the Hub.
 - **Install a new release now, rather than within 5 minutes:** `ssh -t hubadmin@$FAMILYHUB_PI_HOST sudo systemctl start familyhub-update`. The `-t` lets `sudo` ask for the password.
 - **A release was rolled back:** the journal says why. The updater won't try that version again, and installs the next release as normal. Once you've found the cause, fix it and merge, and the fix is the next release.
 - **Go back to an earlier release by hand:** the last three are in `/opt/familyhub/releases/`. First pause the updater, or it puts the newest release back within 5 minutes: `sudo systemctl stop familyhub-update.timer`. Then point the link at the release you want and restart, for example `sudo ln -sfn releases/2026.11.13.60 /opt/familyhub/current && sudo systemctl restart familyhub`. The pause lasts until the Pi next restarts or you run `sudo systemctl start familyhub-update.timer`.
@@ -100,7 +103,7 @@ Test a change on the PC before running it on the Pi. With Docker running, from G
 ansible/tests/run.sh
 ```
 
-It lints the scripts, runs them twice in a Debian container standing in for the Pi, checks that the second run changed nothing, and then checks the result. CI runs the same script on every pull request.
+It lints the scripts, runs them twice in a Debian container standing in for the Pi, checks that the second run changed nothing, and then checks the result. The container has no screen, so it checks the kiosk is set up and its launcher behaves, but only the Pi shows whether the Hub actually appears. CI runs the same script on every pull request.
 
 ## When something goes wrong
 
@@ -110,3 +113,4 @@ It lints the scripts, runs them twice in a Debian container standing in for the 
 - **`Command 'ansible-playbook' not found`:** this terminal was opened before the lines were added to `~/.bashrc`. Run `source ~/.bashrc`, or open a new terminal.
 - **`Missing sudo password`:** the `-K` was left off. See step 4.
 - **`Incorrect sudo password`:** check it outside Ansible with `ssh -t hubadmin@$FAMILYHUB_PI_HOST sudo -v`. If it's right, that prints nothing and closes; if it's wrong, it says `Sorry, try again`. If no password works, write the card again (step 2) with one copied straight from the password manager.
+- **The screen stays black, or shows a login prompt:** the kiosk waits for the Hub to answer its health check before opening it, so check that first (step 4). Then see what the kiosk says: `ssh hubadmin@$FAMILYHUB_PI_HOST journalctl -u familyhub-kiosk -b`. Check the screen is in the HDMI port next to the power socket.

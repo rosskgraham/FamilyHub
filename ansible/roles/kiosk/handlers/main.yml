@@ -1,0 +1,6 @@
+- name: Restart the kiosk
+  ansible.builtin.systemd_service:
+    name: familyhub-kiosk.service
+    state: restarted
+    daemon_reload: true
+  when: hub_kiosk_start

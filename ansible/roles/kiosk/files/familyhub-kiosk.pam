@@ -1,0 +1,7 @@
+# Managed by the FamilyHub setup scripts.
+# The session systemd opens for familyhub-kiosk.service. pam_systemd puts it on the screen's seat, which is
+# what lets cage use the screen, the GPU and the touchscreen. systemd never asks this for a password.
+auth     required pam_unix.so nullok
+account  required pam_unix.so
+session  required pam_unix.so
+session  required pam_systemd.so

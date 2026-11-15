@@ -1,0 +1,39 @@
+# {{ ansible_managed }}
+# The Hub on the Pi's screen: cage showing Chromium on the first console, as its own user (ADR 0009).
+[Unit]
+Description=FamilyHub on the screen
+After=systemd-user-sessions.service dbus.socket systemd-logind.service getty@tty1.service
+Wants=dbus.socket systemd-logind.service
+Conflicts=getty@tty1.service
+ConditionPathExists=/dev/tty1
+
+[Service]
+User={{ hub_kiosk_user }}
+# A login session on the first console gives cage the screen, the GPU and the touchscreen.
+PAMName=familyhub-kiosk
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
+StandardInput=tty-fail
+StandardOutput=journal
+StandardError=journal
+UtmpIdentifier=tty1
+UtmpMode=user
+
+# In memory, and emptied each time the kiosk stops, so Chromium starts fresh.
+RuntimeDirectory=familyhub-kiosk
+Environment=HOME=/run/familyhub-kiosk
+Environment=FAMILYHUB_URL=http://localhost:{{ hub_port }}
+
+# -s lets Ctrl+Alt+F2 switch to a console with a login prompt.
+ExecStart=/usr/bin/cage -s -- /usr/local/lib/familyhub/kiosk.sh
+Restart=always
+RestartSec=5
+
+ProtectSystem=full
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=graphical.target
