@@ -38,4 +38,19 @@ describe('openUsageStore', () => {
 		]);
 		store.close();
 	});
+
+	it("keeps the car's charge readings once each, and forgets ones older than it's told", () => {
+		const store = openUsageStore(':memory:');
+		const at = (time: string) => `2026-10-28T${time}:00.000Z`;
+		const keepFrom = new Date(at('00:00'));
+		store.saveCharge({ at: '2026-10-20T08:00:00.000Z', percent: 30 }, new Date('2026-10-01T00:00:00Z'));
+		store.saveCharge({ at: at('01:10'), percent: 55 }, keepFrom);
+		store.saveCharge({ at: at('01:00'), percent: 52 }, keepFrom);
+		store.saveCharge({ at: at('01:00'), percent: 99 }, keepFrom);
+		expect(store.chargeBetween(new Date('2026-10-01T00:00:00Z'), new Date(at('23:00')))).toEqual([
+			{ at: at('01:00'), percent: 52 },
+			{ at: at('01:10'), percent: 55 }
+		]);
+		store.close();
+	});
 });

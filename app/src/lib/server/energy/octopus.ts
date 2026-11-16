@@ -1,5 +1,6 @@
-// The Household's Intelligent Octopus Go rates and Smart-charging slots, from Octopus's GraphQL API (ADR 0007).
-import type { Rates, Slot } from '#lib/energy.ts';
+// The Household's Intelligent Octopus Go rates and Smart-charging slots, and the car's charge, from Octopus's GraphQL
+// API (ADR 0007).
+import type { Charge, Rates, Slot } from '#lib/energy.ts';
 
 const GRAPHQL = 'https://api.octopus.energy/v1/graphql/';
 // Octopus's tokens last an hour; ask for a new one a little before.
@@ -40,6 +41,27 @@ export interface DispatchesResponse {
 
 export interface PlannedResponse {
 	flexPlannedDispatches: { start: string; end: string }[];
+}
+
+/** The car's status, as Octopus hears it from the car through Škoda's connection. */
+export interface VehicleResponse {
+	devices: {
+		deviceType: string;
+		status?: {
+			stateOfCharge?: { value: string | number | null; timestamp: string | null } | null;
+			stateOfChargeLimit?: { upperSocLimit: number | null } | null;
+		} | null;
+	}[];
+}
+
+/** The car's latest charge, or null when Octopus has no car or hasn't heard its charge. Octopus sends numbers as strings. */
+export function toCharge(response: VehicleResponse): Charge | null {
+	const status = response.devices.find((d) => d.deviceType === 'ELECTRIC_VEHICLES')?.status;
+	const reading = status?.stateOfCharge;
+	const percent = Number(reading?.value);
+	if (!reading?.timestamp || reading.value === null || !Number.isFinite(percent)) return null;
+	const limit = status?.stateOfChargeLimit?.upperSocLimit;
+	return { percent, at: new Date(reading.timestamp).toISOString(), limit: typeof limit === 'number' ? limit : null };
 }
 
 /** Intelligent Octopus Go's products start `IOG-`, and the older Intelligent Octopus's `INTELLI-`. */
@@ -115,6 +137,27 @@ export class Octopus {
 				)
 			: { flexPlannedDispatches: [] };
 		return toSlots(planned.flexPlannedDispatches, data.completedDispatches);
+	}
+
+	/** The car's battery, from the same device list as the slots. */
+	async charge(): Promise<Charge | null> {
+		const data = await this.#query<VehicleResponse>(
+			`query ($account: String!) {
+				devices(accountNumber: $account) {
+					deviceType
+					... on SmartFlexVehicle {
+						status {
+							... on SmartFlexVehicleStatus {
+								stateOfCharge { value timestamp }
+								stateOfChargeLimit { upperSocLimit }
+							}
+						}
+					}
+				}
+			}`,
+			{ account: this.account }
+		);
+		return toCharge(data);
 	}
 
 	async #query<T>(query: string, variables: Record<string, string>, retried = false): Promise<T> {

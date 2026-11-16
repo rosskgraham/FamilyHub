@@ -1,4 +1,4 @@
-import type { Live, Slot } from '#lib/energy.ts';
+import type { Charge, Live, Slot } from '#lib/energy.ts';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Minute } from './myenergi.ts';
 import { UnsupportedTariff, type Tariff } from './octopus.ts';
@@ -17,7 +17,8 @@ function fakeOctopus() {
 	const octopus = {
 		tariffAnswer: sampleTariff as Tariff | Error,
 		slotsAnswer: [] as Slot[] | Error,
-		asked: { tariff: 0, slots: 0 },
+		chargeAnswer: null as Charge | null | Error,
+		asked: { tariff: 0, slots: 0, charge: 0 },
 		async tariff() {
 			octopus.asked.tariff++;
 			if (octopus.tariffAnswer instanceof Error) throw octopus.tariffAnswer;
@@ -27,6 +28,11 @@ function fakeOctopus() {
 			octopus.asked.slots++;
 			if (octopus.slotsAnswer instanceof Error) throw octopus.slotsAnswer;
 			return octopus.slotsAnswer;
+		},
+		async charge() {
+			octopus.asked.charge++;
+			if (octopus.chargeAnswer instanceof Error) throw octopus.chargeAnswer;
+			return octopus.chargeAnswer;
 		}
 	};
 	return octopus;
@@ -99,6 +105,53 @@ describe('createEnergy', () => {
 		const result = await energy({ octopus: null, zappi: null })();
 		expect(result.status).toEqual({ kind: 'sample' });
 		expect(result.usageStatus).toEqual({ kind: 'sample' });
+		expect(result.charge).toEqual({ at: '2026-10-28T08:10:00.000Z', percent: 80, limit: 80 });
+		expect(result.chargeToday).toHaveLength(50);
+	});
+
+	describe('the car’s charge', () => {
+		const reading = (time: string, percent: number): Charge => ({
+			at: `2026-10-28T${time}:00.000Z`,
+			percent,
+			limit: 80
+		});
+
+		it('keeps a reading for the line while the Zappi says the car’s plugged in, and shows the latest', async () => {
+			const load = energy();
+			octopus.chargeAnswer = reading('08:14', 60);
+			// The first reading races the Zappi's first answer, so whether it's kept isn't the point here.
+			await load();
+			octopus.chargeAnswer = reading('08:24', 62);
+			now += SLOTS_MS;
+			await load();
+			await settle();
+			const result = await load();
+			expect(result.charge).toEqual(reading('08:24', 62));
+			expect(result.chargeToday.at(-1)).toEqual({ at: '2026-10-28T08:24:00.000Z', percent: 62 });
+		});
+
+		it('keeps no readings while the car’s unplugged, and asks hourly', async () => {
+			zappi.liveAnswer = { watts: 300, car: 'unplugged' };
+			const load = energy();
+			octopus.chargeAnswer = reading('08:14', 60);
+			await load();
+			now += SLOTS_MS;
+			await load();
+			await settle();
+			expect(octopus.asked.charge).toBe(1);
+			now += SLOTS_UNPLUGGED_MS;
+			await load();
+			await settle();
+			expect(octopus.asked.charge).toBe(2);
+			expect((await load()).chargeToday).toEqual([]);
+		});
+
+		it('leaves the rest of the Section alone when the charge can’t be read', async () => {
+			octopus.chargeAnswer = new TypeError('fetch failed');
+			const result = await energy()();
+			expect(result.charge).toBeNull();
+			expect(result.status).toEqual({ kind: 'live', updatedAt: '2026-10-28T08:15:00.000Z' });
+		});
 	});
 
 	describe('Octopus', () => {

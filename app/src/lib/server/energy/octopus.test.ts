@@ -1,5 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Octopus, toSlots, toTariff, UnsupportedTariff, type AgreementsResponse } from './octopus.ts';
+import {
+	Octopus,
+	toCharge,
+	toSlots,
+	toTariff,
+	UnsupportedTariff,
+	type AgreementsResponse,
+	type VehicleResponse
+} from './octopus.ts';
 
 // Recorded from the GraphQL API, with made-up rates and the account removed.
 const agreement = (productCode: string, values: number[]): AgreementsResponse => ({
@@ -34,6 +42,36 @@ describe('toTariff', () => {
 
 	it('needs a current agreement', () => {
 		expect(() => toTariff({ account: { electricityAgreements: [] } })).toThrow('No current electricity agreement');
+	});
+});
+
+describe('toCharge', () => {
+	// The shape Octopus answered for the Household's car on 15 November 2026, with the IDs left out.
+	const vehicle = (status: VehicleResponse['devices'][number]['status']): VehicleResponse => ({
+		devices: [{ deviceType: 'ELECTRIC_VEHICLES', status }]
+	});
+
+	it("reads the car's charge and where charging stops, turning Octopus's strings into numbers", () => {
+		expect(
+			toCharge(
+				vehicle({
+					stateOfCharge: { value: '78.00', timestamp: '2026-11-15T23:01:54+00:00' },
+					stateOfChargeLimit: { upperSocLimit: 80 }
+				})
+			)
+		).toEqual({ percent: 78, at: '2026-11-15T23:01:54.000Z', limit: 80 });
+	});
+
+	it("has no limit when Octopus doesn't say one", () => {
+		expect(toCharge(vehicle({ stateOfCharge: { value: 64, timestamp: '2026-11-15T20:00:00Z' } }))?.limit).toBeNull();
+	});
+
+	it("is null when there's no car, or Octopus hasn't heard its charge", () => {
+		expect(toCharge({ devices: [{ deviceType: 'BATTERIES', status: null }] })).toBeNull();
+		expect(toCharge(vehicle(null))).toBeNull();
+		expect(toCharge(vehicle({ stateOfCharge: null }))).toBeNull();
+		expect(toCharge(vehicle({ stateOfCharge: { value: null, timestamp: '2026-11-15T20:00:00Z' } }))).toBeNull();
+		expect(toCharge(vehicle({ stateOfCharge: { value: '78.00', timestamp: null } }))).toBeNull();
 	});
 });
 

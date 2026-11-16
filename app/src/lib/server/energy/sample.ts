@@ -1,5 +1,13 @@
 // Made-up rates, slots and usage, as in the Energy mockups: the car charged overnight, and a slot this afternoon.
-import { halfHoursOf, type HalfHourUse, type Live, type Rates, type Slot } from '#lib/energy.ts';
+import {
+	halfHoursOf,
+	type Charge,
+	type ChargeReading,
+	type HalfHourUse,
+	type Live,
+	type Rates,
+	type Slot
+} from '#lib/energy.ts';
 import { addDays, dayKey, formatTime, ukTime } from '#lib/time.ts';
 
 export const sampleTariff: { name: string; rates: Rates } = {
@@ -53,4 +61,28 @@ export function sampleUsage(now: Date): {
 		yesterday: day(addDays(today, -1), ukTime(today, '00:00')),
 		live: { watts: 800, car: 'plugged' }
 	};
+}
+
+// The sample car's battery, and its charge before the night's charging.
+const BATTERY_KWH = 77;
+const START_PERCENT = 52;
+const LIMIT = 80;
+const READING_MS = 10 * 60_000;
+
+/**
+ * The sample car's charge, read every 10 minutes since midnight while it's been plugged in: rising with the night's
+ * charging in CAR, then holding at its limit.
+ */
+export function sampleCharge(now: Date): { charge: Charge; chargeToday: ChargeReading[] } {
+	const midnight = ukTime(dayKey(now), '00:00').getTime();
+	const chargeToday: ChargeReading[] = [];
+	for (let t = midnight; t <= now.getTime(); t += READING_MS) {
+		const halves = (t - midnight) / (30 * 60_000);
+		let kwh = 0;
+		for (let i = 0; i < Math.ceil(halves) && i < CAR.length; i++) kwh += CAR[i]! * Math.min(1, halves - i);
+		const percent = Math.min(LIMIT, START_PERCENT + (kwh / BATTERY_KWH) * 100);
+		chargeToday.push({ at: new Date(t).toISOString(), percent: Math.round(percent * 10) / 10 });
+	}
+	const last = chargeToday.at(-1)!;
+	return { charge: { ...last, limit: LIMIT }, chargeToday };
 }

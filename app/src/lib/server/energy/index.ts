@@ -1,5 +1,5 @@
 import { CALENDAR_SOURCE, OCTOPUS_ACCOUNT, OCTOPUS_API_KEY, ZAPPI_GLO_API_KEY, ZAPPI_GLO_SN } from '$app/env/private';
-import type { HalfHourUse, Live, OctopusStatus, Slot, UsageStatus } from '#lib/energy.ts';
+import type { Charge, ChargeReading, HalfHourUse, Live, OctopusStatus, Slot, UsageStatus } from '#lib/energy.ts';
 import { addDays, dayKey, ukTime } from '#lib/time.ts';
 import { orElse } from '../fallback.ts';
 import { now } from '../now.ts';
@@ -8,7 +8,7 @@ import { readJson, writeJson } from '../store.ts';
 import { createSync, type Kept, type Snapshot, type Sync } from '../sync.ts';
 import { Myenergi, toHalfHours, utcDays } from './myenergi.ts';
 import { merge, Octopus, UnsupportedTariff, type Tariff } from './octopus.ts';
-import { sampleSlots, sampleTariff, sampleUsage } from './sample.ts';
+import { sampleCharge, sampleSlots, sampleTariff, sampleUsage } from './sample.ts';
 import { openUsageStore, type UsageStore } from './usage-store.ts';
 
 export interface EnergyResult {
@@ -23,6 +23,10 @@ export interface EnergyResult {
 	/** Null when the Zappi hasn't reported for a while. */
 	live: Live | null;
 	usageStatus: UsageStatus;
+	/** The car's battery, as Octopus last heard it, or null when it hasn't. */
+	charge: Charge | null;
+	/** Today's charge readings, kept while the car was plugged in, for the line over the usage chart. */
+	chargeToday: ChargeReading[];
 	/** When each sync started failing, once it's been failing for an hour. */
 	needsRoss: { octopus: string | null; zappi: string | null };
 }
@@ -30,7 +34,7 @@ export interface EnergyResult {
 /** Where the energy comes from, so tests can stand in for Octopus, the Zappi, the disk and the clock. */
 export interface EnergySources {
 	/** The Household's Octopus account, or null for sample rates. */
-	octopus: Pick<Octopus, 'tariff' | 'slots'> | null;
+	octopus: Pick<Octopus, 'tariff' | 'slots' | 'charge'> | null;
 	/** The Zappi, through myenergi, or null for sample usage. */
 	zappi: Pick<Myenergi, 'live' | 'minutes'> | null;
 	/** Where the usage is added up, opened the first time it's needed. */
@@ -41,7 +45,9 @@ export interface EnergySources {
 	clock: () => number;
 }
 
-type Rates = Pick<EnergyResult, 'tariff' | 'slots' | 'status'> & { needsRoss: string | null };
+type Rates = Pick<EnergyResult, 'tariff' | 'slots' | 'status' | 'charge' | 'chargeToday'> & {
+	needsRoss: string | null;
+};
 type Usage = Pick<EnergyResult, 'today' | 'yesterday' | 'live' | 'usageStatus'> & { needsRoss: string | null };
 
 let energy: (() => Promise<EnergyResult>) | undefined;
@@ -67,7 +73,14 @@ function fromSettings(): EnergySources {
 	};
 }
 
-const noRates: Rates = { tariff: null, slots: [], status: { kind: 'stale', updatedAt: null }, needsRoss: null };
+const noRates: Rates = {
+	tariff: null,
+	slots: [],
+	status: { kind: 'stale', updatedAt: null },
+	charge: null,
+	chargeToday: [],
+	needsRoss: null
+};
 const noUsage: Usage = {
 	today: [],
 	yesterday: [],
@@ -92,6 +105,8 @@ const LIVE_MS = 60_000;
 // After this long without hearing from the Zappi, Live demand isn't shown rather than shown out of date.
 export const LIVE_STALE_MS = 5 * 60_000;
 export const HISTORY_MS = 15 * 60_000;
+// The charge line only covers today, so a week of readings is plenty.
+const CHARGE_KEEP_MS = 7 * 24 * 3600_000;
 // myenergi takes a little while to finish a day's history.
 export const SETTLED_MS = 60 * 60_000;
 const DATABASE = 'energy.db';
@@ -102,15 +117,29 @@ const DATABASE = 'energy.db';
  */
 export function createEnergy({ octopus, zappi, openStore, files, clock }: EnergySources): () => Promise<EnergyResult> {
 	const at = () => new Date(clock());
-	// The Zappi's last status, which also says how often to ask Octopus for slots.
+	// The Zappi's last status, which also says how often to ask Octopus for slots and the car's charge.
 	let lastLive: Snapshot<Live> | null = null;
+	// Opened the first time either the Zappi's usage or the car's charge needs it.
+	let store: UsageStore | undefined;
+	const usageStore = () => (store ??= openStore());
+	// Until the Zappi has said, assume the car might be plugged in.
+	const carEveryMs = () => (lastLive?.value?.car === 'unplugged' ? SLOTS_UNPLUGGED_MS : SLOTS_MS);
+
+	/** Today's charge readings, or none if the database can't be opened: the line is extra, and never costs the prices. */
+	function chargeReadings(when: Date): ChargeReading[] {
+		try {
+			return usageStore().chargeBetween(ukTime(dayKey(when), '00:00'), when);
+		} catch {
+			return [];
+		}
+	}
 
 	/** A file in the data folder, read and written in the shape the sync keeps. */
 	function onDisk<T>(file: string) {
 		return { load: () => files.read<Kept<T>>(file), save: (k: Kept<T>) => files.write(file, k) };
 	}
 
-	let octopusSyncs: { tariff: Sync<Tariff>; slots: Sync<Slot[]> } | undefined;
+	let octopusSyncs: { tariff: Sync<Tariff>; slots: Sync<Slot[]>; charge: Sync<Charge | null> } | undefined;
 
 	/** The background syncs for the tariff and slots, both kept on disk so past slots still cost yesterday after a restart. */
 	function startOctopus(client: NonNullable<EnergySources['octopus']>) {
@@ -131,8 +160,7 @@ export function createEnergy({ octopus, zappi, openStore, files, clock }: Energy
 				kept = merge(kept, await client.slots(), at()).filter((s) => new Date(s.to) > since);
 				return kept;
 			},
-			// Until the Zappi has said, assume the car might be plugged in.
-			everyMs: () => (lastLive?.value?.car === 'unplugged' ? SLOTS_UNPLUGGED_MS : SLOTS_MS),
+			everyMs: carEveryMs,
 			clock,
 			load: async () => {
 				const k = await slotsFile.load();
@@ -141,17 +169,49 @@ export function createEnergy({ octopus, zappi, openStore, files, clock }: Energy
 			},
 			save: slotsFile.save
 		});
-		return { tariff, slots };
+		// A reading is kept only while the Zappi says the car's plugged in, so the line covers just those times.
+		const charge = createSync({
+			name: 'Octopus car charge',
+			fetch: async () => {
+				const reading = await client.charge();
+				const plugged = lastLive?.value != null && lastLive.value.car !== 'unplugged';
+				if (reading && plugged) {
+					try {
+						usageStore().saveCharge({ at: reading.at, percent: reading.percent }, new Date(clock() - CHARGE_KEEP_MS));
+					} catch (e) {
+						// The reading still shows; only the line misses it.
+						console.error('Could not keep the car’s charge for the line:', e);
+					}
+				}
+				return reading;
+			},
+			everyMs: carEveryMs,
+			clock
+		});
+		return { tariff, slots, charge };
 	}
 
 	async function loadRates(when: Date): Promise<Rates> {
 		if (!octopus)
-			return { tariff: sampleTariff, slots: sampleSlots(when), status: { kind: 'sample' }, needsRoss: null };
+			return {
+				tariff: sampleTariff,
+				slots: sampleSlots(when),
+				status: { kind: 'sample' },
+				...sampleCharge(when),
+				needsRoss: null
+			};
 		octopusSyncs ??= startOctopus(octopus);
-		const [tariff, slots] = await Promise.all([octopusSyncs.tariff.read(), octopusSyncs.slots.read()]);
+		const [tariff, slots, charge] = await Promise.all([
+			octopusSyncs.tariff.read(),
+			octopusSyncs.slots.read(),
+			octopusSyncs.charge.read()
+		]);
+		// The charge is extra: when it can't be read, the rest of the Section carries on as before.
+		const chargeToday = chargeReadings(when);
 		const needsRoss = earlier(tariff.needsRoss, slots.needsRoss);
 		if (tariff.error instanceof UnsupportedTariff) {
-			return { tariff: null, slots: [], status: { kind: 'unsupported', tariff: tariff.error.tariff }, needsRoss };
+			const status: OctopusStatus = { kind: 'unsupported', tariff: tariff.error.tariff };
+			return { tariff: null, slots: [], status, charge: charge.value, chargeToday, needsRoss };
 		}
 		const since = ukTime(addDays(dayKey(when), -1), '00:00');
 		const recent = (slots.value ?? []).filter((s) => new Date(s.to) > since);
@@ -159,14 +219,14 @@ export function createEnergy({ octopus, zappi, openStore, files, clock }: Energy
 		const updatedAt = [tariff.at, slots.at].filter((t) => t !== null).sort()[0] ?? null;
 		const status: OctopusStatus =
 			tariff.error || slots.error || !updatedAt ? { kind: 'stale', updatedAt } : { kind: 'live', updatedAt };
-		return { tariff: tariff.value, slots: recent, status, needsRoss };
+		return { tariff: tariff.value, slots: recent, status, charge: charge.value, chargeToday, needsRoss };
 	}
 
 	let zappiSyncs: { live: Sync<Live>; history: Sync<true>; store: UsageStore } | undefined;
 
 	/** The background syncs for the Zappi's status and history, with the history added up into the usage store. */
 	function startZappi(client: NonNullable<EnergySources['zappi']>) {
-		const store = openStore();
+		const store = usageStore();
 		// UTC days whose whole history is already in the store.
 		const settled = new Set<string>();
 		const live = createSync({ name: 'Zappi status', fetch: () => client.live(), everyMs: LIVE_MS, clock });
@@ -213,6 +273,8 @@ export function createEnergy({ octopus, zappi, openStore, files, clock }: Energy
 			tariff: rates.tariff,
 			slots: rates.slots,
 			status: rates.status,
+			charge: rates.charge,
+			chargeToday: rates.chargeToday,
 			today: usage.today,
 			yesterday: usage.yesterday,
 			live: usage.live,

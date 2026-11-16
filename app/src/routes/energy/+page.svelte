@@ -5,6 +5,7 @@
 		appliances,
 		bandAt,
 		bestStart,
+		batteryText,
 		carText,
 		cheapNow,
 		formatKw,
@@ -73,6 +74,8 @@
 			{#if energy.live}
 				<div class="big tabular">{formatKw(energy.live.watts)}</div>
 				<div class="sub">{carText[energy.live.car]}</div>
+				{@const battery = batteryText(energy.live.car, energy.charge, clock.now)}
+				{#if battery}<div class="sub tabular">{battery}</div>{/if}
 			{:else}
 				<div class="none">Not reporting</div>
 				{#if energy.usageStatus.kind === 'stale' && energy.usageStatus.updatedAt}
@@ -113,10 +116,17 @@
 				>
 			{/if}
 		</div>
-		<UsageChart day={dayKey(clock.now)} use={energy.today} slots={energy.slots} priced={rates !== null} />
+		<UsageChart
+			day={dayKey(clock.now)}
+			use={energy.today}
+			slots={energy.slots}
+			priced={rates !== null}
+			charge={energy.chargeToday}
+		/>
 		<div class="legend">
 			<span><i class="house"></i>House</span>
 			<span><i class="car"></i>Car</span>
+			{#if energy.chargeToday.length > 0}<span><i class="charge"></i>Car battery, right scale</span>{/if}
 			{#if rates}
 				<span><i class="off-peak"></i>Off-peak, {formatPence(rates.offPeak)}</span>
 				<span><i class="peak"></i>Peak, {formatPence(rates.peak)}</span>
@@ -343,6 +353,12 @@
 	}
 	i.house {
 		background: var(--house);
+	}
+	/* The charge line's key: a short stroke of the line's own ink, not a swatch. */
+	i.charge {
+		height: 4px;
+		border-radius: 2px;
+		background: var(--ink);
 	}
 	i.car {
 		background: var(--car);

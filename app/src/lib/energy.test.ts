@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
 	bandAt,
 	bestStart,
+	batteryText,
+	chargeLine,
 	cheapNow,
 	cheapTimes,
 	formatKw,
@@ -212,5 +214,59 @@ describe('formatting', () => {
 		expect(formatLength(2)).toBe('1 hour');
 		expect(formatLength(3)).toBe('1½ hours');
 		expect(formatLength(6)).toBe('3 hours');
+	});
+});
+
+describe('chargeLine', () => {
+	const reading = (time: string, percent: number) => ({ at: at(time).toISOString(), percent });
+
+	it('places readings across the day, from 0 at midnight', () => {
+		expect(chargeLine([reading('00:00', 52), reading('00:30', 56)], '2026-10-28')).toEqual([
+			[
+				{ x: 0, percent: 52 },
+				{ x: 1 / 48, percent: 56 }
+			]
+		]);
+	});
+
+	it('breaks the line where the car was unplugged for a while, and keeps a lone reading', () => {
+		const runs = chargeLine([reading('01:00', 50), reading('01:10', 52), reading('18:00', 70)], '2026-10-28');
+		expect(runs.map((r) => r.map((p) => p.percent))).toEqual([[50, 52], [70]]);
+	});
+
+	it('leaves out other days, sorts the readings, and keeps the charge within 0 to 100', () => {
+		const runs = chargeLine(
+			[reading('02:10', 104), { at: '2026-10-27T23:50:00Z', percent: 40 }, reading('02:00', 60)],
+			'2026-10-28'
+		);
+		expect(runs.map((r) => r.map((p) => p.percent))).toEqual([[60, 100]]);
+	});
+
+	it('measures across the whole day when the clocks go back', () => {
+		// 25 October 2026 is 25 hours long; 12:00 UTC is 13 hours in.
+		const runs = chargeLine([{ at: '2026-10-25T12:00:00Z', percent: 50 }], '2026-10-25');
+		expect(runs[0]?.[0]?.x).toBeCloseTo(13 / 25);
+	});
+});
+
+describe('batteryText', () => {
+	const charge = { percent: 64.4, at: at('08:10').toISOString(), limit: 80 };
+
+	it('gives the charge, and where charging stops while it charges', () => {
+		expect(batteryText('charging', charge, at('08:15'))).toBe('Battery 64%, up to 80%');
+		expect(batteryText('plugged', charge, at('08:15'))).toBe('Battery 64%');
+	});
+
+	it('says when an old reading is from', () => {
+		expect(batteryText('plugged', charge, at('09:00'))).toBe('Battery 64% at 08:10');
+	});
+
+	it("is null when the car's unplugged, or there's no reading", () => {
+		expect(batteryText('unplugged', charge, at('08:15'))).toBeNull();
+		expect(batteryText('charging', null, at('08:15'))).toBeNull();
+	});
+
+	it("doesn't say where it stops once it's there", () => {
+		expect(batteryText('charging', { ...charge, percent: 80 }, at('08:15'))).toBe('Battery 80%');
 	});
 });
