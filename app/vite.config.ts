@@ -12,8 +12,9 @@ export default defineConfig({
 
 			// A Node server, which is what runs on the Pi: `node build`.
 			adapter: adapter(),
-			// The release's version, set by CI (see scripts/release.mjs). Without it, the time of the build.
-			version: process.env.HUB_VERSION ? { name: process.env.HUB_VERSION } : undefined,
+			// The release's version, set by CI (see scripts/release.mjs). Without it, the time of the build. The
+			// screen asks for it every minute, and reloads when it changes, once no one's using the Hub.
+			version: { ...(process.env.HUB_VERSION && { name: process.env.HUB_VERSION }), pollInterval: 60_000 },
 			// Where a release is reached: http://localhost:3000 on the Pi, set by CI. adapter-node 6 doesn't read
 			// ORIGIN at runtime, and without this it assumes https, so Google's sign-in address is wrong and
 			// SvelteKit refuses the Hub's own forms as cross-site. Unset in development and the e2e tests,
