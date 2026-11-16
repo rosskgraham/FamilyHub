@@ -24,6 +24,14 @@ _Avoid_: All, family, shared
 The wall-mounted touchscreen in the kitchen, and the product as a whole.
 _Avoid_: Screen, display, dashboard, tablet
 
+**Family app**:
+The Household's own app on their phones, installed from Chrome rather than an app store, where each Member signs in as themselves to use the Shopping list and To-dos. Planned ([ADR 0010](docs/adr/0010-shared-lists-in-an-azure-backend-with-an-installable-family-app.md)).
+_Avoid_: Phone app, mobile app, PWA
+
+**Backend**:
+The Hub's own service in Azure that holds the Shopping list and To-dos for the Family app and the Hub. Planned ([ADR 0010](docs/adr/0010-shared-lists-in-an-azure-backend-with-an-installable-family-app.md)).
+_Avoid_: Server (the Hub's server on the Pi), cloud, API
+
 **Section**:
 One of the Hub's top-level areas, each for one job: Calendar, Shopping, Chores, Watch, Energy or To-dos.
 _Avoid_: App, tab, page, mode, screen
