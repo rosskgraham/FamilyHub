@@ -14,6 +14,6 @@ The Hub becomes one more client. It keeps its own copy in SQLite (ADR 0006), so 
 - **Microsoft To Do or Todoist:** shared lists across personal accounts and a ready-made app, but someone else's app, model and limits.
 - **Lists the Hub owns on the Pi, with a phone web app:** no cloud, but phones away from home would need a way in to the Pi.
 - **A React Native (Expo) app:** installed from an APK or Google Play. The web app needs neither, updates itself, and shares the Hub's SvelteKit.
-- **Azure SQL Database:** the engine used at work, but its free serverless offer is about 55 hours awake a month and takes up to a minute to wake, and the always-on Basic tier isn't free.
-- **Azure Database for PostgreSQL:** free only for a new account's first year. Free Postgres outside Azure would take the data out of the Bicep setup.
+- **Azure SQL Database:** the engine used at work, but its free offer is about 55 hours awake a month at the smallest size, staying awake at least 15 minutes after each use, and the always-on Basic tier costs about $5 a month.
+- **Azure Database for PostgreSQL:** free only for a new Azure free account's first 12 months. Free Postgres outside Azure would take the data out of the Bicep setup.
 - **A TypeScript backend:** would share merge and repeat rules with the Hub and the app, but Python was chosen.

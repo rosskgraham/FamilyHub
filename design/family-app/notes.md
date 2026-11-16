@@ -37,15 +37,15 @@ This is the interesting path on purpose. Simpler ones are listed under Considere
                                    └──────────────────────────────┘
 ```
 
-| Part | Proposal | Free allowance (to check against current pricing) |
+| Part | Proposal | Free allowance (checked 16 November 2026) |
 |---|---|---|
-| The app's files | Azure Static Web Apps, free tier, with free HTTPS, which installable web apps need | Free tier |
-| API | Python, FastAPI and Pydantic, in a container on Azure Container Apps, scaling to zero | Monthly free grant of vCPU-seconds, memory and requests |
-| Container images | GitHub Container Registry, as the repo is public | Free for public images. Azure Container Registry has no free tier |
-| Data | Cosmos DB for NoSQL, free tier, read with `azure-cosmos` | 1000 RU/s and 25 GB, one free account per subscription, for good |
-| Live updates | Azure Web PubSub, free tier: the server tells clients something changed, and they fetch it | Free tier caps connections and messages a day, enough for a family |
+| The app's files | Azure Static Web Apps, free tier, with free HTTPS, which installable web apps need | Free plan: 100 GB a month of bandwidth with no overage, 250 MB per app, 10 apps per subscription. Its own sign-in only offers preconfigured providers, not Google, which is why the app signs in with MSAL instead |
+| API | Python, FastAPI and Pydantic, in a container on Azure Container Apps, scaling to zero | 180,000 vCPU-seconds, 360,000 GiB-seconds and 2 million requests a month, per subscription. A copy kept running between requests is billed at a lower idle rate |
+| Container images | GitHub Container Registry, as the repo is public | Storage and bandwidth "currently free", with at least a month's notice of any change. Azure Container Registry has no free tier |
+| Data | Cosmos DB for NoSQL, free tier, read with `azure-cosmos` | 1000 RU/s and 25 GB for the account's lifetime, one free account per subscription, opted into when it's created. Serverless accounts aren't eligible, so it uses provisioned throughput, shared across the database's containers |
+| Live updates | Azure Web PubSub, free tier: the server tells clients something changed, and they fetch it | 20 concurrent connections and 20,000 messages a day, counting only messages it sends out. Each open app and the Hub is one connection |
 | Notifications | Web Push, sent by the API with `pywebpush` | Free: no Firebase or Notification Hubs |
-| Sign-in | Microsoft Entra External ID, with Google as the way in, so each Member uses their own Google account. MSAL in the app | Free up to a monthly number of users |
+| Sign-in | Microsoft Entra External ID, with Google as the way in, so each Member uses their own Google account. MSAL in the app | The first 50,000 monthly active users. Google sign-in needs only a free Google Cloud client |
 | Telemetry | Application Insights, as the Hub already uses ([ADR 0005](../../docs/adr/0005-telemetry-via-otel-collector-to-app-insights.md)) | Inside the existing daily cap |
 | Infrastructure | Bicep in `infra/`, deployed by the Azure DevOps pipeline ([ADR 0008](../../docs/adr/0008-azure-resources-from-bicep-through-azure-devops.md)) | — |
 
@@ -73,7 +73,7 @@ Every part stays on a free tier, as ADR 0008 requires. The API and the database 
 - **The API scales to zero.** After about 5 minutes with no requests, Container Apps stops it. The next request waits for a container and Python to start: typically a few seconds, more for a large image. So after a quiet spell, a change can take several seconds to reach the other devices, instead of about one. Cosmos DB and Web PubSub are always on.
 - **The Hub doesn't poll often**, or the API would never scale to zero. It relies on live updates, and catches up now and then.
 - **The image is kept small**, and the app starts quickly, so cold starts stay short. Application Insights measures them.
-- **If the delay is annoying in practice**, a schedule can keep one copy of the API running in waking hours (about 06:30 to 22:00, matching the Hub's Sleep). That's one Bicep setting, and costs a little beyond the free grant, roughly £2 a month, so it needs Ross's approval.
+- **If the delay is annoying in practice**, a schedule can keep one copy of the API running in waking hours (about 06:30 to 22:00, matching the Hub's Sleep). That's one Bicep setting, and costs a little beyond the free grant, so it needs Ross's approval. With the smallest copy (0.25 vCPU, 0.5 GiB) that's roughly $2 to $3.50 a month, or $4 to $6.50 always on. The range is because sources disagree on the idle vCPU rate ($0.000003 or $0.000008 a second). Memory is $0.000003 a GiB-second. Check the pricing page in the region before approving.
 
 ## Repeats
 
@@ -118,8 +118,8 @@ Later, if wanted: Chores on the children's phones, the Week view on phones, and 
 - **Microsoft To Do or Todoist:** shared lists across personal accounts and a ready-made app, but a third party's app, model and limits.
 - **Lists the Hub owns on the Pi, with a phone web app:** no cloud, but phones away from home would need to reach the Pi (Tailscale or Cloudflare Tunnel).
 - **A React Native (Expo) app:** a store-style app, installed from an APK or Google Play. An installable web app needs neither, updates itself, and shares the Hub's SvelteKit code.
-- **Azure SQL Database:** the same engine as at work. Its free serverless offer gives about 55 hours awake a month at its smallest size, which a family waking it several times a day could use up within a month, and it takes up to about a minute to wake. The Basic tier is always on but costs roughly £4 a month.
-- **Azure Database for PostgreSQL:** free only for a new Azure account's first 12 months, then roughly £10 to £12 a month.
+- **Azure SQL Database:** the same engine as at work. Its free offer gives each database 100,000 vCore-seconds, 32 GB of data and 32 GB of backups a month, for the subscription's lifetime. Serverless runs at least 0.5 vCores while awake, so that's about 55 hours awake a month, and it stays awake at least 15 minutes after each use (60 by default). A family waking it several times a day could use that up within a month, and then it pauses until the 1st unless charges are allowed. The Basic tier (5 DTU, 2 GB) is always on, for about $5 a month.
+- **Azure Database for PostgreSQL:** free only with a new Azure free account, for 12 months: 750 hours a month of the Burstable B1MS server and 32 GB. After that it's billed by the hour, the most of any option here.
 - **Postgres outside Azure (Neon, Supabase):** free tiers, but the data would leave Azure and the Bicep setup.
 - **A TypeScript backend:** would share merge and repeat rules with the Hub and the app. Python was chosen.
 - **Azure Functions instead of Container Apps:** also scales to zero, but a long-lived FastAPI service is easier to run and test locally the same way it runs in Azure.
