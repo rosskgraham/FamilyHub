@@ -183,7 +183,7 @@ export const palettes: Record<Theme, Palette> = {
 		plugged: '#F5B400',
 		binBlue: '#7FA8FF',
 		binGrey: '#A6B0BF',
-		binBrown: '#C98F55',
+		binBrown: '#9A7254',
 		binPurple: '#B99BFF',
 		cake: '#FF85B4',
 		flame: '#FFB547',

@@ -5,8 +5,7 @@
 		appliances,
 		bandAt,
 		bestStart,
-		batteryText,
-		carText,
+		carLine,
 		cheapNow,
 		formatKw,
 		formatKwh,
@@ -73,9 +72,7 @@
 			<div class="eyebrow">Using now</div>
 			{#if energy.live}
 				<div class="big tabular">{formatKw(energy.live.watts)}</div>
-				<div class="sub">{carText[energy.live.car]}</div>
-				{@const battery = batteryText(energy.live.car, energy.charge, clock.now)}
-				{#if battery}<div class="sub tabular">{battery}</div>{/if}
+				<div class="sub">{carLine(energy.live.car, energy.charge, clock.now)}</div>
 			{:else}
 				<div class="none">Not reporting</div>
 				{#if energy.usageStatus.kind === 'stale' && energy.usageStatus.updatedAt}

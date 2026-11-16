@@ -27,6 +27,7 @@ export const load: PageServerLoad = async () => {
 			rates: energy.tariff?.rates ?? null,
 			slots: energy.slots,
 			live: energy.live,
+			charge: energy.charge,
 			today: energy.today,
 			needsRoss: energy.needsRoss
 		}
