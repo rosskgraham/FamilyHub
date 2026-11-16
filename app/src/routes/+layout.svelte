@@ -10,12 +10,12 @@
 	import NavBar from '#lib/components/NavBar.svelte';
 	import Sleep from '#lib/components/Sleep.svelte';
 	import { clock } from '#lib/clock.svelte.ts';
-	import { returnsToToday } from '#lib/idle.ts';
+	import { reloadsForRelease, returnsToToday } from '#lib/idle.ts';
 	import { isAsleep, sleepPalette } from '#lib/sleep.ts';
 	import { cssVariables, palettes } from '#lib/theme.ts';
 	import { browser } from '$app/env';
 	import { goto, invalidateAll } from '$app/navigation';
-	import { page } from '$app/state';
+	import { page, updated } from '$app/state';
 	import { onMount } from 'svelte';
 	import type { LayoutProps } from './$types';
 
@@ -45,6 +45,12 @@
 		if (!browser || !returnsToToday(page.url.pathname, clock.now, lastTouch ?? loadedAt)) return;
 		const theme = page.url.searchParams.get('theme');
 		goto(theme ? `/?theme=${theme}` : '/');
+	});
+
+	// The Pi installs a new release by itself (ADR 0004). Once the Hub's been left alone, load its code too.
+	$effect(() => {
+		if (browser && reloadsForRelease(updated.current, page.url.pathname, clock.now, lastTouch ?? loadedAt))
+			location.reload();
 	});
 
 	// Check for changes every minute.

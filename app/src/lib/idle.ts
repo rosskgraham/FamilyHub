@@ -7,3 +7,13 @@ export function returnsToToday(path: string, now: Date, lastTouch: Date): boolea
 	if (path === '/' || path.startsWith('/setup') || path.startsWith('/auth')) return false;
 	return now.getTime() - lastTouch.getTime() >= IDLE_MS;
 }
+
+/**
+ * Whether to reload for a new release. The screen's browser runs for days, so without this it keeps the code it
+ * opened with, and new data reaches old components. It waits until the Hub's been left alone, so a reload never
+ * interrupts someone, and never reloads setup.
+ */
+export function reloadsForRelease(updated: boolean, path: string, now: Date, lastTouch: Date): boolean {
+	if (!updated || path.startsWith('/setup') || path.startsWith('/auth')) return false;
+	return now.getTime() - lastTouch.getTime() >= IDLE_MS;
+}
