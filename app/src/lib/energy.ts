@@ -237,3 +237,61 @@ export const carText: Record<CarState, string> = {
 	plugged: 'Car plugged in, not charging',
 	charging: 'Car charging'
 };
+
+/** The car's battery, as Octopus last heard from the car. */
+export interface Charge {
+	/** 0 to 100. */
+	percent: number;
+	/** When the car reported it, as an ISO instant. */
+	at: string;
+	/** Where charging stops, 0 to 100, or null if Octopus doesn't say. */
+	limit: number | null;
+}
+
+/** One reading of the car's charge, kept while it was plugged in, for the line over the usage chart. */
+export interface ChargeReading {
+	at: string;
+	percent: number;
+}
+
+/** Readings further apart than this belong to separate plug-ins, so the line breaks between them. */
+export const CHARGE_GAP_MS = 45 * 60_000;
+/** A charge reading older than this says when it's from, rather than pass as current. */
+export const CHARGE_STALE_MS = 30 * 60_000;
+
+/** A point on the charge line: across the day from 0 to 1, and the charge from 0 to 100. */
+export interface ChargePoint {
+	x: number;
+	percent: number;
+}
+
+/**
+ * The day's readings as runs of points across the day, one run for each time the car was plugged in. A reading on its
+ * own is a run of one, so it still shows.
+ */
+export function chargeLine(readings: ChargeReading[], day: DayKey): ChargePoint[][] {
+	const start = ukTime(day, '00:00').getTime();
+	const length = ukTime(addDays(day, 1), '00:00').getTime() - start;
+	const runs: ChargePoint[][] = [];
+	let last = -Infinity;
+	for (const r of [...readings].sort((a, b) => a.at.localeCompare(b.at))) {
+		const t = Date.parse(r.at);
+		if (t < start || t >= start + length) continue;
+		if (t - last > CHARGE_GAP_MS) runs.push([]);
+		runs.at(-1)!.push({ x: (t - start) / length, percent: Math.min(100, Math.max(0, r.percent)) });
+		last = t;
+	}
+	return runs;
+}
+
+/**
+ * The Using now tile's line about the battery while the car's plugged in: "Battery 80%", "Battery 64%, up to 80%" while
+ * it charges, or "Battery 80% at 23:01" when the reading is old. Null when unplugged or there's no reading.
+ */
+export function batteryText(car: CarState, charge: Charge | null, at: Date): string | null {
+	if (car === 'unplugged' || !charge) return null;
+	const old = at.getTime() - Date.parse(charge.at) > CHARGE_STALE_MS;
+	const when = old ? ` at ${formatTime(new Date(charge.at))}` : '';
+	const upTo = car === 'charging' && charge.limit !== null && charge.limit > charge.percent;
+	return `Battery ${Math.round(charge.percent)}%${when}${upTo ? `, up to ${charge.limit}%` : ''}`;
+}

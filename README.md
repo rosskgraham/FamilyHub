@@ -53,9 +53,9 @@ The plan is in [docs/requirements.md](docs/requirements.md). Progress so far:
 | ✅ | Overnight sleep, and a Day and Evening theme | Done, on a PC |
 | ✅ | Offline resilience | Done, on a PC |
 | ✅ | A versioned release built on every merge | Done |
-| ✅ | Home energy: cheap and peak times, when to run the dishwasher, and the car’s share ([design](design/mockups/energy/notes.md)) | Done, on a PC |
+| ✅ | Home energy: cheap and peak times, when to run the dishwasher, the car’s share, and its charge ([design](design/mockups/energy/notes.md)) | Done, on a PC |
 | ✅ | To-dos from Google Tasks, one-off and repeating ([design](design/mockups/todos/notes.md)) | Done, on a PC |
-| ⬜ | A Raspberry Pi set up from scripts, showing the Hub full-screen | In progress: set up from scripts, pulling releases and full-screen; settings, secrets and Sleep to come |
+| ⬜ | A Raspberry Pi set up from scripts, showing the Hub full-screen | In progress: set up from scripts, pulling its own releases, full-screen, with its settings and secrets from Key Vault. Still to come: an on-screen keyboard, and the screen powering down for Sleep |
 | ⬜ | On the kitchen wall: **v1** | |
 | ⬜ | Recipe videos from a YouTube playlist | After v1 |
 | ⬜ | A motion sensor that wakes it when someone walks in | After v1 |
@@ -68,11 +68,11 @@ v1 is done when it's been on the wall for two weeks and nobody goes back to chec
 
 - **App:** [SvelteKit](https://svelte.dev/docs/kit) with strict TypeScript, providing both the screen and a small server behind it, in [`app/`](app/README.md).
 - **Data:** Google Calendar (read-only) and Google Tasks, signed in as the Household's one Google account. Weather from Open-Meteo.
-- **Hardware:** a Raspberry Pi 5 with a 1080p touchscreen, provisionally a 21.5″ Waveshare (not bought yet), running the app full-screen in a browser ([why a Pi](docs/adr/0001-web-app-on-raspberry-pi.md)).
+- **Hardware:** a Raspberry Pi 5 with a 1080p touchscreen, provisionally a 21.5″ Waveshare (not bought yet), running the app full-screen in Chromium inside cage, with no desktop behind it ([why a Pi](docs/adr/0001-web-app-on-raspberry-pi.md), [the kiosk](docs/adr/0009-kiosk-is-chromium-in-cage.md)).
 - **Hosting:** none. Everything runs on the Pi and nothing is reachable from the internet ([ADR 0002](docs/adr/0002-everything-runs-on-the-pi.md)). The Pi pulls its own releases and rolls back if one is unhealthy ([ADR 0004](docs/adr/0004-pi-pulls-releases.md)).
 - **Data:** Chores, the Hub's only data of its own, live in SQLite on the Pi, backed up nightly to Google Drive ([ADR 0006](docs/adr/0006-hub-owned-data-in-sqlite.md)).
 - **Monitoring:** OpenTelemetry to Azure Application Insights, with anything personal stripped before it leaves the house ([ADR 0005](docs/adr/0005-telemetry-via-otel-collector-to-app-insights.md)).
-- **Azure:** the Key Vault and Application Insights are built from Bicep by an Azure DevOps pipeline, on free tiers unless something billable has been approved ([ADR 0008](docs/adr/0008-azure-resources-from-bicep-through-azure-devops.md)).
+- **Azure:** the Key Vault and Application Insights are built from Bicep by an Azure DevOps pipeline, resource group included, in FamilyHub's own subscription, on free tiers unless something billable has been approved ([ADR 0008](docs/adr/0008-azure-resources-from-bicep-through-azure-devops.md)).
 
 ## Run it yourself
 
