@@ -6,3 +6,5 @@ The Household kept its shopping list in Google Keep, but Keep's API is only avai
 
 - **A list the Hub owns, with its own phone web app:** the most build work, and it would mean the Hub must be reachable from outside the house. Still an option if Tasks falls short.
 - **Todoist:** a polished shared list with an API, but a new app for everyone, when the Household already lives in one Google account.
+
+Replaced by [ADR 0010](0010-shared-lists-in-an-azure-backend-with-an-installable-family-app.md) once its backend is built: the Shopping list and To-dos move to a backend in Azure, with a family app on the phones.
