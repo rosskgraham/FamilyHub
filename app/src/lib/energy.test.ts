@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	bandAt,
 	bestStart,
-	batteryText,
+	carLine,
 	chargeLine,
 	cheapNow,
 	cheapTimes,
@@ -249,24 +249,26 @@ describe('chargeLine', () => {
 	});
 });
 
-describe('batteryText', () => {
+describe('carLine', () => {
 	const charge = { percent: 64.4, at: at('08:10').toISOString(), limit: 80 };
 
 	it('gives the charge, and where charging stops while it charges', () => {
-		expect(batteryText('charging', charge, at('08:15'))).toBe('Battery 64%, up to 80%');
-		expect(batteryText('plugged', charge, at('08:15'))).toBe('Battery 64%');
+		expect(carLine('charging', charge, at('08:15'))).toBe('Charging · 64%, up to 80%');
+		expect(carLine('plugged', charge, at('08:15'))).toBe('Plugged in · 64%');
 	});
 
-	it('says when an old reading is from', () => {
-		expect(batteryText('plugged', charge, at('09:00'))).toBe('Battery 64% at 08:10');
+	it('says when an old reading is from, leaving out where it stops to keep to one line', () => {
+		expect(carLine('plugged', charge, at('09:00'))).toBe('Plugged in · 64% at 08:10');
+		expect(carLine('charging', charge, at('09:00'))).toBe('Charging · 64% at 08:10');
 	});
 
-	it("is null when the car's unplugged, or there's no reading", () => {
-		expect(batteryText('unplugged', charge, at('08:15'))).toBeNull();
-		expect(batteryText('charging', null, at('08:15'))).toBeNull();
+	it("says just the car's state when it's unplugged, or there's no reading", () => {
+		expect(carLine('unplugged', charge, at('08:15'))).toBe('Car not plugged in');
+		expect(carLine('charging', null, at('08:15'))).toBe('Car charging');
+		expect(carLine('plugged', null, at('08:15'))).toBe('Car plugged in, not charging');
 	});
 
 	it("doesn't say where it stops once it's there", () => {
-		expect(batteryText('charging', { ...charge, percent: 80 }, at('08:15'))).toBe('Battery 80%');
+		expect(carLine('charging', { ...charge, percent: 80 }, at('08:15'))).toBe('Charging · 80%');
 	});
 });

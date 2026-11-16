@@ -285,13 +285,16 @@ export function chargeLine(readings: ChargeReading[], day: DayKey): ChargePoint[
 }
 
 /**
- * The Using now tile's line about the battery while the car's plugged in: "Battery 80%", "Battery 64%, up to 80%" while
- * it charges, or "Battery 80% at 23:01" when the reading is old. Null when unplugged or there's no reading.
+ * The Using now tile's line about the car, with its battery while it's plugged in: "Plugged in · 80%",
+ * "Charging · 64%, up to 80%", or "Plugged in · 80% at 23:01" when the reading is old. One line, as the tile only
+ * has room for three, so an old reading leaves out where charging stops. carText's when unplugged or there's no reading.
  */
-export function batteryText(car: CarState, charge: Charge | null, at: Date): string | null {
-	if (car === 'unplugged' || !charge) return null;
+export function carLine(car: CarState, charge: Charge | null, at: Date): string {
+	if (car === 'unplugged' || !charge) return carText[car];
 	const old = at.getTime() - Date.parse(charge.at) > CHARGE_STALE_MS;
-	const when = old ? ` at ${formatTime(new Date(charge.at))}` : '';
+	const state = car === 'charging' ? 'Charging' : 'Plugged in';
+	const percent = `${Math.round(charge.percent)}%`;
+	if (old) return `${state} · ${percent} at ${formatTime(new Date(charge.at))}`;
 	const upTo = car === 'charging' && charge.limit !== null && charge.limit > charge.percent;
-	return `Battery ${Math.round(charge.percent)}%${when}${upTo ? `, up to ${charge.limit}%` : ''}`;
+	return `${state} · ${percent}${upTo ? `, up to ${charge.limit}%` : ''}`;
 }

@@ -5,6 +5,7 @@
 		formatKw,
 		formatPounds,
 		totals,
+		type Charge,
 		type HalfHourUse,
 		type Live,
 		type Rates,
@@ -16,12 +17,15 @@
 		rates,
 		slots,
 		live,
+		charge,
 		today,
 		needsRoss
 	}: {
 		rates: Rates | null;
 		slots: Slot[];
 		live: Live | null;
+		/** The car's battery, as Octopus last heard it. */
+		charge: Charge | null;
 		today: HalfHourUse[];
 		/** When each sync started failing, once it's been an hour. */
 		needsRoss: { octopus: string | null; zappi: string | null };
@@ -35,8 +39,16 @@
 	const spent = $derived(rates && totals(today, rates, slots));
 	const plugged = $derived(live !== null && live.car !== 'unplugged');
 	const charging = $derived(live?.car === 'charging');
+	// The battery shows beside the car only while it's plugged in, as on the Energy Section.
+	const percent = $derived(plugged && charge ? `${Math.round(charge.percent)}%` : null);
 	const carLabel = $derived(
-		!live ? 'Car charger not reporting' : charging ? 'Car charging' : plugged ? 'Car plugged in' : 'Car not plugged in'
+		(!live
+			? 'Car charger not reporting'
+			: charging
+				? 'Car charging'
+				: plugged
+					? 'Car plugged in'
+					: 'Car not plugged in') + (percent ? `, battery ${percent}` : '')
 	);
 	const time = (iso: string) => formatTime(new Date(iso));
 	// A sync failing for an hour says so here, where everyone looks, instead of the slot.
@@ -55,7 +67,7 @@ and a Smart-charging slot when there is one. Opens the Energy Section. -->
 	<div class="head">
 		<span class="title">Energy</span>
 		{#if live}
-			<!-- The car: grey when it's unplugged, amber when it's plugged in, with a pulsing bolt while it charges. -->
+			<!-- The car: grey when it's unplugged, amber when it's plugged in, with a pulsing bolt while it charges, and its battery beside it while plugged in. -->
 			<span class="car" class:plugged role="img" aria-label={carLabel} title={carLabel}>
 				{#if charging}
 					<svg class="bolt" width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -81,6 +93,7 @@ and a Smart-charging slot when there is one. Opens the Energy Section. -->
 						d="M19 18v2"
 					/>
 				</svg>
+				{#if percent}<span class="percent tabular" aria-hidden="true">{percent}</span>{/if}
 			</span>
 		{/if}
 		<svg
@@ -148,6 +161,11 @@ and a Smart-charging slot when there is one. Opens the Energy Section. -->
 	}
 	.car.plugged {
 		color: var(--plugged);
+	}
+	.percent {
+		margin-left: 6px;
+		font-size: 28px;
+		font-weight: 700;
 	}
 	.bolt {
 		animation: flow 1.6s ease-in-out infinite;
