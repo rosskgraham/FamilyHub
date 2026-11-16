@@ -16,6 +16,7 @@ This is the interesting path on purpose. Simpler ones are listed under Considere
 - **The family app is an installable web app** (16 November 2026), not a store app: open its address in Chrome and tap Install. No Google Play, no APKs. It updates itself.
 - **It's built with SvelteKit**, like the Hub, so it can share the Hub's components, colours and fonts.
 - **The backend is Python** (16 November 2026).
+- **It runs on App Service's Free plan (F1)** (16 November 2026), not Container Apps. F1 counts the CPU time used, not the time it's running, so the Hub can keep it warm for free, and changes reach other devices in about a second. Container Apps would scale to zero for free, but counts every second it runs, so keeping it warm costs money (see Considered Options).
 - **Data is in Cosmos DB, on its free tier** (16 November 2026). Azure SQL's free offer and Azure's Postgres don't fit a free tier (see Considered Options).
 - **Every Member gets an account, the children included** (16 November 2026). The children have Google accounts on devices of their own, so everyone signs in as themselves.
 - **Children can do everything grown-ups can** on the Shopping list and To-dos (16 November 2026).
@@ -28,8 +29,8 @@ This is the interesting path on purpose. Simpler ones are listed under Considere
 ```
  Phones (installed web app)          Azure (Bicep, ADR 0008)                     Pi (the Hub)
  ┌──────────────────┐   HTTPS +    ┌──────────────────────────────┐  outbound   ┌──────────────────┐
- │ IndexedDB copy,  │◄──realtime──►│ API on Container Apps        │◄──only────► │ SQLite copy      │
- │ service worker:  │              │ (Python, scales to zero)     │             │ keeps working    │
+ │ IndexedDB copy,  │◄──realtime──►│ API on App Service (F1)      │◄──only────► │ SQLite copy      │
+ │ service worker:  │              │ (Python, kept warm by Hub)   │             │ keeps working    │
  │ opens and works  │              │ Cosmos DB free tier          │             │ when internet's  │
  │ offline in the   │              │ Web PubSub (live updates)    │             │ down; still no   │
  │ shop             │◄──Web Push───│ Entra External ID (sign-in)  │             │ open port        │
@@ -40,8 +41,7 @@ This is the interesting path on purpose. Simpler ones are listed under Considere
 | Part | Proposal | Free allowance (checked 16 November 2026) |
 |---|---|---|
 | The app's files | Azure Static Web Apps, free tier, with free HTTPS, which installable web apps need | Free plan: 100 GB a month of bandwidth with no overage, 250 MB per app, 10 apps per subscription. Its own sign-in only offers preconfigured providers, not Google, which is why the app signs in with MSAL instead |
-| API | Python, FastAPI and Pydantic, in a container on Azure Container Apps, scaling to zero | 180,000 vCPU-seconds, 360,000 GiB-seconds and 2 million requests a month, per subscription. A copy kept running between requests is billed at a lower idle rate |
-| Container images | GitHub Container Registry, as the repo is public | Storage and bandwidth "currently free", with at least a month's notice of any change. Azure Container Registry has no free tier |
+| API | Python, FastAPI and Pydantic, deployed as code to a Linux web app on App Service's Free plan (F1), so there's no container image or registry | 60 CPU minutes a day, 1 GB of memory and 1 GB of storage, on shared machines. No Always On, so it shuts down after a while with no requests. Not supported for production: no SLA, no scaling out, no staging slots. Past the daily CPU minutes, it's reported to return errors until midnight UTC |
 | Data | Cosmos DB for NoSQL, free tier, read with `azure-cosmos` | 1000 RU/s and 25 GB for the account's lifetime, one free account per subscription, opted into when it's created. Serverless accounts aren't eligible, so it uses provisioned throughput, shared across the database's containers |
 | Live updates | Azure Web PubSub, free tier: the server tells clients something changed, and they fetch it | 20 concurrent connections and 20,000 messages a day, counting only messages it sends out. Each open app and the Hub is one connection |
 | Notifications | Web Push, sent by the API with `pywebpush` | Free: no Firebase or Notification Hubs |
@@ -49,7 +49,7 @@ This is the interesting path on purpose. Simpler ones are listed under Considere
 | Telemetry | Application Insights, as the Hub already uses ([ADR 0005](../../docs/adr/0005-telemetry-via-otel-collector-to-app-insights.md)) | Inside the existing daily cap |
 | Infrastructure | Bicep in `infra/`, deployed by the Azure DevOps pipeline ([ADR 0008](../../docs/adr/0008-azure-resources-from-bicep-through-azure-devops.md)) | — |
 
-Every part stays on a free tier, as ADR 0008 requires. The API and the database sign in to each other with the container's managed identity, so there's no password anywhere.
+Every part stays on a free tier, as ADR 0008 requires. The API signs in to the database and Web PubSub with the web app's managed identity, so there's no password anywhere.
 
 ## The family app
 
@@ -63,17 +63,26 @@ Every part stays on a free tier, as ADR 0008 requires. The API and the database 
 
 - **Every change is an operation** with an ID made on the device: add an item, tick it off, untick it, rename it, remove it. The device keeps it in a queue until the server confirms it, so sending it twice does no harm.
 - **The server applies operations in the order it receives them**, and keeps them in Cosmos DB with a sequence number. A client asks for "everything after number N", so catching up after a day offline is one request.
-- **Cosmos DB's change feed** gives every change as an ordered stream. It drives the "something changed" messages through Web PubSub.
+- **The API tells Web PubSub "something changed"** while it's handling the change, after saving it. Not Cosmos DB's change feed, which would need something running all the time to watch it.
 - **Conflicts are settled per field**, latest write wins, with two rules where that's wrong. Removing beats editing: an item removed at home doesn't come back because someone ticked it in the shop. And ticking off is kept apart from the item's text.
 - **Web PubSub only says "something changed"**, never the change itself, so a missed message costs nothing: the next catch-up gets it.
+
+One change, start to finish:
+
+1. A phone sends "ticked off milk" to the API.
+2. The API saves it in Cosmos DB, then tells Web PubSub the Shopping list changed.
+3. Web PubSub tells the Hub and any phones with the app open.
+4. Each asks the API for everything after the last change it has, and shows it.
+
+The Hub holds one connection open to Web PubSub, an always-on service of its own. It doesn't ask the API over and over. Connecting to Web PubSub needs an access token from the API, and the Hub's can be long-lived.
 
 ## Responsiveness
 
 - **Taps are instant everywhere.** Ticking off, adding or removing changes the device's own copy straight away, and the change goes to the server in the background.
-- **The API scales to zero.** After about 5 minutes with no requests, Container Apps stops it. The next request waits for a container and Python to start: typically a few seconds, more for a large image. So after a quiet spell, a change can take several seconds to reach the other devices, instead of about one. Cosmos DB and Web PubSub are always on.
-- **The Hub doesn't poll often**, or the API would never scale to zero. It relies on live updates, and catches up now and then.
-- **The image is kept small**, and the app starts quickly, so cold starts stay short. Application Insights measures them.
-- **If the delay is annoying in practice**, a schedule can keep one copy of the API running in waking hours (about 06:30 to 22:00, matching the Hub's Sleep). That's one Bicep setting, and costs a little beyond the free grant, so it needs Ross's approval. With the smallest copy (0.25 vCPU, 0.5 GiB) that's roughly $2 to $3.50 a month, or $4 to $6.50 always on. The range is because sources disagree on the idle vCPU rate ($0.000003 or $0.000008 a second). Memory is $0.000003 a GiB-second. Check the pricing page in the region before approving.
+- **The Hub keeps the API warm.** F1 has no Always On, so a web app with no requests shuts down, and the next request waits for Python to start again: often 10 to 30 seconds (from experience, not a measured figure). So in waking hours the Hub catches up with the API every 10 to 15 minutes. That's also the safety net for a missed "something changed" message, and keeps the API running, so changes reach other devices in about a second.
+- **It costs almost nothing of the 60 CPU minutes.** F1 counts CPU time, not time running, and a catch-up with nothing new takes milliseconds. A family's changes add a little more. The real risk is a bug that loops, which could use up the day's minutes and leave the API returning errors until midnight UTC. Phones and the Hub carry on offline until it's back, and Application Insights shows the CPU used.
+- **It's left to shut down overnight**, while the Hub is asleep (22:00 to 06:30), so the first catch-up of the morning waits for it to start, before anyone's up.
+- **Cosmos DB and Web PubSub are always on.**
 
 ## Repeats
 
@@ -93,8 +102,8 @@ Ticking off or removing affects one occurrence, as now.
 
 ## Slices
 
-1. **Backend skeleton:** Bicep for Container Apps, Cosmos DB, Web PubSub and Static Web Apps; a FastAPI service with `/health`; images built in GitHub Actions; telemetry; sign-in with Entra External ID and Google.
-2. **The Shopping list in the backend:** its operations, log, change feed and live updates, with Python tests. Test data only.
+1. **Backend skeleton:** Bicep for the App Service plan and web app, Cosmos DB, Web PubSub and Static Web Apps; a FastAPI service with `/health`, deployed by the pipeline; telemetry; sign-in with Entra External ID and Google.
+2. **The Shopping list in the backend:** its operations, log and live updates, with Python tests. Test data only.
 3. **The family app, first version:** install, sign in, the Shopping list, offline queue, live updates.
 4. **The Hub on the backend:** a Shopping list client behind the same interface as the Google Tasks one, so the Shopping Section and Today card don't change.
 5. **The switch:** import the Household's list from Google Tasks once, then use the backend.
@@ -122,5 +131,6 @@ Later, if wanted: Chores on the children's phones, the Week view on phones, and 
 - **Azure Database for PostgreSQL:** free only with a new Azure free account, for 12 months: 750 hours a month of the Burstable B1MS server and 32 GB. After that it's billed by the hour, the most of any option here.
 - **Postgres outside Azure (Neon, Supabase):** free tiers, but the data would leave Azure and the Bicep setup.
 - **A TypeScript backend:** would share merge and repeat rules with the Hub and the app. Python was chosen.
-- **Azure Functions instead of Container Apps:** also scales to zero, but a long-lived FastAPI service is easier to run and test locally the same way it runs in Azure.
+- **Azure Container Apps:** containers, scaling to zero, with an SLA, and closer to how a real product would run. Its free grant each month (180,000 vCPU-seconds, 360,000 GiB-seconds, 2 million requests) is about 200 hours of the smallest copy (0.25 vCPU, 0.5 GiB), because it counts every second a copy runs. So it's free only if it scales to zero, and then a change waits a few seconds for it to start after a quiet spell. Kept running in waking hours it's roughly $2 to $3.50 a month, or $4 to $6.50 always on (sources disagree on the idle vCPU rate, $0.000003 or $0.000008 a second; memory is $0.000003 a GiB-second). Moving the FastAPI service there later is mostly a Bicep change.
+- **Azure Functions:** also scales to zero, but a long-lived FastAPI service is easier to run and test locally the same way it runs in Azure.
 - **Notification Hubs for notifications:** needed for a store app's push, but Web Push reaches an installed web app with nothing extra.
