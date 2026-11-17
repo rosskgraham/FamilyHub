@@ -44,7 +44,7 @@ This is the interesting path on purpose. Simpler ones are listed under Considere
 | The app's files | Azure Static Web Apps, free tier, with free HTTPS, which installable web apps need | Free plan: 100 GB a month of bandwidth with no overage, 250 MB per app, 10 apps per subscription. Its own sign-in only offers preconfigured providers, not Google, which is why the app signs in with MSAL instead |
 | API | Python, FastAPI and Pydantic, in a function app on Azure Functions Flex Consumption, with `AsgiFunctionApp` passing HTTP requests to FastAPI. Deployed as a zip package to the storage account, so there's no container image or registry. 512 MB instances, at most 1 instance (checked 17 November 2026) | 250,000 executions and 100,000 GB-seconds a month, per subscription. Each execution is billed as at least 1 second. About 9,000 to 10,000 executions a month is about 4% of the executions and 5% of the GB-seconds. Scales to zero when idle. The storage account it needs isn't in the grant: standard rates, pennies a month, approved |
 | Side jobs | A Storage queue on the function app's storage account, read by queue-triggered functions in the same app: Web Push, the Tasks import, timers | Counted in the same grant, plus the storage account's transactions |
-| Cost guard | A Cost Management budget that emails when spending passes a small monthly amount | Free |
+| Cost guard | A Cost Management budget of £5 a month that emails when it's passed (decided 17 November 2026). Spending is expected never to go past the storage account's pennies, so any alert means something is wrong | Free |
 | Data | Cosmos DB for NoSQL, free tier, read with `azure-cosmos` | 1000 RU/s and 25 GB for the account's lifetime, one free account per subscription, opted into when it's created. Serverless accounts aren't eligible, so it uses provisioned throughput, shared across the database's containers |
 | Live updates | Azure Web PubSub, free tier: the server tells clients something changed, and they fetch it | 20 concurrent connections and 20,000 messages a day, counting only messages it sends out. Each open app and the Hub is one connection |
 | Notifications | Web Push, sent by the API with `pywebpush` | Free: no Firebase or Notification Hubs |
@@ -119,7 +119,6 @@ Later, if wanted: Chores on the children's phones, the Week view on phones, and 
 ## Open questions
 
 - **Do the children's Google accounts allow "Sign in with Google" to other apps?** If they're supervised with Family Link, a parent may have to allow it in Family Link first. Check with one child's account before building sign-in.
-- **How big a monthly budget** should the cost alert be set at?
 - **What's worth a notification?** For example, a To-do due today, or "something was added to the Shopping list".
 - **Backups:** Cosmos DB's built-in periodic backup, or a nightly export to Google Drive like Chores (ADR 0006).
 - **What happens to the Google Tasks lists** after the switch: deleted, or left as a read-only record.
