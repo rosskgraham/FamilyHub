@@ -20,6 +20,16 @@ Then open <http://localhost:5173>. The screen is designed at 1920×1080 and scal
 
 Until it's set up, it shows sample Events (a typical week repeated for every week) and a sample Shopping list and sample To-dos kept in memory, which reset when the app restarts. The weather is a sample until home is set.
 
+### Or on the Pi's screen
+
+```
+npm run pi:dev
+```
+
+This runs the same dev server and shows it on the Pi's screen, so a saved change appears on the wall straight away, with no release. It asks for `hubadmin`'s sudo password. Ctrl+C puts the Hub back on the screen, as does losing the connection or restarting the Pi. The Hub keeps running on the Pi throughout, so nothing on it changes. The screen shows the PC's data, not the Pi's, and dev mode loads slowly, so judge speed on a release.
+
+It needs the Pi's SSH key in `C:\Users\<you>\.ssh` (copy it from Ubuntu if it was made there, as in [the Pi runbook](../docs/runbooks/pi-setup.md)). The Pi is `familyhub.local`, or `FAMILYHUB_PI_HOST` if that's set.
+
 ## Show the real Calendars, Shopping list and To-dos
 
 1. Follow [the Google Cloud runbook](../docs/runbooks/google-cloud-setup.md), and put `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `app/.env`.
