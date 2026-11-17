@@ -1,6 +1,7 @@
-// FamilyHub's Azure resources: a Key Vault for the setup scripts' secrets, and Log Analytics with
-// Application Insights for the Hub's telemetry (ADR 0005). Everything is on a free tier or inside a
-// free allowance, apart from Key Vault, which has no free tier and was approved at a few pence a year.
+// FamilyHub's Azure resources: a Key Vault for the setup scripts' secrets, Log Analytics with Application
+// Insights for the Hub's telemetry (ADR 0005), and the family app's backend (backend.bicep, ADR 0011).
+// Everything is on a free tier or inside a free allowance, apart from Key Vault, which has no free tier and was
+// approved at a few pence a year, and the backend's storage account, approved at pennies a month.
 // main.bicep deploys this into rg-familyhub, which it creates.
 
 targetScope = 'resourceGroup'
@@ -19,7 +20,8 @@ param dailyCapGb string = '0.15'
 @maxValue(31)
 param retentionDays int = 30
 
-// Key Vault names are global, so a short suffix from the resource group keeps this one unique.
+// Key Vault, function app and storage account names are global, so a short suffix from the resource group
+// keeps them unique.
 var suffix = take(uniqueString(resourceGroup().id), 6)
 var tags = {
   project: 'familyhub'
@@ -94,6 +96,17 @@ resource insightsConnectionString 'Microsoft.KeyVault/vaults/secrets@2026-05-15'
   }
 }
 
+module backend 'backend.bicep' = {
+  name: 'familyhub-backend'
+  params: {
+    location: location
+    suffix: suffix
+    appInsightsName: insights.name
+  }
+}
+
 output keyVaultName string = vault.name
 output keyVaultUri string = vault.properties.vaultUri
 output appInsightsName string = insights.name
+output functionAppName string = backend.outputs.functionAppName
+output apiUrl string = backend.outputs.apiUrl
