@@ -1,0 +1,22 @@
+# Git hooks, run by pre-commit (https://pre-commit.com) before each commit. Set up once per clone:
+#   uv tool install pre-commit
+#   pre-commit install
+#
+# Ruff runs through uv, so it's the version locked in backend/uv.lock: the same one CI runs, with the rules in
+# backend/pyproject.toml. A hook that fixes a file stops the commit; check the change, add it, and commit again.
+
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check (backend)
+        entry: uv run --project backend --frozen ruff check --fix --exit-non-zero-on-fix
+        language: system
+        types_or: [python, pyi]
+        files: ^backend/
+      - id: ruff-format
+        name: ruff format (backend)
+        entry: uv run --project backend --frozen ruff format
+        language: system
+        types_or: [python, pyi]
+        files: ^backend/

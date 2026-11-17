@@ -59,6 +59,28 @@ jobs:
       - name: Lint the setup scripts, run them twice, and check the result
         run: ansible/tests/run.sh
 
+  # The family app's backend (ADR 0011): ruff's lint and formatting, then the tests. A required check, so
+  # a pull request can't merge with lint errors.
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - name: Install, exactly as locked
+        run: uv sync --frozen --python 3.12
+      - name: Lint
+        run: uv run ruff check --output-format=github .
+      - name: Check formatting
+        run: uv run ruff format --check .
+      - name: Unit tests
+        run: uv run pytest
+
   # Every merge to main that passes the checks becomes a release the Pi can pull (ADR 0004).
   release:
     needs: check

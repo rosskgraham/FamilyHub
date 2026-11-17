@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+local.settings.json
+# Made from uv.lock when the pipeline packages the app.
+requirements.txt

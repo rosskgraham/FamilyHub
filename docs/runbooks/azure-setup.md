@@ -11,9 +11,12 @@ Do this signed in as Ross, with the Azure CLI on the PC (`az login`). It takes a
 | Key Vault | Standard. There's no free tier; about 2p per 10,000 reads | Under 1p a month |
 | Log Analytics workspace | Pay-as-you-go, with 5 GB a month free, capped at 0.15 GB a day | £0. Data past the cap is dropped, not charged |
 | Application Insights | Workspace-based, so it's billed through the workspace | £0 |
+| Function app (the family app's backend) | Flex Consumption, 512 MB, at most 1 instance. 250,000 executions and 100,000 GB-seconds a month are free | £0. About 5% of the free grant is expected |
+| Storage account (the function app's) | General-purpose v2, Standard LRS, Hot. No free tier | Pennies a month. Approved by Ross on 17 November 2026 ([ADR 0011](../adr/0011-backend-runs-on-functions-flex-consumption.md)) |
+| Cost Management budget | £5 a month, emailing when it's passed | £0 |
 | Azure DevOps | 1 free Microsoft-hosted parallel job (1,800 minutes a month) | £0 |
 
-Nothing else is added without Ross's approval. Alert rules have no free tier, so they come later, with their own approval.
+Nothing else is added without Ross's approval. Alert rules have no free tier, so they come later, with their own approval. The budget isn't an alert rule, and is free. Spending is expected never to go past the storage account's pennies, so its email means something is wrong.
 
 ## 1. Create FamilyHub's subscription
 
@@ -35,7 +38,7 @@ In the Azure DevOps project:
 
    This gives the connection **Contributor** on the `FamilyHub` subscription, with no secret to rotate. It can create the resource group, and can't reach any other subscription.
 
-2. Let the connection give out one role, and only that one: **Key Vault Secrets Officer**, which the deployment gives Ross on the vault. Find the connection's app ID under **Manage App registration**, then:
+2. Let the connection give out two roles, and only those: **Key Vault Secrets Officer**, which the deployment gives Ross on the vault, and **Storage Blob Data Owner**, which it gives the function app on its own storage account. Find the connection's app ID under **Manage App registration**, then:
 
    ```
    sub=$(az account show --subscription FamilyHub --query id --output tsv)
@@ -44,10 +47,14 @@ In the Azure DevOps project:
      --role "Role Based Access Control Administrator" \
      --scope "/subscriptions/$sub" \
      --condition-version 2.0 \
-     --condition "((!(ActionMatches{'Microsoft.Authorization/roleAssignments/write'})) OR (@Request[Microsoft.Authorization/roleAssignments:RoleDefinitionId] ForAnyOfAnyValues:GuidEquals {b86a8fe4-44ce-4948-aee5-eccb2c155cd7})) AND ((!(ActionMatches{'Microsoft.Authorization/roleAssignments/delete'})) OR (@Resource[Microsoft.Authorization/roleAssignments:RoleDefinitionId] ForAnyOfAnyValues:GuidEquals {b86a8fe4-44ce-4948-aee5-eccb2c155cd7}))"
+     --condition "((!(ActionMatches{'Microsoft.Authorization/roleAssignments/write'})) OR (@Request[Microsoft.Authorization/roleAssignments:RoleDefinitionId] ForAnyOfAnyValues:GuidEquals {b86a8fe4-44ce-4948-aee5-eccb2c155cd7, b7e6dc6d-f1e8-4753-8033-0f276bb0955b})) AND ((!(ActionMatches{'Microsoft.Authorization/roleAssignments/delete'})) OR (@Resource[Microsoft.Authorization/roleAssignments:RoleDefinitionId] ForAnyOfAnyValues:GuidEquals {b86a8fe4-44ce-4948-aee5-eccb2c155cd7, b7e6dc6d-f1e8-4753-8033-0f276bb0955b}))"
    ```
 
-3. **Pipelines → Library → + Variable group.** Name it `familyhub`, and add `FAMILYHUB_ADMIN_OBJECT_ID` with the output of `az ad signed-in-user show --query id --output tsv`. It isn't secret, but the repo is public, so it's kept here.
+   If the connection was set up before the backend, when it could give out only Key Vault Secrets Officer, remove that role assignment first (**Subscriptions → FamilyHub → Access control (IAM) → Role assignments**, the connection's **Role Based Access Control Administrator**), then run the command above.
+
+3. **Pipelines → Library → + Variable group.** Name it `familyhub`, and add two variables. Neither is secret, but the repo is public, so they're kept here:
+   - `FAMILYHUB_ADMIN_OBJECT_ID`: the output of `az ad signed-in-user show --query id --output tsv`.
+   - `FAMILYHUB_BUDGET_EMAIL`: where the £5 budget sends its email if it's passed.
 
 4. **Pipelines → Environments → New environment:** `familyhub-azure`, with no resources. Adding an **Approvals** check here makes every deploy wait for a click. That's optional.
 

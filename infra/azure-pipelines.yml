@@ -1,27 +1,30 @@
 # Deploys everything FamilyHub has in Azure from infra/main.bicep, at the scope of its own FamilyHub
-# subscription, resource group included (ADR 0008). A pull request gets a lint and a what-if, which lists what
-# the merge would change; a merge to main deploys. Setup, including the service connection, variable group and
+# subscription, resource group included (ADR 0008), then the family app's backend from backend/ to its function
+# app (ADR 0011). A pull request gets a lint, a what-if, which lists what the merge would change, and the
+# backend's tests; a merge to main deploys. Setup, including the service connection, variable group and
 # environment named below, is in docs/runbooks/azure-setup.md.
 
 trigger:
   branches:
     include: [main]
   paths:
-    include: [infra]
+    include: [infra, backend]
 
 pr:
   branches:
     include: [main]
   paths:
-    include: [infra]
+    include: [infra, backend]
 
 variables:
-  # FAMILYHUB_ADMIN_OBJECT_ID, which main.bicepparam reads. Kept out of the public repo.
+  # FAMILYHUB_ADMIN_OBJECT_ID and FAMILYHUB_BUDGET_EMAIL, which main.bicepparam reads. Kept out of the public repo.
   - group: familyhub
   - name: serviceConnection
     value: familyhub-azure
   - name: location
     value: uksouth
+  - name: resourceGroup
+    value: rg-familyhub
 
 pool:
   vmImage: ubuntu-latest
@@ -39,6 +42,34 @@ stages:
               az bicep lint --file infra/main.bicep
               az bicep build-params --file infra/main.bicepparam --stdout > /dev/null
             displayName: Lint the Bicep
+
+          - task: UsePythonVersion@0
+            displayName: Use Python 3.12, as the function app does
+            inputs:
+              versionSpec: '3.12'
+
+          - script: |
+              set -euo pipefail
+              pip install --quiet uv
+              cd backend
+              uv sync --frozen
+              uv run ruff check .
+              uv run ruff format --check .
+              uv run pytest
+            displayName: Test the backend
+
+          # Flex builds the app itself from requirements.txt (a remote build), so the package is just the source.
+          - script: |
+              set -euo pipefail
+              cd backend
+              uv export --frozen --no-dev --no-hashes --no-emit-project --output-file requirements.txt
+              zip -r "$(Build.ArtifactStagingDirectory)/backend.zip" \
+                function_app.py host.json requirements.txt familyhub_api -x '*__pycache__*'
+            displayName: Package the backend
+
+          - publish: $(Build.ArtifactStagingDirectory)/backend.zip
+            artifact: backend
+            displayName: Keep the backend package for the deploy
 
           # Pull requests from forks of the public repo never get near the subscription.
           - task: AzureCLI@2
@@ -68,8 +99,10 @@ stages:
               steps:
                 - checkout: self
 
+                # A deployment job also downloads the Check stage's backend package, to $(Pipeline.Workspace)/backend.
                 - task: AzureCLI@2
-                  displayName: Deploy
+                  displayName: Deploy the resources
+                  name: resources
                   inputs:
                     azureSubscription: ${{ variables.serviceConnection }}
                     scriptType: bash
@@ -77,9 +110,41 @@ stages:
                     inlineScript: |
                       set -euo pipefail
                       infra/register-providers.sh
-                      az deployment sub create \
+                      outputs=$(az deployment sub create \
                         --name "familyhub-$(Build.BuildId)" \
                         --location "$(location)" \
                         --template-file infra/main.bicep \
                         --parameters infra/main.bicepparam \
-                        --query properties.outputs --output yaml
+                        --query properties.outputs --output json)
+                      echo "$outputs"
+                      echo "##vso[task.setvariable variable=functionAppName]$(jq -r .functionAppName.value <<< "$outputs")"
+                      echo "##vso[task.setvariable variable=apiUrl]$(jq -r .apiUrl.value <<< "$outputs")"
+
+                - task: AzureCLI@2
+                  displayName: Deploy the backend
+                  inputs:
+                    azureSubscription: ${{ variables.serviceConnection }}
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      set -euo pipefail
+                      az functionapp deployment source config-zip \
+                        --resource-group "$(resourceGroup)" \
+                        --name "$(functionAppName)" \
+                        --src "$(Pipeline.Workspace)/backend/backend.zip" \
+                        --build-remote true
+
+                # The first request after a deploy is a cold start, so it gets a couple of minutes.
+                - script: |
+                    set -euo pipefail
+                    for attempt in $(seq 1 12); do
+                      if curl --fail --silent --show-error --max-time 30 "$(apiUrl)/health"; then
+                        echo
+                        exit 0
+                      fi
+                      echo "Not answering yet (attempt $attempt)"
+                      sleep 10
+                    done
+                    echo "##vso[task.logissue type=error]The API didn't answer /health after deploying."
+                    exit 1
+                  displayName: Check the API answers

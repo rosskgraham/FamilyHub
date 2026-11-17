@@ -1,5 +1,5 @@
 // Everything FamilyHub has in Azure, in its own FamilyHub subscription (ADR 0008): the rg-familyhub resource
-// group, and the resources in resources.bicep inside it. Deployed at subscription scope by
+// group, the resources in resources.bicep inside it, and a monthly cost budget. Deployed at subscription scope by
 // infra/azure-pipelines.yml, so nothing in Azure is made by hand.
 
 targetScope = 'subscription'
@@ -17,6 +17,15 @@ param dailyCapGb string = '0.15'
 @minValue(30)
 @maxValue(31)
 param retentionDays int = 30
+
+@description('The most FamilyHub is expected to cost in a month, in the billing currency (pounds). Spending should never go past the backend storage account\'s pennies, so passing this means something is wrong (ADR 0011).')
+param monthlyBudget int = 5
+
+@description('The first month the budget counts from: the first of a month.')
+param budgetStartDate string = '2026-11-01'
+
+@description('Who the budget emails when it is passed. Kept out of the public repo.')
+param budgetEmail string
 
 resource group 'Microsoft.Resources/resourceGroups@2025-04-01' = {
   name: 'rg-familyhub'
@@ -37,7 +46,33 @@ module resources 'resources.bicep' = {
   }
 }
 
+// A guard, not a limit: Azure carries on past it, but sends an email. Budgets are free.
+resource budget 'Microsoft.Consumption/budgets@2026-06-01' = {
+  name: 'budget-familyhub'
+  properties: {
+    category: 'Cost'
+    amount: monthlyBudget
+    timeGrain: 'Monthly'
+    timePeriod: {
+      startDate: budgetStartDate
+    }
+    notifications: {
+      passed: {
+        enabled: true
+        operator: 'GreaterThan'
+        threshold: 100
+        thresholdType: 'Actual'
+        contactEmails: [
+          budgetEmail
+        ]
+      }
+    }
+  }
+}
+
 output resourceGroupName string = group.name
 output keyVaultName string = resources.outputs.keyVaultName
 output keyVaultUri string = resources.outputs.keyVaultUri
 output appInsightsName string = resources.outputs.appInsightsName
+output functionAppName string = resources.outputs.functionAppName
+output apiUrl string = resources.outputs.apiUrl
