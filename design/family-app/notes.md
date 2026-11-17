@@ -16,7 +16,8 @@ This is the interesting path on purpose. Simpler ones are listed under Considere
 - **The family app is an installable web app** (16 November 2026), not a store app: open its address in Chrome and tap Install. No Google Play, no APKs. It updates itself.
 - **It's built with SvelteKit**, like the Hub, so it can share the Hub's components, colours and fonts.
 - **The backend is Python** (16 November 2026).
-- **It runs on App Service's Free plan (F1)** (16 November 2026), not Container Apps. F1 counts the CPU time used, not the time it's running, so the Hub can keep it warm for free, and changes reach other devices in about a second. Container Apps would scale to zero for free, but counts every second it runs, so keeping it warm costs money (see Considered Options).
+- **It runs on Azure Functions Flex Consumption** (17 November 2026, [ADR 0011](../../docs/adr/0011-backend-runs-on-functions-flex-consumption.md)), replacing App Service's Free plan (F1), chosen the day before. It's the same FastAPI app, run through `AsgiFunctionApp`. Flex has no daily CPU stop and stays inside its free grant, but its storage account costs pennies a month, which Ross approved.
+- **Saving stays synchronous** (17 November 2026). Changes must be applied in order, and Storage queues and Service Bus Basic don't keep it. Service Bus Standard does, with sessions, but costs about $10 a month. A Storage queue carries only side jobs: Web Push, the Tasks import, and timers.
 - **Data is in Cosmos DB, on its free tier** (16 November 2026). Azure SQL's free offer and Azure's Postgres don't fit a free tier (see Considered Options).
 - **Every Member gets an account, the children included** (16 November 2026). The children have Google accounts on devices of their own, so everyone signs in as themselves.
 - **Children can do everything grown-ups can** on the Shopping list and To-dos (16 November 2026).
@@ -29,8 +30,8 @@ This is the interesting path on purpose. Simpler ones are listed under Considere
 ```
  Phones (installed web app)          Azure (Bicep, ADR 0008)                     Pi (the Hub)
  ┌──────────────────┐   HTTPS +    ┌──────────────────────────────┐  outbound   ┌──────────────────┐
- │ IndexedDB copy,  │◄──realtime──►│ API on App Service (F1)      │◄──only────► │ SQLite copy      │
- │ service worker:  │              │ (Python, kept warm by Hub)   │             │ keeps working    │
+ │ IndexedDB copy,  │◄──realtime──►│ API on Functions (Flex)      │◄──only────► │ SQLite copy      │
+ │ service worker:  │              │ (FastAPI, scales to zero)    │             │ keeps working    │
  │ opens and works  │              │ Cosmos DB free tier          │             │ when internet's  │
  │ offline in the   │              │ Web PubSub (live updates)    │             │ down; still no   │
  │ shop             │◄──Web Push───│ Entra External ID (sign-in)  │             │ open port        │
@@ -41,7 +42,9 @@ This is the interesting path on purpose. Simpler ones are listed under Considere
 | Part | Proposal | Free allowance (checked 16 November 2026) |
 |---|---|---|
 | The app's files | Azure Static Web Apps, free tier, with free HTTPS, which installable web apps need | Free plan: 100 GB a month of bandwidth with no overage, 250 MB per app, 10 apps per subscription. Its own sign-in only offers preconfigured providers, not Google, which is why the app signs in with MSAL instead |
-| API | Python, FastAPI and Pydantic, deployed as code to a Linux web app on App Service's Free plan (F1), so there's no container image or registry | 60 CPU minutes a day, 1 GB of memory and 1 GB of storage, on shared machines. No Always On, so it shuts down after a while with no requests. Not supported for production: no SLA, no scaling out, no staging slots. Past the daily CPU minutes, it's reported to return errors until midnight UTC |
+| API | Python, FastAPI and Pydantic, in a function app on Azure Functions Flex Consumption, with `AsgiFunctionApp` passing HTTP requests to FastAPI. Deployed as a zip package to the storage account, so there's no container image or registry. 512 MB instances, at most 1 instance (checked 17 November 2026) | 250,000 executions and 100,000 GB-seconds a month, per subscription. Each execution is billed as at least 1 second. About 9,000 to 10,000 executions a month is about 4% of the executions and 5% of the GB-seconds. Scales to zero when idle. The storage account it needs isn't in the grant: standard rates, pennies a month, approved |
+| Side jobs | A Storage queue on the function app's storage account, read by queue-triggered functions in the same app: Web Push, the Tasks import, timers | Counted in the same grant, plus the storage account's transactions |
+| Cost guard | A Cost Management budget that emails when spending passes a small monthly amount | Free |
 | Data | Cosmos DB for NoSQL, free tier, read with `azure-cosmos` | 1000 RU/s and 25 GB for the account's lifetime, one free account per subscription, opted into when it's created. Serverless accounts aren't eligible, so it uses provisioned throughput, shared across the database's containers |
 | Live updates | Azure Web PubSub, free tier: the server tells clients something changed, and they fetch it | 20 concurrent connections and 20,000 messages a day, counting only messages it sends out. Each open app and the Hub is one connection |
 | Notifications | Web Push, sent by the API with `pywebpush` | Free: no Firebase or Notification Hubs |
@@ -49,7 +52,7 @@ This is the interesting path on purpose. Simpler ones are listed under Considere
 | Telemetry | Application Insights, as the Hub already uses ([ADR 0005](../../docs/adr/0005-telemetry-via-otel-collector-to-app-insights.md)) | Inside the existing daily cap |
 | Infrastructure | Bicep in `infra/`, deployed by the Azure DevOps pipeline ([ADR 0008](../../docs/adr/0008-azure-resources-from-bicep-through-azure-devops.md)) | — |
 
-Every part stays on a free tier, as ADR 0008 requires. The API signs in to the database and Web PubSub with the web app's managed identity, so there's no password anywhere.
+Every part stays on a free tier, as ADR 0008 requires, except the function app's storage account, which Ross approved on 17 November 2026. The API signs in to the database, Web PubSub and its storage account with the function app's managed identity, so there's no password anywhere.
 
 ## The family app
 
@@ -79,9 +82,10 @@ The Hub holds one connection open to Web PubSub, an always-on service of its own
 ## Responsiveness
 
 - **Taps are instant everywhere.** Ticking off, adding or removing changes the device's own copy straight away, and the change goes to the server in the background.
-- **The Hub keeps the API warm.** F1 has no Always On, so a web app with no requests shuts down, and the next request waits for Python to start again: often 10 to 30 seconds (from experience, not a measured figure). So in waking hours the Hub catches up with the API every 10 to 15 minutes. That's also the safety net for a missed "something changed" message, and keeps the API running, so changes reach other devices in about a second.
-- **It costs almost nothing of the 60 CPU minutes.** F1 counts CPU time, not time running, and a catch-up with nothing new takes milliseconds. A family's changes add a little more. The real risk is a bug that loops, which could use up the day's minutes and leave the API returning errors until midnight UTC. Phones and the Hub carry on offline until it's back, and Application Insights shows the CPU used.
-- **It's left to shut down overnight**, while the Hub is asleep (22:00 to 06:30), so the first catch-up of the morning waits for it to start, before anyone's up.
+- **The API scales to zero after a quiet spell.** Flex then starts it again on the next request. Microsoft doesn't say how long it waits before scaling to zero, or publish how long a cold start takes, so measure both in slice 1. A cold start delays only how soon other devices see a change, never the tap itself.
+- **The Hub still catches up every 10 to 15 minutes** in waking hours. That's the safety net for a missed "something changed" message. It may also keep the API warm, but nothing relies on it.
+- **If cold starts prove annoying,** one always-ready instance removes them. Its memory is billed even when idle, with no free grant, so it needs its own approval.
+- **A bug that loops costs money, not the API.** With no daily stop, the guards are the one-instance limit, the budget alert and Application Insights. Phones and the Hub carry on offline if the API is ever down.
 - **Cosmos DB and Web PubSub are always on.**
 
 ## Repeats
@@ -102,7 +106,7 @@ Ticking off or removing affects one occurrence, as now.
 
 ## Slices
 
-1. **Backend skeleton:** Bicep for the App Service plan and web app, Cosmos DB, Web PubSub and Static Web Apps; a FastAPI service with `/health`, deployed by the pipeline; telemetry; sign-in with Entra External ID and Google.
+1. **Backend skeleton:** Bicep for the Flex Consumption function app and its storage account, Cosmos DB, Web PubSub, Static Web Apps and the budget; a FastAPI service with `/health` behind `AsgiFunctionApp`, deployed by the pipeline; telemetry; sign-in with Entra External ID and Google. Measure the scale-to-zero wait and the cold start.
 2. **The Shopping list in the backend:** its operations, log and live updates, with Python tests. Test data only.
 3. **The family app, first version:** install, sign in, the Shopping list, offline queue, live updates.
 4. **The Hub on the backend:** a Shopping list client behind the same interface as the Google Tasks one, so the Shopping Section and Today card don't change.
@@ -115,6 +119,7 @@ Later, if wanted: Chores on the children's phones, the Week view on phones, and 
 ## Open questions
 
 - **Do the children's Google accounts allow "Sign in with Google" to other apps?** If they're supervised with Family Link, a parent may have to allow it in Family Link first. Check with one child's account before building sign-in.
+- **How big a monthly budget** should the cost alert be set at?
 - **What's worth a notification?** For example, a To-do due today, or "something was added to the Shopping list".
 - **Backups:** Cosmos DB's built-in periodic backup, or a nightly export to Google Drive like Chores (ADR 0006).
 - **What happens to the Google Tasks lists** after the switch: deleted, or left as a read-only record.
@@ -132,5 +137,7 @@ Later, if wanted: Chores on the children's phones, the Week view on phones, and 
 - **Postgres outside Azure (Neon, Supabase):** free tiers, but the data would leave Azure and the Bicep setup.
 - **A TypeScript backend:** would share merge and repeat rules with the Hub and the app. Python was chosen.
 - **Azure Container Apps:** containers, scaling to zero, with an SLA, and closer to how a real product would run. Its free grant each month (180,000 vCPU-seconds, 360,000 GiB-seconds, 2 million requests) is about 200 hours of the smallest copy (0.25 vCPU, 0.5 GiB), because it counts every second a copy runs. So it's free only if it scales to zero, and then a change waits a few seconds for it to start after a quiet spell. Kept running in waking hours it's roughly $2 to $3.50 a month, or $4 to $6.50 always on (sources disagree on the idle vCPU rate, $0.000003 or $0.000008 a second; memory is $0.000003 a GiB-second). Moving the FastAPI service there later is mostly a Bicep change.
-- **Azure Functions:** also scales to zero, but a long-lived FastAPI service is easier to run and test locally the same way it runs in Azure.
+- **App Service's Free plan (F1), kept warm by the Hub:** chosen first, on 16 November 2026. Free, and F1 counts CPU time, not time running. But it stops for the rest of the day after 60 CPU minutes, has no SLA, and isn't supported for production. Replaced by Flex Consumption ([ADR 0011](../../docs/adr/0011-backend-runs-on-functions-flex-consumption.md)).
+- **Azure Functions' Linux Consumption plan:** a similar free grant, but it retires on 30 September 2028.
+- **Saves through Service Bus Standard, with sessions for ordering:** about $10 a month, which the family's load doesn't justify.
 - **Notification Hubs for notifications:** needed for a store app's push, but Web Push reaches an installed web app with nothing extra.

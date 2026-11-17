@@ -8,6 +8,8 @@ The family app is an installable web app built with SvelteKit, like the Hub, ser
 
 The Hub becomes one more client. It keeps its own copy in SQLite (ADR 0006), so the wall still works when the internet's down, and it still only makes outbound connections, so nothing outside the house can reach the Pi. ADR 0002's "no cloud server" no longer holds. The Pi signs in to the backend with an Entra app registration's certificate, which the setup scripts copy from the Key Vault, allowed only to read and change the lists. So the Pi now holds an Azure credential besides the Application Insights connection string. Everything is Bicep, deployed by the pipeline, on free tiers (ADR 0008). The [design notes](../../design/family-app/notes.md) hold the details, the slices and the open questions.
 
+Partly replaced by [ADR 0011](0011-backend-runs-on-functions-flex-consumption.md): the same FastAPI app runs on Azure Functions Flex Consumption instead of F1, and the Hub no longer keeps it warm.
+
 ## Considered Options
 
 - **Keep Google Tasks, with the Household's account on every phone:** no work, but the lists stay the Household account's rather than each Member's, and repeats stay hidden.
