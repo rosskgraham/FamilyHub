@@ -5,7 +5,7 @@
 set -euo pipefail
 
 for namespace in Microsoft.KeyVault Microsoft.OperationalInsights Microsoft.Insights Microsoft.Storage \
-  Microsoft.Web Microsoft.Consumption; do
+  Microsoft.Web Microsoft.Consumption Microsoft.DocumentDB Microsoft.SignalRService; do
   if [[ $(az provider show --namespace "$namespace" --query registrationState --output tsv) != Registered ]]; then
     echo "Turning on $namespace"
     az provider register --namespace "$namespace" --wait

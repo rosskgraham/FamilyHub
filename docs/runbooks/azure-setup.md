@@ -13,6 +13,8 @@ Do this signed in as Ross, with the Azure CLI on the PC (`az login`). It takes a
 | Application Insights | Workspace-based, so it's billed through the workspace | £0 |
 | Function app (the family app's backend) | Flex Consumption, 512 MB, at most 1 instance. 250,000 executions and 100,000 GB-seconds a month are free | £0. About 5% of the free grant is expected |
 | Storage account (the function app's) | General-purpose v2, Standard LRS, Hot. No free tier | Pennies a month. Approved by Ross on 17 November 2026 ([ADR 0011](../adr/0011-backend-runs-on-functions-flex-consumption.md)) |
+| Cosmos DB (the lists) | Free tier: 1000 RU/s and 25 GB for the account's lifetime, one account per subscription. Its throughput is capped at 1000 RU/s, so it can't go past the free tier | £0 |
+| Web PubSub (live updates) | Free: 20 connections at once and 20,000 messages a day | £0 |
 | Cost Management budget | £5 a month, emailing when it's passed | £0 |
 | Azure DevOps | 1 free Microsoft-hosted parallel job (1,800 minutes a month) | £0 |
 
@@ -38,7 +40,7 @@ In the Azure DevOps project:
 
    This gives the connection **Contributor** on the `FamilyHub` subscription, with no secret to rotate. It can create the resource group, and can't reach any other subscription.
 
-2. Let the connection give out two roles, and only those: **Key Vault Secrets Officer**, which the deployment gives Ross on the vault, and **Storage Blob Data Owner**, which it gives the function app on its own storage account. Find the connection's app ID under **Manage App registration**, then:
+2. Let the connection give out three roles, and only those: **Key Vault Secrets Officer**, which the deployment gives Ross on the vault, and **Storage Blob Data Owner** and **Web PubSub Service Owner**, which it gives the function app on its storage account and Web PubSub. (Cosmos DB's data role is Cosmos DB's own, not an Azure role, so Contributor already covers it.) Find the connection's app ID under **Manage App registration**, then, in Git Bash:
 
    ```
    sub=$(az account show --subscription FamilyHub --query id --output tsv)
@@ -47,10 +49,25 @@ In the Azure DevOps project:
      --role "Role Based Access Control Administrator" \
      --scope "/subscriptions/$sub" \
      --condition-version 2.0 \
-     --condition "((!(ActionMatches{'Microsoft.Authorization/roleAssignments/write'})) OR (@Request[Microsoft.Authorization/roleAssignments:RoleDefinitionId] ForAnyOfAnyValues:GuidEquals {b86a8fe4-44ce-4948-aee5-eccb2c155cd7, b7e6dc6d-f1e8-4753-8033-0f276bb0955b})) AND ((!(ActionMatches{'Microsoft.Authorization/roleAssignments/delete'})) OR (@Resource[Microsoft.Authorization/roleAssignments:RoleDefinitionId] ForAnyOfAnyValues:GuidEquals {b86a8fe4-44ce-4948-aee5-eccb2c155cd7, b7e6dc6d-f1e8-4753-8033-0f276bb0955b}))"
+     --condition "((!(ActionMatches{'Microsoft.Authorization/roleAssignments/write'})) OR (@Request[Microsoft.Authorization/roleAssignments:RoleDefinitionId] ForAnyOfAnyValues:GuidEquals {b86a8fe4-44ce-4948-aee5-eccb2c155cd7, b7e6dc6d-f1e8-4753-8033-0f276bb0955b, 12cf5a90-567b-43ae-8102-96cf46c7d9b4})) AND ((!(ActionMatches{'Microsoft.Authorization/roleAssignments/delete'})) OR (@Resource[Microsoft.Authorization/roleAssignments:RoleDefinitionId] ForAnyOfAnyValues:GuidEquals {b86a8fe4-44ce-4948-aee5-eccb2c155cd7, b7e6dc6d-f1e8-4753-8033-0f276bb0955b, 12cf5a90-567b-43ae-8102-96cf46c7d9b4}))"
    ```
 
-   If the connection was set up before the backend, when it could give out only Key Vault Secrets Officer, remove that role assignment first (**Subscriptions → FamilyHub → Access control (IAM) → Role assignments**, the connection's **Role Based Access Control Administrator**), then run the command above.
+   Or in PowerShell:
+
+   ```powershell
+   $sub = az account show --subscription FamilyHub --query id --output tsv
+   $condition = @'
+   ((!(ActionMatches{'Microsoft.Authorization/roleAssignments/write'})) OR (@Request[Microsoft.Authorization/roleAssignments:RoleDefinitionId] ForAnyOfAnyValues:GuidEquals {b86a8fe4-44ce-4948-aee5-eccb2c155cd7, b7e6dc6d-f1e8-4753-8033-0f276bb0955b, 12cf5a90-567b-43ae-8102-96cf46c7d9b4})) AND ((!(ActionMatches{'Microsoft.Authorization/roleAssignments/delete'})) OR (@Resource[Microsoft.Authorization/roleAssignments:RoleDefinitionId] ForAnyOfAnyValues:GuidEquals {b86a8fe4-44ce-4948-aee5-eccb2c155cd7, b7e6dc6d-f1e8-4753-8033-0f276bb0955b, 12cf5a90-567b-43ae-8102-96cf46c7d9b4}))
+   '@
+   az role assignment create `
+     --assignee <the connection's app ID> `
+     --role "Role Based Access Control Administrator" `
+     --scope "/subscriptions/$sub" `
+     --condition-version 2.0 `
+     --condition $condition.Trim()
+   ```
+
+   If the connection already has this role from an earlier setup, which allowed fewer roles, edit its condition instead: **Subscriptions → FamilyHub → Access control (IAM) → Role assignments**, then the connection's **Role Based Access Control Administrator**, and add the missing roles to the condition for both adding and removing role assignments. Web PubSub Service Owner was added on 17 November 2026.
 
 3. **Pipelines → Library → + Variable group.** Name it `familyhub`, and add two variables. Neither is secret, but the repo is public, so they're kept here:
    - `FAMILYHUB_ADMIN_OBJECT_ID`: the output of `az ad signed-in-user show --query id --output tsv`.
