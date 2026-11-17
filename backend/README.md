@@ -25,7 +25,21 @@ uv run --with "fastapi[standard]" fastapi dev familyhub_api/main.py
 
 Then <http://127.0.0.1:8000/health> answers, and it reloads when the code changes.
 
-Before a pull request, also run `uv run ruff check .` and `uv run ruff format --check .`, which the pipeline runs too.
+## Lint and formatting
+
+[Ruff](https://docs.astral.sh/ruff/) lints and formats the code, with the rules in `pyproject.toml`. It's enforced in three places:
+
+- **Before each commit,** by a [pre-commit](https://pre-commit.com) hook ([`.pre-commit-config.yaml`](../.pre-commit-config.yaml)) that runs ruff on staged backend files, fixing what it can. A commit it fixes stops, so the change can be checked and added. Set it up once per clone, from the repo root:
+
+  ```
+  uv tool install pre-commit
+  pre-commit install
+  ```
+
+- **On every pull request,** by the `backend` job in GitHub Actions CI, a required check, so a pull request with lint errors can't merge.
+- **Before deploying,** by the Azure DevOps pipeline.
+
+The hook runs ruff through uv, so it's the version locked in `uv.lock`, the same as CI. To run it by hand: `uv run ruff check .` and `uv run ruff format .`.
 
 ## Deploying
 
