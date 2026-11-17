@@ -7,22 +7,21 @@ test.beforeEach(async ({ page }) => {
 	await page.clock.setFixedTime(new Date(NOW));
 });
 
-// Signed in, the setup page is taller than the screen. CI has no Google sign-in, so the test
-// makes the page tall itself, then checks its end can be scrolled into view.
+// Signed in, the setup page is taller than the screen. CI has no Google sign-in, so the test makes the page tall
+// itself, then scrolls to its end. It does that with a stylesheet, not by adding elements: Svelte can render the
+// page again while it hydrates, which took away added elements when the machine was busy.
 test('the setup page scrolls when it is taller than the screen', async ({ page }) => {
 	await page.goto('/setup');
-	await page.locator('.setup').evaluate((setup) => {
-		const filler = document.createElement('div');
-		filler.style.height = '2000px';
-		const end = document.createElement('p');
-		end.id = 'end';
-		end.textContent = 'The end';
-		setup.append(filler, end);
-	});
+	await page.addStyleTag({ content: '.setup::after { content: ""; display: block; height: 2000px; }' });
 
-	const end = page.locator('#end');
-	await end.scrollIntoViewIfNeeded();
-	await expect(end).toBeInViewport({ ratio: 1 });
+	const setup = page.locator('.setup');
+	const box = (await setup.boundingBox())!;
+	await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+	await page.mouse.wheel(0, 5000);
+	await expect
+		.poll(() => setup.evaluate((el) => el.scrollHeight - el.clientHeight - el.scrollTop))
+		.toBeLessThanOrEqual(1);
+	expect(await setup.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
 });
 
 test('setup has no nav bar, and a way back to the Today view', async ({ page }) => {
