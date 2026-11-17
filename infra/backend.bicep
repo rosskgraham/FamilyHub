@@ -113,6 +113,14 @@ resource api 'Microsoft.Web/sites@2025-03-01' = {
         maximumInstanceCount: 1
         // The smallest size. Each execution is billed as at least 1 second of this.
         instanceMemoryMB: 512
+        triggers: {
+          http: {
+            // How many requests the one instance takes at once. Python's default is 1, and with only one instance
+            // that left requests waiting up to a minute, or failing with a 503 after 60 seconds, even one at a time
+            // (measured 17 November 2026). FastAPI handles many at once, so 16 is well within it.
+            perInstanceConcurrency: 16
+          }
+        }
       }
       runtime: {
         name: 'python'
