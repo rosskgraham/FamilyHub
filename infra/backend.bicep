@@ -1,7 +1,9 @@
 // The family app's backend (ADR 0010): a function app on Azure Functions Flex Consumption that runs the
-// FastAPI app in backend/ (ADR 0011), and the storage account Flex needs for its deployment package and the
-// host's own state. The function app is inside Flex's free grant; the storage account is billed at standard
-// rates, pennies a month, which Ross approved on 17 November 2026 (ADR 0008). resources.bicep deploys this.
+// FastAPI app in backend/ (ADR 0011), the storage account Flex needs for its deployment package and the
+// host's own state, Cosmos DB for the lists, and Web PubSub to tell clients something changed. The function app
+// is inside Flex's free grant, and Cosmos DB and Web PubSub are on free tiers; the storage account is billed at
+// standard rates, pennies a month, which Ross approved on 17 November 2026 (ADR 0008). resources.bicep deploys
+// this.
 
 targetScope = 'resourceGroup'
 
@@ -24,6 +26,18 @@ var deploymentContainer = 'deployments'
 // Built-in role: full access to blobs, which the Functions host needs for its own state, and for reading the
 // deployment package.
 var storageBlobDataOwner = 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b'
+
+// Built-in role: send messages and hand out client access tokens through Web PubSub.
+var webPubSubServiceOwner = '12cf5a90-567b-43ae-8102-96cf46c7d9b4'
+
+// Cosmos DB's own built-in data role, not an Azure role: read and write items, nothing else.
+var cosmosDataContributor = '00000000-0000-0000-0000-000000000002'
+
+// The one database, which the containers share. Slice 2 adds the containers.
+var databaseName = 'familyhub'
+
+// Cosmos DB's free tier covers 1000 RU/s for the account's lifetime.
+var freeThroughput = 1000
 
 resource insights 'Microsoft.Insights/components@2020-02-02' existing = {
   name: appInsightsName
@@ -54,6 +68,76 @@ resource storage 'Microsoft.Storage/storageAccounts@2025-06-01' = {
     resource deployments 'containers' = {
       name: deploymentContainer
     }
+  }
+}
+
+resource cosmos 'Microsoft.DocumentDB/databaseAccounts@2025-10-15' = {
+  name: 'cosmos-familyhub-${suffix}'
+  location: location
+  tags: tags
+  kind: 'GlobalDocumentDB'
+  properties: {
+    databaseAccountOfferType: 'Standard'
+    // Free tier: one account per subscription, and it can only be chosen when the account is created.
+    enableFreeTier: true
+    // The account can never be given more than the free tier's throughput, so it can't start costing money.
+    capacity: {
+      totalThroughputLimit: freeThroughput
+    }
+    locations: [
+      {
+        locationName: location
+        failoverPriority: 0
+        isZoneRedundant: false
+      }
+    ]
+    consistencyPolicy: {
+      defaultConsistencyLevel: 'Session'
+    }
+    // No keys: the function app signs in with its managed identity.
+    disableLocalAuth: true
+    disableKeyBasedMetadataWriteAccess: true
+    minimalTlsVersion: 'Tls12'
+    publicNetworkAccess: 'Enabled'
+    // Periodic backup's two copies are free. Whether the Household's lists need more is an open question.
+    backupPolicy: {
+      type: 'Periodic'
+      periodicModeProperties: {
+        backupIntervalInMinutes: 240
+        backupRetentionIntervalInHours: 8
+        backupStorageRedundancy: 'Local'
+      }
+    }
+  }
+
+  resource database 'sqlDatabases' = {
+    name: databaseName
+    properties: {
+      resource: {
+        id: databaseName
+      }
+      // Provisioned throughput shared by the database's containers: serverless accounts can't use the free tier.
+      options: {
+        throughput: freeThroughput
+      }
+    }
+  }
+}
+
+resource webPubSub 'Microsoft.SignalRService/webPubSub@2024-03-01' = {
+  name: 'wps-familyhub-${suffix}'
+  location: location
+  tags: tags
+  // Free: 20 connections at once and 20,000 messages a day, which is plenty for the Hub and a few phones.
+  sku: {
+    name: 'Free_F1'
+    tier: 'Free'
+    capacity: 1
+  }
+  properties: {
+    // No keys: the function app signs in with its managed identity.
+    disableLocalAuth: true
+    publicNetworkAccess: 'Enabled'
   }
 }
 
@@ -96,6 +180,18 @@ resource api 'Microsoft.Web/sites@2025-03-01' = {
           name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
           value: insights.properties.ConnectionString
         }
+        {
+          name: 'COSMOS_ENDPOINT'
+          value: cosmos.properties.documentEndpoint
+        }
+        {
+          name: 'COSMOS_DATABASE'
+          value: databaseName
+        }
+        {
+          name: 'WEBPUBSUB_ENDPOINT'
+          value: 'https://${webPubSub.properties.hostName}'
+        }
       ]
     }
     functionAppConfig: {
@@ -137,6 +233,26 @@ resource apiCanUseBlobs 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
     principalId: api.identity.principalId
     principalType: 'ServicePrincipal'
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', storageBlobDataOwner)
+  }
+}
+
+resource apiCanUseWebPubSub 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(webPubSub.id, api.id, webPubSubServiceOwner)
+  scope: webPubSub
+  properties: {
+    principalId: api.identity.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', webPubSubServiceOwner)
+  }
+}
+
+resource apiCanUseCosmos 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2025-10-15' = {
+  parent: cosmos
+  name: guid(cosmos.id, api.id, cosmosDataContributor)
+  properties: {
+    principalId: api.identity.principalId
+    roleDefinitionId: '${cosmos.id}/sqlRoleDefinitions/${cosmosDataContributor}'
+    scope: cosmos.id
   }
 }
 

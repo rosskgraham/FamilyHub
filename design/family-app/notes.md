@@ -107,7 +107,7 @@ Ticking off or removing affects one occurrence, as now.
 
 ## Slices
 
-1. **Backend skeleton:** Bicep for the Flex Consumption function app and its storage account, Cosmos DB, Web PubSub, Static Web Apps and the budget; a FastAPI service with `/health` behind `AsgiFunctionApp`, deployed by the pipeline; telemetry; sign-in with Entra External ID and Google. Measure the scale-to-zero wait and the cold start. Started: the function app, its storage account, the budget, `/health` and the deploy are in. Still to come: Cosmos DB, Web PubSub, Static Web Apps, sign-in and the measurements.
+1. **Backend skeleton:** Bicep for the Flex Consumption function app and its storage account, Cosmos DB, Web PubSub, Static Web Apps and the budget; a FastAPI service with `/health` behind `AsgiFunctionApp`, deployed by the pipeline; telemetry; sign-in with Entra External ID and Google. Measure the scale-to-zero wait and the cold start. Started: the function app, its storage account, the budget, `/health`, the deploy, Cosmos DB and Web PubSub are in. Still to come: Static Web Apps, sign-in and the measurements.
 2. **The Shopping list in the backend:** its operations, log and live updates, with Python tests. Test data only.
 3. **The family app, first version:** install, sign in, the Shopping list, offline queue, live updates.
 4. **The Hub on the backend:** a Shopping list client behind the same interface as the Google Tasks one, so the Shopping Section and Today card don't change.
