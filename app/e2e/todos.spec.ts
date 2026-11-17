@@ -27,8 +27,9 @@ test('the Today view shows To-dos due today and overdue, overdue first, saying h
 	const first = card.getByRole('button').first();
 	await expect(first).toHaveAccessibleName('Tick off Renew the car insurance');
 	await expect(first).toContainText('3 days late');
-	// The overdue one, three due today (one just ticked off), and room for three rows: two, then the rest.
-	await expect(card.getByRole('link', { name: '+2 more' })).toBeVisible();
+	// The overdue one and three due today (one just ticked off), all fitting in the card's five rows.
+	await expect(card.getByRole('button')).toHaveCount(4);
+	await expect(card.getByRole('link', { name: /more/ })).toHaveCount(0);
 	await expect(card.getByText('3 due')).toBeVisible();
 });
 
@@ -61,17 +62,9 @@ test('adding a one-off To-do sends it with the due date chosen', async ({ page }
 	letGo();
 });
 
-test('the Today view’s Shopping card adds an item without opening the list', async ({ page }) => {
-	const { sent, letGo } = await catchChanges(page, '/api/shopping');
+test('the Today view has no Shopping list; it’s in the Shopping Section', async ({ page }) => {
 	await page.goto('/');
-	const card = page.locator('section.shopping');
-	await expect(card.getByText('6 to get')).toBeVisible();
-	await card.getByRole('button', { name: 'Add' }).click();
-	await card.getByRole('textbox', { name: 'New item' }).fill('Oat milk');
-	await card.getByRole('button', { name: 'Add', exact: true }).click();
-	await expect.poll(() => sent).toEqual([{ action: 'add', text: 'Oat milk' }]);
-	letGo();
-	await expect(card.getByRole('link', { name: /Shopping/ })).toHaveAttribute('href', '/shopping');
+	await expect(page.locator('section.shopping')).toHaveCount(0);
 });
 
 test('a long press offers to remove a To-do, and Remove sends it', async ({ page }) => {

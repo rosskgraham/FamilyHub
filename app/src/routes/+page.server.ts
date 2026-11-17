@@ -11,8 +11,10 @@ const DAYS = 5;
 
 export const load: PageServerLoad = async () => {
 	const today = dayKey(now());
-	const [calendar, shopping, todos, energy] = await Promise.all([
+	const [calendar, , todos, energy] = await Promise.all([
 		loadCalendar(today, addDays(today, DAYS)),
+		// Not shown on the Today view, but a list only syncs when it's read: this sends changes queued while offline,
+		// and keeps the failure alert working, while the Hub sits on the Today view.
 		loadShopping(),
 		loadTodos(),
 		loadEnergy()
@@ -21,7 +23,6 @@ export const load: PageServerLoad = async () => {
 		today,
 		events: calendar.events,
 		owners: calendar.household,
-		shopping,
 		todos,
 		energy: {
 			rates: energy.tariff?.rates ?? null,

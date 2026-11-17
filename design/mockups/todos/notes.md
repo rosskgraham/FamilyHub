@@ -19,6 +19,7 @@ To-dos aren't Chores. Chores are the children's, grouped into Routines, and earn
 - **Remove works as it does for Shopping too** (8 November 2026): a long press offers **Remove** or **Keep**. For a repeating To-do, removing skips that one occurrence, and the repeat carries on.
 - **A To-dos Section, and a card on the Today view.**
 - **The Today view's Shopping list becomes a card** with the count ("6 to get"), a quick **+ Add** button, and a tap through to the Shopping Section. The full list only ever showed its first few items there anyway, and the space goes to To-dos.
+- **The Shopping card is dropped from the Today view** (17 November 2026). "6 to get" says nothing at a glance, and adding happens in the Shopping Section anyway. The To-dos card takes its space, showing five rows instead of three.
 
 ## What the Google Tasks API does with repeating tasks
 
@@ -37,7 +38,7 @@ So the Hub can show what's due and overdue, and one-off To-dos with future dates
 
 ## How it works at the wall
 
-- **The side column of the Today view:** the Energy card, then To-dos, then the Shopping card.
+- **The side column of the Today view:** the Energy card, then To-dos (the Shopping card was dropped on 17 November 2026).
 - **Which list holds To-dos** is chosen on the setup page, like the Shopping list.
 
 - **Today view card:** To-dos due today or overdue, overdue first, each with how late it is ("2 days late"). Ticking off works on the card itself.
