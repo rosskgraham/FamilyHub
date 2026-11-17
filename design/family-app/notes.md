@@ -86,6 +86,7 @@ The Hub holds one connection open to Web PubSub, an always-on service of its own
 - **The Hub still catches up every 10 to 15 minutes** in waking hours. That's the safety net for a missed "something changed" message. It may also keep the API warm, but nothing relies on it.
 - **If cold starts prove annoying,** one always-ready instance removes them. Its memory is billed even when idle, with no free grant, so it needs its own approval.
 - **A bug that loops costs money, not the API.** With no daily stop, the guards are the one-instance limit, the budget alert and Application Insights. Phones and the Hub carry on offline if the API is ever down.
+- **The instance takes 16 requests at once** (found 17 November 2026). Flex's default for Python is 1, and with at most one instance, requests waited up to a minute or failed with a 503 after 60 seconds, even sent one at a time. With 16, a warm request takes about 0.1 seconds.
 - **Cosmos DB and Web PubSub are always on.**
 
 ## Repeats
