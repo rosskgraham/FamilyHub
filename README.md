@@ -2,7 +2,7 @@
 
 **A family wall display for the kitchen.** One glance at a touchscreen by the kettle shows what's on today and who it's for, the week ahead, the jobs that are due, and what the electricity is costing. Nobody has to ask, shout up the stairs, or check four phones.
 
-![The Today view: the next Event with a countdown, the rest of today, the next four days, an Energy card with what the house is using, today's cost so far, a car icon showing it plugged in, and a Smart-charging slot, and the To-dos due today](docs/images/today-view.png)
+![The Today view: the next Event with a countdown, the rest of today, the next four days, an Energy card with what the house is using, today's cost so far, a car icon showing it plugged in, and a Smart-charging slot, and the To-dos due today followed by one with no date](docs/images/today-view.png)
 
 <sub>The Today view, running on a PC with sample data.</sub>
 
@@ -10,11 +10,14 @@ FamilyHub is a personal project, built by one family for its own kitchen. Buildi
 
 ## What it does
 
-- **Shows everyone's day at a glance.** It reads the Household's Google Calendars: one per person, plus a shared Family calendar. Each person has a colour and an initial, so you can tell whose an Event is from across the room.
+- **Shows everyone's day at a glance.** It reads the Household's Google Calendars: one per person, plus a shared Family calendar. Each person has a colour and an initial, so you can tell whose an Event is from across the room, and the colours include Google Calendar's own, so they can match everyone's phones. Tap any Event to see its full title and times.
 - **Keeps the shopping list on the wall.** Add or tick off items on the screen, and in the shop on your phone. The list lives in Google Tasks, so phones need nothing new. Tap to tick off, long-press to remove.
+- **Keeps the family's To-dos in view.** One-off and repeating jobs from a Google Tasks list. The Today view shows what's overdue and due today, then the jobs with no date, which anyone can pick up. Tick them off at the screen or on a phone.
 - **Makes chores a game for the kids.** Each child has a lane of Chores for the morning, after school and the evening, ticks them off at the screen, and earns Stars. Bonus jobs are up for grabs for extra Stars, and children who do one together each get them. Finishing a Routine gets a chime and a burst of stars.
 - **Shows when electricity is cheap, and where it goes.** It reads the Household's Intelligent Octopus Go rates and Smart-charging slots from Octopus, and the Zappi car charger's usage from myenergi. It shows what the house is using now, what today has cost, and when to start the dishwasher, washing machine and tumble drier so they finish while it's cheap. Each half-hour is split into the house and the car.
 - **Fits a busy day without scrolling.** Busy days switch to compact rows, and anything that still doesn't fit goes behind a "+N more" that opens the full day. Nothing is cut off silently.
+- **Types at the wall.** Its own on-screen keyboard opens for any box, and slides the page up so the box stays in view.
+- **Has a few Settings.** A gear in the bottom bar chooses a 24-hour or 12-hour clock, and shows which version is running, when it was built and how long it's been up.
 - **Looks after itself.** It keeps showing the last plan if the Wi-Fi drops, says when it last updated, and tells the family in plain words when it needs attention.
 - **Stays at home.** It runs on a Raspberry Pi in the kitchen, and nothing on the internet can reach it.
 
@@ -30,12 +33,22 @@ FamilyHub is a personal project, built by one family for its own kitchen. Buildi
 | ![The Chores section: a lane each for Maya and Leo with their Morning Chores ticked off and their Stars, and Up for grabs beside them with the dishwasher done by Leo and Maya together](docs/images/chores-view.png) | ![A celebration over the Chores section: "Morning done, Maya!" with her badge in a ring of stars and "+3 Stars"](docs/images/chores-celebration.png) |
 | A lane per child, with the Routine whose time it is open and the rest folded away. A tap ticks a Chore off and earns its Stars. Bonus jobs are up for grabs for whoever does them first. | Ticking off the last Chore of a Routine plays a chime and shows a burst of stars, which closes by itself. |
 
-| Energy |
-|---|
-| ![The Energy section: the price now, what the house is using with the car plugged in, and the next cheap time, a chart of today's half-hours with the car's overnight charging over Peak, Off-peak and a Smart-charging slot, the best time to run three appliances, and yesterday's cost split into house and car](docs/images/energy-view.png) |
-| The price now, what the house is using, and the next cheap time. Today's half-hours show the car's charging stacked on the house's use, over which were Peak, Off-peak or a Smart-charging slot. Each appliance gets a window to start in so it finishes while it's cheap, and yesterday's cost is split into the house and the car. |
+| Energy | To-dos |
+|---|---|
+| ![The Energy section: the price now, what the house is using with the car plugged in, and the next cheap time, a chart of today's half-hours with the car's overnight charging over Peak, Off-peak and a Smart-charging slot, the best time to run three appliances, and yesterday's cost split into house and car](docs/images/energy-view.png) | ![The To-dos section: To-dos grouped as overdue, today, tomorrow, later days and no date, with Add to-do](docs/images/todos-view.png) |
+| The price now, what the house is using, and the next cheap time. Today's half-hours show the car's charging stacked on the house's use, over which were Peak, Off-peak or a Smart-charging slot. Each appliance gets a window to start in so it finishes while it's cheap, and yesterday's cost is split into the house and the car. | Every To-do, grouped by when it's due. One-off To-dos can be added at the screen with a due date; repeating ones are set up on a phone. |
 
-The screenshots use the app's built-in sample week, sample Chores and sample energy, and are taken by the screenshot tests. On the real Hub, the corner shows when the Calendars last updated instead of "Sample data".
+| Tapping an Event | The on-screen keyboard |
+|---|---|
+| ![The Week view dimmed behind a card for Maya's "Swimming lesson", 09:00–10:00 on Saturday 31 October](docs/images/event-detail.png) | ![The Shopping list slid up above the on-screen keyboard, with "Oat milk" typed into the new item box](docs/images/keyboard.png) |
+| Titles are often cut short on the views. A tap shows the whole title, whose it is, its day and its times. | Opens for any box. Numbers along the top, £ in the symbols, and Enter says what it'll do, such as "Add". |
+
+| Settings |
+|---|
+| ![Settings: the clock as 24-hour or 12-hour, and About this Hub with the version, commit, build time, how long it's been running and Node.js](docs/images/settings-view.png) |
+| A 24-hour clock unless 12-hour is chosen, for every time on the screen. About this Hub says what's running, to check a release reached the Pi. |
+
+The screenshots use the app's built-in sample week, sample Chores, sample To-dos and sample energy, and are copied from the screenshot tests. On the real Hub, the corner shows when the Calendars last updated instead of "Sample data".
 
 ## Where it's going
 
@@ -55,8 +68,10 @@ The plan is in [docs/requirements.md](docs/requirements.md). Progress so far:
 | ✅ | A versioned release built on every merge | Done |
 | ✅ | Home energy: cheap and peak times, when to run the dishwasher, the car’s share, and its charge ([design](design/mockups/energy/notes.md)) | Done, on a PC |
 | ✅ | To-dos from Google Tasks, one-off and repeating ([design](design/mockups/todos/notes.md)) | Done, on a PC |
+| ✅ | Settings, Google Calendar's colours, and tapping an Event for its details | Done, on a PC |
 | ⬜ | A Raspberry Pi set up from scripts, showing the Hub full-screen | In progress: set up from scripts, pulling its own releases, full-screen, with its settings and secrets from Key Vault. with an on-screen keyboard. Still to come: the screen powering down for Sleep |
 | ⬜ | On the kitchen wall: **v1** | |
+| ⬜ | The Shopping list and To-dos in a backend of the Hub's own, with a family app for phones ([design](design/family-app/notes.md)) | In progress: the backend's Azure resources are built. Still to come: sign-in, the lists, and the app |
 | ⬜ | Recipe videos from a YouTube playlist | After v1 |
 | ⬜ | A motion sensor that wakes it when someone walks in | After v1 |
 | ⬜ | The rest of the chore chart: streaks, the family jar and Rewards | After v1 |
@@ -70,9 +85,9 @@ v1 is done when it's been on the wall for two weeks and nobody goes back to chec
 - **Data:** Google Calendar (read-only) and Google Tasks, signed in as the Household's one Google account. Weather from Open-Meteo.
 - **Hardware:** a Raspberry Pi 5 with a 1080p touchscreen, provisionally a 21.5″ Waveshare (not bought yet), running the app full-screen in Chromium inside cage, with no desktop behind it ([why a Pi](docs/adr/0001-web-app-on-raspberry-pi.md), [the kiosk](docs/adr/0009-kiosk-is-chromium-in-cage.md)).
 - **Hosting:** none. Everything runs on the Pi and nothing is reachable from the internet ([ADR 0002](docs/adr/0002-everything-runs-on-the-pi.md)). The Pi pulls its own releases and rolls back if one is unhealthy ([ADR 0004](docs/adr/0004-pi-pulls-releases.md)).
-- **Data:** Chores, the Hub's only data of its own, live in SQLite on the Pi, backed up nightly to Google Drive ([ADR 0006](docs/adr/0006-hub-owned-data-in-sqlite.md)).
+- **Data:** Chores, the Hub's own data, live in SQLite on the Pi, backed up nightly to Google Drive ([ADR 0006](docs/adr/0006-hub-owned-data-in-sqlite.md)). The Calendar choices and Settings are kept in a file beside it.
 - **Monitoring:** OpenTelemetry to Azure Application Insights, with anything personal stripped before it leaves the house ([ADR 0005](docs/adr/0005-telemetry-via-otel-collector-to-app-insights.md)).
-- **Azure:** the Key Vault and Application Insights are built from Bicep by an Azure DevOps pipeline, resource group included, in FamilyHub's own subscription, on free tiers unless something billable has been approved ([ADR 0008](docs/adr/0008-azure-resources-from-bicep-through-azure-devops.md)).
+- **Azure:** the Key Vault, Application Insights, and the family app's backend (Azure Functions on Flex Consumption, Cosmos DB and Web PubSub, [ADR 0010](docs/adr/0010-shared-lists-in-an-azure-backend-with-an-installable-family-app.md), [ADR 0011](docs/adr/0011-backend-runs-on-functions-flex-consumption.md)) are built from Bicep by an Azure DevOps pipeline, resource group included, in FamilyHub's own subscription, on free tiers unless something billable has been approved ([ADR 0008](docs/adr/0008-azure-resources-from-bicep-through-azure-devops.md)).
 
 ## Run it yourself
 
@@ -92,10 +107,12 @@ Open <http://localhost:5173>. It starts with sample data. To show real Google Ca
 |---|---|
 | [`app/`](app/README.md) | The Hub itself |
 | [`ansible/`](ansible/README.md) | The scripts that set up the Pi |
+| [`backend/`](backend/README.md) | The family app's backend: a FastAPI service on Azure Functions, being built |
 | [`infra/`](infra/README.md) | The Azure resources, in Bicep, and the pipeline that deploys them |
 | [`docs/requirements.md`](docs/requirements.md) | Scope, quality bar, milestones, and what "v1 done" means |
 | [`GLOSSARY.md`](GLOSSARY.md) | The words the project uses for things, such as Hub, Member and Section |
 | [`docs/adr/`](docs/adr/) | Why the big decisions went the way they did |
 | [`docs/runbooks/`](docs/runbooks/) | Step-by-step setup guides |
 | [`design/mockups/`](design/mockups/README.md) | The original UI mockups. Open `html/index.html` in a browser. The Chores designs are in [`chores/`](design/mockups/chores/README.md), and the parked portrait designs in [`portrait/`](design/mockups/portrait/README.md). |
+| [`design/family-app/notes.md`](design/family-app/notes.md) | The design of the backend and the family app for phones, and its slices |
 | [`docs/diagrams/familyhub-pitch.html`](docs/diagrams/familyhub-pitch.html) | A one-page visual pitch of the idea, written for the family. Open it from a local checkout. |
