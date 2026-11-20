@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { household } from '#lib/household.ts';
-import { parseHousehold } from './household.ts';
+import { getSetting, openHubDatabase, setSetting } from './hub-db.ts';
+import {
+	addMember,
+	householdConfig,
+	memberId,
+	parseHousehold,
+	removeMember,
+	setEveryoneColour,
+	updateMember
+} from './household.ts';
 
 const file = (members: unknown, everyone?: unknown) => JSON.stringify({ members, everyone });
 
@@ -75,5 +84,59 @@ describe('household', () => {
 	it('gives Everyone the colour chosen for it', () => {
 		const result = household([{ id: 'tom', name: 'Tom', colour: 'pink' }], 'orange');
 		expect(result.everyone!.solid).toBe('var(--orange-solid)');
+	});
+});
+
+describe('the Household in the database', () => {
+	const db = () => openHubDatabase(':memory:');
+
+	it('adds Members in order, each with an id that never changes', () => {
+		const d = db();
+		expect(addMember('Ross', 'blueberry', d)).toBe('ross');
+		expect(addMember('Maya', 'pistachio', d)).toBe('maya');
+		updateMember('ross', 'Rossco', 'peacock', d);
+		expect(householdConfig(d).members).toEqual([
+			{ id: 'ross', name: 'Rossco', colour: 'peacock' },
+			{ id: 'maya', name: 'Maya', colour: 'pistachio' }
+		]);
+	});
+
+	it('makes a new id when a name’s is taken', () => {
+		const taken = new Set(['ross']);
+		expect(memberId('Ross', taken)).toBe('ross-2');
+		expect(memberId('Everyone', new Set())).toBe('everyone-2');
+		expect(memberId('!!', new Set())).toBe('member');
+	});
+
+	it.each([
+		['an empty name', '  ', 'blue', 'Type a name.'],
+		['a name already used', 'ross', 'blue', 'There’s already a Ross.'],
+		['the Family calendar’s name', 'Family', 'blue', 'Family calendar’s name'],
+		['a colour that isn’t one', 'Maya', 'teal', 'Choose a colour.'],
+		['Everyone’s colour', 'Maya', 'slate', 'Family calendar’s colour']
+	])('turns down %s', (_, name, colour, message) => {
+		const d = db();
+		addMember('Ross', 'blue', d);
+		expect(() => addMember(name, colour, d)).toThrow(message);
+	});
+
+	it('won’t give Everyone a Member’s colour', () => {
+		const d = db();
+		addMember('Ross', 'blueberry', d);
+		expect(() => setEveryoneColour('blueberry', d)).toThrow('Ross’s colour');
+		setEveryoneColour('tangerine', d);
+		expect(householdConfig(d).everyone).toBe('tangerine');
+	});
+
+	it('removes a Member and their Calendar, but not while they have Chores', () => {
+		const d = db();
+		addMember('Ross', 'blue', d);
+		addMember('Maya', 'green', d);
+		setSetting(d, 'calendars', { ross: 'ross@example.com', maya: 'maya@example.com' });
+		setSetting(d, 'chores', { routines: [], chores: [{ id: 'teeth', who: ['maya'] }], bonus: [] });
+		expect(() => removeMember('maya', d)).toThrow('Maya has Chores');
+		removeMember('ross', d);
+		expect(householdConfig(d).members.map((m) => m.id)).toEqual(['maya']);
+		expect(getSetting(d, 'calendars')).toEqual({ maya: 'maya@example.com' });
 	});
 });

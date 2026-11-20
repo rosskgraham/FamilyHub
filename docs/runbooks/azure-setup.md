@@ -95,14 +95,14 @@ for name in google-client-id google-client-secret octopus-account octopus-api-ke
 done
 ```
 
-The values are the ones in `app/.env` on the PC. Then add the Household and Chores, which are personal, so they're kept here rather than in the public repo:
+The values are the ones in `app/.env` on the PC. The Household and Chores aren't kept here: they live in the Hub's own database, and the Household is set up in Settings at the Hub ([ADR 0012](../adr/0012-household-and-settings-in-the-hub-database.md)). A vault made before that may still have `household-json` and `chores-json`. Once a release with ADR 0012 has started on the Pi, which imports them, delete both:
 
 ```
-az keyvault secret set --vault-name "$vault" --name household-json --file household.json --output none
-az keyvault secret set --vault-name "$vault" --name chores-json --file chores.json --output none
+az keyvault secret delete --vault-name "$vault" --name household-json
+az keyvault secret delete --vault-name "$vault" --name chores-json
 ```
 
-The Pi's setup scripts copy them all to the Pi ([the Pi runbook](pi-setup.md), step 5). Any that are left out, the Hub shows sample data for. To change one later, set it again, then run the scripts with `--tags config`.
+The Pi's setup scripts copy the secrets to the Pi ([the Pi runbook](pi-setup.md), step 5). Any that are left out, the Hub shows sample data for. To change one later, set it again, then run the scripts with `--tags config`.
 
 ## Changing the resources
 

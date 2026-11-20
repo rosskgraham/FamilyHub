@@ -8,14 +8,14 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 	cookies.delete('google_state', { path: '/auth/google' });
 
 	const code = url.searchParams.get('code');
-	if (url.searchParams.get('error') || !code) redirect(303, '/setup?problem=cancelled');
-	if (!state || url.searchParams.get('state') !== state) redirect(303, '/setup?problem=expired');
+	if (url.searchParams.get('error') || !code) redirect(303, '/settings?problem=cancelled');
+	if (!state || url.searchParams.get('state') !== state) redirect(303, '/settings?problem=expired');
 
 	try {
 		await completeSignIn(code, `${url.origin}/auth/google/callback`);
 	} catch (e) {
 		console.error('Google sign-in failed:', e);
-		redirect(303, '/setup?problem=failed');
+		redirect(303, '/settings?problem=failed');
 	}
-	redirect(303, '/setup');
+	redirect(303, '/settings');
 };

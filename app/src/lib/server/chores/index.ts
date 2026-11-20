@@ -13,11 +13,9 @@ import { sampleHousehold, type Household } from '#lib/household.ts';
 import { addDays, dayKey, formatTime, type DayKey } from '#lib/time.ts';
 import { configuredHousehold } from '../household.ts';
 import { now } from '../now.ts';
-import { dataPath } from '../paths.ts';
+import { hubDatabase } from '../hub-db.ts';
 import { sampleChores, configuredChores } from './config.ts';
 import { openChoreStore, type ChoreStore } from './store.ts';
-
-const DATABASE = 'hub.db';
 
 export interface ChoresSetup {
 	config: ChoreConfig;
@@ -46,7 +44,7 @@ export async function choresSetup(): Promise<ChoresSetup> {
 }
 
 function openReal(): ChoreStore {
-	return (real ??= openChoreStore(dataPath(DATABASE)));
+	return (real ??= openChoreStore(hubDatabase()));
 }
 
 /** The real Chores' database, for backing up, or null when there are only sample Chores, which aren't kept. */

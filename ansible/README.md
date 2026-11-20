@@ -20,7 +20,7 @@ This lints the scripts, runs them twice in a Debian 13 container standing in for
 - `roles/base/`: updates (downloaded over IPv4, as the home network's IPv6 doesn't always reach the internet), automatic security updates, UK time, SSH by key only, and the firewall.
 - `roles/node/`: Node.js 24 from NodeSource.
 - `roles/hub_user/`: the `familyhub` user the Hub runs as, and its release, data and config folders ([ADR 0004](../docs/adr/0004-pi-pulls-releases.md)).
-- `roles/hub_config/`: the Hub's secrets and personal settings, from the Key Vault ([ADR 0008](../docs/adr/0008-azure-resources-from-bicep-through-azure-devops.md)). `files/read_key_vault.py` runs on the PC, signed in with `az login`, and reads the secrets named in `group_vars/all.yml`. The role writes them to `/etc/familyhub/hub.env`, writes `household.json` and `chores.json` beside it, and takes off the Pi anything the vault no longer has. Its output never shows a secret. It's tagged `config`, so `--skip-tags config` leaves it out and `--tags config` runs only it.
+- `roles/hub_config/`: the Hub's secrets, from the Key Vault ([ADR 0008](../docs/adr/0008-azure-resources-from-bicep-through-azure-devops.md)). `files/read_key_vault.py` runs on the PC, signed in with `az login`, and reads the secrets named in `group_vars/all.yml`. The role writes them to `/etc/familyhub/hub.env`, writes `household.json` and `chores.json` beside it, and takes off the Pi anything the vault no longer has. Its output never shows a secret. It's tagged `config`, so `--skip-tags config` leaves it out and `--tags config` runs only it.
 - `roles/hub/`: the Hub as a systemd service, and two timers ([ADR 0004](../docs/adr/0004-pi-pulls-releases.md)):
   - `familyhub-update.timer` runs `files/update.mjs` every 5 minutes. It installs the newest GitHub release beside the current one, after checking its SHA-256, and switches the `/opt/familyhub/current` link to it. If the new release doesn't answer `/api/health` with its version within 90 seconds, it switches back and doesn't try that version again. It keeps the newest three releases.
   - `familyhub-watchdog.timer` runs `files/watchdog.sh` every minute, and restarts the Hub if it hasn't answered for three checks in a row. systemd restarts it straight away if it crashes.
@@ -35,7 +35,7 @@ This lints the scripts, runs them twice in a Debian 13 container standing in for
 | `/opt/familyhub/releases/<version>/` | Each installed release, owned by root, so the Hub can't change its own code |
 | `/opt/familyhub/current` | A link to the release that's running |
 | `/var/lib/familyhub/` | What the Hub writes: the Google sign-in and the databases (`HUB_DATA_DIR`) |
-| `/etc/familyhub/` | `household.json` and `chores.json`, which the Hub can read, and the secrets in `hub.env`, which only root can (`HUB_CONFIG_DIR`). All from the Key Vault |
+| `/etc/familyhub/` | The secrets in `hub.env`, from the Key Vault, which only root can read (`HUB_CONFIG_DIR`). On a Pi set up before ADR 0012, also the old `household.json` and `chores.json`, imported once into the Hub's database and then ignored |
 | `/var/lib/familyhub-update/failed.json` | Releases that failed their health check and won't be tried again |
 | `/usr/local/lib/familyhub/` | The updater, the watchdog and the kiosk's launcher |
 | `/run/familyhub-kiosk/` | The kiosk's Chromium profile, in memory, emptied each time the kiosk stops |

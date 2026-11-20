@@ -10,9 +10,9 @@ describe('returnsToToday', () => {
 		expect(returnsToToday('/week', after(120), touched)).toBe(true);
 	});
 
-	it('stays put on the Today view and while setting up Google', () => {
+	it('stays put on the Today view and while signing in to Google', () => {
 		expect(returnsToToday('/', after(600), touched)).toBe(false);
-		expect(returnsToToday('/setup', after(600), touched)).toBe(false);
+		expect(returnsToToday('/auth/google/callback', after(600), touched)).toBe(false);
 	});
 });
 
@@ -26,9 +26,8 @@ describe('reloadsForRelease', () => {
 		expect(reloadsForRelease(true, '/energy', after(120), touched)).toBe(true);
 	});
 
-	it("doesn't reload without a new release, or while setting up Google", () => {
+	it("doesn't reload without a new release, or while signing in to Google", () => {
 		expect(reloadsForRelease(false, '/', after(600), touched)).toBe(false);
-		expect(reloadsForRelease(true, '/setup', after(600), touched)).toBe(false);
 		expect(reloadsForRelease(true, '/auth/google/callback', after(600), touched)).toBe(false);
 	});
 });

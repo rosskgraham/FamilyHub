@@ -14,12 +14,12 @@ Then open <http://localhost:5173>. The screen is designed at 1920×1080 and scal
 
 - `/` is the Today view.
 - `/week` is the Week view. `?week=1` shows next week, and `?week=-1` last week.
-- `/settings`, the gear at the end of the bottom bar, is Settings. For now it chooses a 24-hour clock (the default) or a 12-hour one, for every time on the screen. Settings are kept in `app/data/settings.json` with the Calendar choices. **About this Hub** shows the release running (or "Development build"), its commit, when it was built, when the server started, and Node.js's version. A change to `vite.config.ts` needs `npm run dev` started again before it shows.
+- `/settings`, the gear at the end of the bottom bar, is Settings. It chooses a 24-hour clock (the default) or a 12-hour one, for every time on the screen, and holds the Household and Google (below). **About this Hub** shows the release running (or "Development build"), its commit, when it was built, when the server started, and Node.js's version. A change to `vite.config.ts` needs `npm run dev` started again before it shows.
 - Any text box opens the Hub's own on-screen keyboard (ADR 0009), and the page slides up so the box stays above it. It has numbers along the top, `?123` for symbols including £, a capital at the start of a box, and hold-to-repeat on delete. Enter is labelled with the form's button, such as **Add**. It shows on the PC too, so typing on a real keyboard still works alongside it.
 - Tapping an Event on any view shows its full title, whose it is, its day and its times. Tapping outside it, Close, or two minutes untouched closes it.
 - `?theme=evening` or `?theme=day` on any page shows that theme whatever the time. Otherwise the Day theme shows from sunrise to sunset and the Evening theme after.
 - On a touch-only screen, such as the Hub's, the mouse pointer is hidden. A PC with a mouse keeps it.
-- After two minutes without a touch, the Hub goes back to the Today view, except from the setup page.
+- After two minutes without a touch, the Hub goes back to the Today view, except partway through signing in to Google.
 - From 22:00 to 06:30 the Hub shows Sleep: a dim clock and the next Event. A tap wakes it, and it goes back to Sleep two minutes after the last touch. The schedule is `sleepSchedule` in `src/lib/sleep.ts`, so changing it is a pull request.
 
 Until it's set up, it shows sample Events (a typical week repeated for every week) and a sample Shopping list and sample To-dos kept in memory, which reset when the app restarts. The weather is a sample until home is set.
@@ -37,15 +37,18 @@ It needs the Pi's SSH key in `C:\Users\<you>\.ssh` (copy it from Ubuntu if it wa
 ## Show the real Calendars, Shopping list and To-dos
 
 1. Follow [the Google Cloud runbook](../docs/runbooks/google-cloud-setup.md), and put `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `app/.env`.
-2. Copy `app/household.example.json` to `app/household.json` and put in the Household's Members, each with a name and a colour: `blue`, `orange`, `green`, `purple`, `slate`, `pink`, `yellow` or `red`, or one of Google Calendar's, to match the colours on everyone's phones: `blueberry`, `cherry-blossom`, `peacock`, `pistachio` or `tangerine`. An `initial` is optional; it's the first letter of the name otherwise. Git ignores this file. Everyone, for the Family calendar, is always there, in `slate` unless `"everyone": { "colour": "…" }` chooses another. Everyone can't share a Member's colour.
-3. Run the app, and choose **Sample data · set up Google** in the bottom corner (or go to <http://localhost:5173/setup>).
-4. Sign in with the Household's Google account, then choose each Member's Calendar, which Google Tasks list is the Shopping list, and which holds the To-dos. Repeating To-dos are set up in the Google Tasks app on a phone; the Hub only adds one-off ones.
+2. Run the app, and choose **Sample data · set up Google** in the bottom corner, or the gear. Under **Household and Google**, hold **Hold to change** for a second to unlock it.
+3. Sign in with the Household's Google account.
+4. Add each Member, with a name, a colour and their Calendar, and save the Family calendar's colour and Calendar. The colours include Google Calendar's own (Blueberry, Cherry Blossom, Peacock, Pistachio and Tangerine), to match everyone's phones. The Family calendar can't share a Member's colour.
+5. Choose the Birthdays calendar, and which Google Tasks lists are the Shopping list and the To-dos. Repeating To-dos are set up in the Google Tasks app on a phone; the Hub only adds one-off ones.
 
-To change a Calendar later, go back to <http://localhost:5173/setup>. Changes to `household.json` show on the next reload. Renaming a Member means choosing their Calendar again. Sample Events always use the made-up Household (Ross, Sam, Maya and Leo).
+Change any of it later in the same place. Each Member has an id that never changes, so renaming someone keeps their Calendar and Stars. A Member with Chores can't be removed. Until a Member is added, the Hub shows the made-up Household (Ross, Sam, Maya and Leo).
+
+The Household and every choice in Settings are kept in `app/data/hub.db`, the Hub's database, with the Chores ([ADR 0012](../docs/adr/0012-household-and-settings-in-the-hub-database.md)). On first start, the Hub imports `app/household.json`, `app/chores.json` and `app/data/settings.json` from before, if they're there, keeping the ids they gave. After that they're ignored and can be deleted.
 
 The corner then shows when the Calendars last updated. It warns if the Hub is offline or Google needs it to sign in again (weekly while the Google app is in Testing).
 
-The sign-in and the Calendar choices are kept in `app/data/`, which Git ignores. Delete that folder to start again.
+The sign-in and the database are kept in `app/data/`, which Git ignores. Delete that folder to start again.
 
 ### When Google can't be reached
 
@@ -71,14 +74,14 @@ The Energy section then shows the Zappi's Live demand and the Car's state, asked
 
 ## Set up the real Chores
 
-Copy `app/chores.example.json` to `app/chores.json`, which Git ignores, and put in the Household's Routines and Chores:
+The Chores are imported once from `app/chores.json` on the Hub's first start with ADR 0012, then kept in its database. Until the family app can set them up on a phone, they can't be changed. For a new install before then, copy `app/chores.example.json` to `app/chores.json`, which Git ignores, before the first start, with the Household's Routines and Chores:
 
 - Each **Routine** has an `id`, a `name` and a `from` time, in the order they happen. The current one is marked "Now".
-- Each **Chore** has an `id`, a `name`, an `icon` (`teeth`, `bed`, `shirt`, `home`, `music`, `book` or `bin`), `stars` from 1 to 3, the `routines` it's done in, and `who` does it, by their names in `household.json` (capitals don't matter). Add `days`, such as `["Wed"]`, for a Chore that isn't every day.
+- Each **Chore** has an `id`, a `name`, an `icon` (`teeth`, `bed`, `shirt`, `home`, `music`, `book` or `bin`), `stars` from 1 to 3, the `routines` it's done in, and `who` does it, by their names in the Household (capitals don't matter). Add `days`, such as `["Wed"]`, for a Chore that isn't every day.
 - **Bonus jobs**, under `bonus`, are optional extras shown as **Up for grabs**. Each has an `id`, a `name`, `stars` from 1 to 3 and optional `days`. Any child can do one: they tap **Done it**, then their own badge, and the Stars go to them. Each job can be done once a day, by whoever's first; tapping it again offers **Undo**.
 - History is recorded against the ids, so a `name` can change freely, but changing an `id` starts its history afresh. Bonus jobs and Chores can't share an id.
 
-Changes show on the next reload. Ticks are kept in `app/data/hub.db`, a SQLite database ([ADR 0006](../docs/adr/0006-hub-owned-data-in-sqlite.md)). Without `chores.json`, or with `CALENDAR_SOURCE=sample`, the Chores section shows sample Chores for Maya and Leo with a made-up week, kept in memory, which resets when the app restarts.
+Ticks are kept in `app/data/hub.db`, a SQLite database ([ADR 0006](../docs/adr/0006-hub-owned-data-in-sqlite.md)). Without Chores, or with `CALENDAR_SOURCE=sample`, the Chores section shows sample Chores for Maya and Leo with a made-up week, kept in memory, which resets when the app restarts.
 
 ## Check types and run the tests
 
@@ -108,7 +111,7 @@ Every merge to `main` that passes CI becomes a [GitHub release](https://github.c
 
 A release is `familyhub-<version>.tar.gz` and its SHA-256. It holds the built server and a `package.json`, and nothing else: the app has no runtime dependencies and no native code, so the same package runs on a PC and on the Pi. Before publishing, `scripts/release.mjs` unpacks it, starts it, and checks it answers with its version.
 
-To run one, unpack it and start it with Node 24 from that folder. It reads `household.json`, `chores.json` and `data/` from the folder it runs in, and its settings from the environment:
+To run one, unpack it and start it with Node 24 from that folder. It reads `data/` from the folder it runs in (and, once, any old `household.json` and `chores.json`), and its settings from the environment:
 
 ```
 node --env-file=.env build
@@ -125,7 +128,8 @@ It listens on port 3000, or `PORT`. `/api/health` answers `{"status":"ok","versi
 - `src/lib/calendar.ts`: the Event type and grouping Events by day.
 - `src/lib/server/calendar/`: where Events come from. `google.ts` reads Google Calendar, `fake.ts` is the sample week, `index.ts` picks one, and `cache.ts` keeps the last good Events for when Google can't be reached.
 - `src/lib/server/google/auth.ts`: signing in to Google and keeping the sign-in fresh.
-- `src/routes/setup/`: signing in, choosing whose each Calendar is, and choosing the Shopping list and the To-dos list.
+- `src/routes/settings/`: Settings: the clock, About this Hub, and the Household and Google (`src/lib/components/HouseholdSettings.svelte` and `MemberForm.svelte`): Members, their colours and Calendars, the lists, and signing in. `/setup` only redirects there now.
+- `src/lib/server/hub-db.ts`: the Hub's database, `hub.db`, and its migrations. `household.ts` keeps the Household in it, `settings.ts` the choices, and `import-files.ts` imports the old files once.
 - `src/lib/server/tasks/`: what the Shopping list and To-dos share as Google Tasks lists. `google.ts` reads and changes a list, `queue.ts` holds changes made while Google can't be reached, and `feed.ts` keeps a list fresh, shows it from disk when Google can't be reached, and applies changes.
 - `src/lib/server/shopping/` and `src/lib/server/todos/`: each list's own reading of Google's tasks, and its sample list in `fake.ts`.
 - `src/lib/components/ShoppingList.svelte`: the list on the Today view and in the Shopping section, with ticking off, adding and removing.

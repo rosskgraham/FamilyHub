@@ -28,8 +28,8 @@
     group: "{{ hub_user }}"
     mode: "0700"
 
-# household.json and chores.json: the Hub reads them, and only the setup scripts change them. The secrets
-# go here too, in hub.env, which only root can read: systemd hands them to the Hub when it starts.
+# The secrets, in hub.env, which only root can read: systemd hands them to the Hub when it starts. Before ADR
+# 0012, household.json and chores.json were here too; a Pi set up then still has them, imported once and ignored.
 - name: Create the Hub's config folder
   ansible.builtin.file:
     path: "{{ hub_config_dir }}"

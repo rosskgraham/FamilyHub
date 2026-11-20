@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { updated } from '$app/state';
 	import { build } from '#lib/build.ts';
+	import HouseholdSettings from '#lib/components/HouseholdSettings.svelte';
 	import { showTime } from '#lib/show-time.svelte.ts';
 	import { clock } from '#lib/clock.svelte.ts';
 	import { clockFormat } from '#lib/show-time.svelte.ts';
@@ -22,7 +23,7 @@
 <section class="settings">
 	<h1>Settings</h1>
 
-	{#if form?.message}<p class="problem">{form.message}</p>{/if}
+	{#if form && 'form' in form && form.form === 'clock'}<p class="problem">{form.message}</p>{/if}
 
 	<!-- A tap saves straight away, and every time on the screen changes with it. -->
 	<form method="POST" action="?/clock" use:enhance>
@@ -41,6 +42,15 @@
 			</div>
 		</div>
 	</form>
+
+	<HouseholdSettings
+		household={data.household}
+		choices={data.choices}
+		google={data.google}
+		problem={data.problem}
+		backup={data.backup}
+		form={form ?? null}
+	/>
 
 	<!-- What's running, to check a release reached the Pi. The values change with every build, so the screenshot tests
 	     cover them up. -->
@@ -69,10 +79,16 @@
 </section>
 
 <style>
+	/* Taller than the screen with the Household, so it scrolls above the bottom bar. */
 	.settings {
 		flex: 1;
-		max-width: 1100px;
+		min-width: 0;
+		overflow-y: auto;
 		font-size: 28px;
+	}
+	.settings > :global(form),
+	.settings > .about {
+		max-width: 1100px;
 	}
 	h1 {
 		margin: 0 0 32px;

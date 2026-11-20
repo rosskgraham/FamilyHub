@@ -7,7 +7,7 @@ A family wall display in the kitchen that shows the household's calendars, a sha
 ### People
 
 **Household**:
-The family the Hub serves, listed in `app/household.json`. Sample data uses a made-up Household: Ross, Sam, Maya and Leo.
+The family the Hub serves, set up in Settings and kept in the Hub's database. Sample data uses a made-up Household: Ross, Sam, Maya and Leo.
 _Avoid_: Users, accounts, family group
 
 **Member**:

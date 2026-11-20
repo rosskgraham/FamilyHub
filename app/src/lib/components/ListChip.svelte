@@ -7,7 +7,7 @@
 
 <!-- Beside a Google Tasks list's heading: a count, or why it may be out of date. -->
 {#if status.kind === 'stale' && status.reason === 'sign-in'}
-	<a class="chip problem" href="/setup">Sign in needed</a>
+	<a class="chip problem" href="/settings">Sign in needed</a>
 {:else if status.kind === 'stale'}
 	<span class="chip problem">{status.waiting > 0 ? `Offline · ${status.waiting} to send` : 'Offline'}</span>
 {:else}
