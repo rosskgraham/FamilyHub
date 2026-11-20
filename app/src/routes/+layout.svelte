@@ -8,13 +8,16 @@
 	import favicon from '#lib/assets/favicon.svg';
 	import Header from '#lib/components/Header.svelte';
 	import NavBar from '#lib/components/NavBar.svelte';
+	import EventDetail from '#lib/components/EventDetail.svelte';
 	import Sleep from '#lib/components/Sleep.svelte';
 	import { clock } from '#lib/clock.svelte.ts';
+	import { eventDetail } from '#lib/event-detail.svelte.ts';
+	import { IDLE_MS } from '#lib/idle.ts';
 	import { reloadsForRelease, returnsToToday } from '#lib/idle.ts';
 	import { isAsleep, sleepPalette } from '#lib/sleep.ts';
 	import { cssVariables, palettes } from '#lib/theme.ts';
 	import { browser } from '$app/env';
-	import { goto, invalidateAll } from '$app/navigation';
+	import { afterNavigate, goto, invalidateAll } from '$app/navigation';
 	import { page, updated } from '$app/state';
 	import { onMount } from 'svelte';
 	import type { LayoutProps } from './$types';
@@ -47,6 +50,14 @@
 		goto(theme ? `/?theme=${theme}` : '/');
 	});
 
+	// An Event's detail closes on its own like everything else: two minutes untouched, on going to sleep, or on leaving
+	// the page it was opened from.
+	$effect(() => {
+		if (!eventDetail.shown) return;
+		if (asleep || clock.now.getTime() - (lastTouch ?? loadedAt).getTime() >= IDLE_MS) eventDetail.close();
+	});
+	afterNavigate(() => eventDetail.close());
+
 	// The Pi installs a new release by itself (ADR 0004). Once the Hub's been left alone, load its code too.
 	$effect(() => {
 		if (browser && reloadsForRelease(updated.current, page.url.pathname, clock.now, lastTouch ?? loadedAt))
@@ -74,6 +85,7 @@
 		<main>{@render children()}</main>
 		<!-- Setup isn't a Section, and has its own way back. -->
 		{#if !page.url.pathname.startsWith('/setup')}<NavBar />{/if}
+		{#if eventDetail.shown}<EventDetail shown={eventDetail.shown} />{/if}
 		{#if asleep}
 			<Sleep events={data.sleep.events} owners={data.sleep.owners} onwake={() => (lastTouch = new Date())} />
 		{/if}

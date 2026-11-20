@@ -2,7 +2,8 @@
 	import { clock } from '#lib/clock.svelte.ts';
 	import WeatherIcon from './WeatherIcon.svelte';
 	import { RAIN_HOURS, type Weather } from '#lib/weather.ts';
-	import { dayKey, formatDayMonth, formatTime, formatWeekday } from '#lib/time.ts';
+	import { dayKey, formatDayMonth, formatWeekday } from '#lib/time.ts';
+	import { showTime } from '#lib/show-time.svelte.ts';
 
 	let { weather }: { weather: Weather | null } = $props();
 
@@ -11,7 +12,7 @@
 
 <header>
 	<div class="when">
-		<div class="clock tabular">{formatTime(clock.now)}</div>
+		<div class="clock tabular">{showTime(clock.now)}</div>
 		<div>
 			<div class="weekday">{formatWeekday(today, 'long')}</div>
 			<div class="date">{formatDayMonth(today)}</div>

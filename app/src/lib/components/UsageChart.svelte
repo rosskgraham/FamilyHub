@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { bandAt, chargeLine, halfHoursOf, type ChargeReading, type HalfHourUse, type Slot } from '#lib/energy.ts';
 	import { formatTime, type DayKey } from '#lib/time.ts';
+	import { showTime } from '#lib/show-time.svelte.ts';
 
 	let {
 		day,
@@ -38,7 +39,7 @@
 				band: priced ? bandAt(from, slots) : null,
 				house: ((u?.house ?? 0) / top) * 100,
 				car: ((u?.car ?? 0) / top) * 100,
-				label: time.endsWith(':00') && Number(time.slice(0, 2)) % 3 === 0 ? time : ''
+				label: time.endsWith(':00') && Number(time.slice(0, 2)) % 3 === 0 ? showTime(from) : ''
 			};
 		})
 	);

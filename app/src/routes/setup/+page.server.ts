@@ -73,6 +73,7 @@ export const actions = {
 			return typeof value === 'string' && value !== '' ? value : undefined;
 		};
 		await writeSettings({
+			...(await readSettings()),
 			calendars,
 			shoppingList: chosen('shoppingList'),
 			todoList: chosen('todoList'),

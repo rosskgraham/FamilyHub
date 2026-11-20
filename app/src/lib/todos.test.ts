@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dueBy, groupTodos, lateness, type Todo } from './todos.ts';
+import { dueBy, forToday, groupTodos, lateness, type Todo } from './todos.ts';
 
 const TODAY = '2026-11-07';
 const todo = (text: string, due: string | null, tickedOff = false): Todo => ({ id: text, text, due, tickedOff });
@@ -19,6 +19,24 @@ describe('dueBy', () => {
 	it('keeps a To-do just ticked off where it was, so it can be unticked', () => {
 		const todos = [todo('Ticked', '2026-11-06', true), todo('Today', TODAY)];
 		expect(dueBy(todos, TODAY).map((t) => t.text)).toEqual(['Ticked', 'Today']);
+	});
+});
+
+describe('forToday', () => {
+	it('puts overdue and today first, then undated To-dos in list order, leaving out later dates', () => {
+		const todos = [
+			todo('Undated A', null),
+			todo('Today', TODAY),
+			todo('Next week', '2026-11-14'),
+			todo('Undated B', null),
+			todo('Yesterday', '2026-11-06')
+		];
+		expect(forToday(todos, TODAY).map((t) => t.text)).toEqual(['Yesterday', 'Today', 'Undated A', 'Undated B']);
+	});
+
+	it('keeps an undated To-do just ticked off where it was, so it can be unticked', () => {
+		const todos = [todo('Ticked', null, true), todo('Undated', null)];
+		expect(forToday(todos, TODAY).map((t) => t.text)).toEqual(['Ticked', 'Undated']);
 	});
 });
 

@@ -4,7 +4,7 @@ A design for a To-dos Section and a Today view card, with the Shopping list on t
 
 ## The idea
 
-The Household's jobs that aren't Chores, such as entering the meter readings or booking the car's MOT, live in a Google Tasks list called "Family Task List". Some happen once, some repeat. The Hub shows what's due today and what's overdue, and anyone can tick a To-do off at the Hub, or on a phone in the Google Tasks app.
+The Household's jobs that aren't Chores, such as entering the meter readings or booking the car's MOT, live in a Google Tasks list called "Family Task List". Some happen once, some repeat. The Hub shows what's due today and what's overdue, and the To-dos with no date, and anyone can tick a To-do off at the Hub, or on a phone in the Google Tasks app.
 
 To-dos aren't Chores. Chores are the children's, grouped into Routines, and earn Stars. To-dos are anyone's, and earn nothing.
 
@@ -41,7 +41,7 @@ So the Hub can show what's due and overdue, and one-off To-dos with future dates
 - **The side column of the Today view:** the Energy card, then To-dos (the Shopping card was dropped on 17 November 2026).
 - **Which list holds To-dos** is chosen on the setup page, like the Shopping list.
 
-- **Today view card:** To-dos due today or overdue, overdue first, each with how late it is ("2 days late"). Ticking off works on the card itself.
+- **Today view card:** To-dos due today or overdue, overdue first, each with how late it is ("2 days late"), then To-dos with no date, which are free for anyone to pick up (added 20 November 2026). The "N due" count leaves the undated ones out. Ticking off works on the card itself.
 - **To-dos Section:** overdue, today, and then what's coming, by date. One-off To-dos with a future date show there; repeating ones only once Google lists them. **+ Add** for a one-off To-do, with an optional due date.
 
 ## Open questions

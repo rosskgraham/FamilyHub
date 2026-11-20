@@ -31,6 +31,14 @@ export function dueBy(todos: Todo[], today: DayKey): Todo[] {
 	return todos.filter((t) => t.due !== null && t.due <= today).sort(byDue);
 }
 
+/**
+ * For the Today view: what's due today or before, overdue first, then the To-dos with no date, in the list's order.
+ * Those are free for anyone to pick up, so they show too, after what's due. Later dates wait for the To-dos Section.
+ */
+export function forToday(todos: Todo[], today: DayKey): Todo[] {
+	return [...dueBy(todos, today), ...todos.filter((t) => t.due === null)];
+}
+
 function daysBetween(from: DayKey, to: DayKey): number {
 	return Math.round((Date.parse(`${to}T12:00:00Z`) - Date.parse(`${from}T12:00:00Z`)) / 86_400_000);
 }

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { dueBy, type Todo, type TodosStatus } from '#lib/todos.ts';
+	import { forToday, type Todo, type TodosStatus } from '#lib/todos.ts';
 	import type { DayKey } from '#lib/time.ts';
 	import ListChip from './ListChip.svelte';
 	import TodoItem from './TodoItem.svelte';
@@ -13,14 +13,15 @@
 
 	let problem: string | null = $state(null);
 
-	const due = $derived(dueBy(todos, today));
-	const left = $derived(due.filter((t) => !t.tickedOff).length);
+	const shown = $derived(forToday(todos, today));
+	// The chip counts only what's due; To-dos with no date are there to pick up, not late.
+	const left = $derived(shown.filter((t) => t.due !== null && !t.tickedOff).length);
 	// With more than fit, the last row says how many more there are.
-	const visible = $derived(due.length > rows ? due.slice(0, rows - 1) : due);
-	const more = $derived(due.length - visible.length);
+	const visible = $derived(shown.length > rows ? shown.slice(0, rows - 1) : shown);
+	const more = $derived(shown.length - visible.length);
 </script>
 
-<!-- The Today view's To-dos: what's due today or overdue. The rest are in the To-dos Section. -->
+<!-- The Today view's To-dos: what's due today or overdue, then those with no date. Later ones are in the To-dos Section. -->
 <section class="todos">
 	<div class="head">
 		<a href="/todos"><h2>To-dos</h2></a>
@@ -29,7 +30,7 @@
 
 	{#if problem}<p class="message" role="alert">{problem}</p>{/if}
 
-	{#if due.length === 0}
+	{#if shown.length === 0}
 		<p class="none">Nothing due today</p>
 	{:else}
 		<ul>

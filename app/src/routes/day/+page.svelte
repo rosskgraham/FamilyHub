@@ -1,9 +1,11 @@
 <script lang="ts">
+	import { opensEvent } from '#lib/event-detail.svelte.ts';
 	import { eventsOn } from '#lib/calendar.ts';
 	import { clock } from '#lib/clock.svelte.ts';
 	import Badge from '#lib/components/Badge.svelte';
 	import Banner from '#lib/components/Banner.svelte';
-	import { addDays, formatDayMonth, formatTime, formatWeekday } from '#lib/time.ts';
+	import { addDays, formatDayMonth, formatWeekday } from '#lib/time.ts';
+	import { showTime } from '#lib/show-time.svelte.ts';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -66,6 +68,7 @@
 					title={event.title}
 					bin={event.bin}
 					birthday={event.birthday}
+					{event}
 					height={56}
 					badge={36}
 					fontSize={26}
@@ -81,8 +84,14 @@
 		<div class="rows">
 			{#each day.timed as event (event.id)}
 				{@const owner = data.owners[event.owner]}
-				<div class="row" class:past={isPast(event.end)} style:background={owner.bg} style:color={owner.fg}>
-					<span class="time tabular">{formatTime(new Date(event.start))}–{formatTime(new Date(event.end))}</span>
+				<div
+					class="row"
+					class:past={isPast(event.end)}
+					use:opensEvent={{ event, owner }}
+					style:background={owner.bg}
+					style:color={owner.fg}
+				>
+					<span class="time tabular">{showTime(event.start)}–{showTime(event.end)}</span>
 					<Badge {owner} size={44} />
 					<span class="title">{event.title}</span>
 				</div>
@@ -179,6 +188,7 @@
 	}
 	.time {
 		flex: none;
+		white-space: nowrap;
 		font-size: 30px;
 		font-weight: 700;
 	}

@@ -15,7 +15,8 @@
 		formatStarts,
 		totals
 	} from '#lib/energy.ts';
-	import { dayKey, formatTime } from '#lib/time.ts';
+	import { dayKey } from '#lib/time.ts';
+	import { clockFormat, showTime } from '#lib/show-time.svelte.ts';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -33,7 +34,7 @@
 	const yesterdayKwh = $derived(yesterday ? yesterday.house + yesterday.car : 0);
 
 	const bandName = { 'off-peak': 'Off-peak', slot: 'Smart-charging slot', peak: 'Peak' };
-	const time = (iso: string) => formatTime(new Date(iso));
+	const time = showTime;
 
 	// Says when the Section isn't showing the real thing, or isn't up to date.
 	const note = $derived.by(() => {
@@ -72,7 +73,7 @@
 			<div class="eyebrow">Using now</div>
 			{#if energy.live}
 				<div class="big tabular">{formatKw(energy.live.watts)}</div>
-				<div class="sub">{carLine(energy.live.car, energy.charge, clock.now)}</div>
+				<div class="sub">{carLine(energy.live.car, energy.charge, clock.now, clockFormat())}</div>
 			{:else}
 				<div class="none">Not reporting</div>
 				{#if energy.usageStatus.kind === 'stale' && energy.usageStatus.updatedAt}
@@ -87,13 +88,15 @@
 				<div class="none">Not known</div>
 			{:else if cheap.current}
 				<div class="eyebrow">Cheap now · <span class="pence">{formatPence(rates.offPeak)}</span></div>
-				<div class="when tabular">Until {time(cheap.current.to)}</div>
+				<div class="when tabular" class:twelve={clockFormat() === '12h'}>Until {time(cheap.current.to)}</div>
 				<div class="sub">
 					{cheap.current.slot ? `Smart-charging slot, then ${time(cheap.next.from)}` : 'Off-peak window'}
 				</div>
 			{:else}
 				<div class="eyebrow">Next cheap · <span class="pence">{formatPence(rates.offPeak)}</span></div>
-				<div class="when tabular">{time(cheap.next.from)}–{time(cheap.next.to)}</div>
+				<div class="when tabular" class:twelve={clockFormat() === '12h'}>
+					{time(cheap.next.from)}–{time(cheap.next.to)}
+				</div>
 				<div class="sub">
 					{cheap.next.slot ? `Smart-charging slot, then ${time(cheap.then.from)}` : 'Off-peak window'}
 				</div>
@@ -144,7 +147,7 @@
 				</div>
 				<div class="start">
 					{#if rates}
-						<div class="time tabular">{formatStarts(start, clock.now)}</div>
+						<div class="time tabular">{formatStarts(start, clock.now, clockFormat())}</div>
 						<div class="sub dim">
 							{start.slot
 								? 'smart-charging slot'
@@ -288,6 +291,11 @@
 		font-size: 56px;
 		font-weight: 700;
 		line-height: 1.1;
+		white-space: nowrap;
+	}
+	/* "11:30 pm–5:30 am" is longer than "23:30–05:30", and still has to fit on one line. */
+	.when.twelve {
+		font-size: 38px;
 	}
 
 	.day {

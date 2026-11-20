@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { showTime } from '#lib/show-time.svelte.ts';
 	import { clock } from '#lib/clock.svelte.ts';
 	import {
 		cheapNow,
@@ -11,7 +12,6 @@
 		type Rates,
 		type Slot
 	} from '#lib/energy.ts';
-	import { formatTime } from '#lib/time.ts';
 
 	let {
 		rates,
@@ -50,7 +50,7 @@
 					? 'Car plugged in'
 					: 'Car not plugged in') + (percent ? `, battery ${percent}` : '')
 	);
-	const time = (iso: string) => formatTime(new Date(iso));
+	const time = showTime;
 	// A sync failing for an hour says so here, where everyone looks, instead of the slot.
 	const problem = $derived.by(() => {
 		const { octopus, zappi } = needsRoss;

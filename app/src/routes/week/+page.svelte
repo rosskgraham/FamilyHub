@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { opensEvent } from '#lib/event-detail.svelte.ts';
 	import { takeBins } from '#lib/bins.ts';
 	import { eventsOn } from '#lib/calendar.ts';
 	import { clock } from '#lib/clock.svelte.ts';
@@ -6,7 +7,8 @@
 	import Banner from '#lib/components/Banner.svelte';
 	import BinIcon from '#lib/components/BinIcon.svelte';
 	import { fitColumn, type Space } from '#lib/fit.ts';
-	import { dayOfMonth, formatDayMonth, formatTime, formatWeekday, type DayKey } from '#lib/time.ts';
+	import { dayOfMonth, formatDayMonth, formatWeekday, type DayKey } from '#lib/time.ts';
+	import { showTime } from '#lib/show-time.svelte.ts';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -100,6 +102,7 @@
 						title={event.title}
 						bin={event.bin}
 						birthday={event.birthday}
+						{event}
 						height={SPACE.row}
 					/>
 				{/each}
@@ -109,15 +112,27 @@
 				{#each fit.timed as event (event.id)}
 					{@const owner = data.owners[event.owner]}
 					{#if fit.compact}
-						<div class="row" style:height="{SPACE.row}px" style:background={owner.bg} style:color={owner.fg}>
-							<span class="row-time tabular">{formatTime(new Date(event.start))}</span>
+						<div
+							class="row"
+							use:opensEvent={{ event, owner }}
+							style:height="{SPACE.row}px"
+							style:background={owner.bg}
+							style:color={owner.fg}
+						>
+							<span class="row-time tabular">{showTime(event.start)}</span>
 							<Badge {owner} size={26} />
 							<span class="row-title">{event.title}</span>
 						</div>
 					{:else}
-						<div class="card" style:height="{SPACE.card}px" style:background={owner.bg} style:color={owner.fg}>
+						<div
+							class="card"
+							use:opensEvent={{ event, owner }}
+							style:height="{SPACE.card}px"
+							style:background={owner.bg}
+							style:color={owner.fg}
+						>
 							<div class="card-top">
-								<span class="card-time tabular">{formatTime(new Date(event.start))}</span>
+								<span class="card-time tabular">{showTime(event.start)}</span>
 								<Badge {owner} />
 							</div>
 							<div class="card-title">{event.title}</div>
@@ -262,6 +277,7 @@
 	}
 	.row-time {
 		flex: none;
+		white-space: nowrap;
 		font-weight: 700;
 	}
 	.row-title {
@@ -295,6 +311,7 @@
 		justify-content: space-between;
 	}
 	.card-time {
+		white-space: nowrap;
 		font-size: 22px;
 		font-weight: 700;
 	}

@@ -1,5 +1,7 @@
 <script lang="ts">
 	import type { BinColour } from '#lib/bins.ts';
+	import type { CalendarEvent } from '#lib/calendar.ts';
+	import { opensEvent } from '#lib/event-detail.svelte.ts';
 	import type { Owner } from '#lib/household.ts';
 	import Badge from './Badge.svelte';
 	import BinIcon from './BinIcon.svelte';
@@ -14,7 +16,8 @@
 		badge = 26,
 		fontSize = 20,
 		bin,
-		birthday = false
+		birthday = false,
+		event
 	}: {
 		owner: Owner;
 		title: string;
@@ -23,11 +26,14 @@
 		fontSize?: number;
 		bin?: BinColour;
 		birthday?: boolean;
+		/** The Event, to show its detail when tapped. */
+		event?: CalendarEvent;
 	} = $props();
 </script>
 
 <div
 	class="banner"
+	use:opensEvent={event ? { event, owner } : null}
 	style:height="{height}px"
 	style:border-color={owner.solid}
 	style:color={owner.fg}

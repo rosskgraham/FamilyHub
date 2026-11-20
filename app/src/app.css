@@ -22,6 +22,18 @@ a {
 	text-decoration: none;
 }
 
+/* The Hub's screen is touch only, so it has no use for a mouse pointer drawn over it. A PC with a mouse keeps its own. */
+@media (pointer: coarse) {
+	* {
+		cursor: none !important;
+	}
+}
+
+/* Events open their detail when tapped. */
+.opens-event {
+	cursor: pointer;
+}
+
 .tabular {
 	font-variant-numeric: tabular-nums;
 }
