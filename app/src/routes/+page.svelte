@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { opensEvent } from '#lib/event-detail.svelte.ts';
 	import { takeBins } from '#lib/bins.ts';
 	import { eventsOn } from '#lib/calendar.ts';
 	import { clock } from '#lib/clock.svelte.ts';
@@ -8,7 +9,8 @@
 	import EnergyCard from '#lib/components/EnergyCard.svelte';
 	import TodosCard from '#lib/components/TodosCard.svelte';
 	import { fitColumn } from '#lib/fit.ts';
-	import { addDays, dayOfMonth, formatIn, formatTime, formatWeekday } from '#lib/time.ts';
+	import { addDays, dayOfMonth, formatIn, formatWeekday } from '#lib/time.ts';
+	import { showTime } from '#lib/show-time.svelte.ts';
 	import {
 		BANNER,
 		CHIP,
@@ -52,7 +54,7 @@
 <div class="today" style:gap="{SECTION_GAP}px">
 	{#if next}
 		{@const owner = data.owners[next.owner]}
-		<section class="next" style:height="{NEXT}px">
+		<section class="next" style:height="{NEXT}px" use:opensEvent={{ event: next, owner }}>
 			<div class="who">
 				<Badge {owner} size={80} />
 				<div>
@@ -60,7 +62,7 @@
 					<div class="title">{next.title}</div>
 				</div>
 			</div>
-			<div class="time tabular">{formatTime(new Date(next.start))}</div>
+			<div class="time tabular">{showTime(next.start)}</div>
 		</section>
 	{:else}
 		<section class="next" style:height="{NEXT}px">
@@ -76,6 +78,7 @@
 					title={event.title}
 					bin={event.bin}
 					birthday={event.birthday}
+					{event}
 					height={BANNER}
 					badge={36}
 					fontSize={26}
@@ -92,11 +95,12 @@
 				<div
 					class="row"
 					class:slim
+					use:opensEvent={{ event, owner }}
 					style:height="{layout.laterRow}px"
 					style:background={owner.bg}
 					style:color={owner.fg}
 				>
-					<span class="row-time tabular">{formatTime(new Date(event.start))}</span>
+					<span class="row-time tabular">{showTime(event.start)}</span>
 					<Badge {owner} size={slim ? 34 : 44} />
 					<span class="row-title">{event.title}</span>
 				</div>
@@ -127,6 +131,7 @@
 							title={event.title}
 							bin={event.bin}
 							birthday={event.birthday}
+							{event}
 							height={CHIP}
 							badge={24}
 							fontSize={21}
@@ -134,9 +139,15 @@
 					{/each}
 					{#each fit.timed as event (event.id)}
 						{@const owner = data.owners[event.owner]}
-						<div class="chip" style:height="{CHIP}px" style:background={owner.bg} style:color={owner.fg}>
+						<div
+							class="chip"
+							use:opensEvent={{ event, owner }}
+							style:height="{CHIP}px"
+							style:background={owner.bg}
+							style:color={owner.fg}
+						>
 							<span class="tag" style:background={owner.solid} style:color={owner.on}>{owner.initial}</span>
-							<span class="chip-text"><b class="tabular">{formatTime(new Date(event.start))}</b> {event.title}</span>
+							<span class="chip-text"><b class="tabular">{showTime(event.start)}</b> {event.title}</span>
 						</div>
 					{/each}
 					{#if fit.more > 0}
@@ -229,8 +240,11 @@
 		padding: 0 24px;
 		border-radius: 20px;
 	}
+	/* Wide enough for "19:30", and grows for "7:30 pm" in the 12-hour format. */
 	.row-time {
-		width: 96px;
+		flex: none;
+		min-width: 96px;
+		white-space: nowrap;
 		font-size: 32px;
 		font-weight: 700;
 	}

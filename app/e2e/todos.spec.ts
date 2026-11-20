@@ -20,15 +20,20 @@ test.beforeEach(async ({ page }) => {
 	await page.clock.setFixedTime(new Date(NOW));
 });
 
-test('the Today view shows To-dos due today and overdue, overdue first, saying how late', async ({ page }) => {
+test('the Today view shows To-dos due today and overdue, overdue first, saying how late, then undated ones', async ({
+	page
+}) => {
 	await page.goto('/');
 	const card = page.locator('section.todos');
 	await expect(card.getByRole('heading', { name: 'To-dos' })).toBeVisible();
 	const first = card.getByRole('button').first();
 	await expect(first).toHaveAccessibleName('Tick off Renew the car insurance');
 	await expect(first).toContainText('3 days late');
-	// The overdue one and three due today (one just ticked off), all fitting in the card's five rows.
-	await expect(card.getByRole('button')).toHaveCount(4);
+	// The overdue one, three due today (one just ticked off), then the undated one, filling the card's five rows.
+	// Those due later are left for the To-dos Section.
+	await expect(card.getByRole('button')).toHaveCount(5);
+	await expect(card.getByRole('button').last()).toHaveAccessibleName('Tick off Clean the oven');
+	await expect(card.getByText('Pay the window cleaner')).toHaveCount(0);
 	await expect(card.getByRole('link', { name: /more/ })).toHaveCount(0);
 	await expect(card.getByText('3 due')).toBeVisible();
 });

@@ -32,7 +32,23 @@ export interface MemberColours {
 }
 
 // Slate was Everyone's grey before Everyone's colour could be chosen, and is still its colour unless one is.
-export const memberColours = ['blue', 'orange', 'green', 'purple', 'slate', 'pink', 'yellow', 'red'] as const;
+// The last five are Google Calendar's, by Google's names, so a Member can have the same colour on the Hub as on their
+// phone. Google's own shades are kept where they're readable, and deepened just enough where they aren't.
+export const memberColours = [
+	'blue',
+	'orange',
+	'green',
+	'purple',
+	'slate',
+	'pink',
+	'yellow',
+	'red',
+	'blueberry',
+	'cherry-blossom',
+	'peacock',
+	'pistachio',
+	'tangerine'
+] as const;
 
 export interface Palette {
 	/** The page behind the cards. */
@@ -144,7 +160,12 @@ export const palettes: Record<Theme, Palette> = {
 			slate: { bg: '#E3E6EB', fg: '#1E2530', solid: '#4A5565', on: '#FFFFFF' },
 			pink: { bg: '#FBD9E7', fg: '#6E1640', solid: '#C2306B', on: '#FFFFFF' },
 			yellow: { bg: '#FFEFB0', fg: '#5C4300', solid: '#8A6500', on: '#FFFFFF' },
-			red: { bg: '#FFD8D4', fg: '#7A1A14', solid: '#C0362C', on: '#FFFFFF' }
+			red: { bg: '#FFD8D4', fg: '#7A1A14', solid: '#C0362C', on: '#FFFFFF' },
+			blueberry: { bg: '#DDE1F7', fg: '#1F2A70', solid: '#3F51B5', on: '#FFFFFF' },
+			'cherry-blossom': { bg: '#FBDDE8', fg: '#6E0E33', solid: '#D81B60', on: '#FFFFFF' },
+			peacock: { bg: '#CCEBFA', fg: '#00405F', solid: '#0277BD', on: '#FFFFFF' },
+			pistachio: { bg: '#DCEDC8', fg: '#28440F', solid: '#4E7F22', on: '#FFFFFF' },
+			tangerine: { bg: '#FFDCCF', fg: '#6B1F00', solid: '#CC3F10', on: '#FFFFFF' }
 		}
 	},
 	// From the dark mockup (B · Lanes by person): dimmer, so it's easy on the eyes in a dark kitchen.
@@ -195,7 +216,12 @@ export const palettes: Record<Theme, Palette> = {
 			slate: { bg: '#2A313C', fg: '#DCE1EA', solid: '#A6B0BF', on: '#0E1116' },
 			pink: { bg: '#4A1830', fg: '#FFD0E3', solid: '#FF85B4', on: '#3A0A20' },
 			yellow: { bg: '#3D3208', fg: '#FFE9A3', solid: '#F5C842', on: '#2E2400' },
-			red: { bg: '#4A1714', fg: '#FFD0CC', solid: '#FF8A80', on: '#3A0805' }
+			red: { bg: '#4A1714', fg: '#FFD0CC', solid: '#FF8A80', on: '#3A0805' },
+			blueberry: { bg: '#232A55', fg: '#D0D6FF', solid: '#8C9EFF', on: '#121A4A' },
+			'cherry-blossom': { bg: '#4D1428', fg: '#FFD0E0', solid: '#FF6FA0', on: '#3D0718' },
+			peacock: { bg: '#0B3448', fg: '#BDE8FF', solid: '#4FC3F7', on: '#002A3D' },
+			pistachio: { bg: '#253A12', fg: '#D4EDB8', solid: '#9CCC65', on: '#1A2E06' },
+			tangerine: { bg: '#4D200F', fg: '#FFD4C2', solid: '#FF8A65', on: '#3D1100' }
 		}
 	}
 };

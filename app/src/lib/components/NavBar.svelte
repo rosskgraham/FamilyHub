@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { formatTime } from '#lib/time.ts';
+	import { showTime } from '#lib/show-time.svelte.ts';
 
 	const links = [
 		{ href: '/', label: 'Today' },
@@ -14,7 +14,7 @@
 	];
 
 	const status = $derived(page.data.calendarStatus);
-	const updated = (iso: string | null) => (iso ? `last updated ${formatTime(new Date(iso))}` : 'not loaded yet');
+	const updated = (iso: string | null) => (iso ? `last updated ${showTime(iso)}` : 'not loaded yet');
 
 	// A long press on the status opens setup. It's hidden like this because setup can sign the Hub out of Google.
 	const LONG_PRESS_MS = 1000;
@@ -42,6 +42,23 @@
 		{#each links as link (link.href)}
 			<a href={link.href} aria-current={page.url.pathname === link.href ? 'page' : undefined}>{link.label}</a>
 		{/each}
+		<a
+			class="settings"
+			href="/settings"
+			aria-label="Settings"
+			aria-current={page.url.pathname === '/settings' ? 'page' : undefined}
+		>
+			<svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true">
+				<path
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"
+				/>
+			</svg>
+		</a>
 	</nav>
 
 	{#if status?.kind === 'sample'}
@@ -49,7 +66,7 @@
 			>{status.setUp ? 'Sample data' : 'Sample data · set up Google'}</a
 		>
 	{:else if status?.kind === 'live'}
-		<span class="status" use:opensSetup>Updated {formatTime(new Date(status.updatedAt))}</span>
+		<span class="status" use:opensSetup>Updated {showTime(status.updatedAt)}</span>
 	{:else if status?.kind === 'stale' && status.reason === 'sign-in'}
 		<a class="status problem" href="/setup" use:opensSetup>Calendar needs signing in again</a>
 	{:else if status?.kind === 'stale'}
@@ -81,6 +98,9 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
+	}
+	nav a.settings {
+		width: 80px;
 	}
 	nav a[aria-current='page'] {
 		background: var(--selected);

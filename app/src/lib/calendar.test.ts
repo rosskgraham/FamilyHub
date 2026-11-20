@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { eventsOn, nextEvent, type CalendarEvent } from './calendar.ts';
+import { eventsOn, eventWhen, nextEvent, type CalendarEvent } from './calendar.ts';
 
 const timed = (id: string, start: string, end: string): CalendarEvent => ({
 	id,
@@ -45,5 +45,44 @@ describe('nextEvent', () => {
 
 	it('skips an Event that has started, and all-day Events', () => {
 		expect(nextEvent([lunch, bins], new Date('2026-10-28T12:30:00Z'))).toBeUndefined();
+	});
+});
+
+describe('eventWhen', () => {
+	const event = (allDay: boolean, start: string, end: string): CalendarEvent => ({
+		id: 'e',
+		title: 'Event',
+		owner: 'ross',
+		allDay,
+		start,
+		end
+	});
+
+	it('gives a timed Event its UK day and times', () => {
+		// 4 July 2026 is in summer time, so 08:00 UTC is 09:00 in the UK.
+		expect(eventWhen(event(false, '2026-07-04T08:00:00Z', '2026-07-04T09:30:00Z'))).toEqual({
+			day: 'Saturday 4 July',
+			time: '09:00–10:30'
+		});
+	});
+
+	it('uses the clock format chosen in Settings', () => {
+		expect(eventWhen(event(false, '2026-11-20T15:00:00Z', '2026-11-20T16:00:00Z'), '12h').time).toBe('3:00 pm–4:00 pm');
+	});
+
+	it('keeps an Event ending at midnight on its own day', () => {
+		expect(eventWhen(event(false, '2026-11-20T22:00:00Z', '2026-11-21T00:00:00Z')).day).toBe('Friday 20 November');
+	});
+
+	it('gives both days for a timed Event past midnight', () => {
+		expect(eventWhen(event(false, '2026-11-20T22:00:00Z', '2026-11-21T02:00:00Z'))).toEqual({
+			day: 'Friday 20 November – Saturday 21 November',
+			time: '22:00–02:00'
+		});
+	});
+
+	it('says all day, with the last day for a longer one', () => {
+		expect(eventWhen(event(true, '2026-11-20', '2026-11-21'))).toEqual({ day: 'Friday 20 November', time: 'All day' });
+		expect(eventWhen(event(true, '2026-11-20', '2026-11-23')).day).toBe('Friday 20 November – Sunday 22 November');
 	});
 });

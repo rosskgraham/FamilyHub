@@ -21,12 +21,20 @@ const partsFormat = new Intl.DateTimeFormat('en-GB', {
 	minute: '2-digit'
 });
 
-const timeFormat = new Intl.DateTimeFormat('en-GB', {
-	timeZone: TIME_ZONE,
-	hourCycle: 'h23',
-	hour: '2-digit',
-	minute: '2-digit'
-});
+/** How times are shown on the screen, chosen in Settings. */
+export type ClockFormat = '24h' | '12h';
+export const clockFormats: ClockFormat[] = ['24h', '12h'];
+export const DEFAULT_CLOCK_FORMAT: ClockFormat = '24h';
+
+const timeFormats: Record<ClockFormat, Intl.DateTimeFormat> = {
+	'24h': new Intl.DateTimeFormat('en-GB', {
+		timeZone: TIME_ZONE,
+		hourCycle: 'h23',
+		hour: '2-digit',
+		minute: '2-digit'
+	}),
+	'12h': new Intl.DateTimeFormat('en-GB', { timeZone: TIME_ZONE, hourCycle: 'h12', hour: 'numeric', minute: '2-digit' })
+};
 
 export function dayKey(date: Date): DayKey {
 	return keyFormat.format(date);
@@ -68,8 +76,12 @@ export function ukTime(key: DayKey, hhmm: string): Date {
 	return new Date(guess - (shown - guess));
 }
 
-export function formatTime(date: Date): string {
-	return timeFormat.format(date);
+/**
+ * For example "15:04", or "3:04 pm" in the 12-hour format. Left at 24 hours, it's also the Hub's `HH:mm` for comparing
+ * times, so only pass a format when showing the time to people.
+ */
+export function formatTime(date: Date, format: ClockFormat = '24h'): string {
+	return timeFormats[format].format(date);
 }
 
 export function formatWeekday(key: DayKey, style: 'long' | 'short'): string {

@@ -14,7 +14,10 @@ Then open <http://localhost:5173>. The screen is designed at 1920×1080 and scal
 
 - `/` is the Today view.
 - `/week` is the Week view. `?week=1` shows next week, and `?week=-1` last week.
+- `/settings`, the gear at the end of the bottom bar, is Settings. For now it chooses a 24-hour clock (the default) or a 12-hour one, for every time on the screen. Settings are kept in `app/data/settings.json` with the Calendar choices.
+- Tapping an Event on any view shows its full title, whose it is, its day and its times. Tapping outside it, Close, or two minutes untouched closes it.
 - `?theme=evening` or `?theme=day` on any page shows that theme whatever the time. Otherwise the Day theme shows from sunrise to sunset and the Evening theme after.
+- On a touch-only screen, such as the Hub's, the mouse pointer is hidden. A PC with a mouse keeps it.
 - After two minutes without a touch, the Hub goes back to the Today view, except from the setup page.
 - From 22:00 to 06:30 the Hub shows Sleep: a dim clock and the next Event. A tap wakes it, and it goes back to Sleep two minutes after the last touch. The schedule is `sleepSchedule` in `src/lib/sleep.ts`, so changing it is a pull request.
 
@@ -33,7 +36,7 @@ It needs the Pi's SSH key in `C:\Users\<you>\.ssh` (copy it from Ubuntu if it wa
 ## Show the real Calendars, Shopping list and To-dos
 
 1. Follow [the Google Cloud runbook](../docs/runbooks/google-cloud-setup.md), and put `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `app/.env`.
-2. Copy `app/household.example.json` to `app/household.json` and put in the Household's Members, each with a name and a colour: `blue`, `orange`, `green`, `purple`, `slate`, `pink`, `yellow` or `red`. An `initial` is optional; it's the first letter of the name otherwise. Git ignores this file. Everyone, for the Family calendar, is always there, in `slate` unless `"everyone": { "colour": "…" }` chooses another. Everyone can't share a Member's colour.
+2. Copy `app/household.example.json` to `app/household.json` and put in the Household's Members, each with a name and a colour: `blue`, `orange`, `green`, `purple`, `slate`, `pink`, `yellow` or `red`, or one of Google Calendar's, to match the colours on everyone's phones: `blueberry`, `cherry-blossom`, `peacock`, `pistachio` or `tangerine`. An `initial` is optional; it's the first letter of the name otherwise. Git ignores this file. Everyone, for the Family calendar, is always there, in `slate` unless `"everyone": { "colour": "…" }` chooses another. Everyone can't share a Member's colour.
 3. Run the app, and choose **Sample data · set up Google** in the bottom corner (or go to <http://localhost:5173/setup>).
 4. Sign in with the Household's Google account, then choose each Member's Calendar, which Google Tasks list is the Shopping list, and which holds the To-dos. Repeating To-dos are set up in the Google Tasks app on a phone; the Hub only adds one-off ones.
 

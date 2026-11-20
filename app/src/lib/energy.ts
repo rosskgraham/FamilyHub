@@ -1,6 +1,6 @@
 // Intelligent Octopus Go and what the Hub works out from it: whether it's cheap now, the next cheap time, when to run
 // Hungry appliances, and what each Half-hour cost.
-import { addDays, dayKey, formatTime, ukTime, type DayKey } from './time.ts';
+import { addDays, dayKey, formatTime, ukTime, type ClockFormat, type DayKey } from './time.ts';
 
 /** The tariff's two prices, in pence per kWh, as Octopus reports them. */
 export interface Rates {
@@ -226,10 +226,10 @@ export function formatLength(halfHours: number): string {
 }
 
 /** For example "23:30–02:30", "Now–02:30", or "13:00" when there's only one time to start. */
-export function formatStarts(best: BestStart, at: Date): string {
+export function formatStarts(best: BestStart, at: Date, format: ClockFormat = '24h'): string {
 	const earliest = new Date(best.earliest);
-	const from = earliest.getTime() <= at.getTime() ? 'Now' : formatTime(earliest);
-	return best.earliest === best.latest ? from : `${from}–${formatTime(new Date(best.latest))}`;
+	const from = earliest.getTime() <= at.getTime() ? 'Now' : formatTime(earliest, format);
+	return best.earliest === best.latest ? from : `${from}–${formatTime(new Date(best.latest), format)}`;
 }
 
 export const carText: Record<CarState, string> = {
@@ -289,12 +289,12 @@ export function chargeLine(readings: ChargeReading[], day: DayKey): ChargePoint[
  * "Charging · 64%, up to 80%", or "Plugged in · 80% at 23:01" when the reading is old. One line, as the tile only
  * has room for three, so an old reading leaves out where charging stops. carText's when unplugged or there's no reading.
  */
-export function carLine(car: CarState, charge: Charge | null, at: Date): string {
+export function carLine(car: CarState, charge: Charge | null, at: Date, format: ClockFormat = '24h'): string {
 	if (car === 'unplugged' || !charge) return carText[car];
 	const old = at.getTime() - Date.parse(charge.at) > CHARGE_STALE_MS;
 	const state = car === 'charging' ? 'Charging' : 'Plugged in';
 	const percent = `${Math.round(charge.percent)}%`;
-	if (old) return `${state} · ${percent} at ${formatTime(new Date(charge.at))}`;
+	if (old) return `${state} · ${percent} at ${formatTime(new Date(charge.at), format)}`;
 	const upTo = car === 'charging' && charge.limit !== null && charge.limit > charge.percent;
 	return `${state} · ${percent}${upTo ? `, up to ${charge.limit}%` : ''}`;
 }

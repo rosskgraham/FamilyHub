@@ -3,7 +3,8 @@
 	import { clock } from '#lib/clock.svelte.ts';
 	import type { Household } from '#lib/household.ts';
 	import { sleepPalette } from '#lib/sleep.ts';
-	import { addDays, dayKey, formatDayMonth, formatIn, formatTime, formatWeekday } from '#lib/time.ts';
+	import { addDays, dayKey, formatDayMonth, formatIn, formatWeekday } from '#lib/time.ts';
+	import { showTime } from '#lib/show-time.svelte.ts';
 	import Badge from './Badge.svelte';
 
 	let { events, owners, onwake }: { events: CalendarEvent[]; owners: Household; onwake: () => void } = $props();
@@ -31,12 +32,12 @@
 	style:--sleep-line={sleepPalette.line}
 	style:--sleep-hint={sleepPalette.hint}
 >
-	<span class="clock tabular">{formatTime(clock.now)}</span>
+	<span class="clock tabular">{showTime(clock.now)}</span>
 	<span class="date">{formatWeekday(today, 'long')} {formatDayMonth(today)}</span>
 	{#if next && owner}
 		<span class="next">
 			<Badge {owner} size={44} />
-			<span class="title">{next.title} · <span class="tabular">{formatTime(new Date(next.start))}</span></span>
+			<span class="title">{next.title} · <span class="tabular">{showTime(next.start)}</span></span>
 			<span class="when">{when}</span>
 		</span>
 	{/if}
