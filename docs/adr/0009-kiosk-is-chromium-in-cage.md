@@ -2,7 +2,7 @@
 
 The Pi shows the Hub in Chromium, full-screen, inside [cage](https://github.com/cage-kiosk/cage): a Wayland compositor that shows one app and nothing else. There's no desktop, no taskbar and no window to close, so a stray touch can't leave the Hub, and if Chromium closes, systemd starts it again. cage runs as its own `kiosk` user, which can't log in, on the first console, which no longer offers a login prompt. The browser's profile lives in memory and starts fresh each time, so there's never a "restore pages?" prompt and nothing wears the SD card.
 
-cage has no on-screen keyboard, so the Hub gets its own: a Svelte component that opens when a Shopping item or To-do is being typed. It can be sized to the Hub's 64px touch targets, looks like the rest of the Hub, and shows on the PC and in the screenshot tests like everything else. Until it's built, typing at the Pi needs a USB keyboard.
+cage has no on-screen keyboard, so the Hub gets its own: a Svelte component that opens when a Shopping item or To-do is being typed. It can be sized to the Hub's 64px touch targets, looks like the rest of the Hub, and shows on the PC and in the screenshot tests like everything else. It was built in November 2026: it opens for any text box, anywhere on the Hub, and slides the page up so the box stays in view.
 
 ## Considered Options
 

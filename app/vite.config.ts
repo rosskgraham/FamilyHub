@@ -1,8 +1,28 @@
 import adapter from '@sveltejs/adapter-node';
+import { execSync } from 'node:child_process';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vitest/config';
 
+// The commit a build is made from, for Settings: CI's, or the PC's checkout. Empty when there's no git, as in the
+// screenshot tests' container.
+function commit(): string {
+	if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA.slice(0, 7);
+	try {
+		return execSync('git rev-parse --short=7 HEAD', { stdio: ['ignore', 'pipe', 'ignore'] })
+			.toString()
+			.trim();
+	} catch {
+		return '';
+	}
+}
+
 export default defineConfig({
+	// What Settings shows about the build. See src/lib/build.ts.
+	define: {
+		__HUB_RELEASE__: JSON.stringify(Boolean(process.env.HUB_VERSION)),
+		__HUB_COMMIT__: JSON.stringify(commit()),
+		__HUB_BUILT_AT__: JSON.stringify(new Date().toISOString())
+	},
 	plugins: [
 		sveltekit({
 			compilerOptions: {

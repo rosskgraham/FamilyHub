@@ -9,6 +9,7 @@
 	import Header from '#lib/components/Header.svelte';
 	import NavBar from '#lib/components/NavBar.svelte';
 	import EventDetail from '#lib/components/EventDetail.svelte';
+	import Keyboard from '#lib/components/Keyboard.svelte';
 	import Sleep from '#lib/components/Sleep.svelte';
 	import { clock } from '#lib/clock.svelte.ts';
 	import { eventDetail } from '#lib/event-detail.svelte.ts';
@@ -50,6 +51,9 @@
 		goto(theme ? `/?theme=${theme}` : '/');
 	});
 
+	// While the on-screen keyboard is open, the page slides up so the form being typed in stays above it.
+	let lift = $state(0);
+
 	// An Event's detail closes on its own like everything else: two minutes untouched, on going to sleep, or on leaving
 	// the page it was opened from.
 	$effect(() => {
@@ -80,12 +84,18 @@
 
 <!-- The theme changes within a minute of sunset or sunrise, when the page next checks for changes. -->
 <div class="hub {theme}" style={cssVariables(palettes[theme])} style:background={asleep ? sleepPalette.bg : null}>
-	<div class="stage" style:transform="translate({left}px, {top}px) scale({scale})">
+	<div
+		class="stage"
+		class:lifted={lift > 0}
+		style:--lift="-{lift}px"
+		style:transform="translate({left}px, {top}px) scale({scale})"
+	>
 		<Header weather={data.weather} />
 		<main>{@render children()}</main>
 		<!-- Setup isn't a Section, and has its own way back. -->
 		{#if !page.url.pathname.startsWith('/setup')}<NavBar />{/if}
 		{#if eventDetail.shown}<EventDetail shown={eventDetail.shown} />{/if}
+		<Keyboard bind:lift />
 		{#if asleep}
 			<Sleep events={data.sleep.events} owners={data.sleep.owners} onwake={() => (lastTouch = new Date())} />
 		{/if}
@@ -115,6 +125,16 @@
 		flex-direction: column;
 		gap: 24px;
 		transform-origin: 0 0;
+	}
+	.stage > :global(header),
+	.stage > main,
+	.stage > :global(footer) {
+		transition: translate 0.2s ease-out;
+	}
+	.lifted > :global(header),
+	.lifted > main,
+	.lifted > :global(footer) {
+		translate: 0 var(--lift);
 	}
 	main {
 		flex: 1;

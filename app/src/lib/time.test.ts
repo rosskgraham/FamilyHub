@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addDays, dayKey, formatIn, formatTime, startOfWeek, ukTime, weekday } from './time.ts';
+import { addDays, dayKey, formatDuration, formatIn, formatTime, startOfWeek, ukTime, weekday } from './time.ts';
 
 // British Summer Time ends at 01:00 UTC on Sunday 25 October 2026.
 
@@ -73,5 +73,19 @@ describe('formatTime', () => {
 		expect(formatTime(new Date('2026-07-01T14:04:00Z'), '12h')).toBe('3:04 pm');
 		expect(formatTime(new Date('2026-12-01T00:05:00Z'), '12h')).toBe('12:05 am');
 		expect(formatTime(new Date('2026-12-01T12:30:00Z'), '12h')).toBe('12:30 pm');
+	});
+});
+
+describe('formatDuration', () => {
+	const at = (minutes: number) => new Date(Date.parse('2026-11-20T12:00:00Z') + minutes * 60_000);
+	const start = at(0);
+
+	it('says minutes, then hours and minutes, then days and hours', () => {
+		expect(formatDuration(start, at(0.5))).toBe('under a minute');
+		expect(formatDuration(start, at(45))).toBe('45 min');
+		expect(formatDuration(start, at(60))).toBe('1 h');
+		expect(formatDuration(start, at(135))).toBe('2 h 15 min');
+		expect(formatDuration(start, at(24 * 60))).toBe('1 day');
+		expect(formatDuration(start, at(3 * 24 * 60 + 4 * 60 + 59))).toBe('3 days 4 h');
 	});
 });
