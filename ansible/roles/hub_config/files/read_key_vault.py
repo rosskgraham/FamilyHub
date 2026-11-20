@@ -6,8 +6,8 @@ FamilyHub's own subscription, or $FAMILYHUB_AZURE_SUBSCRIPTION, whatever the PC'
 is $FAMILYHUB_KEY_VAULT, or else the one in the rg-familyhub resource group. The values are secrets: the playbook
 hides this script's output.
 
-    read_key_vault.py google-client-id household-json ...
-    {"vault": "kv-familyhub-abc123", "secrets": {"google-client-id": "...", "household-json": "..."}}
+    read_key_vault.py google-client-id octopus-api-key ...
+    {"vault": "kv-familyhub-abc123", "secrets": {"google-client-id": "...", "octopus-api-key": "..."}}
 """
 
 import json

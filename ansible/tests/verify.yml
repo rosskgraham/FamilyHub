@@ -123,30 +123,22 @@
       ansible.builtin.set_fact:
         vault: "{{ lookup('ansible.builtin.file', 'key_vault.json') | from_json }}"
 
-    - name: Read the Hub's secrets file and settings
+    - name: Read the Hub's secrets file, and look for the old Household and Chores files
       ansible.builtin.stat:
         path: "{{ item }}"
       loop: [/etc/familyhub/hub.env, /etc/familyhub/household.json, /etc/familyhub/chores.json]
       register: config_files
 
-    - name: Check only root can read the secrets, the Hub can read its Household, and Chores aren't made up
+    # The pretend vault still has household-json, as the real one may until it's tidied up: the Household lives in
+    # the Hub's database now (ADR 0012), so the playbook no longer copies it.
+    - name: Check only root can read the secrets, and the Household and Chores aren't copied from the vault
       ansible.builtin.assert:
         that:
           - config_files.results[0].stat.pw_name == 'root' and config_files.results[0].stat.gr_name == 'root'
           - config_files.results[0].stat.mode == '0600'
-          - config_files.results[1].stat.pw_name == 'root' and config_files.results[1].stat.gr_name == 'familyhub'
-          - config_files.results[1].stat.mode == '0640'
-          # Not in the vault, so not on the Pi: the Hub shows sample Chores.
+          - "'household-json' in vault.secrets"
+          - not config_files.results[1].stat.exists
           - not config_files.results[2].stat.exists
-
-    - name: Read the Household the Hub was given
-      ansible.builtin.slurp:
-        path: /etc/familyhub/household.json
-      register: household
-
-    - name: Check the Household is exactly what the vault holds
-      ansible.builtin.assert:
-        that: household.content | b64decode == vault.secrets['household-json']
 
     - name: Read the Hub's own environment
       ansible.builtin.shell: tr '\0' '\n' < /proc/$(systemctl show --property=MainPID --value familyhub.service)/environ

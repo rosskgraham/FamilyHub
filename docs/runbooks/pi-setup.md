@@ -88,9 +88,9 @@ ssh hubadmin@$FAMILYHUB_PI_HOST curl -s localhost:3000/api/health
 
 It answers `{"status":"ok","version":"…"}` with the newest release's version.
 
-## 5. Give the Hub its secrets and settings
+## 5. Give the Hub its secrets
 
-The Google, Octopus and Zappi secrets, home's location, `household.json` and `chores.json` are kept in the Key Vault ([ADR 0008](../adr/0008-azure-resources-from-bicep-through-azure-devops.md)), never in the repo. Each run of the scripts reads them on the PC and writes them to `/etc/familyhub/` on the Pi: the secrets into `hub.env`, which only root can read, and the two settings files beside it. Whatever isn't in the vault is left out, or taken off the Pi, and the Hub shows sample data for it. The run says which vault it read and what it left out.
+The Google, Octopus and Zappi secrets and home's location are kept in the Key Vault ([ADR 0008](../adr/0008-azure-resources-from-bicep-through-azure-devops.md)), never in the repo. Each run of the scripts reads them on the PC and writes them into `/etc/familyhub/hub.env` on the Pi, which only root can read. Whatever isn't in the vault is left out, and the Hub shows sample data for it. The run says which vault it read and what it left out. The Household is set up afterwards in Settings at the Hub, and kept in its own database ([ADR 0012](../adr/0012-household-and-settings-in-the-hub-database.md)).
 
 1. Set up Azure and put the secrets in the Key Vault, following [the Azure runbook](azure-setup.md), steps 1 to 3.
 2. Install the Azure CLI in Ubuntu (WSL), then sign in as the person who can read the secrets:
@@ -116,7 +116,7 @@ The Pi signs in to Google once, and keeps the sign-in in `/var/lib/familyhub`.
    ssh -N -L 3000:localhost:3000 hubadmin@$FAMILYHUB_PI_HOST
    ```
 
-3. In the PC's browser, open <http://localhost:3000/setup>, and sign in with the Household's Google account. The Hub on the wall picks it up within a minute.
+3. In the PC's browser, open <http://localhost:3000/settings>, hold **Hold to change** under Household and Google, and sign in with the Household's Google account. Add the Members there too, with their colours and Calendars, if the Hub has none yet. The Hub on the wall picks it up within a minute.
 4. Stop the SSH command with Ctrl+C.
 
 ## Looking after the Hub

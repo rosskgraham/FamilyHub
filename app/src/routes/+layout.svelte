@@ -92,8 +92,7 @@
 	>
 		<Header weather={data.weather} />
 		<main>{@render children()}</main>
-		<!-- Setup isn't a Section, and has its own way back. -->
-		{#if !page.url.pathname.startsWith('/setup')}<NavBar />{/if}
+		<NavBar />
 		{#if eventDetail.shown}<EventDetail shown={eventDetail.shown} />{/if}
 		<Keyboard bind:lift />
 		{#if asleep}

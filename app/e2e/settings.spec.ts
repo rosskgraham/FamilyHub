@@ -1,5 +1,9 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { NOW } from '../playwright.config.ts';
+
+// About this Hub changes with every build. Hidden with a stylesheet rather than masked, as a mask is drawn over
+// whatever's in front, such as the bottom bar, when Settings is scrolled.
+const hideBuildDetails = (page: Page) => page.addStyleTag({ content: '.varies { visibility: hidden; }' });
 
 test.beforeEach(async ({ page }) => {
 	// The browser's clock, to match the server's HUB_NOW.
@@ -29,14 +33,16 @@ test('Settings shows the 24-hour clock chosen, by default', async ({ page }) => 
 
 test('settings view', async ({ page }) => {
 	await page.goto('/settings');
+	await hideBuildDetails(page);
 	await page.evaluate(() => document.fonts.ready);
-	await expect(page).toHaveScreenshot('settings.png', { mask: [page.locator('.varies')] });
+	await expect(page).toHaveScreenshot('settings.png');
 });
 
 test('settings view in the Evening theme', async ({ page }) => {
 	await page.goto('/settings?theme=evening');
+	await hideBuildDetails(page);
 	await page.evaluate(() => document.fonts.ready);
-	await expect(page).toHaveScreenshot('settings-evening.png', { mask: [page.locator('.varies')] });
+	await expect(page).toHaveScreenshot('settings-evening.png');
 });
 
 test('Settings says what version is running', async ({ page }) => {

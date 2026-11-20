@@ -1,9 +1,8 @@
 import type { OwnerId } from '#lib/household.ts';
 import { clockFormats, DEFAULT_CLOCK_FORMAT, type ClockFormat } from '#lib/time.ts';
-import { readJson, writeJson } from './store.ts';
+import { getSetting, hubDatabase, setSetting } from './hub-db.ts';
 
-// Chosen on the setup page and kept on the Hub's disk. The repo is public,
-// so these never go in it.
+// Chosen in Settings and kept in the Hub's database (ADR 0012). The repo is public, so these never go in it.
 export interface Settings {
 	/** Which Google Calendar belongs to each Member, and which is the Family calendar. */
 	calendars: Record<OwnerId, string>;
@@ -17,18 +16,27 @@ export interface Settings {
 	clockFormat?: ClockFormat;
 }
 
-const SETTINGS_FILE = 'settings.json';
+/** Each setting's own key in the database, so saving one never touches another. */
+export const SETTING_KEYS = ['calendars', 'shoppingList', 'todoList', 'birthdays', 'clockFormat'] as const;
 
 export async function readSettings(): Promise<Settings> {
-	return (await readJson<Settings>(SETTINGS_FILE)) ?? { calendars: {} };
+	const db = hubDatabase();
+	const settings: Settings = { calendars: getSetting(db, 'calendars') ?? {} };
+	for (const key of SETTING_KEYS.slice(1) as Exclude<(typeof SETTING_KEYS)[number], 'calendars'>[]) {
+		const value = getSetting<string>(db, key);
+		if (value !== undefined) (settings as unknown as Record<string, string>)[key] = value;
+	}
+	return settings;
+}
+
+/** Saves every setting given; one left out or undefined is cleared. */
+export async function writeSettings(settings: Settings): Promise<void> {
+	const db = hubDatabase();
+	for (const key of SETTING_KEYS) setSetting(db, key, settings[key]);
 }
 
 /** The clock format chosen in Settings, or the 24-hour default. */
 export async function readClockFormat(): Promise<ClockFormat> {
 	const chosen = (await readSettings()).clockFormat;
 	return chosen && clockFormats.includes(chosen) ? chosen : DEFAULT_CLOCK_FORMAT;
-}
-
-export async function writeSettings(settings: Settings): Promise<void> {
-	await writeJson(SETTINGS_FILE, settings);
 }

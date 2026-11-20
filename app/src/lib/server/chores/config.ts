@@ -1,10 +1,10 @@
 import { error } from '@sveltejs/kit';
-import { readFile } from 'node:fs/promises';
 import { CHORE_ICONS, WEEKDAYS, type BonusJob, type Chore, type ChoreConfig, type Routine } from '#lib/chores.ts';
 import { EVERYONE, type Household } from '#lib/household.ts';
-import { configPath } from '../paths.ts';
+import { getSetting, hubDatabase } from '../hub-db.ts';
 
-// The real Chores stay out of Git beside household.json; chores.example.json shows the shape.
+// The real Chores are kept in the Hub's database (ADR 0012), imported once from chores.json, whose shape
+// chores.example.json shows. Setting them up belongs in the family app on phones, later.
 const CHORES_FILE = 'chores.json';
 
 /** Sample Chores for the sample Household's children, Maya and Leo. */
@@ -46,40 +46,33 @@ export const sampleChores: ChoreConfig = {
 	]
 };
 
-/** The Chores from chores.json, or null if there's no file. Read on every call, so edits show without a restart. */
+/** The Chores from the Hub's database, or null if there are none yet. Checked against today's Household. */
 export async function configuredChores(household: Household): Promise<ChoreConfig | null> {
-	let text: string;
-	try {
-		text = await readFile(configPath(CHORES_FILE), 'utf8');
-	} catch (e) {
-		if ((e as NodeJS.ErrnoException).code === 'ENOENT') return null;
-		throw e;
-	}
-	return parseChores(text, household);
+	const stored = getSetting<ChoreConfig>(hubDatabase(), 'chores');
+	return stored ? parseChores(JSON.stringify(stored), household, 'The Chores') : null;
 }
 
 const ID = /^[a-z0-9][a-z0-9-]*$/;
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 
-export function parseChores(text: string, household: Household): ChoreConfig {
+export function parseChores(text: string, household: Household, file = CHORES_FILE): ChoreConfig {
 	let json: { routines?: unknown; chores?: unknown; bonus?: unknown };
 	try {
 		json = JSON.parse(text);
 	} catch {
-		error(500, `${CHORES_FILE} isn't valid JSON.`);
+		error(500, `${file} isn't valid JSON.`);
 	}
 	if (!Array.isArray(json?.routines) || json.routines.length === 0) {
-		error(500, `${CHORES_FILE} needs a "routines" list with at least one Routine.`);
+		error(500, `${file} needs a "routines" list with at least one Routine.`);
 	}
-	if (json.bonus !== undefined && !Array.isArray(json.bonus))
-		error(500, `"bonus" in ${CHORES_FILE} needs to be a list.`);
+	if (json.bonus !== undefined && !Array.isArray(json.bonus)) error(500, `"bonus" in ${file} needs to be a list.`);
 	if (!Array.isArray(json.chores) || json.chores.length === 0) {
-		error(500, `${CHORES_FILE} needs a "chores" list with at least one Chore.`);
+		error(500, `${file} needs a "chores" list with at least one Chore.`);
 	}
 
 	const routineIds = new Set<string>();
 	const routines = json.routines.map((r: Partial<Routine>, i): Routine => {
-		const where = `Routine ${i + 1} in ${CHORES_FILE}`;
+		const where = `Routine ${i + 1} in ${file}`;
 		if (typeof r?.id !== 'string' || !ID.test(r.id) || routineIds.has(r.id)) {
 			error(500, `${where} needs a unique "id" of lower-case letters, digits and dashes.`);
 		}
@@ -89,15 +82,12 @@ export function parseChores(text: string, household: Household): ChoreConfig {
 		return { id: r.id, name: r.name.trim(), from: r.from };
 	});
 	if (routines.some((r, i) => i > 0 && r.from <= routines[i - 1]!.from)) {
-		error(
-			500,
-			`The Routines in ${CHORES_FILE} need to be in the order they happen, each starting later than the one before.`
-		);
+		error(500, `The Routines in ${file} need to be in the order they happen, each starting later than the one before.`);
 	}
 
 	const choreIds = new Set<string>();
 	const chores = json.chores.map((c: Partial<Chore>, i): Chore => {
-		const where = typeof c?.id === 'string' ? `Chore "${c.id}" in ${CHORES_FILE}` : `Chore ${i + 1} in ${CHORES_FILE}`;
+		const where = typeof c?.id === 'string' ? `Chore "${c.id}" in ${file}` : `Chore ${i + 1} in ${file}`;
 		if (typeof c?.id !== 'string' || !ID.test(c.id) || choreIds.has(c.id)) {
 			error(500, `${where} needs a unique "id" of lower-case letters, digits and dashes.`);
 		}
@@ -112,13 +102,13 @@ export function parseChores(text: string, household: Household): ChoreConfig {
 		const members = Object.values(household).filter((m) => m.id !== EVERYONE);
 		const names = members.map((m) => m.name).join(', ');
 		if (!Array.isArray(c.who) || c.who.length === 0) {
-			error(500, `${where} needs "who": a list of Members from household.json, from ${names}.`);
+			error(500, `${where} needs "who": a list of the Household's Members, from ${names}.`);
 		}
 		// A Member by their name or id, whatever the capitals.
 		const who = c.who.map((w) => {
 			const found =
 				typeof w === 'string' && members.find((m) => [m.id, m.name.toLowerCase()].includes(w.trim().toLowerCase()));
-			if (!found) error(500, `${where} is for "${w}", who isn't in household.json. Members are ${names}.`);
+			if (!found) error(500, `${where} is for "${w}", who isn't in the Household. Members are ${names}.`);
 			return found.id;
 		});
 		checkDays(c.days, where);
@@ -136,8 +126,7 @@ export function parseChores(text: string, household: Household): ChoreConfig {
 
 	// Bonus jobs share ids with Chores, so the two can't clash in the record.
 	const bonus = ((json.bonus ?? []) as Partial<BonusJob>[]).map((b, i): BonusJob => {
-		const where =
-			typeof b?.id === 'string' ? `Bonus job "${b.id}" in ${CHORES_FILE}` : `Bonus job ${i + 1} in ${CHORES_FILE}`;
+		const where = typeof b?.id === 'string' ? `Bonus job "${b.id}" in ${file}` : `Bonus job ${i + 1} in ${file}`;
 		if (typeof b?.id !== 'string' || !ID.test(b.id) || choreIds.has(b.id)) {
 			error(
 				500,
