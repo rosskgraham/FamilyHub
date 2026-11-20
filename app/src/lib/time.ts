@@ -97,6 +97,21 @@ export function dayOfMonth(key: DayKey): number {
 	return Number(key.slice(8));
 }
 
+/**
+ * How long from one time to another, for example "under a minute", "45 min", "2 h 15 min" or "3 days 4 h". Past a
+ * day, minutes are left out.
+ */
+export function formatDuration(from: Date, to: Date): string {
+	const minutes = Math.max(0, Math.floor((to.getTime() - from.getTime()) / 60_000));
+	if (minutes < 1) return 'under a minute';
+	if (minutes < 60) return `${minutes} min`;
+	const hours = Math.floor(minutes / 60);
+	if (hours < 24) return minutes % 60 === 0 ? `${hours} h` : `${hours} h ${minutes % 60} min`;
+	const days = Math.floor(hours / 24);
+	const dayText = `${days} ${days === 1 ? 'day' : 'days'}`;
+	return hours % 24 === 0 ? dayText : `${dayText} ${hours % 24} h`;
+}
+
 /** For example "in 27 min" or "in 1 h 49 min". */
 export function formatIn(from: Date, to: Date): string {
 	const minutes = Math.max(0, Math.round((to.getTime() - from.getTime()) / 60_000));

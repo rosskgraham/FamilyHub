@@ -5,7 +5,7 @@
 	import { showTime } from '#lib/show-time.svelte.ts';
 	import { clock } from '#lib/clock.svelte.ts';
 	import { clockFormat } from '#lib/show-time.svelte.ts';
-	import { dayKey, formatDayMonth, formatTime, type ClockFormat } from '#lib/time.ts';
+	import { dayKey, formatDayMonth, formatDuration, formatTime, type ClockFormat } from '#lib/time.ts';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -56,7 +56,9 @@
 			<dt>Built</dt>
 			<dd class="varies">{when(build.builtAt)}</dd>
 			<dt>Running since</dt>
-			<dd class="varies">{when(data.server.startedAt)}</dd>
+			<dd class="varies">
+				{when(data.server.startedAt)} · {formatDuration(new Date(data.server.startedAt), clock.now)}
+			</dd>
 			<dt>Node.js</dt>
 			<dd class="varies">{data.server.node}</dd>
 		</dl>
