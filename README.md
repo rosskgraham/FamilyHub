@@ -17,7 +17,7 @@ FamilyHub is a personal project, built by one family for its own kitchen. Buildi
 - **Shows when electricity is cheap, and where it goes.** It reads the Household's Intelligent Octopus Go rates and Smart-charging slots from Octopus, and the Zappi car charger's usage from myenergi. It shows what the house is using now, what today has cost, and when to start the dishwasher, washing machine and tumble drier so they finish while it's cheap. Each half-hour is split into the house and the car.
 - **Fits a busy day without scrolling.** Busy days switch to compact rows, and anything that still doesn't fit goes behind a "+N more" that opens the full day. Nothing is cut off silently.
 - **Types at the wall.** Its own on-screen keyboard opens for any box, and slides the page up so the box stays in view.
-- **Has a few Settings.** A gear in the bottom bar chooses a 24-hour or 12-hour clock, and shows which version is running, when it was built and how long it's been up.
+- **Is set up at the wall.** A gear in the bottom bar opens Settings: a 24-hour or 12-hour clock, the Household's Members with their colours and Calendars, the Shopping and To-do lists, and the Hub's Google account, locked until held for a second. It also shows which version is running, when it was built and how long it's been up.
 - **Looks after itself.** It keeps showing the last plan if the Wi-Fi drops, says when it last updated, and tells the family in plain words when it needs attention.
 - **Stays at home.** It runs on a Raspberry Pi in the kitchen, and nothing on the internet can reach it.
 
@@ -45,8 +45,8 @@ FamilyHub is a personal project, built by one family for its own kitchen. Buildi
 
 | Settings |
 |---|
-| ![Settings: the clock as 24-hour or 12-hour, and About this Hub with the version, commit, build time, how long it's been running and Node.js](docs/images/settings-view.png) |
-| A 24-hour clock unless 12-hour is chosen, for every time on the screen. About this Hub says what's running, to check a release reached the Pi. |
+| ![Settings, unlocked: the clock as 24-hour or 12-hour, and Household and Google with the Family calendar's colour, a row to add a Member with a name and a colour, and a note that Google isn't set up](docs/images/settings-view.png) |
+| A 24-hour clock unless 12-hour is chosen, for every time on the screen. Below it, the Household: each Member's name, colour and Calendar, the Family calendar, the lists and Google, locked until held so nobody changes it by accident. About this Hub says what's running, to check a release reached the Pi. |
 
 The screenshots use the app's built-in sample week, sample Chores, sample To-dos and sample energy, and are copied from the screenshot tests. On the real Hub, the corner shows when the Calendars last updated instead of "Sample data".
 
@@ -69,7 +69,8 @@ The plan is in [docs/requirements.md](docs/requirements.md). Progress so far:
 | ✅ | Home energy: cheap and peak times, when to run the dishwasher, the car’s share, and its charge ([design](design/mockups/energy/notes.md)) | Done, on a PC |
 | ✅ | To-dos from Google Tasks, one-off and repeating ([design](design/mockups/todos/notes.md)) | Done, on a PC |
 | ✅ | Settings, Google Calendar's colours, and tapping an Event for its details | Done, on a PC |
-| ⬜ | A Raspberry Pi set up from scripts, showing the Hub full-screen | In progress: set up from scripts, pulling its own releases, full-screen, with its settings and secrets from Key Vault. with an on-screen keyboard. Still to come: the screen powering down for Sleep |
+| ✅ | The Household set up in Settings and kept in the Hub's database, not the Key Vault ([ADR 0012](docs/adr/0012-household-and-settings-in-the-hub-database.md)) | Done, on a PC |
+| ⬜ | A Raspberry Pi set up from scripts, showing the Hub full-screen | In progress: set up from scripts, pulling its own releases, full-screen, with its secrets from the Key Vault, and an on-screen keyboard. Still to come: the screen powering down for Sleep |
 | ⬜ | On the kitchen wall: **v1** | |
 | ⬜ | The Shopping list and To-dos in a backend of the Hub's own, with a family app for phones ([design](design/family-app/notes.md)) | In progress: the backend's Azure resources are built. Still to come: sign-in, the lists, and the app |
 | ⬜ | Recipe videos from a YouTube playlist | After v1 |
@@ -85,7 +86,7 @@ v1 is done when it's been on the wall for two weeks and nobody goes back to chec
 - **Data:** Google Calendar (read-only) and Google Tasks, signed in as the Household's one Google account. Weather from Open-Meteo.
 - **Hardware:** a Raspberry Pi 5 with a 1080p touchscreen, provisionally a 21.5″ Waveshare (not bought yet), running the app full-screen in Chromium inside cage, with no desktop behind it ([why a Pi](docs/adr/0001-web-app-on-raspberry-pi.md), [the kiosk](docs/adr/0009-kiosk-is-chromium-in-cage.md)).
 - **Hosting:** none. Everything runs on the Pi and nothing is reachable from the internet ([ADR 0002](docs/adr/0002-everything-runs-on-the-pi.md)). The Pi pulls its own releases and rolls back if one is unhealthy ([ADR 0004](docs/adr/0004-pi-pulls-releases.md)).
-- **Data:** Chores, the Hub's own data, live in SQLite on the Pi, backed up nightly to Google Drive ([ADR 0006](docs/adr/0006-hub-owned-data-in-sqlite.md)). The Calendar choices and Settings are kept in a file beside it.
+- **Data:** the Hub's own data lives in SQLite on the Pi, backed up nightly to Google Drive: the Chores' record ([ADR 0006](docs/adr/0006-hub-owned-data-in-sqlite.md)), and the Household and everything chosen in Settings ([ADR 0012](docs/adr/0012-household-and-settings-in-the-hub-database.md)). The Key Vault holds only secrets.
 - **Monitoring:** OpenTelemetry to Azure Application Insights, with anything personal stripped before it leaves the house ([ADR 0005](docs/adr/0005-telemetry-via-otel-collector-to-app-insights.md)).
 - **Azure:** the Key Vault, Application Insights, and the family app's backend (Azure Functions on Flex Consumption, Cosmos DB and Web PubSub, [ADR 0010](docs/adr/0010-shared-lists-in-an-azure-backend-with-an-installable-family-app.md), [ADR 0011](docs/adr/0011-backend-runs-on-functions-flex-consumption.md)) are built from Bicep by an Azure DevOps pipeline, resource group included, in FamilyHub's own subscription, on free tiers unless something billable has been approved ([ADR 0008](docs/adr/0008-azure-resources-from-bicep-through-azure-devops.md)).
 
@@ -99,7 +100,7 @@ npm install
 npm run dev
 ```
 
-Open <http://localhost:5173>. It starts with sample data. To show real Google Calendars and the Shopping list, follow [the Google Cloud runbook](docs/runbooks/google-cloud-setup.md), then choose **Sample data · set up Google** in the corner. More detail is in [app/README.md](app/README.md).
+Open <http://localhost:5173>. It starts with sample data. To show real Google Calendars and the Shopping list, follow [the Google Cloud runbook](docs/runbooks/google-cloud-setup.md), then choose **Sample data · set up Google** in the corner, unlock Household and Google, sign in, and add the Household. More detail is in [app/README.md](app/README.md).
 
 ## Find your way around
 
