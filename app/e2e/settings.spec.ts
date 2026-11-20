@@ -30,11 +30,20 @@ test('Settings shows the 24-hour clock chosen, by default', async ({ page }) => 
 test('settings view', async ({ page }) => {
 	await page.goto('/settings');
 	await page.evaluate(() => document.fonts.ready);
-	await expect(page).toHaveScreenshot('settings.png');
+	await expect(page).toHaveScreenshot('settings.png', { mask: [page.locator('.varies')] });
 });
 
 test('settings view in the Evening theme', async ({ page }) => {
 	await page.goto('/settings?theme=evening');
 	await page.evaluate(() => document.fonts.ready);
-	await expect(page).toHaveScreenshot('settings-evening.png');
+	await expect(page).toHaveScreenshot('settings-evening.png', { mask: [page.locator('.varies')] });
+});
+
+test('Settings says what version is running', async ({ page }) => {
+	await page.goto('/settings');
+	const about = page.getByRole('region', { name: 'About this Hub' });
+	// The tests build the Hub without a release name.
+	await expect(about).toContainText('Development build');
+	await expect(about).toContainText('Running since');
+	await expect(about).toContainText(/Node\.js\s*v\d+/);
 });

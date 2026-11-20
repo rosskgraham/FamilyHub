@@ -4,6 +4,11 @@ import type { CalendarStatus } from '#lib/calendar.ts';
 import type { ClockFormat } from '#lib/time.ts';
 
 declare global {
+	// Set by vite.config.ts when the Hub is built. Read through src/lib/build.ts.
+	const __HUB_RELEASE__: boolean;
+	const __HUB_COMMIT__: string;
+	const __HUB_BUILT_AT__: string;
+
 	namespace App {
 		// interface Error {}
 		// interface Locals {}

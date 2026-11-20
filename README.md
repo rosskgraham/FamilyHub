@@ -55,7 +55,7 @@ The plan is in [docs/requirements.md](docs/requirements.md). Progress so far:
 | ✅ | A versioned release built on every merge | Done |
 | ✅ | Home energy: cheap and peak times, when to run the dishwasher, the car’s share, and its charge ([design](design/mockups/energy/notes.md)) | Done, on a PC |
 | ✅ | To-dos from Google Tasks, one-off and repeating ([design](design/mockups/todos/notes.md)) | Done, on a PC |
-| ⬜ | A Raspberry Pi set up from scripts, showing the Hub full-screen | In progress: set up from scripts, pulling its own releases, full-screen, with its settings and secrets from Key Vault. Still to come: an on-screen keyboard, and the screen powering down for Sleep |
+| ⬜ | A Raspberry Pi set up from scripts, showing the Hub full-screen | In progress: set up from scripts, pulling its own releases, full-screen, with its settings and secrets from Key Vault. with an on-screen keyboard. Still to come: the screen powering down for Sleep |
 | ⬜ | On the kitchen wall: **v1** | |
 | ⬜ | Recipe videos from a YouTube playlist | After v1 |
 | ⬜ | A motion sensor that wakes it when someone walks in | After v1 |

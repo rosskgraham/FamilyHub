@@ -62,7 +62,8 @@ test('adding a one-off To-do sends it with the due date chosen', async ({ page }
 	await page.getByRole('button', { name: 'Add to-do' }).click();
 	await page.getByRole('textbox', { name: 'New to-do' }).fill('Book the MOT');
 	await page.getByRole('button', { name: 'Tomorrow' }).click();
-	await page.getByRole('button', { name: 'Add', exact: true }).click();
+	// The form's Add, not the on-screen keyboard's.
+	await page.getByRole('main').getByRole('button', { name: 'Add', exact: true }).click();
 	await expect.poll(() => sent).toEqual([{ action: 'add', text: 'Book the MOT', due: '2026-10-29' }]);
 	letGo();
 });

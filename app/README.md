@@ -14,7 +14,8 @@ Then open <http://localhost:5173>. The screen is designed at 1920×1080 and scal
 
 - `/` is the Today view.
 - `/week` is the Week view. `?week=1` shows next week, and `?week=-1` last week.
-- `/settings`, the gear at the end of the bottom bar, is Settings. For now it chooses a 24-hour clock (the default) or a 12-hour one, for every time on the screen. Settings are kept in `app/data/settings.json` with the Calendar choices.
+- `/settings`, the gear at the end of the bottom bar, is Settings. For now it chooses a 24-hour clock (the default) or a 12-hour one, for every time on the screen. Settings are kept in `app/data/settings.json` with the Calendar choices. **About this Hub** shows the release running (or "Development build"), its commit, when it was built, when the server started, and Node.js's version. A change to `vite.config.ts` needs `npm run dev` started again before it shows.
+- Any text box opens the Hub's own on-screen keyboard (ADR 0009), and the page slides up so the box stays above it. It has numbers along the top, `?123` for symbols including £, a capital at the start of a box, and hold-to-repeat on delete. Enter is labelled with the form's button, such as **Add**. It shows on the PC too, so typing on a real keyboard still works alongside it.
 - Tapping an Event on any view shows its full title, whose it is, its day and its times. Tapping outside it, Close, or two minutes untouched closes it.
 - `?theme=evening` or `?theme=day` on any page shows that theme whatever the time. Otherwise the Day theme shows from sunrise to sunset and the Evening theme after.
 - On a touch-only screen, such as the Hub's, the mouse pointer is hidden. A PC with a mouse keeps it.
