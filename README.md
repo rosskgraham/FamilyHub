@@ -114,6 +114,7 @@ Open <http://localhost:5173>. It starts with sample data. To show real Google Ca
 | [`GLOSSARY.md`](GLOSSARY.md) | The words the project uses for things, such as Hub, Member and Section |
 | [`docs/adr/`](docs/adr/) | Why the big decisions went the way they did |
 | [`docs/runbooks/`](docs/runbooks/) | Step-by-step setup guides |
+| [`site/`](site/) | The public [home page](https://rosskgraham.github.io/FamilyHub/) and [privacy policy](https://rosskgraham.github.io/FamilyHub/privacy.html) Google asks for before the Hub's Google app is published |
 | [`docs/ways-of-working.md`](docs/ways-of-working.md) | How work moves from an idea to the wall: the private board, evidence, independent review and checking on the Pi |
 | [`scripts/`](scripts/) | The board helper and the independent review launcher |
 | [`design/mockups/`](design/mockups/README.md) | The original UI mockups. Open `html/index.html` in a browser. The Chores designs are in [`chores/`](design/mockups/chores/README.md), and the parked portrait designs in [`portrait/`](design/mockups/portrait/README.md). |
