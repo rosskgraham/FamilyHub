@@ -77,8 +77,8 @@ Posted by `/pickup` when it hands a card to review, and repeated in the PR descr
 - **what wasn't checked, and why**, such as screenshot tests when Docker wasn't running, or anything that can only be
   checked on the Pi after release;
 - whether the root README changed, and if not, why not;
-- for a PR that only changes `docs/`, `design/` or Markdown files, that CI doesn't run for it, in place of CI being
-  green;
+- for a PR that only changes `docs/`, `design/`, `site/` or Markdown outside `app/`, that CI skipped its checks
+  (they show as passed without running), in place of CI being green;
 - for a change anyone can see on the screen, **screenshots** of it, and for a UI bug, of it fixed.
 
 Unverified is fine if it's said. Claiming something was checked when it wasn't is the one thing that isn't.

@@ -1,18 +1,52 @@
 name: CI
 
-# Docs, design files, the public site (site/, deployed by pages.yml) and Markdown are skipped: nothing here checks them,
-# and a docs-only merge would otherwise publish a release with the same code. A change with any other file still runs
-# everything. main has no required checks; if it ever does, this needs a job-level filter instead, as a skipped workflow
-# never reports.
 on:
   pull_request:
-    paths-ignore: ['docs/**', 'design/**', 'site/**', '**/*.md']
   push:
     branches: [main]
-    paths-ignore: ['docs/**', 'design/**', 'site/**', '**/*.md']
 
 jobs:
+  # Decides whether the checks need to run. Docs, design files, the public site (site/, deployed by pages.yml) and
+  # Markdown outside app/ aren't checked by anything here, and a docs-only merge would otherwise publish a release with
+  # the same code. check, pi and backend are required by the "Protect main" ruleset, so they're skipped by their own
+  # `if` rather than by skipping the workflow: a job skipped that way counts as passed, a workflow that never runs never
+  # reports. app/'s Markdown counts as code, because the app's lint formats it. The jobs run unless this job said
+  # 'false', so if it fails or gives no answer they still run, rather than show as passed without running. Renames are
+  # listed as a deletion and an addition, so moving a file out of app/ into docs/ still counts as code.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.diff.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Look for anything other than docs
+        id: diff
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          # If the changed files can't be listed (a new branch, a force push), run everything.
+          if ! files=$(git diff --name-only --no-renames "$BASE" "$GITHUB_SHA"); then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          code=false
+          while IFS= read -r file; do
+            case "$file" in
+              '') ;;
+              docs/* | design/* | site/*) ;;
+              app/*) code=true ;;
+              *.md) ;;
+              *) code=true ;;
+            esac
+          done <<< "$files"
+          echo "Changed files:"; echo "$files"; echo "code=$code"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+
   check:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     # The same image `npm run test:screenshots` uses, so screenshots match.
     # Its version must match @playwright/test in app/package-lock.json.
@@ -58,6 +92,8 @@ jobs:
 
   # The Pi's setup scripts, run in a container standing in for the Pi.
   pi:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -65,9 +101,11 @@ jobs:
       - name: Lint the setup scripts, run them twice, and check the result
         run: ansible/tests/run.sh
 
-  # The family app's backend (ADR 0011): ruff's lint and formatting, then the tests. A required check, so
-  # a pull request can't merge with lint errors.
+  # The family app's backend (ADR 0011): ruff's lint and formatting, then the tests. Required by the
+  # "Protect main" ruleset, so a pull request can't merge with lint errors.
   backend:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -87,7 +125,8 @@ jobs:
       - name: Unit tests
         run: uv run pytest
 
-  # Every merge to main that passes the checks becomes a release the Pi can pull (ADR 0004).
+  # Every merge to main that passes the checks becomes a release the Pi can pull (ADR 0004). A docs-only merge skips
+  # check, and so skips this too.
   release:
     needs: check
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
