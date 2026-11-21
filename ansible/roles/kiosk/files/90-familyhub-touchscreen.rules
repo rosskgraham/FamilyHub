@@ -1,4 +1,9 @@
-# The touchscreen's controller (ILITEK, USB 222a) shows up as a touchscreen and also as a mouse, for computers
-# without touch drivers. The mouse never sends anything, but while it's there Chromium takes the screen for a mouse
-# screen and cage draws a pointer, so the Hub's pointer stays on the wall. libinput ignores it; touch is unchanged.
+# The Hub's screen is touch only, but while libinput finds anything it takes for a mouse, Chromium takes the screen for
+# a mouse screen and cage draws a pointer, so the pointer stays on the wall. libinput ignores these; touch is unchanged.
+#
+# The touchscreen's controller (ILITEK, USB 222a) shows up as a touchscreen and also as a mouse, for computers without
+# touch drivers. The mouse never sends anything.
 SUBSYSTEM=="input", KERNEL=="event*", ENV{ID_VENDOR_ID}=="222a", ENV{ID_INPUT_MOUSE}=="1", ENV{LIBINPUT_IGNORE_DEVICE}="1"
+# Each HDMI port's CEC input (vc4-hdmi-0 and vc4-hdmi-1), for a TV remote that can move a pointer, shows up as a pointing
+# stick. The Hub doesn't use CEC.
+SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="vc4-hdmi-*", ENV{LIBINPUT_IGNORE_DEVICE}="1"
