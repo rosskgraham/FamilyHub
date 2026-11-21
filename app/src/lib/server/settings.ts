@@ -1,4 +1,5 @@
 import type { OwnerId } from '#lib/household.ts';
+import { DEFAULT_THEME_CHOICE, themeChoices, type ThemeChoice } from '#lib/theme.ts';
 import { clockFormats, DEFAULT_CLOCK_FORMAT, type ClockFormat } from '#lib/time.ts';
 import { getSetting, hubDatabase, setSetting } from './hub-db.ts';
 
@@ -14,10 +15,12 @@ export interface Settings {
 	birthdays?: string;
 	/** How times are shown, chosen on the Settings page. 24 hours unless chosen otherwise. */
 	clockFormat?: ClockFormat;
+	/** Light, Dark, or Auto (the Day theme until sunset), chosen on the Settings page. Auto unless chosen otherwise. */
+	theme?: ThemeChoice;
 }
 
 /** Each setting's own key in the database, so saving one never touches another. */
-export const SETTING_KEYS = ['calendars', 'shoppingList', 'todoList', 'birthdays', 'clockFormat'] as const;
+export const SETTING_KEYS = ['calendars', 'shoppingList', 'todoList', 'birthdays', 'clockFormat', 'theme'] as const;
 
 export async function readSettings(): Promise<Settings> {
 	const db = hubDatabase();
@@ -39,4 +42,10 @@ export async function writeSettings(settings: Settings): Promise<void> {
 export async function readClockFormat(): Promise<ClockFormat> {
 	const chosen = (await readSettings()).clockFormat;
 	return chosen && clockFormats.includes(chosen) ? chosen : DEFAULT_CLOCK_FORMAT;
+}
+
+/** The theme chosen in Settings, or Auto. */
+export async function readThemeChoice(): Promise<ThemeChoice> {
+	const chosen = (await readSettings()).theme;
+	return chosen && themeChoices.includes(chosen) ? chosen : DEFAULT_THEME_CHOICE;
 }

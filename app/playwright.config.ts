@@ -1,5 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
-import { mkdtempSync } from 'node:fs';
+import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -13,6 +13,10 @@ const HOME = (process.env.FAMILYHUB_E2E_HOME ??= mkdtempSync(join(tmpdir(), 'fam
 
 /** Wednesday 28 October 2026, 08:15 in the UK: a school day with Events before and after. */
 export const NOW = '2026-10-28T08:15:00Z';
+
+// A Pi at 52.5 °C, so Settings shows the same temperature on every machine, with or without one of its own.
+const THERMAL_ZONE = join(HOME, 'thermal_zone0_temp');
+writeFileSync(THERMAL_ZONE, '52500\n');
 
 export default defineConfig({
 	testDir: 'e2e',
@@ -44,6 +48,7 @@ export default defineConfig({
 			ZAPPI_GLO_SN: '',
 			ZAPPI_GLO_API_KEY: '',
 			HUB_NOW: NOW,
+			HUB_THERMAL_ZONE: THERMAL_ZONE,
 			HUB_CONFIG_DIR: join(HOME, 'config'),
 			HUB_DATA_DIR: join(HOME, 'data')
 		}

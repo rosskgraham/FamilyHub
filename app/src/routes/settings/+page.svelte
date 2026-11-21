@@ -6,6 +6,8 @@
 	import { showTime } from '#lib/show-time.svelte.ts';
 	import { clock } from '#lib/clock.svelte.ts';
 	import { clockFormat } from '#lib/show-time.svelte.ts';
+	import { warmth, warmthNote } from '#lib/pi-temperature.ts';
+	import { DEFAULT_THEME_CHOICE, type ThemeChoice } from '#lib/theme.ts';
 	import { dayKey, formatDayMonth, formatDuration, formatTime, type ClockFormat } from '#lib/time.ts';
 	import type { PageProps } from './$types';
 
@@ -18,6 +20,13 @@
 		{ format: '24h', name: '24-hour' },
 		{ format: '12h', name: '12-hour' }
 	];
+
+	const themeChoices: { choice: ThemeChoice; name: string; note: string }[] = [
+		{ choice: 'auto', name: 'Auto', note: 'By the sun' },
+		{ choice: 'light', name: 'Light', note: 'Always' },
+		{ choice: 'dark', name: 'Dark', note: 'Always' }
+	];
+	const themeChoice = $derived(data.themeChoice ?? DEFAULT_THEME_CHOICE);
 </script>
 
 <section class="settings">
@@ -37,6 +46,26 @@
 					<button type="submit" name="clockFormat" value={choice.format} aria-pressed={clockFormat() === choice.format}>
 						<span class="name">{choice.name}</span>
 						<span class="example tabular">{formatTime(clock.now, choice.format)}</span>
+					</button>
+				{/each}
+			</div>
+		</div>
+	</form>
+
+	{#if form && 'form' in form && form.form === 'theme'}<p class="problem">{form.message}</p>{/if}
+
+	<!-- Like the clock, a tap changes every screen straight away. Sleep stays dark whatever is chosen. -->
+	<form method="POST" action="?/theme" use:enhance>
+		<div class="row">
+			<div>
+				<h2 id="theme-heading">Theme</h2>
+				<p>Auto is light from sunrise and dark after sunset.</p>
+			</div>
+			<div class="choices" role="group" aria-labelledby="theme-heading">
+				{#each themeChoices as choice (choice.choice)}
+					<button type="submit" name="theme" value={choice.choice} aria-pressed={themeChoice === choice.choice}>
+						<span class="name">{choice.name}</span>
+						<span class="example">{choice.note}</span>
 					</button>
 				{/each}
 			</div>
@@ -71,6 +100,18 @@
 			</dd>
 			<dt>Node.js</dt>
 			<dd class="varies">{data.server.node}</dd>
+			<dt>Temperature</dt>
+			<!-- Only the Pi has one to read. A dev server runs on the PC, even when pi:dev shows it on the wall. -->
+			{#if !data.server.temperature}
+				<dd class="none">Only shown on the Pi</dd>
+			{:else}
+				{@const t = data.server.temperature}
+				<dd>
+					<span class="tabular">{t.now.toFixed(1)} °C</span> · highest since starting
+					<span class="tabular">{t.highest.toFixed(1)} °C</span>
+					<span class="warmth {warmth(t.highest)}">{warmthNote[warmth(t.highest)]}</span>
+				</dd>
+			{/if}
 		</dl>
 		{#if updated.current}
 			<p class="update">A new version is installed. It loads once the Hub has been left alone for two minutes.</p>
@@ -89,6 +130,10 @@
 	.settings > :global(form),
 	.settings > .about {
 		max-width: 1100px;
+	}
+	.settings > form + form,
+	.settings > form + .problem {
+		margin-top: 24px;
 	}
 	h1 {
 		margin: 0 0 32px;
@@ -164,6 +209,19 @@
 	dd {
 		margin: 0;
 		font-weight: 600;
+	}
+	.none {
+		font-weight: 400;
+		color: var(--dim);
+	}
+	.warmth {
+		display: block;
+		font-size: 24px;
+		font-weight: 400;
+		color: var(--dim);
+	}
+	.warmth.hot {
+		color: var(--problem);
 	}
 	.update {
 		margin: 20px 0 0;

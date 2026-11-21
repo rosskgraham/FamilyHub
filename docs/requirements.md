@@ -58,7 +58,8 @@ Ross, Sam, Maya and Leo. Everyone sees every Event and can use every Quick actio
 
 ### Look and locale
 
-- Day theme from sunrise until sunset, Evening theme after, with sunrise and sunset times from Open-Meteo.
+- Day theme from sunrise until sunset, Evening theme after, with sunrise and sunset times from Open-Meteo, unless Light or Dark is chosen in Settings.
+- Settings shows the Pi's CPU temperature and the highest since the Hub started, to tell whether the Pi needs a fan.
 - UK time zone, a 24-hour clock unless 12-hour is chosen in Settings, British date formats and English, °C, weeks start on Monday.
 
 ### Legibility (tested)

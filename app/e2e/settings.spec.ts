@@ -31,6 +31,28 @@ test('Settings shows the 24-hour clock chosen, by default', async ({ page }) => 
 	await expect(page.getByRole('button', { name: /24-hour/ })).toHaveAttribute('aria-pressed', 'true');
 });
 
+// Light or Dark would change other tests' screenshots, so only Auto is ever chosen here. What each choice shows is
+// tested in src/lib/theme.test.ts.
+test('Settings shows the Auto theme chosen, by default', async ({ page }) => {
+	await page.goto('/settings');
+	const theme = page.getByRole('group', { name: 'Theme' });
+	await expect(theme.getByRole('button', { name: /Auto/ })).toHaveAttribute('aria-pressed', 'true');
+	await expect(theme.getByRole('button', { name: /Light/ })).toHaveAttribute('aria-pressed', 'false');
+	await expect(theme.getByRole('button', { name: /Dark/ })).toHaveAttribute('aria-pressed', 'false');
+
+	await theme.getByRole('button', { name: /Auto/ }).click();
+	await expect(page).toHaveURL('/settings');
+	await expect(theme.getByRole('button', { name: /Auto/ })).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('Settings shows how warm the Pi is', async ({ page }) => {
+	await page.goto('/settings');
+	const about = page.getByRole('region', { name: 'About this Hub' });
+	// The tests' pretend Pi is at 52.5 °C.
+	await expect(about).toContainText('52.5 °C');
+	await expect(about).toContainText('Fine without a fan.');
+});
+
 test('settings view', async ({ page }) => {
 	await page.goto('/settings');
 	await hideBuildDetails(page);

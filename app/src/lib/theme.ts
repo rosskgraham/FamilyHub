@@ -19,6 +19,20 @@ export function themeAt(now: Date, sun: SunTimes): Theme {
 	return time >= sun.sunrise && time < sun.sunset ? 'day' : 'evening';
 }
 
+/** Chosen in Settings: Auto follows the sun, Light is always the Day theme, Dark always the Evening theme. */
+export type ThemeChoice = 'auto' | 'light' | 'dark';
+
+export const themeChoices: ThemeChoice[] = ['auto', 'light', 'dark'];
+
+export const DEFAULT_THEME_CHOICE: ThemeChoice = 'auto';
+
+/** The theme to show now, for the choice made in Settings. */
+export function chosenTheme(choice: ThemeChoice, now: Date, sun: SunTimes): Theme {
+	if (choice === 'light') return 'day';
+	if (choice === 'dark') return 'evening';
+	return themeAt(now, sun);
+}
+
 /** A Member's colours, as one theme draws them. */
 export interface MemberColours {
 	/** Event background. */

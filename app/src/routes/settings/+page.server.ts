@@ -11,14 +11,16 @@ import {
 	setEveryoneColour,
 	updateMember
 } from '#lib/server/household.ts';
+import { piTemperature } from '#lib/server/pi-temperature.ts';
 import { readSettings, writeSettings, type Settings } from '#lib/server/settings.ts';
 import { serverStartedAt } from '#lib/server/started.ts';
 import { listTaskLists, type GoogleTaskList } from '#lib/server/tasks/google.ts';
+import { themeChoices, type ThemeChoice } from '#lib/theme.ts';
 import { clockFormats, type ClockFormat } from '#lib/time.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 // Settings, including the Household and Google, which used to be the setup page (ADR 0012). The layout already gives
-// every page the clock format.
+// every page the clock format and the theme chosen.
 
 type Google =
 	| { step: 'credentials' }
@@ -42,7 +44,7 @@ async function google(): Promise<{ google: Google; ended: boolean }> {
 export const load: PageServerLoad = async ({ url }) => {
 	const [{ google: g, ended }, settings, backup] = await Promise.all([google(), readSettings(), readBackupStatus()]);
 	return {
-		server: { startedAt: serverStartedAt().toISOString(), node: process.version },
+		server: { startedAt: serverStartedAt().toISOString(), node: process.version, temperature: piTemperature() },
 		household: householdConfig(),
 		choices: {
 			calendars: settings.calendars,
@@ -87,6 +89,12 @@ export const actions = {
 		if (!clockFormats.includes(chosen as ClockFormat))
 			return fail(400, { form: 'clock', message: 'Choose 24-hour or 12-hour.' });
 		await writeSettings({ ...(await readSettings()), clockFormat: chosen as ClockFormat });
+	},
+	theme: async ({ request }) => {
+		const chosen = (await request.formData()).get('theme');
+		if (!themeChoices.includes(chosen as ThemeChoice))
+			return fail(400, { form: 'theme', message: 'Choose Auto, Light or Dark.' });
+		await writeSettings({ ...(await readSettings()), theme: chosen as ThemeChoice });
 	},
 	addMember: async ({ request }) => {
 		const form = await request.formData();
