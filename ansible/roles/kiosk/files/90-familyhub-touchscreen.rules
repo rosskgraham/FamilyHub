@@ -1,0 +1,4 @@
+# The touchscreen's controller (ILITEK, USB 222a) shows up as a touchscreen and also as a mouse, for computers
+# without touch drivers. The mouse never sends anything, but while it's there Chromium takes the screen for a mouse
+# screen and cage draws a pointer, so the Hub's pointer stays on the wall. libinput ignores it; touch is unchanged.
+SUBSYSTEM=="input", KERNEL=="event*", ENV{ID_VENDOR_ID}=="222a", ENV{ID_INPUT_MOUSE}=="1", ENV{LIBINPUT_IGNORE_DEVICE}="1"
