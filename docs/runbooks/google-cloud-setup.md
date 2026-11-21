@@ -32,7 +32,7 @@ This is under **Google Auth Platform** (older consoles call it **OAuth consent s
 > [!NOTE]
 > Leave the app in **Testing** while the Hub runs on a PC. In Testing, Google ends the Hub's sign-in every 7 days, so you sign in again once a week. That's fine for development.
 >
-> The Hub on the wall can't need signing in weekly, so the app gets published in the Pi milestone. Publishing asks for a homepage and a privacy policy address, which this runbook will cover then. When signing in to an unverified published app, Google shows a "Google hasn't verified this app" warning once: choose **Advanced → Go to FamilyHub (unsafe)**. That's expected for a personal app. Don't submit the app for verification.
+> The Hub on the wall can't need signing in weekly, so once it's on the Pi, publish the app: see [Publish the app](#publish-the-app) below.
 
 ## 4. Create the Hub's credentials
 
@@ -69,10 +69,29 @@ Calendar IDs aren't secret, but they're the Household's. Note them for now. They
 | Leo | |
 | Family | |
 
+## Publish the app
+
+In **Testing**, Google ends the Hub's sign-in every 7 days. Published, it lasts until someone removes it. Publish it once the Hub is on the Pi. It stays **unverified**: don't submit it for verification, and don't add a logo, as a logo makes Google ask for verification.
+
+Google won't publish an External app until its Branding page links a home page and a privacy policy. They're the two pages in [`site/`](../../site/), served by GitHub Pages and deployed by the `Pages` workflow whenever `site/` changes on main.
+
+1. Check both pages load: <https://rosskgraham.github.io/FamilyHub/> and <https://rosskgraham.github.io/FamilyHub/privacy.html>. If they don't, check the repo's **Settings → Pages** has **Source: GitHub Actions**, and run the `Pages` workflow from the **Actions** tab.
+2. **Google Auth Platform → Branding:**
+   - **App home page:** `https://rosskgraham.github.io/FamilyHub/`
+   - **App privacy policy link:** `https://rosskgraham.github.io/FamilyHub/privacy.html`
+   - **Authorised domains → Add domain:** `rosskgraham.github.io`
+   - Leave the logo empty, and save.
+3. **Audience → Publish app**, and confirm. It should say **In production**.
+4. Sign the Hub in to Google again, as in [the Pi runbook](pi-setup.md#sign-the-hub-in-to-google). A sign-in from Testing still expires after its 7 days, so the new one is what lasts. Google now shows a "Google hasn't verified this app" warning: choose **Advanced → Go to FamilyHub (unsafe)**. That's expected for a personal app, and it's shown once per account.
+
+The privacy policy lists every scope the Hub asks for, including the Nest's `sdm.service`. If the Hub ever asks for another, add it to `site/privacy.html` first.
+
 ## If something goes wrong
 
 - **"Access blocked: This app's request is invalid":** the redirect address doesn't match. Check it matches step 4 exactly, including `http` and the port.
-- **The sign-in stops working after a week:** expected while the app is in Testing. Sign in again.
+- **The sign-in stops working after a week:** expected while the app is in Testing. Sign in again, or [publish the app](#publish-the-app).
+- **Publish app says "To publish your app, you must complete your configuration on the Branding page":** the home page or privacy policy link is missing, or its domain isn't under **Authorised domains** (see [Publish the app](#publish-the-app)). If all three are there and it still says so, Google doesn't say what's missing; a Google Cloud support case is the only way to find out.
+- **Google won't accept `rosskgraham.github.io` as an authorised domain:** it may want proof of ownership. Verify `https://rosskgraham.github.io/FamilyHub/` in [Google Search Console](https://search.google.com/search-console) with its HTML file method, by adding the file it gives you to `site/`.
 - **"Access blocked: FamilyHub has not completed the Google verification process":** the account signing in isn't a test user. Add it (step 3.4).
 - **"Access denied" with no warning screen:** the signed-in Google account isn't the Household's account.
 

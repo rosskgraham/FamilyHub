@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en-GB">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>FamilyHub privacy policy</title>
+		<meta
+			name="description"
+			content="What FamilyHub reads from Google, where it keeps it, and how to remove its access."
+		/>
+		<link rel="icon" href="logo.svg" type="image/svg+xml" />
+		<link rel="stylesheet" href="style.css" />
+	</head>
+	<body>
+		<main>
+			<header>
+				<a href="./"><img src="logo.svg" alt="FamilyHub home" /></a>
+				<h1>Privacy policy</h1>
+			</header>
+			<p class="lede">
+				FamilyHub is a wall screen for one household. Only that household's Google account signs in to it. This page
+				says what it reads from Google, where that goes, and how to stop it.
+			</p>
+
+			<section>
+				<h2>What it reads from Google</h2>
+				<p>FamilyHub asks Google for these permissions, and uses each one only for what's listed:</p>
+				<ul>
+					<li>
+						<strong>Google Calendar, read only</strong> (<code>calendar.readonly</code>): to show the household's
+						Events. It never changes or adds an Event.
+					</li>
+					<li>
+						<strong>Google Tasks</strong> (<code>tasks</code>): to show the Shopping list and the To-dos, and to add,
+						tick off and remove items on them.
+					</li>
+					<li>
+						<strong>Google Drive, only its own files</strong> (<code>drive.file</code>): to save a nightly backup of the
+						Hub's own data in a "FamilyHub backups" folder. It can't see any other file in the Drive.
+					</li>
+					<li>
+						<strong>Nest thermostat</strong> (<code>sdm.service</code>), if it's connected: to show the room's
+						temperature and whether the heating is on, and to change the thermostat's temperature.
+					</li>
+				</ul>
+				<p>It doesn't ask for or use contacts, email, photos, location, or anything else in the account.</p>
+			</section>
+
+			<section>
+				<h2>Where it's kept</h2>
+				<ul>
+					<li>
+						Everything is read by the Raspberry Pi in the house and shown on its screen. Nothing on the Pi can be
+						reached from the internet.
+					</li>
+					<li>
+						The Hub's own data, such as the Chores and its settings, stays on the Pi, with a nightly backup in the
+						household's own Google Drive, as above.
+					</li>
+					<li>
+						The Google sign-in is kept only on the Pi. The app's own Google credentials, which aren't anyone's data, are
+						kept in a key vault in the household's own Microsoft Azure subscription.
+					</li>
+					<li>
+						Diagnostic logs go to the household's own Azure subscription, with anything personal, such as Event titles
+						or names, removed before they leave the house.
+					</li>
+				</ul>
+			</section>
+
+			<section>
+				<h2>Who sees it</h2>
+				<p>
+					Only the household. FamilyHub doesn't sell, share or give Google data to anyone, doesn't use it for
+					advertising, and doesn't use it to train AI models. Its use of data from Google APIs follows the
+					<a href="https://developers.google.com/terms/api-services-user-data-policy"
+						>Google API Services User Data Policy</a
+					>, including the Limited Use requirements.
+				</p>
+			</section>
+
+			<section>
+				<h2>Removing its access</h2>
+				<p>
+					Go to <a href="https://myaccount.google.com/connections">your Google account's third-party connections</a>,
+					choose FamilyHub, and remove its access. For the Nest, also remove it in the Google Home app or at
+					<a href="https://nestservices.google.com/partnerconnections">nestservices.google.com/partnerconnections</a>.
+					The Hub then stops reading anything. Backups it made stay in the Drive's "FamilyHub backups" folder until
+					they're deleted there.
+				</p>
+			</section>
+
+			<section>
+				<h2>Questions</h2>
+				<p>
+					FamilyHub is run by Ross Graham. Get in touch through
+					<a href="https://github.com/rosskgraham">github.com/rosskgraham</a>. The code is open source at
+					<a href="https://github.com/rosskgraham/FamilyHub">github.com/rosskgraham/FamilyHub</a>, so anyone can check
+					what it does.
+				</p>
+			</section>
+
+			<footer>
+				<p>Last updated 21 November 2026 · <a href="./">FamilyHub home</a></p>
+			</footer>
+		</main>
+	</body>
+</html>
