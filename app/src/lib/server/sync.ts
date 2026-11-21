@@ -34,6 +34,11 @@ export interface SyncOptions<T> {
 	save?: (kept: Kept<T>) => Promise<void>;
 	/** Milliseconds since 1970: Date.now, or a fake one in tests. */
 	clock?: () => number;
+	/**
+	 * Logs one line for a run of failures, when it starts, instead of a line for each and another after an hour. For a
+	 * source asked often whose failures can last, such as the Nest going offline.
+	 */
+	logOnce?: boolean;
 }
 
 export interface Sync<T> {
@@ -94,8 +99,14 @@ export function createSync<T>(options: SyncOptions<T>): Sync<T> {
 			error = e;
 			failures += 1;
 			failingSince ??= lastTry;
-			console.error(`${options.name} sync failed:`, e instanceof Error ? e.message : e);
-			if (!logged && clock() - failingSince >= NEEDS_ROSS_MS) {
+			const why = e instanceof Error ? e.message : e;
+			if (options.logOnce) {
+				if (failures === 1)
+					console.error(`${options.name} sync failing, since ${new Date(failingSince).toISOString()}:`, why);
+			} else {
+				console.error(`${options.name} sync failed:`, why);
+			}
+			if (!options.logOnce && !logged && clock() - failingSince >= NEEDS_ROSS_MS) {
 				// The line telemetry will turn into an alert for Ross (ADR 0005).
 				console.error(`${options.name} sync failing for over an hour, since ${new Date(failingSince).toISOString()}`);
 				logged = true;

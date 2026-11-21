@@ -66,6 +66,16 @@ describe('forLogs', () => {
 		);
 	});
 
+	it('leaves out the Nest’s Device Access project and device ids', () => {
+		const project = '0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0';
+		expect(forLogs(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project}/devices`)).toBe(
+			'https://smartdevicemanagement.googleapis.com/v1/enterprises/…/devices'
+		);
+		expect(
+			forLogs(`https://smartdevicemanagement.googleapis.com/v1/enterprises/${project}/devices/AVPHwEu:executeCommand`)
+		).toBe('https://smartdevicemanagement.googleapis.com/v1/enterprises/…/devices/…');
+	});
+
 	it('keeps addresses with nothing personal in them', () => {
 		expect(forLogs('https://tasks.googleapis.com/tasks/v1/lists/MTIz/tasks/abc')).toBe(
 			'https://tasks.googleapis.com/tasks/v1/lists/MTIz/tasks/abc'

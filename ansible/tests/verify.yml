@@ -152,6 +152,7 @@
         that:
           - ('GOOGLE_CLIENT_ID=' ~ vault.secrets['google-client-id']) in hub_environment.stdout_lines
           - ('GOOGLE_CLIENT_SECRET=' ~ vault.secrets['google-client-secret']) in hub_environment.stdout_lines
+          - ('NEST_PROJECT_ID=' ~ vault.secrets['nest-project-id']) in hub_environment.stdout_lines
           - "'HOME_LATITUDE=51.50' in hub_environment.stdout_lines"
           - hub_environment.stdout is not search('OCTOPUS|ZAPPI|InstrumentationKey')
         quiet: true

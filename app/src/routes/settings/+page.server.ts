@@ -11,6 +11,7 @@ import {
 	setEveryoneColour,
 	updateMember
 } from '#lib/server/household.ts';
+import { disconnectNest, isNestConnected, loadHeating, nestConfigured } from '#lib/server/nest/index.ts';
 import { piTemperature } from '#lib/server/pi-temperature.ts';
 import { readSettings, writeSettings, type Settings } from '#lib/server/settings.ts';
 import { serverStartedAt } from '#lib/server/started.ts';
@@ -41,8 +42,25 @@ async function google(): Promise<{ google: Google; ended: boolean }> {
 	}
 }
 
+type Nest =
+	// No Google client: there's nothing to connect with.
+	{ step: 'hidden' } | { step: 'project' } | { step: 'connect' } | { step: 'connected'; ended: boolean };
+
+async function nest(): Promise<Nest> {
+	if (!isConfigured()) return { step: 'hidden' };
+	if (!nestConfigured()) return { step: 'project' };
+	if (!(await isNestConnected())) return { step: 'connect' };
+	const heating = await loadHeating();
+	return { step: 'connected', ended: !!heating && !heating.reporting && !!heating.signInEnded };
+}
+
 export const load: PageServerLoad = async ({ url }) => {
-	const [{ google: g, ended }, settings, backup] = await Promise.all([google(), readSettings(), readBackupStatus()]);
+	const [{ google: g, ended }, settings, backup, n] = await Promise.all([
+		google(),
+		readSettings(),
+		readBackupStatus(),
+		nest()
+	]);
 	return {
 		server: { startedAt: serverStartedAt().toISOString(), node: process.version, temperature: piTemperature() },
 		household: householdConfig(),
@@ -53,6 +71,7 @@ export const load: PageServerLoad = async ({ url }) => {
 			birthdays: settings.birthdays ?? ''
 		},
 		google: g,
+		nest: n,
 		problem: ended ? 'ended' : url.searchParams.get('problem'),
 		backup
 	};
@@ -135,6 +154,10 @@ export const actions = {
 	},
 	signOut: async () => {
 		await signOut();
+		redirect(303, '/settings');
+	},
+	disconnectNest: async () => {
+		await disconnectNest();
 		redirect(303, '/settings');
 	}
 } satisfies Actions;

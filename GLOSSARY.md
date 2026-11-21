@@ -60,6 +60,10 @@ _Avoid_: Light mode, dark mode, night mode
 Chosen in Settings: Auto (the Day theme until sunset, the Evening theme after), Light (always the Day theme) or Dark (always the Evening theme). Sleep is dark whatever is chosen.
 _Avoid_: Mode
 
+**Heating**:
+The house's central heating, as the Nest thermostat reports it: the inside temperature and humidity, and whether it's heating, set to a target, in Eco or off. Shown in the header beside the weather ([ADR 0013](docs/adr/0013-the-nest-through-googles-sdm-api.md)).
+_Avoid_: Climate, thermostat (the device itself), boiler
+
 **Quick action**:
 A one- or two-tap change made at the Hub: switching view or Section, or adding, ticking off or removing a Shopping item. Creating or editing Events is not a Quick action; that happens on phones.
 _Avoid_: Shortcut, command
