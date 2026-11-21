@@ -46,7 +46,7 @@ Change any of it later in the same place. Each Member has an id that never chang
 
 The Household and every choice in Settings are kept in `app/data/hub.db`, the Hub's database, with the Chores ([ADR 0012](../docs/adr/0012-household-and-settings-in-the-hub-database.md)). On first start, the Hub imports `app/household.json`, `app/chores.json` and `app/data/settings.json` from before, if they're there, keeping the ids they gave. After that they're ignored and can be deleted.
 
-The corner then shows when the Calendars last updated. It warns if the Hub is offline or Google needs it to sign in again (weekly while the Google app is in Testing).
+The corner then shows when the Calendars last updated. It warns if the Hub is offline or Google needs it to sign in again (every 7 days if the Google app is still in Testing: [publish it](../docs/runbooks/google-cloud-setup.md#publish-the-app)).
 
 The sign-in and the database are kept in `app/data/`, which Git ignores. Delete that folder to start again.
 
