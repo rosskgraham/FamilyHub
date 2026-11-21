@@ -27,12 +27,10 @@ This is under **Google Auth Platform** (older consoles call it **OAuth consent s
    - `https://www.googleapis.com/auth/calendar.readonly` (read Calendars, never change them)
    - `https://www.googleapis.com/auth/tasks` (read and change the Shopping list)
    - `https://www.googleapis.com/auth/drive.file` (only the files the Hub creates itself: the Chores backups, in a "FamilyHub backups" folder)
-4. **Audience → Test users → Add users:** add the Household's Google account. While the app is in **Testing**, only listed test users can sign in.
+4. **Audience → Test users → Add users:** add the Household's Google account. A new app starts in **Testing**, where only listed test users can sign in.
 
 > [!NOTE]
-> Leave the app in **Testing** while the Hub runs on a PC. In Testing, Google ends the Hub's sign-in every 7 days, so you sign in again once a week. That's fine for development.
->
-> The Hub on the wall can't need signing in weekly, so once it's on the Pi, publish the app: see [Publish the app](#publish-the-app) below.
+> In **Testing**, Google ends the Hub's sign-in every 7 days. The Hub on the wall can't need signing in weekly, so the app doesn't stay there: once these steps are done, [publish the app](#publish-the-app).
 
 ## 4. Create the Hub's credentials
 
@@ -71,7 +69,7 @@ Calendar IDs aren't secret, but they're the Household's. Note them for now. They
 
 ## Publish the app
 
-In **Testing**, Google ends the Hub's sign-in every 7 days. Published, it lasts until someone removes it. Publish it once the Hub is on the Pi. It stays **unverified**: don't submit it for verification, and don't add a logo, as a logo makes Google ask for verification.
+In **Testing**, Google ends the Hub's sign-in every 7 days. Published, it lasts until someone removes it. It stays **unverified**: don't submit it for verification, and don't add a logo, as a logo makes Google ask for verification.
 
 Google won't publish an External app until its Branding page links a home page and a privacy policy. They're the two pages in [`site/`](../../site/), served by GitHub Pages and deployed by the `Pages` workflow whenever `site/` changes on main.
 
@@ -89,10 +87,10 @@ The privacy policy lists every scope the Hub asks for, including the Nest's `sdm
 ## If something goes wrong
 
 - **"Access blocked: This app's request is invalid":** the redirect address doesn't match. Check it matches step 4 exactly, including `http` and the port.
-- **The sign-in stops working after a week:** expected while the app is in Testing. Sign in again, or [publish the app](#publish-the-app).
+- **The sign-in stops working after a week:** the app is still in Testing, or the Hub's sign-in is from before it was published. [Publish the app](#publish-the-app) if it isn't, then sign the Hub in again.
 - **Publish app says "To publish your app, you must complete your configuration on the Branding page":** the home page or privacy policy link is missing, or its domain isn't under **Authorised domains** (see [Publish the app](#publish-the-app)). If all three are there and it still says so, Google doesn't say what's missing; a Google Cloud support case is the only way to find out.
 - **Google won't accept `rosskgraham.github.io` as an authorised domain:** it may want proof of ownership. Verify `https://rosskgraham.github.io/FamilyHub/` in [Google Search Console](https://search.google.com/search-console) with its HTML file method, by adding the file it gives you to `site/`.
-- **"Access blocked: FamilyHub has not completed the Google verification process":** the account signing in isn't a test user. Add it (step 3.4).
+- **"Access blocked: FamilyHub has not completed the Google verification process":** the app is still in Testing and the account signing in isn't a test user. [Publish the app](#publish-the-app), or add the account (step 3.4).
 - **"Access denied" with no warning screen:** the signed-in Google account isn't the Household's account.
 
 ## Adding the Drive permission to an existing setup
