@@ -194,6 +194,21 @@
           - screen_units.results[0].status.ProtectHome == 'no'
           - default_target.stdout == 'graphical.target'
 
-    - name: Check the rule that hides the touchscreen's pretend mouse is installed and valid
+    - name: Check the rule that hides the pointer is installed and valid
       ansible.builtin.command: udevadm verify /etc/udev/rules.d/90-familyhub-touchscreen.rules
       changed_when: false
+
+    - name: Read the rule that hides the pointer
+      ansible.builtin.slurp:
+        src: /etc/udev/rules.d/90-familyhub-touchscreen.rules
+      register: pointer_rule
+
+    # Both, or the pointer stays: either one is enough for Chromium and cage to think there's a mouse.
+    - name: Check it ignores the touchscreen's pretend mouse and the HDMI ports' CEC inputs
+      ansible.builtin.assert:
+        that:
+          - >-
+            'ENV{ID_VENDOR_ID}=="222a", ENV{ID_INPUT_MOUSE}=="1", ENV{LIBINPUT_IGNORE_DEVICE}="1"'
+            in (pointer_rule.content | b64decode)
+          - >-
+            'ATTRS{name}=="vc4-hdmi-*", ENV{LIBINPUT_IGNORE_DEVICE}="1"' in (pointer_rule.content | b64decode)
