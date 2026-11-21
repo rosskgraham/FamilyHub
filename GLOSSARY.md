@@ -56,6 +56,10 @@ _Avoid_: Standby, screensaver, off, night mode
 The light look the Hub uses until sunset, and the dark look it uses after.
 _Avoid_: Light mode, dark mode, night mode
 
+**Theme choice**:
+Chosen in Settings: Auto (the Day theme until sunset, the Evening theme after), Light (always the Day theme) or Dark (always the Evening theme). Sleep is dark whatever is chosen.
+_Avoid_: Mode
+
 **Quick action**:
 A one- or two-tap change made at the Hub: switching view or Section, or adding, ticking off or removing a Shopping item. Creating or editing Events is not a Quick action; that happens on phones.
 _Avoid_: Shortcut, command

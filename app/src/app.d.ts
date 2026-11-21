@@ -1,6 +1,7 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
 import type { CalendarStatus } from '#lib/calendar.ts';
+import type { ThemeChoice } from '#lib/theme.ts';
 import type { ClockFormat } from '#lib/time.ts';
 
 declare global {
@@ -20,6 +21,8 @@ declare global {
 			calendarStatus?: CalendarStatus;
 			/** How times are shown, chosen in Settings. The layout gives it for every page. */
 			clockFormat?: ClockFormat;
+			/** Auto, Light or Dark, chosen in Settings. The layout gives it for every page. */
+			themeChoice?: ThemeChoice;
 		}
 		// interface PageState {}
 		// interface Platform {}

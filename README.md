@@ -17,7 +17,7 @@ FamilyHub is a personal project, built by one family for its own kitchen. Buildi
 - **Shows when electricity is cheap, and where it goes.** It reads the Household's Intelligent Octopus Go rates and Smart-charging slots from Octopus, and the Zappi car charger's usage from myenergi. It shows what the house is using now, what today has cost, and when to start the dishwasher, washing machine and tumble drier so they finish while it's cheap. Each half-hour is split into the house and the car.
 - **Fits a busy day without scrolling.** Busy days switch to compact rows, and anything that still doesn't fit goes behind a "+N more" that opens the full day. Nothing is cut off silently.
 - **Types at the wall.** Its own on-screen keyboard opens for any box, and slides the page up so the box stays in view.
-- **Is set up at the wall.** A gear in the bottom bar opens Settings: a 24-hour or 12-hour clock, the Household's Members with their colours and Calendars, the Shopping and To-do lists, and the Hub's Google account, locked until held for a second. It also shows which version is running, when it was built and how long it's been up.
+- **Is set up at the wall.** A gear in the bottom bar opens Settings: a 24-hour or 12-hour clock, a Light, Dark or Auto theme (Auto follows sunrise and sunset), the Household's Members with their colours and Calendars, the Shopping and To-do lists, and the Hub's Google account, locked until held for a second. It also shows which version is running, when it was built, how long it's been up, and how warm the Pi is, to tell whether it needs a fan.
 - **Looks after itself.** It keeps showing the last plan if the Wi-Fi drops, says when it last updated, and tells the family in plain words when it needs attention.
 - **Stays at home.** It runs on a Raspberry Pi in the kitchen, and nothing on the internet can reach it.
 
@@ -63,7 +63,7 @@ The plan is in [docs/requirements.md](docs/requirements.md). Progress so far:
 | ✅ | Real weather (Open-Meteo) | Done, on a PC |
 | ✅ | Tests and CI: unit tests, screenshot tests, GitHub Actions | Done |
 | ✅ | Chore chart, first slice: kids tick off their Chores for Stars ([design](design/mockups/chores/notes.md)) | Done, on a PC |
-| ✅ | Overnight sleep, and a Day and Evening theme | Done, on a PC |
+| ✅ | Overnight sleep, and a Day and Evening theme, or either all the time | Done, on a PC |
 | ✅ | Offline resilience | Done, on a PC |
 | ✅ | A versioned release built on every merge | Done |
 | ✅ | Home energy: cheap and peak times, when to run the dishwasher, the car’s share, and its charge ([design](design/mockups/energy/notes.md)) | Done, on a PC |

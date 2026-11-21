@@ -48,6 +48,11 @@ export const variables = defineEnvVars({
 			'The folder holding household.json and chores.json. On the Pi, a folder on the data partition outside the releases. Defaults to app.',
 		schema: optional
 	},
+	HUB_THERMAL_ZONE: {
+		description:
+			'The file the Pi’s CPU temperature is read from, for Settings. Defaults to the kernel’s; only the screenshot tests set it.',
+		schema: optional
+	},
 	HUB_NOW: {
 		description: 'Pretend it is this moment (an ISO time) on the server. Only for the screenshot tests.',
 		schema: optional

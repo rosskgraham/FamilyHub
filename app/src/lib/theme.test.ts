@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { binColours } from './bins.ts';
 import { sleepPalette } from './sleep.ts';
-import { memberColours, palettes, themeAt, themes, type Palette } from './theme.ts';
+import { chosenTheme, memberColours, palettes, themeAt, themes, type Palette } from './theme.ts';
 
 describe('themeAt', () => {
 	const sun = { sunrise: '07:05', sunset: '16:40' };
@@ -20,6 +20,25 @@ describe('themeAt', () => {
 		// 20:30 BST is 19:30 UTC.
 		expect(themeAt(new Date('2026-06-21T19:30:00Z'), { sunrise: '04:43', sunset: '21:21' })).toBe('day');
 		expect(themeAt(new Date('2026-06-21T20:30:00Z'), { sunrise: '04:43', sunset: '21:21' })).toBe('evening');
+	});
+});
+
+describe('chosenTheme', () => {
+	const sun = { sunrise: '07:05', sunset: '16:40' };
+	const noon = new Date('2026-10-28T12:00:00Z');
+	const night = new Date('2026-10-28T21:00:00Z');
+
+	it('follows the sun on Auto', () => {
+		expect(chosenTheme('auto', noon, sun)).toBe('day');
+		expect(chosenTheme('auto', night, sun)).toBe('evening');
+	});
+
+	it('keeps the Day theme on Light, even at night', () => {
+		expect(chosenTheme('light', night, sun)).toBe('day');
+	});
+
+	it('keeps the Evening theme on Dark, even at noon', () => {
+		expect(chosenTheme('dark', noon, sun)).toBe('evening');
 	});
 });
 
