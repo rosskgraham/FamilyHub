@@ -38,6 +38,7 @@ Every move by Claude posts a comment on the card saying why. A move without its 
 | In review → Active | `/review-story`                    | It requests changes                                                 | **Review** (below)                                          |
 | Merge              | Ross only                          | The `story-review` status is green on the PR's latest commit        | —                                                           |
 | In review → Done   | Ross, or `/pickup` after the merge | It's checked where it runs                                          | **Verified**: what was checked, where, and in which release |
+| Refined → Idea     | Ross, or `/pickup`                 | It turns out not to be ready                                        | What's missing                                              |
 
 A card that turns out not to be needed goes to Removed, with a comment saying why.
 
@@ -75,8 +76,7 @@ Posted by `/pickup` when it hands a card to review, and repeated in the PR descr
   showed, screenshots, or what was checked by hand;
 - **what wasn't checked, and why**, such as screenshot tests when Docker wasn't running, or anything that can only be
   checked on the Pi after release;
-- whether the root README changed, and if not, why not.
-
+- whether the root README changed, and if not, why not;
 - for a change anyone can see on the screen, **screenshots** of it, and for a UI bug, of it fixed.
 
 Unverified is fine if it's said. Claiming something was checked when it wasn't is the one thing that isn't.
@@ -88,14 +88,17 @@ Every PR is reviewed by a Claude session that didn't write it. `/pickup` starts 
 
 - It starts in a fresh worktree at the PR's latest commit, with no conversation behind it. It gets only the card number;
   it reads the card and the PR itself. The implementing session can't brief it.
-- It can read code and run tests, but it can't edit files, commit or push.
+- It can read code and run the checks CI runs, but it has no tools to edit files, commit or push. It's not a sandbox:
+  running the PR's tests and `scripts/board.mjs` runs the PR's own code, which is reviewed with that in mind.
 - It checks each acceptance criterion against the code and the evidence, re-runs the tests it needs rather than trusting
   the evidence, and looks for bugs.
 - It posts a **Review** comment on the card and the PR: a verdict for each criterion (met, not met or unverified),
   findings with files and lines, and the commands it ran.
-- It sets the `story-review` commit status: green to approve, red for changes. `Protect main` requires it, so a PR can't
+- It sets the `story-review` status on the commit it reviewed, never on whatever is latest when it finishes: green to
+  approve, red for changes. `Protect main` requires it, so a PR can't
   merge until it's green, and any new push needs a new review. GitHub won't let Ross approve his own PRs, which is why
-  it's a status, not an approval.
+  it's a status, not an approval. The ruleset has no bypass, so getting past a broken review means fixing it, or
+  changing `Protect main` on purpose.
 
 Ross can also run `/review-story <id>` in a new terminal. Never in the session that wrote the code.
 
@@ -121,7 +124,8 @@ node scripts/board.mjs next <column> [type]      cards in a column, top priority
 node scripts/board.mjs move <id> <column>        Idea, Refined, Active, In review or Done
 node scripts/board.mjs comment <id> < body.html  posts HTML from stdin to the card
 node scripts/board.mjs attach <id> <file> [caption]  attaches a screenshot and shows it in a comment
-node scripts/board.mjs status <pr> <success|failure|pending> <description>
+node scripts/board.mjs columns [board]           each board's columns and their rules
+node scripts/board.mjs status <commit> <success|failure|pending> <description>
 ```
 
 It needs the Azure CLI with the `azure-devops` extension, signed in, and `gh`. `attach` also needs a personal access

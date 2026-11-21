@@ -34,6 +34,7 @@ For **each acceptance criterion**, decide **met**, **not met** or **unverified**
 - Re-run the tests that matter yourself. In `app/`: `npm test`, `npm run check`, `npm run lint`, and
   `npx playwright test` (skip the screenshot tests, which need Docker: `--grep-invert "view"` or by file). In
   `backend/`: `uv run pytest`, `uv run ruff check`. For `infra/`: `az bicep build`.
+- For a criterion about the board itself: `node scripts/board.mjs columns` and `show`.
 - A criterion that can only be checked on the Pi or by hand is **unverified** unless the evidence shows it was, and is
   fine to approve if the card says it waits for after the merge.
 
@@ -58,8 +59,9 @@ changes**.
    the verdict and the commit reviewed; a table of each criterion with met / not met / unverified and why; findings
    with file and line, blocking first; the commands you ran and their results.
 2. The same on the PR, in Markdown: `gh pr comment <pr> --body-file -` with the text on stdin.
-3. The status: `node scripts/board.mjs status <pr> success "Approved: <one line>"`, or
-   `node scripts/board.mjs status <pr> failure "Changes requested: <one line>"`.
+3. The status, on the commit you reviewed (from `git rev-parse HEAD`), never looked up again from the PR:
+   `node scripts/board.mjs status <commit> success "Approved: <one line>"`, or
+   `node scripts/board.mjs status <commit> failure "Changes requested: <one line>"`.
 4. If you requested changes: `node scripts/board.mjs move <id> Active`.
 
 End with the verdict in two or three lines. Never edit, commit, push or merge anything.

@@ -42,7 +42,8 @@ const ALLOWED = [
 	'Bash(npx playwright test:*)',
 	'Bash(npx prettier --check:*)',
 	'Bash(npx eslint:*)',
-	'Bash(uv run:*)',
+	'Bash(uv run pytest:*)',
+	'Bash(uv run ruff check:*)',
 	'Bash(uv sync:*)',
 	'Bash(az bicep build:*)'
 ];
@@ -122,7 +123,7 @@ const worktree = join(root, '.claude', 'worktrees', `review-${pr.number}-${sha.s
 const logs = join(root, '.claude', 'worktrees', 'review-logs');
 mkdirSync(logs, { recursive: true });
 
-board('status', String(pr.number), 'pending', `Independent review of AB#${id} running`);
+board('status', sha, 'pending', `Independent review of AB#${id} running`);
 console.log(`Reviewing AB#${id}: PR #${pr.number} at ${sha.slice(0, 7)}, in ${worktree}`);
 
 let verdict;
@@ -175,7 +176,7 @@ try {
 if (verdict === 'success' || verdict === 'failure') {
 	console.log(`story-review: ${verdict === 'success' ? 'approved' : 'changes requested'}.`);
 } else {
-	board('status', String(pr.number), 'failure', 'The review did not finish. Run it again.');
+	board('status', sha, 'failure', 'The review did not finish. Run it again.');
 	console.error('The reviewer did not post a verdict, so story-review is red. Run it again.');
 	process.exit(1);
 }

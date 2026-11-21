@@ -11,8 +11,9 @@
 //                                                    a new card in Idea, as a child of the parent
 //   node scripts/board.mjs attach <id> <file> [caption]
 //                                                    attaches a screenshot to the card and shows it in a comment
-//   node scripts/board.mjs status <pr> <success|failure|pending> <description>
-//                                                    the story-review commit status on the PR's head
+//   node scripts/board.mjs columns [board]           each board's columns and their rules
+//   node scripts/board.mjs status <commit> <success|failure|pending> <description>
+//                                                    the story-review status on the commit that was reviewed
 //
 // Needs the Azure CLI with the azure-devops extension, signed in, and gh. attach also needs AZURE_DEVOPS_EXT_PAT: a
 // personal access token with Work Items (Read & write), as az devops invoke can only send JSON. No shell is involved,
@@ -239,6 +240,8 @@ function create(type, title, parent) {
 	const description = process.stdin.isTTY ? '' : readFileSync(0, 'utf8').trim();
 	const args = ['boards', 'work-item', 'create', '--project', PROJECT, '--type', type, '--title', title];
 	if (description) args.push('--description', description);
+	// A Bug shows Repro Steps where a story shows its Description, so it gets both.
+	if (description && type === 'Bug') args.push('--fields', `Microsoft.VSTS.TCM.ReproSteps=${description}`);
 	const item = az(...args);
 	if (parent)
 		az(
@@ -307,9 +310,11 @@ async function attach(id, file, caption = '') {
 	console.log(`Attached ${name} to #${id} and showed it in comment ${posted.id}.`);
 }
 
-function status(pr, state, description) {
+// The status goes on the commit that was reviewed, never "the PR's latest", which may have moved on since: a push during
+// a review must not inherit its verdict.
+function status(sha, state, description) {
+	if (!/^[0-9a-f]{40}$/.test(sha ?? '')) throw new Error('Give the full commit that was reviewed: git rev-parse HEAD.');
 	if (!['success', 'failure', 'pending'].includes(state)) throw new Error('State must be success, failure or pending.');
-	const sha = run('gh', ['pr', 'view', String(pr), '--repo', REPO, '--json', 'headRefOid', '-q', '.headRefOid']).trim();
 	run('gh', ['api', '--method', 'POST', `repos/${REPO}/statuses/${sha}`, '--input', '-'], {
 		input: JSON.stringify({
 			state,
@@ -317,15 +322,25 @@ function status(pr, state, description) {
 			description: (description ?? '').slice(0, 140)
 		})
 	});
-	console.log(`${STATUS_CONTEXT} is ${state} on PR #${pr} (${sha.slice(0, 7)}).`);
+	console.log(`${STATUS_CONTEXT} is ${state} on ${sha.slice(0, 7)}.`);
+}
+
+function columns(only) {
+	for (const board of [...new Set(Object.values(BOARD))].filter((b) => !only || b === only)) {
+		const cols = invoke({ area: 'work', resource: 'columns', route: { project: PROJECT, team: TEAM, board } }).value;
+		console.log(`## ${board}`);
+		for (const c of cols)
+			console.log(`- ${c.name}${c.itemLimit ? ` (limit ${c.itemLimit})` : ''}: ${c.description || '-'}`);
+		console.log('');
+	}
 }
 
 const [command, ...args] = process.argv.slice(2);
-const commands = { show, next, move, comment, set, create, attach, status };
+const commands = { show, next, move, comment, set, create, attach, columns, status };
 try {
 	if (!commands[command])
 		throw new Error(
-			'Usage: node scripts/board.mjs show|next|move|comment|set|create|attach|status … (see the top of this file)'
+			'Usage: node scripts/board.mjs show|next|move|comment|set|create|attach|columns|status … (see the top of this file)'
 		);
 	await commands[command](...args);
 } catch (e) {
