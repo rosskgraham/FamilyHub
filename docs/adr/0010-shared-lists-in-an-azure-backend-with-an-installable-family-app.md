@@ -10,6 +10,8 @@ The Hub becomes one more client. It keeps its own copy in SQLite (ADR 0006), so 
 
 Partly replaced by [ADR 0011](0011-backend-runs-on-functions-flex-consumption.md): the same FastAPI app runs on Azure Functions Flex Consumption instead of F1, and the Hub no longer keeps it warm.
 
+Partly replaced by [ADR 0014](0014-household-accounts-in-cosmos-db.md): the list of the Household's accounts is in Cosmos DB, not the Key Vault.
+
 ## Considered Options
 
 - **Keep Google Tasks, with the Household's account on every phone:** no work, but the lists stay the Household account's rather than each Member's, and repeats stay hidden.

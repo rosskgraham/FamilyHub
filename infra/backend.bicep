@@ -16,6 +16,18 @@ param suffix string
 @description('The Application Insights resource the function app sends its telemetry to.')
 param appInsightsName string
 
+@description('The Entra object ID of the person who runs the setup. They can read and write items in Cosmos DB, to add the Household accounts in Data Explorer.')
+param adminObjectId string
+
+@description('The ID of the FamilyHub External ID tenant, which signs in Members and the Hub (the sign-in runbook). Empty until that is set up, and while it is empty the API refuses anything that needs sign-in.')
+param entraTenantId string = ''
+
+@description('The subdomain of the External ID tenant, as in <subdomain>.ciamlogin.com.')
+param entraSubdomain string = ''
+
+@description('The client ID of the FamilyHub API app registration: the audience its access tokens are for.')
+param apiClientId string = ''
+
 var tags = {
   project: 'familyhub'
 }
@@ -33,7 +45,7 @@ var webPubSubServiceOwner = '12cf5a90-567b-43ae-8102-96cf46c7d9b4'
 // Cosmos DB's own built-in data role, not an Azure role: read and write items, nothing else.
 var cosmosDataContributor = '00000000-0000-0000-0000-000000000002'
 
-// The one database, which the containers share. Slice 2 adds the containers.
+// The one database, which the containers share.
 var databaseName = 'familyhub'
 
 // Cosmos DB's free tier covers 1000 RU/s for the account's lifetime.
@@ -121,6 +133,22 @@ resource cosmos 'Microsoft.DocumentDB/databaseAccounts@2025-10-15' = {
         throughput: freeThroughput
       }
     }
+
+    // The Household's accounts: which Member each account in the External ID tenant is (ADR 0014). Items are
+    // added by hand, as the sign-in runbook says. On the database's shared throughput.
+    resource accounts 'containers' = {
+      name: 'accounts'
+      properties: {
+        resource: {
+          id: 'accounts'
+          // Each item's id is the account's Object ID, so a sign-in's lookup is a point read.
+          partitionKey: {
+            paths: ['/id']
+            kind: 'Hash'
+          }
+        }
+      }
+    }
   }
 }
 
@@ -192,6 +220,19 @@ resource api 'Microsoft.Web/sites@2025-03-01' = {
           name: 'WEBPUBSUB_ENDPOINT'
           value: 'https://${webPubSub.properties.hostName}'
         }
+        // Sign-in (ADR 0010). None of these is secret.
+        {
+          name: 'ENTRA_TENANT_ID'
+          value: entraTenantId
+        }
+        {
+          name: 'ENTRA_SUBDOMAIN'
+          value: entraSubdomain
+        }
+        {
+          name: 'API_CLIENT_ID'
+          value: apiClientId
+        }
       ]
     }
     functionAppConfig: {
@@ -251,6 +292,18 @@ resource apiCanUseCosmos 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignmen
   name: guid(cosmos.id, api.id, cosmosDataContributor)
   properties: {
     principalId: api.identity.principalId
+    roleDefinitionId: '${cosmos.id}/sqlRoleDefinitions/${cosmosDataContributor}'
+    scope: cosmos.id
+  }
+}
+
+// Ross adds the Household's accounts by hand in Data Explorer (the sign-in runbook, step 8). With keys off, Data
+// Explorer signs in as him, so he needs the same data role.
+resource adminCanUseCosmos 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2025-10-15' = {
+  parent: cosmos
+  name: guid(cosmos.id, adminObjectId, cosmosDataContributor)
+  properties: {
+    principalId: adminObjectId
     roleDefinitionId: '${cosmos.id}/sqlRoleDefinitions/${cosmosDataContributor}'
     scope: cosmos.id
   }

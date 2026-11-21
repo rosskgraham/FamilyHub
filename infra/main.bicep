@@ -27,6 +27,15 @@ param budgetStartDate string = '2026-11-01'
 @description('Who the budget emails when it is passed. Kept out of the public repo.')
 param budgetEmail string
 
+@description('The ID of the FamilyHub External ID tenant, which signs in Members and the Hub (the sign-in runbook). Empty until that is set up, and while it is empty the API refuses anything that needs sign-in.')
+param entraTenantId string = ''
+
+@description('The subdomain of the External ID tenant, as in <subdomain>.ciamlogin.com.')
+param entraSubdomain string = ''
+
+@description('The client ID of the FamilyHub API app registration: the audience its access tokens are for.')
+param apiClientId string = ''
+
 resource group 'Microsoft.Resources/resourceGroups@2025-04-01' = {
   name: 'rg-familyhub'
   location: location
@@ -43,6 +52,9 @@ module resources 'resources.bicep' = {
     adminObjectId: adminObjectId
     dailyCapGb: dailyCapGb
     retentionDays: retentionDays
+    entraTenantId: entraTenantId
+    entraSubdomain: entraSubdomain
+    apiClientId: apiClientId
   }
 }
 
