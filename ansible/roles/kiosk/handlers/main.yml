@@ -1,6 +1,6 @@
-# Before the kiosk restarts, so cage starts without the pretend mouse. Skipped where udev isn't running, as in the
+# Before the kiosk restarts, so cage starts without the devices it ignores. Skipped where udev isn't running, as in the
 # tests' container.
-- name: Apply the touchscreen rule
+- name: Apply the pointer rule
   ansible.builtin.shell: |
     test -S /run/udev/control || exit 0
     udevadm control --reload
