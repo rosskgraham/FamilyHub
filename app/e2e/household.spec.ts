@@ -28,6 +28,8 @@ test('the Household is locked until held, so nobody changes it by accident', asy
 	const name = page.getByRole('textbox', { name: 'New Member’s name' });
 	// Tapped where it is, as a finger would: locked, it can't take focus.
 	const tap = async () => {
+		// Scrolled to first, as a finger would: below the Clock and Theme rows, it starts out of view.
+		await name.scrollIntoViewIfNeeded();
 		const box = (await name.boundingBox())!;
 		await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
 	};
