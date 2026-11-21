@@ -3,7 +3,7 @@
 //
 //   node scripts/board.mjs show <id>                 the card: fields, links, comments
 //   node scripts/board.mjs next <column> [type]      cards in a column, top priority first
-//   node scripts/board.mjs move <id> <column>        to Idea, Refining, Ready, Active, In review or Done
+//   node scripts/board.mjs move <id> <column>        to Idea, Refined, Active, In review or Done
 //   node scripts/board.mjs comment <id> < body.html  posts HTML from stdin to the card's discussion
 //   node scripts/board.mjs set <id> <title|description|acceptance> < value.html
 //                                                    replaces a field with HTML (or text) from stdin
@@ -28,11 +28,10 @@ const TEAM = 'FamilyHub Team';
 const REPO = 'rosskgraham/FamilyHub';
 const STATUS_CONTEXT = 'story-review';
 
-// Each column's state. Idea, Refining and Ready are all New; the board column says which.
+// Each column's state. Idea and Refined are both New; the board column says which.
 const COLUMNS = {
 	Idea: 'New',
-	Refining: 'New',
-	Ready: 'New',
+	Refined: 'New',
 	Active: 'Active',
 	'In review': 'Resolved',
 	Done: 'Closed'

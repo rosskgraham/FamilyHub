@@ -7,11 +7,11 @@ details, and this repo is public, so issues aren't used.
 Most work is done by Claude Code sessions, with Ross deciding what matters and merging. Three skills cover the work, and
 `scripts/board.mjs` is how they read and update the board.
 
-| Skill                | Picks up                                                               | Leaves it in                                       |
-| -------------------- | ---------------------------------------------------------------------- | -------------------------------------------------- |
-| `/refine-story [id]` | the top card in Idea, or the one given                                 | Ready, or still Refining with the questions left   |
-| `/pickup [id]`       | the top card in Ready, or the one given; or a card sent back to Active | In review, with the review started                 |
-| `/review-story [id]` | the top card in In review with no review on its latest commit          | In review (approved) or Active (changes requested) |
+| Skill                | Picks up                                                                 | Leaves it in                                         |
+| -------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------- |
+| `/refine-story [id]` | the top card in Idea, or the one given                                   | Refined, or still in Idea with what's left to answer |
+| `/pickup [id]`       | the top card in Refined, or the one given; or a card sent back to Active | In review, with the review started                   |
+| `/review-story [id]` | the top card in In review with no review on its latest commit            | In review (approved) or Active (changes requested)   |
 
 ## The board
 
@@ -21,8 +21,7 @@ repeats its rule from here.
 | Column    | State    | Means                                                                                       |
 | --------- | -------- | ------------------------------------------------------------------------------------------- |
 | Idea      | New      | Written down, nothing more                                                                  |
-| Refining  | New      | Being worked out                                                                            |
-| Ready     | New      | Meets the Definition of Ready                                                               |
+| Refined   | New      | Fully kitted and ready to implement: meets the Definition of Ready                          |
 | Active    | Active   | Being built, on a branch                                                                    |
 | In review | Resolved | A PR is open, waiting for or past review; or merged and waiting to be checked where it runs |
 | Done      | Closed   | Merged and checked                                                                          |
@@ -33,9 +32,8 @@ Every move by Claude posts a comment on the card saying why. A move without its 
 
 | Move               | Who                                | Only when                                                           | Comment                                                     |
 | ------------------ | ---------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------- |
-| Idea → Refining    | Anyone                             | Someone starts working it out                                       | —                                                           |
-| Refining → Ready   | Ross, or `/refine-story`           | It meets the Definition of Ready                                    | **Refined**: what was decided, and anything Ross was asked  |
-| Ready → Active     | `/pickup`                          | Fewer than 2 cards are Active                                       | **Started**: the branch                                     |
+| Idea → Refined     | Ross, or `/refine-story`           | It meets the Definition of Ready                                    | **Refined**: what was decided, and anything Ross was asked  |
+| Refined → Active   | `/pickup`                          | Fewer than 2 cards are Active                                       | **Started**: the branch                                     |
 | Active → In review | `/pickup`                          | A PR is open with `AB#<id>`, CI is green and the evidence is posted | **Evidence** (below)                                        |
 | In review → Active | `/review-story`                    | It requests changes                                                 | **Review** (below)                                          |
 | Merge              | Ross only                          | The `story-review` status is green on the PR's latest commit        | —                                                           |
@@ -56,6 +54,9 @@ Where a picture shows the problem better than words, it goes on the card with `b
   tests' images, or a browser at the same 1920×1080.
 
 ### Definition of Ready
+
+Refining is the work of moving a card from Idea to Refined. There's no column for it: a card stays in Idea until it's
+fully kitted, and anything left to answer goes in a comment on it. Refined means this is all true:
 
 - The problem, and who it's for, are written down.
 - Every acceptance criterion can be tested, and says how it will be checked: a unit test, an e2e test, a screenshot test,
@@ -117,7 +118,7 @@ moves to Done. Something that only runs in CI or on a PC is Done at merge, sayin
 ```
 node scripts/board.mjs show <id>                 the card: fields, links and discussion
 node scripts/board.mjs next <column> [type]      cards in a column, top priority first
-node scripts/board.mjs move <id> <column>        Idea, Refining, Ready, Active, In review or Done
+node scripts/board.mjs move <id> <column>        Idea, Refined, Active, In review or Done
 node scripts/board.mjs comment <id> < body.html  posts HTML from stdin to the card
 node scripts/board.mjs attach <id> <file> [caption]  attaches a screenshot and shows it in a comment
 node scripts/board.mjs status <pr> <success|failure|pending> <description>

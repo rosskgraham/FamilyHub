@@ -1,6 +1,6 @@
 ---
 name: pickup
-description: Pick up a Ready FamilyHub card (or one sent back from review, or one merged and waiting to be checked), implement it on a branch, post the evidence on the card, open the PR and start the independent review. Use when Ross asks to pick up, start, build or implement the next card or a given one.
+description: Pick up a Refined FamilyHub card (or one sent back from review, or one merged and waiting to be checked), implement it on a branch, post the evidence on the card, open the PR and start the independent review. Use when Ross asks to pick up, start, build or implement the next card or a given one.
 argument-hint: '[work item id]'
 ---
 
@@ -16,8 +16,9 @@ session reviews. Never review your own work, and never merge.
   - **In review, and its PR is merged**: go to step 7.
   - **In review, PR open**: it's waiting for review; say so and stop.
 - Without one, run `node scripts/board.mjs next Active` for cards sent back from review first, then
-  `node scripts/board.mjs next Ready`. Offer the top one.
-- Check it meets the Definition of Ready. If it doesn't, stop and suggest `/refine-story <id>`.
+  `node scripts/board.mjs next Refined`. Offer the top one.
+- Check it meets the Definition of Ready. If it doesn't, stop, suggest `/refine-story <id>`, and move it back to Idea
+  with a comment saying what's missing.
 - Check the WIP limit: `node scripts/board.mjs next Active` shows fewer than 2 cards (not counting this one if it was
   sent back). If it's full, say which cards are holding it and stop.
 
