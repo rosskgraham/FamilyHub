@@ -1,4 +1,5 @@
 import { loadCalendar } from '#lib/server/calendar/index.ts';
+import { loadHeating } from '#lib/server/nest/index.ts';
 import { loadWeather, sunTimes } from '#lib/server/weather/index.ts';
 import { now } from '#lib/server/now.ts';
 import { readClockFormat, readThemeChoice } from '#lib/server/settings.ts';
@@ -9,8 +10,9 @@ import type { LayoutServerLoad } from './$types';
 export const load: LayoutServerLoad = async ({ url }) => {
 	const today = dayKey(now());
 	// Sleep shows the next Event, which overnight is usually tomorrow's first.
-	const [weather, calendar, clockFormat, themeChoice] = await Promise.all([
+	const [weather, heating, calendar, clockFormat, themeChoice] = await Promise.all([
 		loadWeather(),
+		loadHeating(),
 		loadCalendar(today, addDays(today, 2)),
 		readClockFormat(),
 		readThemeChoice()
@@ -20,6 +22,7 @@ export const load: LayoutServerLoad = async ({ url }) => {
 	const theme = themes.find((t) => t === asked) ?? chosenTheme(themeChoice, now(), sunTimes(now()));
 	return {
 		weather,
+		heating,
 		theme,
 		themeChoice,
 		clockFormat,

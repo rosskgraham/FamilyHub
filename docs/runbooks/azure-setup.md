@@ -89,7 +89,7 @@ The deployment's output gives `keyVaultName`, and the Application Insights conne
 
 ```
 vault=<keyVaultName>
-for name in google-client-id google-client-secret octopus-account octopus-api-key zappi-glo-sn zappi-glo-api-key home-latitude home-longitude; do
+for name in google-client-id google-client-secret nest-project-id octopus-account octopus-api-key zappi-glo-sn zappi-glo-api-key home-latitude home-longitude; do
   read -rsp "$name: " value; echo
   az keyvault secret set --vault-name "$vault" --name "$name" --value "$value" --output none
 done

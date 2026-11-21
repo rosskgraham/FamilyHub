@@ -117,6 +117,9 @@ deactivate; rm -rf ~/heating-test
 
 ## B. The Nest (Google SDM API)
 
+> [!NOTE]
+> This was the one-off test, with a client of its own. To connect the Nest to the Hub for real, follow [Connect the Nest to the Hub](nest-setup.md).
+
 The Nest must be in the Google Home app, signed in to the Google account that owns it. Device Access is registered on that account.
 
 ### B1. Register for Device Access

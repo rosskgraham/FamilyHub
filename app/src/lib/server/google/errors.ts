@@ -45,12 +45,13 @@ export function googleError(status: number, body: unknown, message: string): Err
 	return new GoogleRefused(status, full);
 }
 /**
- * A request's address, fit for the logs: no query, and no calendar ids, which are usually email addresses (ADR 0005).
+ * A request's address, fit for the logs (ADR 0005): no query, no calendar ids, which are usually email addresses, and
+ * no Device Access project or device ids, which with a token are enough to reach the Nest.
  */
 export function forLogs(url: string): string {
 	const [path] = url.split('?');
-	return path!
-		.split('/')
-		.map((part) => (/@|%40/.test(part) ? '…' : part))
+	const parts = path!.split('/');
+	return parts
+		.map((part, i) => (/@|%40/.test(part) || /^(enterprises|devices)$/.test(parts[i - 1] ?? '') ? '…' : part))
 		.join('/');
 }

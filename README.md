@@ -2,7 +2,7 @@
 
 **A family wall display for the kitchen.** One glance at a touchscreen by the kettle shows what's on today and who it's for, the week ahead, the jobs that are due, and what the electricity is costing. Nobody has to ask, shout up the stairs, or check four phones.
 
-![The Today view: the next Event with a countdown, the rest of today, the next four days, an Energy card with what the house is using, today's cost so far, a car icon showing it plugged in, and a Smart-charging slot, and the To-dos due today followed by one with no date](docs/images/today-view.png)
+![The Today view: the inside temperature with the heating on beside the outdoor weather, the next Event with a countdown, the rest of today, the next four days, an Energy card with what the house is using, today's cost so far, a car icon showing it plugged in, and a Smart-charging slot, and the To-dos due today followed by one with no date](docs/images/today-view.png)
 
 <sub>The Today view, running on a PC with sample data.</sub>
 
@@ -15,9 +15,10 @@ FamilyHub is a personal project, built by one family for its own kitchen. Buildi
 - **Keeps the family's To-dos in view.** One-off and repeating jobs from a Google Tasks list. The Today view shows what's overdue and due today, then the jobs with no date, which anyone can pick up. Tick them off at the screen or on a phone.
 - **Makes chores a game for the kids.** Each child has a lane of Chores for the morning, after school and the evening, ticks them off at the screen, and earns Stars. Bonus jobs are up for grabs for extra Stars, and children who do one together each get them. Finishing a Routine gets a chime and a burst of stars.
 - **Shows when electricity is cheap, and where it goes.** It reads the Household's Intelligent Octopus Go rates and Smart-charging slots from Octopus, and the Zappi car charger's usage from myenergi. It shows what the house is using now, what today has cost, and when to start the dishwasher, washing machine and tumble drier so they finish while it's cheap. Each half-hour is split into the house and the car.
+- **Shows how warm the house is.** Beside the outdoor weather, the header shows the inside temperature and humidity from the Nest thermostat, and what the heating is doing: heating to a target, set to one, in Eco or off. If the Nest stops reporting, it says since when rather than show an old temperature.
 - **Fits a busy day without scrolling.** Busy days switch to compact rows, and anything that still doesn't fit goes behind a "+N more" that opens the full day. Nothing is cut off silently.
 - **Types at the wall.** Its own on-screen keyboard opens for any box, and slides the page up so the box stays in view.
-- **Is set up at the wall.** A gear in the bottom bar opens Settings: a 24-hour or 12-hour clock, a Light, Dark or Auto theme (Auto follows sunrise and sunset), the Household's Members with their colours and Calendars, the Shopping and To-do lists, and the Hub's Google account, locked until held for a second. It also shows which version is running, when it was built, how long it's been up, and how warm the Pi is, to tell whether it needs a fan.
+- **Is set up at the wall.** A gear in the bottom bar opens Settings: a 24-hour or 12-hour clock, a Light, Dark or Auto theme (Auto follows sunrise and sunset), the Household's Members with their colours and Calendars, the Shopping and To-do lists, the Hub's Google account and the Nest, locked until held for a second. It also shows which version is running, when it was built, how long it's been up, and how warm the Pi is, to tell whether it needs a fan.
 - **Looks after itself.** It keeps showing the last plan if the Wi-Fi drops, says when it last updated, and tells the family in plain words when it needs attention.
 - **Stays at home.** It runs on a Raspberry Pi in the kitchen, and nothing on the internet can reach it.
 
@@ -48,7 +49,7 @@ FamilyHub is a personal project, built by one family for its own kitchen. Buildi
 | ![Settings, unlocked: the clock as 24-hour or 12-hour, and Household and Google with the Family calendar's colour, a row to add a Member with a name and a colour, and a note that Google isn't set up](docs/images/settings-view.png) |
 | A 24-hour clock unless 12-hour is chosen, for every time on the screen. Below it, the Household: each Member's name, colour and Calendar, the Family calendar, the lists and Google, locked until held so nobody changes it by accident. About this Hub says what's running, to check a release reached the Pi. |
 
-The screenshots use the app's built-in sample week, sample Chores, sample To-dos and sample energy, and are copied from the screenshot tests. On the real Hub, the corner shows when the Calendars last updated instead of "Sample data".
+The screenshots use the app's built-in sample week, sample Chores, sample To-dos, sample energy and sample heating, and are copied from the screenshot tests. On the real Hub, the corner shows when the Calendars last updated instead of "Sample data".
 
 ## Where it's going
 
@@ -70,6 +71,7 @@ The plan is in [docs/requirements.md](docs/requirements.md). Progress so far:
 | ✅ | To-dos from Google Tasks, one-off and repeating ([design](design/mockups/todos/notes.md)) | Done, on a PC |
 | ✅ | Settings, Google Calendar's colours, and tapping an Event for its details | Done, on a PC |
 | ✅ | The Household set up in Settings and kept in the Hub's database, not the Key Vault ([ADR 0012](docs/adr/0012-household-and-settings-in-the-hub-database.md)) | Done, on a PC |
+| ⬜ | The heating from the Nest ([ADR 0013](docs/adr/0013-the-nest-through-googles-sdm-api.md), [design](design/mockups/heating/README.md)) | In progress: shown in the header. Still to come: changing the target from the Hub, and the bathroom floor |
 | ⬜ | A Raspberry Pi set up from scripts, showing the Hub full-screen | In progress: set up from scripts, pulling its own releases, full-screen, with its secrets from the Key Vault, and an on-screen keyboard. Still to come: the screen powering down for Sleep |
 | ⬜ | On the kitchen wall: **v1** | |
 | ⬜ | The Shopping list and To-dos in a backend of the Hub's own, with a family app for phones ([design](design/family-app/notes.md)) | In progress: the backend's Azure resources are built. Still to come: sign-in, the lists, and the app |

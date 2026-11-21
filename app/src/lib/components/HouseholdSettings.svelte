@@ -16,6 +16,7 @@
 		household,
 		choices,
 		google,
+		nest,
 		problem,
 		backup,
 		form
@@ -27,6 +28,7 @@
 			| { step: 'sign-in' }
 			| { step: 'unreachable' }
 			| { step: 'ready'; calendars: Choice[]; taskLists: Choice[] };
+		nest: { step: 'hidden' } | { step: 'project' } | { step: 'connect' } | { step: 'connected'; ended: boolean };
 		problem: string | null;
 		backup: { lastAt?: string | null; failingSince?: string | null; needsSignIn?: boolean } | null;
 		form: { form?: string; message?: string; saved?: string } | null;
@@ -57,7 +59,10 @@
 		cancelled: 'Signing in was cancelled.',
 		expired: 'Signing in took too long. Try again.',
 		failed: 'Google turned the sign-in down. Check the runbook’s “If something goes wrong”.',
-		ended: 'Google has ended the Hub’s sign-in. Sign in again.'
+		ended: 'Google has ended the Hub’s sign-in. Sign in again.',
+		'nest-cancelled': 'Connecting the Nest was cancelled.',
+		'nest-expired': 'Connecting the Nest took too long. Try again.',
+		'nest-failed': 'Google turned the Nest down. Check the Nest runbook’s “If something goes wrong”.'
 	};
 	const problemText = $derived(problem ? (problems[problem] ?? null) : null);
 	const when = (iso: string) =>
@@ -71,6 +76,7 @@
 		});
 
 	let confirmingSignOut = $state(false);
+	let confirmingDisconnect = $state(false);
 </script>
 
 <section class="household" aria-labelledby="household-heading">
@@ -212,6 +218,43 @@
 				</form>
 			{/if}
 		</div>
+
+		<!-- The Nest has a sign-in of its own (ADR 0013), so it can be disconnected without touching the Calendars. -->
+		{#if nest.step !== 'hidden'}
+			<div class="google nest">
+				{#if nest.step === 'project'}
+					<p>
+						To show the heating, put the Nest’s Device Access project ID in <code>NEST_PROJECT_ID</code> and restart the Hub.
+					</p>
+				{:else if nest.step === 'connect'}
+					<p>Connect the Nest to show the heating beside the weather. Choose the thermostat when Google asks.</p>
+					<a class="primary" href="/auth/nest" data-sveltekit-reload>Connect the Nest</a>
+				{:else}
+					<p>
+						{#if nest.ended}
+							Google has ended the Nest’s sign-in. Disconnect it, then connect it again.
+						{:else}
+							The Nest is connected. The heating shows beside the weather.
+						{/if}
+					</p>
+					<form
+						method="POST"
+						action="?/disconnectNest"
+						onsubmit={(e) => {
+							if (!confirmingDisconnect) {
+								e.preventDefault();
+								confirmingDisconnect = true;
+								setTimeout(() => (confirmingDisconnect = false), 4000);
+							}
+						}}
+					>
+						<button class="quiet" class:confirming={confirmingDisconnect} type="submit"
+							>{confirmingDisconnect ? 'Tap to disconnect' : 'Disconnect the Nest'}</button
+						>
+					</form>
+				{/if}
+			</div>
+		{/if}
 	</div>
 </section>
 
@@ -314,6 +357,10 @@
 	}
 	.google p {
 		margin: 0;
+	}
+	.nest {
+		padding-top: 28px;
+		border-top: 2px solid var(--line);
 	}
 	.primary,
 	.quiet {

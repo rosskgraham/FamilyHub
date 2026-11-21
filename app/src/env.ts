@@ -11,6 +11,11 @@ export const variables = defineEnvVars({
 		description: 'The Hub’s Google OAuth client secret. Never commit it.',
 		schema: optional
 	},
+	NEST_PROJECT_ID: {
+		description:
+			'The Nest’s Device Access project ID, for the heating. Without it, Settings doesn’t offer to connect the Nest. See docs/runbooks/nest-setup.md.',
+		schema: optional
+	},
 	HOME_LATITUDE: {
 		description: 'Where home is, for the weather. Without it and HOME_LONGITUDE the Hub shows sample weather.',
 		schema: optional

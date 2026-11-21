@@ -86,6 +86,8 @@ Google won't publish an External app until its Branding page links a home page a
 
 The privacy policy lists every scope the Hub asks for, including the Nest's `sdm.service`. If the Hub ever asks for another, add it to `site/privacy.html` first.
 
+For the heating, the Nest needs the Smart Device Management API, its own scope and two more redirect addresses: see [Connect the Nest to the Hub](nest-setup.md).
+
 ## If something goes wrong
 
 - **"Access blocked: This app's request is invalid":** the redirect address doesn't match. Check it matches step 4 exactly, including `http` and the port.

@@ -90,7 +90,7 @@
 		style:--lift="-{lift}px"
 		style:transform="translate({left}px, {top}px) scale({scale})"
 	>
-		<Header weather={data.weather} />
+		<Header weather={data.weather} heating={data.heating} />
 		<main>{@render children()}</main>
 		<NavBar />
 		{#if eventDetail.shown}<EventDetail shown={eventDetail.shown} />{/if}

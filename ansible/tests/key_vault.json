@@ -3,6 +3,7 @@
   "secrets": {
     "google-client-id": "test-client-id.apps.googleusercontent.com",
     "google-client-secret": "GOCSPX-a\"tricky\\one $HOME `x` with spaces",
+    "nest-project-id": "0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0",
     "home-latitude": "51.50",
     "home-longitude": "-0.12",
     "appinsights-connection-string": "InstrumentationKey=not-for-the-hub",
