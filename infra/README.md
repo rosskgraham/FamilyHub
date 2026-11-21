@@ -15,7 +15,7 @@ Everything is on a free tier or inside a free allowance by default. Anything bil
   - `asp-familyhub`: the Flex Consumption plan.
   - `func-familyhub-<suffix>`: the function app that runs [`backend/`](../backend/README.md): Python 3.12, 512 MB, at most 1 instance. It signs in to its storage account with its managed identity.
   - `stfamilyhub<suffix>`: its storage account, with no keys, holding the deployment package and the host's own state. The one billable part, approved at pennies a month.
-  - `cosmos-familyhub-<suffix>`: Cosmos DB for NoSQL on the free tier, with its throughput capped at the free 1000 RU/s, and the `familyhub` database sharing it. No keys: the function app reads and writes with its managed identity.
+  - `cosmos-familyhub-<suffix>`: Cosmos DB for NoSQL on the free tier, with its throughput capped at the free 1000 RU/s, and the `familyhub` database sharing it. Its `accounts` container holds the Household's accounts for sign-in ([ADR 0014](../docs/adr/0014-household-accounts-in-cosmos-db.md)), added by hand as the [sign-in runbook](../docs/runbooks/sign-in-setup.md) says. No keys: the function app reads and writes with its managed identity, and the admin with the same data role, through Data Explorer.
   - `wps-familyhub-<suffix>`: Web PubSub on the free tier, which tells the Hub and open apps that something changed. No keys either.
 - `budget-familyhub`, in `main.bicep`: a Cost Management budget of £5 a month on the subscription, which emails if it's passed.
 - `main.bicepparam`: the parameters. `FAMILYHUB_ADMIN_OBJECT_ID` and `FAMILYHUB_BUDGET_EMAIL` come from the pipeline's `familyhub` variable group.

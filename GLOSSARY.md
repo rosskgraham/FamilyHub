@@ -18,6 +18,10 @@ _Avoid_: User, person, profile
 The owner of Events on the Family calendar, which belong to the whole Household rather than one Member, such as bin day.
 _Avoid_: All, family, shared
 
+**Household account**:
+The account a Member signs in to the Family app and the Backend with: their own Google account, through Microsoft Entra External ID. Only the accounts on the Backend's list get in, each linked to one Member ([ADR 0014](docs/adr/0014-household-accounts-in-cosmos-db.md)). The Hub signs in as itself, and has none.
+_Avoid_: User, login, profile
+
 ### The device
 
 **Hub**:
@@ -29,7 +33,7 @@ The Household's own app on their phones, installed from Chrome rather than an ap
 _Avoid_: Phone app, mobile app, PWA
 
 **Backend**:
-The Hub's own service in Azure that holds the Shopping list and To-dos for the Family app and the Hub. Planned ([ADR 0010](docs/adr/0010-shared-lists-in-an-azure-backend-with-an-installable-family-app.md)).
+The Hub's own service in Azure that holds the Shopping list and To-dos for the Family app and the Hub. Being built ([ADR 0010](docs/adr/0010-shared-lists-in-an-azure-backend-with-an-installable-family-app.md)).
 _Avoid_: Server (the Hub's server on the Pi), cloud, API
 
 **Section**:

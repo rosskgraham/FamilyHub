@@ -2,14 +2,25 @@
 
 The family app's backend ([ADR 0010](../docs/adr/0010-shared-lists-in-an-azure-backend-with-an-installable-family-app.md)): a Python FastAPI app, run in Azure by Functions Flex Consumption ([ADR 0011](../docs/adr/0011-backend-runs-on-functions-flex-consumption.md)). The plan and its slices are in the [design notes](../design/family-app/notes.md).
 
-So far it's the skeleton from slice 1: `/health`, deployed by the pipeline.
+So far it's the skeleton from slice 1: `/health`, sign-in, and `/me`, deployed by the pipeline.
+
+## Sign-in
+
+Members sign in with their own Google account through Microsoft Entra External ID, and call the API with an access token for the `Lists.ReadWrite` scope. The Hub signs in as itself, with a certificate, and its app-only token carries the `Hub` app role. The API checks each token's signature against the FamilyHub tenant's keys, its issuer, audience and expiry, then the scope or role. A Member must also have an item in Cosmos DB's `accounts` container, from their Object ID to their Member id on the Hub ([ADR 0014](../docs/adr/0014-household-accounts-in-cosmos-db.md)).
+
+- `GET /me` says who the caller is: `{"kind": "member", "member_id": "…"}` or `{"kind": "hub", "member_id": null}`.
+- No token, or a bad one, is a 401. A good token for an account not on the list, or without the scope or role, is a 403. Before the tenant's details are set (the app settings `ENTRA_TENANT_ID`, `ENTRA_SUBDOMAIN` and `API_CLIENT_ID`), it's a 503.
+- `/health` needs no sign-in.
+
+The tenant is set up by hand, as the [sign-in runbook](../docs/runbooks/sign-in-setup.md) says. `scripts/whoami.py` signs in as a Member or the Hub and calls `/me`, to check it by hand.
 
 ## What's here
 
-- `familyhub_api/main.py`: the FastAPI app. Everything the API does lives here, with no Azure Functions in sight, so it runs and is tested as a plain FastAPI service.
+- `familyhub_api/`: the FastAPI app, with no Azure Functions in sight, so it runs and is tested as a plain FastAPI service. `main.py` has the routes, `auth.py` checks tokens, and `accounts.py` reads the Household's accounts from Cosmos DB.
 - `function_app.py`: the Azure Functions entry point. `AsgiFunctionApp` hands every HTTP request to the FastAPI app.
 - `host.json`: the Functions host's settings. Routes have no `/api` prefix, so it's `/health`, not `/api/health`.
-- `tests/`: pytest tests, run with FastAPI's test client.
+- `tests/`: pytest tests, run with FastAPI's test client. Sign-in's tests sign their own tokens with a key made for the test, and use a stand-in for Cosmos DB.
+- `scripts/`: tools for checking by hand, not deployed.
 - `pyproject.toml` and `uv.lock`: the dependencies, managed with [uv](https://docs.astral.sh/uv/). The pipeline makes `requirements.txt` from `uv.lock` for the deploy, as Flex builds the app from that.
 
 ## Run it on the PC

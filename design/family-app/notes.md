@@ -21,7 +21,7 @@ This is the interesting path on purpose. Simpler ones are listed under Considere
 - **Data is in Cosmos DB, on its free tier** (16 November 2026). Azure SQL's free offer and Azure's Postgres don't fit a free tier (see Considered Options).
 - **Every Member gets an account, the children included** (16 November 2026). The children have Google accounts on devices of their own, so everyone signs in as themselves.
 - **Children can do everything grown-ups can** on the Shopping list and To-dos (16 November 2026).
-- **Only the Household's accounts get in.** The backend keeps a list of which Google account is which Member, kept out of the public repo like `household.json` (in the Key Vault). Any other account that signs in is turned away.
+- **Only the Household's accounts get in.** The backend keeps a list of which account is which Member, in Cosmos DB's `accounts` container (decided 21 November 2026, [ADR 0014](../../docs/adr/0014-household-accounts-in-cosmos-db.md), replacing the Key Vault). Each account is named by its Object ID in the External ID tenant, and points at the Member's id on the Hub. Any other account that signs in gets a 403.
 - **The app is at Static Web Apps' free `*.azurestaticapps.net` address** (16 November 2026), not a domain of the Household's own. Azure picks the name when the app is created, and it changes if the app is ever deleted and made again, which means installing it again on each phone.
 - **The server decides.** As the backend is Python and the clients are TypeScript, merge rules and repeats live only on the server, so nothing is written twice. Clients queue changes, send them when they can, and show what the server says. That's how the Hub's Tasks queue already works (`app/src/lib/server/tasks/queue.ts`).
 
@@ -107,9 +107,9 @@ Ticking off or removing affects one occurrence, as now.
 
 ## Slices
 
-1. **Backend skeleton:** Bicep for the Flex Consumption function app and its storage account, Cosmos DB, Web PubSub, Static Web Apps and the budget; a FastAPI service with `/health` behind `AsgiFunctionApp`, deployed by the pipeline; telemetry; sign-in with Entra External ID and Google. Measure the scale-to-zero wait and the cold start. Started: the function app, its storage account, the budget, `/health`, the deploy, Cosmos DB and Web PubSub are in. Still to come: Static Web Apps, sign-in and the measurements.
+1. **Backend skeleton:** Bicep for the Flex Consumption function app and its storage account, Cosmos DB, Web PubSub and the budget; a FastAPI service with `/health` behind `AsgiFunctionApp`, deployed by the pipeline; telemetry; sign-in with Entra External ID and Google. Measure the scale-to-zero wait and the cold start. Started: the function app, its storage account, the budget, `/health`, the deploy, Cosmos DB, Web PubSub and sign-in are in. Sign-in's setup by hand is in the [sign-in runbook](../../docs/runbooks/sign-in-setup.md), and the API checks it with `GET /me`. Not done yet: the measurements.
 2. **The Shopping list in the backend:** its operations, log and live updates, with Python tests. Test data only.
-3. **The family app, first version:** install, sign in, the Shopping list, offline queue, live updates.
+3. **The family app, first version:** Static Web Apps in Bicep, and the app deployed to it by the pipeline; install, sign in, the Shopping list, offline queue, live updates. Static Web Apps waits until here (decided 17 November 2026), as there's nothing to host on it before the app.
 4. **The Hub on the backend:** a Shopping list client behind the same interface as the Google Tasks one, so the Shopping Section and Today card don't change.
 5. **The switch:** import the Household's list from Google Tasks once, then use the backend.
 6. **To-dos and repeats**, in the backend, the app and the Hub, with an import from Tasks.
@@ -119,7 +119,7 @@ Later, if wanted: Chores on the children's phones, the Week view on phones, and 
 
 ## Open questions
 
-- **Do the children's Google accounts allow "Sign in with Google" to other apps?** If they're supervised with Family Link, a parent may have to allow it in Family Link first. Check with one child's account before building sign-in.
+- **Do the children's Google accounts allow "Sign in with Google" to other apps?** If they're supervised with Family Link, a parent may have to allow it in Family Link first. Check with one child's account (AB#7). Sign-in was built without waiting (21 November 2026): the children's accounts are added to the list once it's known.
 - **What's worth a notification?** For example, a To-do due today, or "something was added to the Shopping list".
 - **Backups:** Cosmos DB's built-in periodic backup, or a nightly export to Google Drive like Chores (ADR 0006).
 - **What happens to the Google Tasks lists** after the switch: deleted, or left as a read-only record.

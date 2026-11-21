@@ -6,7 +6,7 @@ Do this signed in as Ross, on the PC, with the Azure CLI (`az login`). It takes 
 
 ## Why this isn't Bicep
 
-Everything else in Azure is built by the pipeline ([ADR 0008](../adr/0008-azure-resources-from-bicep-through-azure-devops.md)). The External ID tenant is a separate directory, and its app registrations live inside it, where the pipeline's service connection can't reach. A tenant made by the pipeline would also have the service connection, not Ross, as its first administrator. So the tenant, its Google sign-in and its app registrations are made by hand, here. Only the values the backend needs go back into the pipeline (step 8).
+Everything else in Azure is built by the pipeline ([ADR 0008](../adr/0008-azure-resources-from-bicep-through-azure-devops.md)). The External ID tenant is a separate directory, and its app registrations live inside it, where the pipeline's service connection can't reach. A tenant made by the pipeline would also have the service connection, not Ross, as its first administrator. So the tenant, its Google sign-in and its app registrations are made by hand, here. Only the values the backend needs go back into the pipeline (step 7).
 
 ## What it costs
 
@@ -72,7 +72,7 @@ The user flow is the sign-in page the family app sends people to.
 
 1. **Entra ID → External Identities → User flows → New user flow.**
 2. Name: `signup-signin`.
-3. **Identity providers:** tick **Google**. Leave **Email accounts** unticked if the page allows it. If it insists on one, choose **Email one-time passcode**: an account that isn't on the Household's list (step 7) gets nothing from the backend anyway.
+3. **Identity providers:** tick **Google**. Leave **Email accounts** unticked if the page allows it. If it insists on one, choose **Email one-time passcode**: an account that isn't on the Household's list (step 8) gets nothing from the backend anyway.
 4. **User attributes:** **Display Name**.
 5. Create it.
 
@@ -90,6 +90,7 @@ Three app registrations: the backend's API, the family app, and the Hub (step 6)
 **The family app: `FamilyHub app`.**
 
 1. **Authentication → Add a platform → Single-page application**, with the redirect URI `http://localhost:5173/`, for the app running on the PC. Its Static Web Apps address is added in slice 3, when it exists.
+   Then **Add a platform → Mobile and desktop applications**, with the custom redirect URI `http://localhost`, for `backend/scripts/whoami.py`, which checks sign-in by hand (step 8).
 2. **API permissions → Add a permission:**
    - **My APIs → FamilyHub API → Delegated permissions → `Lists.ReadWrite`.**
    - **Microsoft Graph → Delegated permissions → `openid` and `offline_access`.**
@@ -120,31 +121,7 @@ A lost Pi means deleting this certificate from `FamilyHub Hub`, and making a new
 
 When Key Vault renews the certificate, the new version has to be uploaded the same way (steps 1 and 3, with `download` alone) before the old one expires. Entra only accepts the certificates it has been given.
 
-## 7. Let the Household in
-
-The backend lets in only the accounts on a list in the Key Vault. Anyone else can sign up through the user flow, but gets nothing from the backend. The list uses each account's **Object ID** in the FamilyHub tenant, which never changes, rather than an email address.
-
-1. Each Member signs up once. Until the family app exists, use the user flow's test page: **External Identities → User flows → `signup-signin` → Run user flow**, with the application `FamilyHub app` and the reply URL `http://localhost:5173/`. Copy the **Run user flow endpoint** and open it on the Member's phone or browser, then choose **Google**. The page it ends on won't load, as nothing is running at that address, and that's fine. Start with Ross's account. The children's accounts wait for the Family Link check in the [design notes](../../design/family-app/notes.md#open-questions).
-2. **Entra ID → Users:** each Member now has a user, with their Google address. Note each one's **Object ID**.
-3. Write the list as JSON, from each Object ID to the Member's name exactly as in `household.json`:
-
-   ```json
-   {
-     "<Ross's Object ID>": "Ross",
-     "<another Member's Object ID>": "<their name>"
-   }
-   ```
-
-4. In Git Bash, in Ross's usual directory, put it in the Key Vault, then delete the file:
-
-   ```
-   az keyvault secret set --vault-name "$vault" --name household-accounts --file household-accounts.json --output none
-   rm household-accounts.json
-   ```
-
-To let another account in later, add it to the list and set the secret again. To take one out, remove it.
-
-## 8. Give the backend the tenant's details
+## 7. Give the backend the tenant's details
 
 None of these is secret, but the repo is public, so they're kept in the `familyhub` variable group in Azure DevOps, with the others ([the Azure runbook](azure-setup.md), step 2.3):
 
@@ -154,9 +131,49 @@ None of these is secret, but the repo is public, so they're kept in the `familyh
 | `FAMILYHUB_ENTRA_SUBDOMAIN` | Its subdomain, such as `familyhubgraham` (step 1) |
 | `FAMILYHUB_API_CLIENT_ID` | `FamilyHub API`'s **Application (client) ID** (step 5) |
 
-The family app's and the Hub's client IDs are needed in slices 3 and 4, and are added then.
+The pipeline passes them to the function app as app settings on its next deploy. If the sign-in pull request has already merged, run the pipeline again from Azure DevOps. Until they're set, the API answers `/me` and anything else that needs sign-in with a 503, "Sign-in isn't set up yet".
 
-The backend reads `household-accounts` from the Key Vault with its managed identity, as **Key Vault Secrets User**, which means the service connection must be allowed to give out one more role. Add `4633458b-17de-408a-b874-0445c86b69e6` to its condition, for both adding and removing role assignments, the way Web PubSub Service Owner was added ([the Azure runbook](azure-setup.md), step 2). Do this before the sign-in pull request merges, or its deploy fails.
+The family app's and the Hub's client IDs aren't needed by the backend. The family app gets its own in slice 3, and the Pi gets the Hub's in slice 4.
+
+## 8. Let the Household in
+
+The backend lets in only the accounts in Cosmos DB's `accounts` container ([ADR 0014](../adr/0014-household-accounts-in-cosmos-db.md)). Anyone else can sign up through the user flow, but gets a 403 from the backend. Each item is one account: its `id` is the account's **Object ID** in the FamilyHub tenant, which never changes, and its `memberId` is the Member's id on the Hub, which also never changes, even when they're renamed in Settings.
+
+`backend/scripts/whoami.py` signs in and asks the API who you are. Doing this with each Member, before and after adding them, also checks that sign-in works.
+
+1. In Git Bash, in the repo's `backend` folder, set what the script needs (the values are from steps 1, 5 and 6, and the function app's name is in the Azure portal, in `rg-familyhub`):
+
+   ```
+   export FAMILYHUB_API_URL=https://<function app>.azurewebsites.net
+   export FAMILYHUB_ENTRA_TENANT_ID=<tenant ID>
+   export FAMILYHUB_ENTRA_SUBDOMAIN=<subdomain>
+   export FAMILYHUB_API_CLIENT_ID=<FamilyHub API's client ID>
+   export FAMILYHUB_APP_CLIENT_ID=<FamilyHub app's client ID>
+   ```
+
+2. Sign in as the Member: `uv run python scripts/whoami.py member`. A browser opens: choose **Google** and sign in with the Member's Google account. The first time, that signs them up. It prints `403` and "This account isn't one of the Household's", which is right: they aren't on the list yet. Start with Ross's account. The children's accounts wait for the Family Link check (AB#7, and the [design notes](../../design/family-app/notes.md#open-questions)).
+3. In the Entra admin center, in the FamilyHub tenant: **Entra ID → Users**. The Member now has a user, with their Google address. Note its **Object ID**.
+4. Find the Member's id on the Hub. It's made from their name when they were first added, but check rather than guess. On the PC, this asks for hubadmin's password, as `hub.db` is only readable by the Hub:
+
+   ```
+   ssh -t hubadmin@familyhub.local "sudo node -e \"const {DatabaseSync} = require('node:sqlite'); console.table(new DatabaseSync('/var/lib/familyhub/data/hub.db', {readOnly: true}).prepare('SELECT id, name FROM members').all())\""
+   ```
+
+5. In the [Azure portal](https://portal.azure.com), open the Cosmos DB account in `rg-familyhub` (`cosmos-familyhub-…`), then **Data Explorer**. The account has no keys, so Data Explorer signs in as Ross: if it says it can't read the data, open its **Settings** (the cog) and choose **Entra ID** for authentication. Bicep gives Ross Cosmos DB's Data Contributor role for this.
+6. **familyhub → accounts → Items → New Item**, replace what's there with this, and **Save**:
+
+   ```json
+   {
+     "id": "<the Object ID from step 3>",
+     "memberId": "<the Member's id from step 4>"
+   }
+   ```
+
+7. Run `uv run python scripts/whoami.py member` again, with the same account. It prints `200` and `{'kind': 'member', 'member_id': '<their id>'}`.
+
+To let another account in later, add its item. To take one out, delete its item. Either counts from the next request.
+
+To check the Hub's sign-in, add `export FAMILYHUB_HUB_CLIENT_ID=<FamilyHub Hub's client ID>` and `export FAMILYHUB_KEY_VAULT=<keyVaultName>`, sign in to the Azure CLI as Ross (`az login`), and run `uv run python scripts/whoami.py hub`. It prints `200` and `{'kind': 'hub', 'member_id': None}`. The script downloads the certificate to a temporary folder and deletes it when it finishes.
 
 ## If something goes wrong
 
@@ -164,5 +181,7 @@ The backend reads `household-accounts` from the Key Vault with its managed ident
 - **"AADSTS700016: Application … was not found in the directory":** something was set up in Ross's usual directory instead of the FamilyHub tenant. Check the tenant switcher.
 - **Google isn't offered on the sign-in page:** it isn't ticked in the user flow (step 4), or the app isn't added to the user flow (step 5).
 - **A child's account can't sign in:** Family Link may need a parent to allow "Sign in with Google" for that account first. That's the open question in the design notes.
-- **Signing in works, but the backend says 403:** the account isn't on the Household's list, or its Object ID was copied wrongly (step 7).
+- **Signing in works, but the backend says 403:** the account has no item in `accounts`, or its Object ID was copied wrongly (step 8). An item's `id` must be the Object ID exactly.
+- **The backend says 503, "Sign-in isn't set up yet":** the variables in step 7 are missing, or the pipeline hasn't deployed since they were added.
+- **`whoami.py member` says the redirect URI isn't valid:** `http://localhost` is missing from `FamilyHub app`'s **Mobile and desktop applications** platform (step 5).
 - **The family app's silent sign-in fails with Google's "400 invalid_request" about a `username` parameter:** a [known issue](https://learn.microsoft.com/en-us/answers/questions/5822108/entra-external-id-google-federation-username-param) with External ID and Google. It's for slice 3 to handle.
