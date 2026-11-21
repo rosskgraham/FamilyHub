@@ -1,9 +1,14 @@
 name: CI
 
+# Docs, design files and Markdown are skipped: nothing here checks them, and a docs-only merge would otherwise publish a
+# release with the same code. A change with any other file still runs everything. main has no required checks; if it
+# ever does, this needs a job-level filter instead, as a skipped workflow never reports.
 on:
   pull_request:
+    paths-ignore: ['docs/**', 'design/**', '**/*.md']
   push:
     branches: [main]
+    paths-ignore: ['docs/**', 'design/**', '**/*.md']
 
 jobs:
   check:
