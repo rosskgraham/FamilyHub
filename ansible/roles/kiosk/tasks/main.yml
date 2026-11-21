@@ -46,6 +46,18 @@
     mode: "0644"
   notify: Restart the kiosk
 
+# The touchscreen's pretend mouse would keep a pointer on the screen. See the rule for why.
+- name: Ignore the touchscreen's pretend mouse
+  ansible.builtin.copy:
+    src: 90-familyhub-touchscreen.rules
+    dest: /etc/udev/rules.d/90-familyhub-touchscreen.rules
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Apply the touchscreen rule
+    - Restart the kiosk
+
 - name: Install the kiosk's service
   ansible.builtin.template:
     src: familyhub-kiosk.service.j2
