@@ -131,6 +131,7 @@ In the Hub's Google Cloud project (see [Google Cloud setup](google-cloud-setup.m
 1. **APIs & Services → Library:** enable **Smart Device Management API**.
 2. **Google Auth Platform → Clients → Create client:** type **Web application**, name `FamilyHub heating test`, and add `https://www.google.com` as an authorised redirect URI.
 3. Note the **client ID** and **client secret**.
+4. **Google Auth Platform → Audience → Test users:** add the Google account that owns the Nest, if it isn't listed already. While the app is in Testing, any other account gets "Access blocked … has not completed the Google verification process" in B4.
 
 This test uses its own client, so the Hub's sign-in isn't touched. While the app is in Testing, its tokens last 7 days, which is plenty for a test.
 
