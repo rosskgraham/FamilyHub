@@ -1,3 +1,13 @@
+# Before the kiosk restarts, so cage starts without the pretend mouse. Skipped where udev isn't running, as in the
+# tests' container.
+- name: Apply the touchscreen rule
+  ansible.builtin.shell: |
+    test -S /run/udev/control || exit 0
+    udevadm control --reload
+    udevadm trigger --subsystem-match=input --action=change
+    udevadm settle
+  changed_when: true
+
 - name: Restart the kiosk
   ansible.builtin.systemd_service:
     name: familyhub-kiosk.service

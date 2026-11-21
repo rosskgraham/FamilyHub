@@ -193,3 +193,7 @@
           # ProtectHome hides /run/user, where cage makes its Wayland socket.
           - screen_units.results[0].status.ProtectHome == 'no'
           - default_target.stdout == 'graphical.target'
+
+    - name: Check the rule that hides the touchscreen's pretend mouse is installed and valid
+      ansible.builtin.command: udevadm verify /etc/udev/rules.d/90-familyhub-touchscreen.rules
+      changed_when: false
