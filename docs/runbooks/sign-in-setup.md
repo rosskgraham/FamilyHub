@@ -91,6 +91,7 @@ Three app registrations: the backend's API, the family app, and the Hub (step 6)
 
 1. **Authentication → Add a platform → Single-page application**, with the redirect URI `http://localhost:5173/`, for the app running on the PC. Its Static Web Apps address is added in slice 3, when it exists.
    Then **Add a platform → Mobile and desktop applications**, with the custom redirect URI `http://localhost`, for `backend/scripts/whoami.py`, which checks sign-in by hand (step 8).
+   Then, still on **Authentication** (its **Settings** tab, or **Advanced settings** in older portals), set **Allow public client flows** to **Yes**, and save. `whoami.py` has no secret, and without this its sign-in fails with `AADSTS7000218`. The family app has no secret either, so nothing is lost.
 2. **API permissions → Add a permission:**
    - **My APIs → FamilyHub API → Delegated permissions → `Lists.ReadWrite`.**
    - **Microsoft Graph → Delegated permissions → `openid` and `offline_access`.**
@@ -108,11 +109,11 @@ The Hub signs in as itself, with a certificate kept in the Key Vault. The Pi's s
    az account set --subscription FamilyHub
    vault=<keyVaultName>
    az keyvault certificate create --vault-name "$vault" --name hub-entra-certificate \
-     --policy "$(az keyvault certificate get-default-policy)"
+     --policy "$(az keyvault certificate get-default-policy | sed 's/CN=CLIGetDefaultPolicy/CN=FamilyHub Hub/')"
    az keyvault certificate download --vault-name "$vault" --name hub-entra-certificate --file hub.cer
    ```
 
-   Key Vault's default policy makes a self-signed certificate valid for 12 months, and renews it 90 days before it expires.
+   Key Vault's default policy makes a self-signed certificate valid for 12 months, and renews it 90 days before it expires. The `sed` gives it a subject that says what it's for, instead of the default `CN=CLIGetDefaultPolicy`.
 
    The deployment gives Ross **Key Vault Certificates Officer** on the vault for this, as well as Secrets Officer. If the vault says `ForbiddenByRbac` for `certificates`, the pipeline hasn't deployed that role yet, or the service connection isn't allowed to give it out ([the Azure runbook](azure-setup.md), step 2). `az account set` matters if the CLI is also signed in to the FamilyHub tenant: the vault is in Ross's usual directory.
 
@@ -156,11 +157,13 @@ The backend lets in only the accounts in Cosmos DB's `accounts` container ([ADR 
 
 2. Sign in as the Member: `uv run python scripts/whoami.py member`. A browser opens: choose **Google** and sign in with the Member's Google account. The first time, that signs them up. It prints `403` and "This account isn't one of the Household's", which is right: they aren't on the list yet. Start with Ross's account. The children's accounts wait for the Family Link check (AB#7, and the [design notes](../../design/family-app/notes.md#open-questions)).
 3. In the Entra admin center, in the FamilyHub tenant: **Entra ID → Users**. The Member now has a user, with their Google address. Note its **Object ID**.
-4. Find the Member's id on the Hub. It's made from their name when they were first added, but check rather than guess. On the PC, this asks for hubadmin's password, as `hub.db` is only readable by the Hub:
+4. Find the Member's id on the Hub. It's made from their name when they were first added, but check rather than guess. On the PC, `ssh hubadmin@familyhub.local`, then on the Pi run this. It asks for hubadmin's password, as `hub.db` is only readable by the Hub:
 
    ```
-   ssh -t hubadmin@familyhub.local "sudo node -e \"const {DatabaseSync} = require('node:sqlite'); console.table(new DatabaseSync('/var/lib/familyhub/data/hub.db', {readOnly: true}).prepare('SELECT id, name FROM members').all())\""
+   sudo node -e "const {DatabaseSync} = require('node:sqlite'); console.table(new DatabaseSync('/var/lib/familyhub/hub.db', {readOnly: true}).prepare('SELECT id, name FROM members').all())"
    ```
+
+   Then `exit`. It's two steps because the quotes needed to do it in one line from the PC break in PowerShell. The database is in `HUB_DATA_DIR` (`hub_data_dir` in `ansible/group_vars/all.yml`).
 
 5. In the [Azure portal](https://portal.azure.com), open the Cosmos DB account in `rg-familyhub` (`cosmos-familyhub-…`), then **Data Explorer**. The account has no keys, so Data Explorer signs in as Ross: if it says it can't read the data, open its **Settings** (the cog) and choose **Entra ID** for authentication. Bicep gives Ross Cosmos DB's Data Contributor role for this.
 6. **familyhub → accounts → Items → New Item**, replace what's there with this, and **Save**:
@@ -186,5 +189,7 @@ To check the Hub's sign-in, add `export FAMILYHUB_HUB_CLIENT_ID=<FamilyHub Hub's
 - **A child's account can't sign in:** Family Link may need a parent to allow "Sign in with Google" for that account first. That's the open question in the design notes.
 - **Signing in works, but the backend says 403:** the account has no item in `accounts`, or its Object ID was copied wrongly (step 8). An item's `id` must be the Object ID exactly.
 - **The backend says 503, "Sign-in isn't set up yet":** the variables in step 7 are missing, or the pipeline hasn't deployed since they were added.
+- **`whoami.py member` fails with "AADSTS7000218: The request body must contain the following parameter: 'client_assertion' or 'client_secret'":** **Allow public client flows** is off on `FamilyHub app` (step 5).
+- **The `hub.db` command says "unable to open database file":** the path is wrong. It's `/var/lib/familyhub/hub.db` on the Pi (step 8).
 - **`whoami.py member` says the redirect URI isn't valid:** `http://localhost` is missing from `FamilyHub app`'s **Mobile and desktop applications** platform (step 5).
 - **The family app's silent sign-in fails with Google's "400 invalid_request" about a `username` parameter:** a [known issue](https://learn.microsoft.com/en-us/answers/questions/5822108/entra-external-id-google-federation-username-param) with External ID and Google. It's for slice 3 to handle.
