@@ -1,20 +1,20 @@
 # Deploys everything FamilyHub has in Azure from infra/main.bicep, at the scope of its own FamilyHub
 # subscription, resource group included (ADR 0008), then the family app's backend from backend/ to its function
-# app (ADR 0011). A pull request gets a lint, a what-if, which lists what the merge would change, and the
-# backend's tests; a merge to main deploys. Setup, including the service connection, variable group and
+# app (ADR 0011), and the family app from family-app/ to Static Web Apps (ADR 0010). A pull request gets a lint, a
+# what-if, which lists what the merge would change, and the backend's and family app's tests; a merge to main deploys. Setup, including the service connection, variable group and
 # environment named below, is in docs/runbooks/azure-setup.md.
 
 trigger:
   branches:
     include: [main]
   paths:
-    include: [infra, backend]
+    include: [infra, backend, family-app]
 
 pr:
   branches:
     include: [main]
   paths:
-    include: [infra, backend]
+    include: [infra, backend, family-app]
 
 variables:
   # FAMILYHUB_ADMIN_OBJECT_ID and FAMILYHUB_BUDGET_EMAIL, which main.bicepparam reads, and the sign-in tenant's
@@ -72,6 +72,25 @@ stages:
             artifact: backend
             displayName: Keep the backend package for the deploy
 
+          - task: UseNode@1
+            displayName: Use Node 24, as CI does
+            inputs:
+              version: '24.x'
+
+          - script: |
+              set -euo pipefail
+              cd family-app
+              npm ci --no-audit --no-fund
+              npm run check
+              npm run lint
+              npm test
+              npm run build
+            displayName: Test and build the family app
+
+          - publish: family-app/build
+            artifact: family-app
+            displayName: Keep the family app's files for the deploy
+
           # Pull requests from forks of the public repo never get near the subscription.
           - task: AzureCLI@2
             displayName: Show what deploying would change
@@ -120,6 +139,8 @@ stages:
                       echo "$outputs"
                       echo "##vso[task.setvariable variable=functionAppName]$(jq -r .functionAppName.value <<< "$outputs")"
                       echo "##vso[task.setvariable variable=apiUrl]$(jq -r .apiUrl.value <<< "$outputs")"
+                      echo "##vso[task.setvariable variable=familyAppName]$(jq -r .familyAppName.value <<< "$outputs")"
+                      echo "##vso[task.setvariable variable=familyAppUrl]$(jq -r .familyAppUrl.value <<< "$outputs")"
 
                 - task: AzureCLI@2
                   displayName: Deploy the backend
@@ -134,6 +155,25 @@ stages:
                         --name "$(functionAppName)" \
                         --src "$(Pipeline.Workspace)/backend/backend.zip" \
                         --build-remote true
+
+                # The deployment token is read here and used straight away, so it's never stored: not in the repo, not
+                # in the variable group. The Check stage built the files; the CLI only uploads them.
+                - task: AzureCLI@2
+                  displayName: Deploy the family app
+                  inputs:
+                    azureSubscription: ${{ variables.serviceConnection }}
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      set -euo pipefail
+                      token=$(az staticwebapp secrets list \
+                        --name "$(familyAppName)" --resource-group "$(resourceGroup)" \
+                        --query properties.apiKey --output tsv)
+                      echo "##vso[task.setsecret]$token"
+                      npx --yes @azure/static-web-apps-cli@2.1.0 deploy "$(Pipeline.Workspace)/family-app" \
+                        --deployment-token "$token" --env production
+                      curl --fail --silent --show-error --max-time 30 --output /dev/null "$(familyAppUrl)/"
+                      echo "The family app is at $(familyAppUrl)"
 
                 # The first request after a deploy is a cold start, so it gets a couple of minutes.
                 - script: |

@@ -1,0 +1,8 @@
+node_modules
+/.svelte-kit
+/build
+.env
+.env.*
+vite.config.ts.timestamp-*
+.DS_Store
+Thumbs.db

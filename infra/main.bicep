@@ -88,3 +88,5 @@ output keyVaultUri string = resources.outputs.keyVaultUri
 output appInsightsName string = resources.outputs.appInsightsName
 output functionAppName string = resources.outputs.functionAppName
 output apiUrl string = resources.outputs.apiUrl
+output familyAppName string = resources.outputs.familyAppName
+output familyAppUrl string = resources.outputs.familyAppUrl

@@ -1,0 +1,5 @@
+# Made by tools, not written by hand.
+package-lock.json
+.svelte-kit/
+build/
+static/icons/

@@ -7,12 +7,13 @@ on:
 
 jobs:
   # Decides whether the checks need to run. Docs, design files, the public site (site/, deployed by pages.yml) and
-  # Markdown outside app/ aren't checked by anything here, and a docs-only merge would otherwise publish a release with
-  # the same code. check, pi and backend are required by the "Protect main" ruleset, so they're skipped by their own
-  # `if` rather than by skipping the workflow: a job skipped that way counts as passed, a workflow that never runs never
-  # reports. app/'s Markdown counts as code, because the app's lint formats it. The jobs run unless this job said
-  # 'false', so if it fails or gives no answer they still run, rather than show as passed without running. Renames are
-  # listed as a deletion and an addition, so moving a file out of app/ into docs/ still counts as code.
+  # Markdown outside app/ and family-app/ aren't checked by anything here, and a docs-only merge would otherwise publish
+  # a release with the same code. check, pi and backend are required by the "Protect main" ruleset, so they're skipped
+  # by their own `if` rather than by skipping the workflow: a job skipped that way counts as passed, a workflow that
+  # never runs never reports. app/'s and family-app/'s Markdown counts as code, because their lint formats it. The jobs
+  # run unless this job said 'false', so if it fails or gives no answer they still run, rather than show as passed
+  # without running. Renames are listed as a deletion and an addition, so moving a file out of app/ into docs/ still
+  # counts as code.
   changes:
     runs-on: ubuntu-latest
     outputs:
@@ -36,7 +37,7 @@ jobs:
             case "$file" in
               '') ;;
               docs/* | design/* | site/*) ;;
-              app/*) code=true ;;
+              app/* | family-app/*) code=true ;;
               *.md) ;;
               *) code=true ;;
             esac
@@ -124,6 +125,32 @@ jobs:
         run: uv run ruff format --check .
       - name: Unit tests
         run: uv run pytest
+
+  # The family app for phones (ADR 0010): types, formatting, lint, tests, and that it builds. The Azure DevOps
+  # pipeline builds it again to deploy it to Static Web Apps.
+  family-app:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: family-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: family-app/package-lock.json
+      - run: npm ci
+      - name: Check types
+        run: npm run check
+      - name: Check formatting and lint
+        run: npm run lint
+      - name: Unit tests
+        run: npm test
+      - name: Build
+        run: npm run build
 
   # Every merge to main that passes the checks becomes a release the Pi can pull (ADR 0004). A docs-only merge skips
   # check, and so skips this too.

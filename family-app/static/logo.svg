@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <title>FamilyHub</title>
+  <!-- Colours from app/src/lib/theme.ts: hero ink, car blue, star gold. -->
+  <rect width="120" height="120" fill="#161B22"/>
+  <!-- The house: a roof over a wall screen. -->
+  <path d="M24 58 L60 27 L96 58" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="34" y="52" width="52" height="42" rx="7" fill="#FFFFFF"/>
+  <!-- The screen's week: today picked out in gold. -->
+  <rect x="41" y="59" width="11" height="11" rx="2.5" fill="#2456C9"/>
+  <rect x="54.5" y="59" width="11" height="11" rx="2.5" fill="#2456C9"/>
+  <rect x="68" y="59" width="11" height="11" rx="2.5" fill="#F2B42C"/>
+  <rect x="41" y="75" width="11" height="11" rx="2.5" fill="#2456C9"/>
+  <rect x="54.5" y="75" width="11" height="11" rx="2.5" fill="#2456C9"/>
+  <rect x="68" y="75" width="11" height="11" rx="2.5" fill="#2456C9"/>
+</svg>
