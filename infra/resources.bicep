@@ -131,11 +131,12 @@ module backend 'backend.bicep' = {
 }
 
 // The family app's files (ADR 0010), on Static Web Apps' free plan: 100 GB a month, no overage. It isn't offered in
-// UK South, and where it's managed doesn't matter, as its files are served from Azure's edge. The pipeline deploys the
-// files with a deployment token it reads at the time, so the token is never stored anywhere.
+// UK South, and West Europe, its only European region, wasn't taking new customers on 22 November 2026, so it's East
+// US 2 (Ross). That only holds the resource's settings: the files are code, not the Household's data, served from
+// Azure's edge. The pipeline deploys them with a deployment token it reads at the time, so the token isn't stored.
 resource familyApp 'Microsoft.Web/staticSites@2025-03-01' = {
   name: 'swa-familyhub-${suffix}'
-  location: 'westeurope'
+  location: 'eastus2'
   tags: tags
   sku: {
     name: 'Free'
