@@ -1,0 +1,13 @@
+{
+	"navigationFallback": {
+		"rewrite": "/index.html",
+		"exclude": ["/_app/*", "/icons/*", "/*.{svg,png,json,webmanifest,js,css,txt}"]
+	},
+	"mimeTypes": {
+		".webmanifest": "application/manifest+json"
+	},
+	"routes": [
+		{ "route": "/service-worker.js", "headers": { "cache-control": "no-cache" } },
+		{ "route": "/index.html", "headers": { "cache-control": "no-cache" } }
+	]
+}

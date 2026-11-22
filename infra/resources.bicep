@@ -130,8 +130,30 @@ module backend 'backend.bicep' = {
   }
 }
 
+// The family app's files (ADR 0010), on Static Web Apps' free plan: 100 GB a month, no overage. It isn't offered in
+// UK South, and West Europe, its only European region, wasn't taking new customers on 22 November 2026, so it's East
+// US 2 (Ross). That only holds the resource's settings: the files are code, not the Household's data, served from
+// Azure's edge. The pipeline deploys them with a deployment token it reads at the time, so the token isn't stored.
+resource familyApp 'Microsoft.Web/staticSites@2025-03-01' = {
+  name: 'swa-familyhub-${suffix}'
+  location: 'eastus2'
+  tags: tags
+  sku: {
+    name: 'Free'
+    tier: 'Free'
+  }
+  properties: {
+    // Deployed by the Azure DevOps pipeline (ADR 0008), not Static Web Apps' own GitHub workflow.
+    provider: 'None'
+    stagingEnvironmentPolicy: 'Disabled'
+    allowConfigFileUpdates: true
+  }
+}
+
 output keyVaultName string = vault.name
 output keyVaultUri string = vault.properties.vaultUri
 output appInsightsName string = insights.name
 output functionAppName string = backend.outputs.functionAppName
 output apiUrl string = backend.outputs.apiUrl
+output familyAppName string = familyApp.name
+output familyAppUrl string = 'https://${familyApp.properties.defaultHostname}'

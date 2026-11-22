@@ -11,6 +11,7 @@ Everything is on a free tier or inside a free allowance by default. Anything bil
   - `kv-familyhub-<suffix>`: Key Vault (Standard), the setup scripts' secrets, and the Hub's sign-in certificate. Ross can read and write both. The deployment writes the Application Insights connection string into it.
   - `log-familyhub`: the Log Analytics workspace, capped at 0.15 GB a day and keeping 30 days, so it stays free.
   - `appi-familyhub`: Application Insights, for the Hub's telemetry ([ADR 0005](../docs/adr/0005-telemetry-via-otel-collector-to-app-insights.md)), and the backend's.
+  - `swa-familyhub-<suffix>`: Static Web Apps on the free plan, serving [`family-app/`](../family-app/README.md) at its `*.azurestaticapps.net` address ([ADR 0010](../docs/adr/0010-shared-lists-in-an-azure-backend-with-an-installable-family-app.md)). It's managed from East US 2: it isn't offered in UK South, and West Europe, its only European region, wasn't taking new customers (22 November 2026). Its files are served from Azure's edge, and they're code, not the Household's data. The pipeline uploads the build with a deployment token it reads at the time, so the token isn't stored.
 - `backend.bicep`: the family app's backend ([ADR 0011](../docs/adr/0011-backend-runs-on-functions-flex-consumption.md)), deployed by `resources.bicep`:
   - `asp-familyhub`: the Flex Consumption plan.
   - `func-familyhub-<suffix>`: the function app that runs [`backend/`](../backend/README.md): Python 3.12, 512 MB, at most 1 instance. It signs in to its storage account with its managed identity.
