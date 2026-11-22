@@ -9,10 +9,12 @@
 	import Header from '#lib/components/Header.svelte';
 	import NavBar from '#lib/components/NavBar.svelte';
 	import EventDetail from '#lib/components/EventDetail.svelte';
+	import HeatingPanel from '#lib/components/HeatingPanel.svelte';
 	import Keyboard from '#lib/components/Keyboard.svelte';
 	import Sleep from '#lib/components/Sleep.svelte';
 	import { clock } from '#lib/clock.svelte.ts';
 	import { eventDetail } from '#lib/event-detail.svelte.ts';
+	import { heatingPanel } from '#lib/heating-panel.svelte.ts';
 	import { IDLE_MS } from '#lib/idle.ts';
 	import { reloadsForRelease, returnsToToday } from '#lib/idle.ts';
 	import { isAsleep, sleepPalette } from '#lib/sleep.ts';
@@ -54,13 +56,19 @@
 	// While the on-screen keyboard is open, the page slides up so the form being typed in stays above it.
 	let lift = $state(0);
 
-	// An Event's detail closes on its own like everything else: two minutes untouched, on going to sleep, or on leaving
-	// the page it was opened from.
+	// An Event's detail and the Heating panel close on their own like everything else: two minutes untouched, on going
+	// to sleep, or on leaving the page they were opened from.
 	$effect(() => {
-		if (!eventDetail.shown) return;
-		if (asleep || clock.now.getTime() - (lastTouch ?? loadedAt).getTime() >= IDLE_MS) eventDetail.close();
+		if (!eventDetail.shown && !heatingPanel.open) return;
+		if (asleep || clock.now.getTime() - (lastTouch ?? loadedAt).getTime() >= IDLE_MS) {
+			eventDetail.close();
+			heatingPanel.close();
+		}
 	});
-	afterNavigate(() => eventDetail.close());
+	afterNavigate(() => {
+		eventDetail.close();
+		heatingPanel.close();
+	});
 
 	// The Pi installs a new release by itself (ADR 0004). Once the Hub's been left alone, load its code too.
 	$effect(() => {
@@ -94,6 +102,7 @@
 		<main>{@render children()}</main>
 		<NavBar />
 		{#if eventDetail.shown}<EventDetail shown={eventDetail.shown} />{/if}
+		{#if heatingPanel.open && data.heating}<HeatingPanel heating={data.heating} />{/if}
 		<Keyboard bind:lift />
 		{#if asleep}
 			<Sleep events={data.sleep.events} owners={data.sleep.owners} onwake={() => (lastTouch = new Date())} />

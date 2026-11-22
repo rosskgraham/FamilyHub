@@ -68,6 +68,10 @@ _Avoid_: Mode
 The house's central heating, as the Nest thermostat reports it: the inside temperature and humidity, and whether it's heating, set to a target, in Eco or off. Shown in the header beside the weather ([ADR 0013](docs/adr/0013-the-nest-through-googles-sdm-api.md)).
 _Avoid_: Climate, thermostat (the device itself), boiler
 
+**Target**:
+The temperature the Heating is set to heat to. Changed at the Nest's dial, in its app, by its schedule, or from the Hub's Heating panel, opened by tapping the Heating in the header: − and + in 0.5° steps between 16° and 22°, only in Heat. A change lasts until the schedule's next one.
+_Avoid_: Setpoint (the API's word), boost
+
 **Quick action**:
 A one- or two-tap change made at the Hub: switching view or Section, or adding, ticking off or removing a Shopping item. Creating or editing Events is not a Quick action; that happens on phones.
 _Avoid_: Shortcut, command

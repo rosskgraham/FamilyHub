@@ -8,6 +8,8 @@ import { join } from 'node:path';
 const PORT = 4173;
 /** A second Hub, with Google's client and the Nest's project but no Nest sign-in. */
 export const NO_NEST_URL = 'http://localhost:4174';
+/** A third Hub with sample data, whose heating the tests change, so the other tests always see the sample's own. */
+export const HEATING_URL = 'http://localhost:4175';
 
 // Empty config and data folders for each run, so the Hub under test never reads or writes the Household's own
 // household.json, chores.json or data/. Workers load this file too, and reuse the main process's folder.
@@ -85,6 +87,31 @@ export default defineConfig({
 				HUB_NETWORK_FILE: NETWORK,
 				HUB_CONFIG_DIR: join(HOME, 'no-nest', 'config'),
 				HUB_DATA_DIR: join(HOME, 'no-nest', 'data')
+			}
+		},
+		{
+			// The same build again, with sample data and no Google client, so a change of target can only reach the
+			// sample, never a Nest.
+			command: 'npm run preview -- --port 4175 --strictPort',
+			url: HEATING_URL,
+			reuseExistingServer: false,
+			timeout: 180_000,
+			env: {
+				CALENDAR_SOURCE: 'sample',
+				GOOGLE_CLIENT_ID: '',
+				GOOGLE_CLIENT_SECRET: '',
+				NEST_PROJECT_ID: '',
+				HOME_LATITUDE: '',
+				HOME_LONGITUDE: '',
+				OCTOPUS_ACCOUNT: '',
+				OCTOPUS_API_KEY: '',
+				ZAPPI_GLO_SN: '',
+				ZAPPI_GLO_API_KEY: '',
+				HUB_NOW: NOW,
+				HUB_THERMAL_ZONE: THERMAL_ZONE,
+				HUB_NETWORK_FILE: NETWORK,
+				HUB_CONFIG_DIR: join(HOME, 'heating', 'config'),
+				HUB_DATA_DIR: join(HOME, 'heating', 'data')
 			}
 		}
 	]

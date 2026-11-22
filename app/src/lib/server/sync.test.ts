@@ -60,6 +60,31 @@ describe('createSync', () => {
 		expect(fetch).toHaveBeenCalledTimes(1);
 	});
 
+	it('with fresh, answers from a fetch started after the call, not one already under way', async () => {
+		const { fetch, calls } = controlled<string>();
+		const sync = createSync({ name: 'Test', fetch, everyMs: 10 * MINUTE, clock });
+		void sync.read();
+		await settle();
+		expect(fetch).toHaveBeenCalledTimes(1);
+
+		// A change is made while that fetch is under way, so its answer may be from before the change.
+		const fresh = [sync.refresh({ fresh: true }), sync.refresh({ fresh: true })];
+		calls[0]!.resolve('before the change');
+		await settle();
+		expect(fetch).toHaveBeenCalledTimes(2);
+		calls[1]!.resolve('after the change');
+		await Promise.all(fresh);
+		expect((await sync.read()).value).toBe('after the change');
+		expect(fetch).toHaveBeenCalledTimes(2);
+	});
+
+	it('with fresh and nothing under way, fetches once', async () => {
+		const fetch = vi.fn(async () => 'now');
+		const sync = createSync({ name: 'Test', fetch, everyMs: 10 * MINUTE, clock });
+		await sync.refresh({ fresh: true });
+		expect(fetch).toHaveBeenCalledTimes(1);
+	});
+
 	it('keeps the last good answer when a fetch fails, and says why', async () => {
 		let fail = false;
 		const sync = createSync({
