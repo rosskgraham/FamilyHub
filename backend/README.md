@@ -2,7 +2,7 @@
 
 The family app's backend ([ADR 0010](../docs/adr/0010-shared-lists-in-an-azure-backend-with-an-installable-family-app.md)): a Python FastAPI app, run in Azure by Functions Flex Consumption ([ADR 0011](../docs/adr/0011-backend-runs-on-functions-flex-consumption.md)). The plan and its slices are in the [design notes](../design/family-app/notes.md).
 
-So far it's the skeleton from slice 1: `/health`, sign-in, and `/me`, deployed by the pipeline.
+So far it's the skeleton from slice 1 (`/health`, sign-in, and `/me`, deployed by the pipeline) and the Shopping list's operations, log and catch-up from slice 2. Live updates come next.
 
 ## Sign-in
 
@@ -14,12 +14,30 @@ Members sign in with their own Google account through Microsoft Entra External I
 
 The tenant is set up by hand, as the [sign-in runbook](../docs/runbooks/sign-in-setup.md) says. `scripts/whoami.py` signs in as a Member or the Hub and calls `/me`, to check it by hand.
 
+## The Shopping list
+
+Both endpoints need sign-in, as a Member or the Hub, and either can do everything.
+
+- `POST /lists/shopping/operations` takes `{"operations": [...]}`, at most 100, each one of:
+  - `{"id": "<uuid>", "type": "add", "item_id": "<uuid>", "text": "Milk"}`
+  - `{"id": "<uuid>", "type": "tick" | "untick" | "remove", "item_id": "<uuid>"}`
+  - `{"id": "<uuid>", "type": "rename", "item_id": "<uuid>", "text": "Oat milk"}`
+
+  Both ids are made on the device. Text is trimmed and must be 1 to 200 characters. They're applied in order, and the answer is `{"results": [{"id": "…", "seq": 12, "changed": true}, ...]}`. Sending an operation again gets the same answer and changes nothing. Anything invalid is a 422, and none of the batch is applied.
+- `GET /lists/shopping/items?after=N` answers `{"items": [...], "seq": 14}`: every item changed after sequence number N, each with its `id`, `text`, `ticked_off`, `ticked_off_at`, `removed` and `seq`. A removed item comes as a marker, with `removed` true, for devices to drop. With `after=0`, it's what a device starting from nothing needs: the items still to get, and those ticked off in the last 10 minutes. Ask for everything after `seq` next time. An item may come twice, which does no harm.
+
+The server decides how operations merge. Removing beats anything later: a removed item never comes back. Ticked-off and the text are separate, so changing one never undoes the other. Otherwise the latest to arrive wins.
+
+Everything is in Cosmos DB's `lists` container, one partition per list (`listId` `shopping`): a counter, an item per item, and the log of every operation with its number, when it arrived and who sent it. Each operation is written with the counter and the item in one transactional batch, and tried again if another request wrote first. If Cosmos DB can't be reached, or is too busy, it's a 503.
+
+`scripts/shopping.py` signs in as `whoami.py` does, and lists the Shopping list, or runs through every operation with test items, to check it by hand.
+
 ## What's here
 
-- `familyhub_api/`: the FastAPI app, with no Azure Functions in sight, so it runs and is tested as a plain FastAPI service. `main.py` has the routes, `auth.py` checks tokens, and `accounts.py` reads the Household's accounts from Cosmos DB.
+- `familyhub_api/`: the FastAPI app, with no Azure Functions in sight, so it runs and is tested as a plain FastAPI service. `main.py` has the routes, `auth.py` checks tokens, `accounts.py` reads the Household's accounts from Cosmos DB, `lists.py` has the lists' operations and rules, and `cosmos_lists.py` keeps them in Cosmos DB.
 - `function_app.py`: the Azure Functions entry point. `AsgiFunctionApp` hands every HTTP request to the FastAPI app.
 - `host.json`: the Functions host's settings. Routes have no `/api` prefix, so it's `/health`, not `/api/health`.
-- `tests/`: pytest tests, run with FastAPI's test client. Sign-in's tests sign their own tokens with a key made for the test, and use a stand-in for Cosmos DB.
+- `tests/`: pytest tests, run with FastAPI's test client. Sign-in's tests sign their own tokens with a key made for the test. The tests use stand-ins for Cosmos DB, the lists' one refusing clashing writes as a transactional batch would.
 - `scripts/`: tools for checking by hand, not deployed.
 - `pyproject.toml` and `uv.lock`: the dependencies, managed with [uv](https://docs.astral.sh/uv/). The pipeline makes `requirements.txt` from `uv.lock` for the deploy, as Flex builds the app from that.
 
