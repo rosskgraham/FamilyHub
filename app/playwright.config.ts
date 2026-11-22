@@ -20,6 +20,10 @@ export const NOW = '2026-10-28T08:15:00Z';
 const THERMAL_ZONE = join(HOME, 'thermal_zone0_temp');
 writeFileSync(THERMAL_ZONE, '52500\n');
 
+// ...on the home Wi-Fi, so Settings shows the same network on every machine too.
+const NETWORK = join(HOME, 'network.json');
+writeFileSync(NETWORK, JSON.stringify({ kind: 'wifi', name: 'Home Wi-Fi', signal: 72, address: '192.168.0.240' }));
+
 export default defineConfig({
 	testDir: 'e2e',
 	snapshotPathTemplate: '{testDir}/__screenshots__/{arg}{ext}',
@@ -53,6 +57,7 @@ export default defineConfig({
 				ZAPPI_GLO_API_KEY: '',
 				HUB_NOW: NOW,
 				HUB_THERMAL_ZONE: THERMAL_ZONE,
+				HUB_NETWORK_FILE: NETWORK,
 				HUB_CONFIG_DIR: join(HOME, 'config'),
 				HUB_DATA_DIR: join(HOME, 'data')
 			}
@@ -77,6 +82,7 @@ export default defineConfig({
 				ZAPPI_GLO_API_KEY: '',
 				HUB_NOW: NOW,
 				HUB_THERMAL_ZONE: THERMAL_ZONE,
+				HUB_NETWORK_FILE: NETWORK,
 				HUB_CONFIG_DIR: join(HOME, 'no-nest', 'config'),
 				HUB_DATA_DIR: join(HOME, 'no-nest', 'data')
 			}

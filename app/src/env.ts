@@ -58,6 +58,11 @@ export const variables = defineEnvVars({
 			'The file the Pi’s CPU temperature is read from, for Settings. Defaults to the kernel’s; only the screenshot tests set it.',
 		schema: optional
 	},
+	HUB_NETWORK_FILE: {
+		description:
+			'A JSON file standing in for the network the Hub is on, for Settings. Unset, the Hub reads its own; only the screenshot tests set it.',
+		schema: optional
+	},
 	HUB_NOW: {
 		description: 'Pretend it is this moment (an ISO time) on the server. Only for the screenshot tests.',
 		schema: optional
