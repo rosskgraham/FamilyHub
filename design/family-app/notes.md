@@ -80,7 +80,7 @@ One change, start to finish:
 3. Web PubSub tells the Hub and any phones with the app open.
 4. Each asks the API for everything after the last change it has, and shows it.
 
-The Hub holds one connection open to Web PubSub, an always-on service of its own. It doesn't ask the API over and over. Connecting to Web PubSub needs a URL with an access token from the API (`GET /live`). Tokens last 60 minutes, for the Hub as for phones (decided 22 November 2026): a token is only checked when connecting, and a client asks for a new URL whenever it reconnects. One hub carries every list's messages to every connection, and clients ignore the lists they don't show. There's no guard on the free tier's limits, as Free_F1 refuses rather than charges.
+The Hub holds one connection open to Web PubSub, an always-on service of its own. It doesn't ask the API over and over. Connecting to Web PubSub needs a URL with an access token from the API (`GET /live`). Tokens last 60 minutes, for the Hub as for phones (decided 22 November 2026), and a client asks for a new URL whenever it reconnects. Microsoft's docs suggest a token is only checked when connecting, so an open connection outlives it, but that's untested: two tries from a PC on 22 November 2026 stayed open for at least 45 minutes, then the PC slept and dropped them. It doesn't change the design, as phones sleep and networks drop, so every client reconnects anyway. The Hub, always on, tests it in slice 4. One hub carries every list's messages to every connection, and clients ignore the lists they don't show. There's no guard on the free tier's limits, as Free_F1 refuses rather than charges.
 
 ## Responsiveness
 
