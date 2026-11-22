@@ -44,8 +44,12 @@ export interface SyncOptions<T> {
 export interface Sync<T> {
 	/** The latest answer at once, starting a fetch if one is due. Waits only when there's nothing to show yet. */
 	read(): Promise<Snapshot<T>>;
-	/** Fetches now, such as after a change, sharing a fetch already under way. */
-	refresh(): Promise<void>;
+	/**
+	 * Fetches now, such as after a change, sharing a fetch already under way. With `fresh`, the answer is from a fetch
+	 * started after the call: one already under way may have been answered before the change, so it waits for that one,
+	 * then asks again.
+	 */
+	refresh(options?: { fresh?: boolean }): Promise<void>;
 }
 
 /** The first retry comes this soon after a failure, then twice as long each time, up to the source's own interval. */
@@ -59,6 +63,8 @@ export function createSync<T>(options: SyncOptions<T>): Sync<T> {
 	let kept: Kept<T> | null = null;
 	let loaded: Promise<void> | null = null;
 	let inFlight: Promise<void> | null = null;
+	// The fetch that starts once the one under way ends, for a fresh refresh. Shared by every fresh refresh meanwhile.
+	let next: Promise<void> | null = null;
 	let lastTry = -Infinity;
 	let error: unknown = null;
 	let failures = 0;
@@ -132,6 +138,15 @@ export function createSync<T>(options: SyncOptions<T>): Sync<T> {
 		return inFlight;
 	}
 
+	function refreshFresh(): Promise<void> {
+		if (!inFlight) return refresh();
+		next ??= inFlight.then(() => {
+			next = null;
+			return refresh();
+		});
+		return next;
+	}
+
 	return {
 		async read() {
 			await load();
@@ -143,9 +158,9 @@ export function createSync<T>(options: SyncOptions<T>): Sync<T> {
 				failingSince !== null && clock() - failingSince >= NEEDS_ROSS_MS ? new Date(failingSince).toISOString() : null;
 			return { value: kept?.value ?? null, at: kept?.at ?? null, error, needsRoss };
 		},
-		async refresh() {
+		async refresh(options) {
 			await load();
-			await refresh();
+			await (options?.fresh ? refreshFresh() : refresh());
 		}
 	};
 }

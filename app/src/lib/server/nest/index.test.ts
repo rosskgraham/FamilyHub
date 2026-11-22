@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { HeatingReading } from '#lib/heating.ts';
-import { googleError, SignInNeeded } from '../google/errors.ts';
+import { forLogs, googleError, SignInNeeded } from '../google/errors.ts';
 import {
 	changeHeatingTarget,
 	changeTarget,
@@ -209,11 +209,8 @@ describe('changing the target', () => {
 		};
 		const request = vi.fn(async (method: string, url: string) => {
 			if (method === 'GET') return { devices: [device] };
-			throw googleError(
-				400,
-				turnedDown,
-				`Google API request failed, POST ${url.replace(/project-id|device-id/g, '…')}`
-			);
+			// As the Hub's Google requests make their errors, with forLogs taking the IDs out of the address.
+			throw googleError(400, turnedDown, `Google API request failed, POST ${forLogs(url)}`);
 		});
 		const t = thermostat(reading, (celsius) => sendHeat(request as never, 'project-id', celsius));
 		const change = await changeTarget(t, 22);
@@ -223,7 +220,31 @@ describe('changing the target', () => {
 		expect(errors).toHaveBeenCalledTimes(1);
 		const line = errors.mock.calls[0]!.join(' ');
 		expect(line).toMatch(/^Heating target not changed from 21° to 22°: /);
+		expect(line).toContain('POST https://smartdevicemanagement.googleapis.com/v1/enterprises/…/devices/…: 400');
 		expect(line).not.toMatch(/project-id|device-id|Bearer/);
+	});
+
+	it('reads the thermostat again after a change, not taking a poll already under way from before it', async () => {
+		let answer: (r: HeatingReading) => void = () => {};
+		const read = vi.fn(() => new Promise<HeatingReading>((resolve) => (answer = resolve)));
+		let now = Date.parse('2026-11-21T14:02:00Z');
+		const heating = createHeating(read, () => now);
+		const first = heating();
+		await settle();
+		answer(reading);
+		await first;
+
+		// The next poll goes out, and the change is sent while it's under way.
+		now += POLL_MS;
+		void heating();
+		await settle();
+		expect(read).toHaveBeenCalledTimes(2);
+		const after = heating.refresh();
+		answer(reading);
+		await settle();
+		expect(read).toHaveBeenCalledTimes(3);
+		answer({ ...reading, target: 22 });
+		expect(await after).toMatchObject({ target: 22 });
 	});
 
 	it('sends nothing in Eco, Off or when the Nest isn’t reporting', async () => {

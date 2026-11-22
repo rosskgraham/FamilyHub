@@ -160,7 +160,8 @@ export function createHeating(read: () => Promise<HeatingReading>, clock: () => 
 	const now = async (): Promise<Heating> => heatingNow(await sync.read(), clock());
 	return Object.assign(now, {
 		async refresh() {
-			await sync.refresh();
+			// Not a poll that may have been answered before the change.
+			await sync.refresh({ fresh: true });
 			return now();
 		}
 	});
