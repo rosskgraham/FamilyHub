@@ -3,6 +3,7 @@
     uv run python scripts/shopping.py member list      # a browser opens: sign in with Google
     uv run python scripts/shopping.py member check     # adds, ticks, renames and removes test items
     uv run python scripts/shopping.py hub check        # the same, signed in as the Hub
+    uv run python scripts/shopping.py hub live [minutes]  # listens for live updates while making a change
 
 list shows the Shopping list as a device starting from nothing would get it. check runs through every
 operation, sends one twice, and sends 10 adds at once, saying what it expected and what it got. Its items are
@@ -13,12 +14,14 @@ It signs in as scripts/whoami.py does, with the same environment variables.
 
 import json
 import sys
+import time
 import urllib.error
 import urllib.request
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
+from websockets.sync.client import connect
 from whoami import hub_token, member_token, setting
 
 
@@ -112,23 +115,56 @@ def check(api: Api) -> None:
     print("All good." if failures == 0 else f"{failures} failed.")
 
 
+def live(api: Api, sign_in_again: Any, wait_minutes: float) -> None:
+    status, body = api.call("GET", "/live")
+    if status != 200:
+        sys.exit(f"GET /live: {status} {body}")
+    expect("GET /live gives a wss:// URL", body["url"].startswith("wss://"), body)
+    with connect(body["url"], open_timeout=30) as socket:
+        print("Connected.")
+        if wait_minutes:
+            print(f"Waiting {wait_minutes:g} minutes on the open connection.")
+            time.sleep(wait_minutes * 60)
+            api = sign_in_again()
+        before = api.items()["seq"]
+        item_id = str(uuid.uuid4())
+        started = time.monotonic()
+        [added] = api.send(op("add", item_id, f"Test item live {item_id[:8]}"))
+        try:
+            message = json.loads(socket.recv(timeout=30))
+        except TimeoutError:
+            message = None
+        took = time.monotonic() - started
+        expected = {"list": "shopping", "seq": added["seq"]}
+        expect(f"the message arrived, {took:.2f} s after the POST was sent", message == expected, message)
+        caught_up = [i["id"] for i in api.items(before)["items"]]
+        expect("the catch-up after the last seq has the item", item_id in caught_up, caught_up)
+        api.send(op("remove", item_id))
+    print("All good." if failures == 0 else f"{failures} failed.")
+
+
 def main() -> None:
     who, command = (sys.argv[1:3] + ["", ""])[:2]
-    if who not in ("member", "hub") or command not in ("list", "check"):
-        sys.exit("Usage: shopping.py member|hub list|check")
+    if who not in ("member", "hub") or command not in ("list", "check", "live"):
+        sys.exit("Usage: shopping.py member|hub list|check|live [minutes]")
     tenant_id = setting("FAMILYHUB_ENTRA_TENANT_ID")
     authority = f"https://{setting('FAMILYHUB_ENTRA_SUBDOMAIN')}.ciamlogin.com/{tenant_id}"
     api_client_id = setting("FAMILYHUB_API_CLIENT_ID")
-    result = (member_token if who == "member" else hub_token)(authority, api_client_id)
-    if "access_token" not in result:
-        sys.exit(f"Signing in failed: {result.get('error')}: {result.get('error_description')}")
-    api = Api(setting("FAMILYHUB_API_URL").rstrip("/"), result["access_token"])
 
+    def sign_in() -> Api:
+        result = (member_token if who == "member" else hub_token)(authority, api_client_id)
+        if "access_token" not in result:
+            sys.exit(f"Signing in failed: {result.get('error')}: {result.get('error_description')}")
+        return Api(setting("FAMILYHUB_API_URL").rstrip("/"), result["access_token"])
+
+    api = sign_in()
     if command == "list":
         print(json.dumps(api.items(), indent=2))
-    else:
+    elif command == "check":
         check(api)
-        sys.exit(1 if failures else 0)
+    else:
+        live(api, sign_in, float(sys.argv[3]) if len(sys.argv) > 3 else 0)
+    sys.exit(1 if failures else 0)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 """The FastAPI app. It runs as a plain FastAPI service locally and in the tests, and on Azure Functions Flex
 Consumption through function_app.py (ADR 0011)."""
 
+import logging
 import time
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
@@ -15,8 +16,11 @@ from familyhub_api.accounts import CosmosAccounts
 from familyhub_api.auth import Accounts, Caller, EntraSettings, SignIn, TokenChecker
 from familyhub_api.cosmos_lists import CosmosLists
 from familyhub_api.lists import Applied, Busy, Item, Lists, Operations, Store
+from familyhub_api.live import Live, WebPubSubLive
 
 SHOPPING = "shopping"
+
+logger = logging.getLogger(__name__)
 
 # When this process started. Flex Consumption scales to zero after a quiet spell, so a new value here means
 # the request had a cold start. That's how slice 1 measures how long Flex waits before scaling to zero.
@@ -39,6 +43,11 @@ class AppliedOperations(BaseModel):
     results: list[Applied]
 
 
+class LiveConnection(BaseModel):
+    # A Web PubSub client URL, with an access token that lasts an hour. Ask for a new one to reconnect.
+    url: str
+
+
 class ChangedItems(BaseModel):
     items: list[Item]
     # Ask for everything after this next time.
@@ -49,15 +58,19 @@ def create_app(
     checker: TokenChecker | None = None,
     accounts: Accounts | None = None,
     store: Store | None = None,
+    live: Live | None = None,
     clock: Callable[[], datetime] = lambda: datetime.now(UTC),
 ) -> FastAPI:
-    """The app. Without a checker, accounts or store, it makes them from the app settings, as in Azure."""
+    """The app. Without a checker, accounts, store or live updates, it makes them from the app settings, as in
+    Azure."""
     if checker is None and (settings := EntraSettings.from_environment()) is not None:
         checker = TokenChecker(settings)
     if accounts is None:
         accounts = CosmosAccounts.from_environment()
     if store is None:
         store = CosmosLists.from_environment()
+    if live is None:
+        live = WebPubSubLive.from_environment()
     signed_in = SignIn(checker, accounts)
     lists = Lists(store, clock) if store is not None else None
 
@@ -90,8 +103,27 @@ def create_app(
     ) -> AppliedOperations:
         """Applies a batch of operations to the Shopping list, in order. Sending one again does no harm."""
         by = caller.member_id if caller.kind == "member" and caller.member_id else "hub"
-        with _unavailable_if_cosmos_fails():
-            return AppliedOperations(results=lists.apply(SHOPPING, body.operations, by))
+        changes: list[int] = []
+        try:
+            with _unavailable_if_cosmos_fails():
+                return AppliedOperations(results=lists.apply(SHOPPING, body.operations, by, changes))
+        finally:
+            # Even when the batch failed partway, what was saved is worth telling the other devices about.
+            if changes:
+                _tell(live, SHOPPING, max(changes))
+
+    @app.get("/live")
+    def live_connection(caller: Annotated[Caller, Depends(signed_in)]) -> LiveConnection:
+        """Where to connect for live updates: every connection hears {"list": ..., "seq": ...} when a list
+        changes, and catches up from its last seq."""
+        if live is None:
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Live updates aren't set up yet.")
+        try:
+            return LiveConnection(url=live.client_url())
+        except Exception as error:
+            logger.warning("Couldn't get a Web PubSub client URL.", exc_info=True)
+            unavailable = HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Can't reach live updates now.")
+            raise unavailable from error
 
     @app.get("/lists/shopping/items")
     def shopping_items(
@@ -106,6 +138,18 @@ def create_app(
         return ChangedItems(items=caught_up.items, seq=caught_up.seq)
 
     return app
+
+
+def _tell(live: Live | None, list_id: str, seq: int) -> None:
+    """Tells the other devices the list changed. The save stands whatever happens here: a device that misses
+    the message catches up when it next asks."""
+    if live is None:
+        return
+    try:
+        live.changed(list_id, seq)
+    except Exception:
+        # The message carries no item text, so neither does the failure.
+        logger.warning("Couldn't tell clients the %s list changed, up to %s.", list_id, seq, exc_info=True)
 
 
 @contextmanager

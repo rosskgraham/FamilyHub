@@ -80,7 +80,7 @@ One change, start to finish:
 3. Web PubSub tells the Hub and any phones with the app open.
 4. Each asks the API for everything after the last change it has, and shows it.
 
-The Hub holds one connection open to Web PubSub, an always-on service of its own. It doesn't ask the API over and over. Connecting to Web PubSub needs an access token from the API, and the Hub's can be long-lived.
+The Hub holds one connection open to Web PubSub, an always-on service of its own. It doesn't ask the API over and over. Connecting to Web PubSub needs a URL with an access token from the API (`GET /live`). Tokens last 60 minutes, for the Hub as for phones (decided 22 November 2026): a token is only checked when connecting, and a client asks for a new URL whenever it reconnects. One hub carries every list's messages to every connection, and clients ignore the lists they don't show. There's no guard on the free tier's limits, as Free_F1 refuses rather than charges.
 
 ## Responsiveness
 
@@ -111,7 +111,7 @@ Ticking off or removing affects one occurrence, as now.
 ## Slices
 
 1. **Backend skeleton:** Bicep for the Flex Consumption function app and its storage account, Cosmos DB, Web PubSub and the budget; a FastAPI service with `/health` behind `AsgiFunctionApp`, deployed by the pipeline; telemetry; sign-in with Entra External ID and Google. Measure the scale-to-zero wait and the cold start. Started: the function app, its storage account, the budget, `/health`, the deploy, Cosmos DB, Web PubSub and sign-in are in. Sign-in's setup by hand is in the [sign-in runbook](../../docs/runbooks/sign-in-setup.md), and the API checks it with `GET /me`. Not done yet: the measurements.
-2. **The Shopping list in the backend:** its operations, log and live updates, with Python tests. Test data only. Started: the operations, log and catch-up are built (`POST /lists/shopping/operations` and `GET /lists/shopping/items`, in the [backend README](../../backend/README.md#the-shopping-list)). Not done yet: live updates.
+2. **The Shopping list in the backend:** its operations, log and live updates, with Python tests. Test data only. Built: the operations, log and catch-up (`POST /lists/shopping/operations` and `GET /lists/shopping/items`, in the [backend README](../../backend/README.md#the-shopping-list)), and live updates (`GET /live`, in the [backend README](../../backend/README.md#live-updates)).
 3. **The family app, first version:** Static Web Apps in Bicep, and the app deployed to it by the pipeline; install, sign in, the Shopping list, offline queue, live updates. Static Web Apps waits until here (decided 17 November 2026), as there's nothing to host on it before the app.
 4. **The Hub on the backend:** a Shopping list client behind the same interface as the Google Tasks one, so the Shopping Section and Today card don't change.
 5. **The switch:** import the Household's list from Google Tasks once, then use the backend.

@@ -2,7 +2,7 @@
 
 The family app's backend ([ADR 0010](../docs/adr/0010-shared-lists-in-an-azure-backend-with-an-installable-family-app.md)): a Python FastAPI app, run in Azure by Functions Flex Consumption ([ADR 0011](../docs/adr/0011-backend-runs-on-functions-flex-consumption.md)). The plan and its slices are in the [design notes](../design/family-app/notes.md).
 
-So far it's the skeleton from slice 1 (`/health`, sign-in, and `/me`, deployed by the pipeline) and the Shopping list's operations, log and catch-up from slice 2. Live updates come next.
+So far it's the skeleton from slice 1 (`/health`, sign-in, and `/me`, deployed by the pipeline) and slice 2's Shopping list: its operations, log, catch-up and live updates.
 
 ## Sign-in
 
@@ -28,13 +28,25 @@ Both endpoints need sign-in, as a Member or the Hub, and either can do everythin
 
 The server decides how operations merge. Removing beats anything later: a removed item never comes back. Ticked-off and the text are separate, so changing one never undoes the other. Otherwise the latest to arrive wins.
 
-Everything is in Cosmos DB's `lists` container, one partition per list (`listId` `shopping`): a counter, an item per item, and the log of every operation with its number, when it arrived and who sent it. Each operation is written with the counter and the item in one transactional batch, and tried again if another request wrote first. If Cosmos DB can't be reached, or is too busy, it's a 503.
+Everything is in Cosmos DB's `lists` container, one partition per list (`listId` `shopping`): a counter, an item per item, and the log of every operation with its number, when it arrived and who sent it (`sentBy`: a Member's id, or `hub`). Each operation is written with the counter and the item in one transactional batch, and tried again if another request wrote first. If Cosmos DB can't be reached, or is too busy, it's a 503. The operations before the one that failed are kept, so a client resends the whole batch, which is safe: the ones already applied aren't applied again.
 
-`scripts/shopping.py` signs in as `whoami.py` does, and lists the Shopping list, or runs through every operation with test items, to check it by hand.
+## Live updates
+
+Devices hear about a change made elsewhere within about a second, through Azure Web PubSub, rather than asking over and over.
+
+- `GET /live`, signed in as a Member or the Hub, answers `{"url": "wss://…"}`: a Web PubSub client URL for the `familyhub` hub, with an access token that lasts 60 minutes. Connect a plain WebSocket to it. To reconnect, ask for a new URL.
+- After a batch of operations that changed something, every connection gets one message: `{"list": "shopping", "seq": 12}`, the highest number the batch changed. Then fetch `GET /lists/shopping/items?after=<your last seq>`. Ignore lists you don't show.
+- A batch that changed nothing, such as a resend, sends nothing. A batch that failed partway still sends a message for what it saved.
+- The message is never the change itself, so a missed one costs nothing: the next catch-up gets it. Sending it has a 5-second timeout and no retry, and if it fails, the batch is still saved and answered, and the failure is logged.
+- Without `WEBPUBSUB_ENDPOINT`, as on the PC, `GET /live` is a 503 and no messages are sent.
+
+Web PubSub's keys are off, so the API makes each token through Web PubSub's own API, with the function app's managed identity and its Web PubSub Service Owner role. The free tier allows 20 connections at once and 20,000 messages a day, each message to each connection counting once. Past a limit, connections or messages are refused, not charged for.
+
+`scripts/shopping.py` signs in as `whoami.py` does, and lists the Shopping list, runs through every operation with test items, or listens for live updates while making a change (`live`), to check it by hand.
 
 ## What's here
 
-- `familyhub_api/`: the FastAPI app, with no Azure Functions in sight, so it runs and is tested as a plain FastAPI service. `main.py` has the routes, `auth.py` checks tokens, `accounts.py` reads the Household's accounts from Cosmos DB, `lists.py` has the lists' operations and rules, and `cosmos_lists.py` keeps them in Cosmos DB.
+- `familyhub_api/`: the FastAPI app, with no Azure Functions in sight, so it runs and is tested as a plain FastAPI service. `main.py` has the routes, `auth.py` checks tokens, `accounts.py` reads the Household's accounts from Cosmos DB, `lists.py` has the lists' operations and rules, `cosmos_lists.py` keeps them in Cosmos DB, and `live.py` sends live updates through Web PubSub.
 - `function_app.py`: the Azure Functions entry point. `AsgiFunctionApp` hands every HTTP request to the FastAPI app.
 - `host.json`: the Functions host's settings. Routes have no `/api` prefix, so it's `/health`, not `/api/health`.
 - `tests/`: pytest tests, run with FastAPI's test client. Sign-in's tests sign their own tokens with a key made for the test. The tests use stand-ins for Cosmos DB, the lists' one refusing clashing writes as a transactional batch would.
