@@ -19,6 +19,7 @@ This is the interesting path on purpose. Simpler ones are listed under Considere
 - **It runs on Azure Functions Flex Consumption** (17 November 2026, [ADR 0011](../../docs/adr/0011-backend-runs-on-functions-flex-consumption.md)), replacing App Service's Free plan (F1), chosen the day before. It's the same FastAPI app, run through `AsgiFunctionApp`. Flex has no daily CPU stop and stays inside its free grant, but its storage account costs pennies a month, which Ross approved.
 - **Saving stays synchronous** (17 November 2026). Changes must be applied in order, and Storage queues and Service Bus Basic don't keep it. Service Bus Standard does, with sessions, but costs about $10 a month. A Storage queue carries only side jobs: Web Push, the Tasks import, and timers.
 - **Data is in Cosmos DB, on its free tier** (16 November 2026). Azure SQL's free offer and Azure's Postgres don't fit a free tier (see Considered Options).
+- **Backups are Cosmos DB's periodic backup** (22 November 2026), not a nightly export to Google Drive like Chores (ADR 0006): once a day, kept two days, the two copies that are free. A broken list noticed up to two days later can be restored, by a support request to Microsoft, losing up to a day's changes.
 - **Every Member gets an account, the children included** (16 November 2026). The children have Google accounts on devices of their own, so everyone signs in as themselves.
 - **Children can do everything grown-ups can** on the Shopping list and To-dos (16 November 2026).
 - **Only the Household's accounts get in.** The backend keeps a list of which account is which Member, in Cosmos DB's `accounts` container (decided 21 November 2026, [ADR 0014](../../docs/adr/0014-household-accounts-in-cosmos-db.md), replacing the Key Vault). Each account is named by its Object ID in the External ID tenant, and points at the Member's id on the Hub. Any other account that signs in gets a 403.
@@ -65,9 +66,11 @@ Every part stays on a free tier, as ADR 0008 requires, except the function app's
 ## How sync works
 
 - **Every change is an operation** with an ID made on the device: add an item, tick it off, untick it, rename it, remove it. The device keeps it in a queue until the server confirms it, so sending it twice does no harm.
-- **The server applies operations in the order it receives them**, and keeps them in Cosmos DB with a sequence number. A client asks for "everything after number N", so catching up after a day offline is one request.
+- **Items' IDs are made on the device too** (decided 22 November 2026), so an item added offline needs no ID swapping when it reaches the server, as the Hub's Google Tasks queue needs now.
+- **The server applies operations in the order it receives them**, and keeps them in Cosmos DB with a sequence number. A client asks for "everything after number N", so catching up after a day offline is one request. The answer is the items' states as they are now, not the operations, so clients never merge anything: `GET /lists/shopping/items?after=N`. From 0, it's what a device starting from nothing needs: the items still to get and those ticked off in the last 10 minutes.
+- **Each list is one partition** of Cosmos DB's `lists` container, holding its counter, its items and its log of operations. An operation is written with the counter and the item in one transactional batch, the counter only if it hasn't changed since it was read, so no two operations share a number. If another request wrote first, the operation is tried again. The log keeps who sent each operation and when, and the item's text, for recent items later.
 - **The API tells Web PubSub "something changed"** while it's handling the change, after saving it. Not Cosmos DB's change feed, which would need something running all the time to watch it.
-- **Conflicts are settled per field**, latest write wins, with two rules where that's wrong. Removing beats editing: an item removed at home doesn't come back because someone ticked it in the shop. And ticking off is kept apart from the item's text.
+- **Conflicts are settled per field**, latest write wins, with two rules where that's wrong. Removing beats editing: an item removed at home doesn't come back because someone ticked it in the shop. And ticking off is kept apart from the item's text. An operation that changes nothing, such as ticking an item already ticked, still gets a number and is logged.
 - **Web PubSub only says "something changed"**, never the change itself, so a missed message costs nothing: the next catch-up gets it.
 
 One change, start to finish:
@@ -108,7 +111,7 @@ Ticking off or removing affects one occurrence, as now.
 ## Slices
 
 1. **Backend skeleton:** Bicep for the Flex Consumption function app and its storage account, Cosmos DB, Web PubSub and the budget; a FastAPI service with `/health` behind `AsgiFunctionApp`, deployed by the pipeline; telemetry; sign-in with Entra External ID and Google. Measure the scale-to-zero wait and the cold start. Started: the function app, its storage account, the budget, `/health`, the deploy, Cosmos DB, Web PubSub and sign-in are in. Sign-in's setup by hand is in the [sign-in runbook](../../docs/runbooks/sign-in-setup.md), and the API checks it with `GET /me`. Not done yet: the measurements.
-2. **The Shopping list in the backend:** its operations, log and live updates, with Python tests. Test data only.
+2. **The Shopping list in the backend:** its operations, log and live updates, with Python tests. Test data only. Started: the operations, log and catch-up are built (`POST /lists/shopping/operations` and `GET /lists/shopping/items`, in the [backend README](../../backend/README.md#the-shopping-list)). Not done yet: live updates.
 3. **The family app, first version:** Static Web Apps in Bicep, and the app deployed to it by the pipeline; install, sign in, the Shopping list, offline queue, live updates. Static Web Apps waits until here (decided 17 November 2026), as there's nothing to host on it before the app.
 4. **The Hub on the backend:** a Shopping list client behind the same interface as the Google Tasks one, so the Shopping Section and Today card don't change.
 5. **The switch:** import the Household's list from Google Tasks once, then use the backend.
@@ -121,7 +124,6 @@ Later, if wanted: Chores on the children's phones, the Week view on phones, and 
 
 - **Do the children's Google accounts allow "Sign in with Google" to other apps?** If they're supervised with Family Link, a parent may have to allow it in Family Link first. Check with one child's account (AB#7). Sign-in was built without waiting (21 November 2026): the children's accounts are added to the list once it's known.
 - **What's worth a notification?** For example, a To-do due today, or "something was added to the Shopping list".
-- **Backups:** Cosmos DB's built-in periodic backup, or a nightly export to Google Drive like Chores (ADR 0006).
 - **What happens to the Google Tasks lists** after the switch: deleted, or left as a read-only record.
 - **Does the Hub's own Shopping and To-dos code move to the backend client in one go**, or stay switchable between Google Tasks and the backend for a while?
 - **Does the app share code with the Hub** as a package in this repo, or start as its own SvelteKit project and share later?

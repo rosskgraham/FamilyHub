@@ -111,12 +111,14 @@ resource cosmos 'Microsoft.DocumentDB/databaseAccounts@2025-10-15' = {
     disableKeyBasedMetadataWriteAccess: true
     minimalTlsVersion: 'Tls12'
     publicNetworkAccess: 'Enabled'
-    // Periodic backup's two copies are free. Whether the Household's lists need more is an open question.
+    // Periodic backup's two copies are free. Once a day, kept two days, so a broken list noticed up to two
+    // days later can still be restored, by a support request, losing up to a day's changes (decided 22
+    // November 2026).
     backupPolicy: {
       type: 'Periodic'
       periodicModeProperties: {
-        backupIntervalInMinutes: 240
-        backupRetentionIntervalInHours: 8
+        backupIntervalInMinutes: 1440
+        backupRetentionIntervalInHours: 48
         backupStorageRedundancy: 'Local'
       }
     }
@@ -144,6 +146,21 @@ resource cosmos 'Microsoft.DocumentDB/databaseAccounts@2025-10-15' = {
           // Each item's id is the account's Object ID, so a sign-in's lookup is a point read.
           partitionKey: {
             paths: ['/id']
+            kind: 'Hash'
+          }
+        }
+      }
+    }
+
+    // The shared lists: one partition per list, holding its counter, items and log of operations, so they can
+    // be written together in a transactional batch. On the database's shared throughput.
+    resource lists 'containers' = {
+      name: 'lists'
+      properties: {
+        resource: {
+          id: 'lists'
+          partitionKey: {
+            paths: ['/listId']
             kind: 'Hash'
           }
         }
