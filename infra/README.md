@@ -8,7 +8,7 @@ Everything is on a free tier or inside a free allowance by default. Anything bil
 
 - `main.bicep`: everything, deployed at the scope of FamilyHub's own subscription. It creates the `rg-familyhub` resource group and deploys `resources.bicep` into it.
 - `resources.bicep`: the resources in `rg-familyhub`:
-  - `kv-familyhub-<suffix>`: Key Vault (Standard), the setup scripts' secrets. Ross can read and write them. The deployment writes the Application Insights connection string into it.
+  - `kv-familyhub-<suffix>`: Key Vault (Standard), the setup scripts' secrets, and the Hub's sign-in certificate. Ross can read and write both. The deployment writes the Application Insights connection string into it.
   - `log-familyhub`: the Log Analytics workspace, capped at 0.15 GB a day and keeping 30 days, so it stays free.
   - `appi-familyhub`: Application Insights, for the Hub's telemetry ([ADR 0005](../docs/adr/0005-telemetry-via-otel-collector-to-app-insights.md)), and the backend's.
 - `backend.bicep`: the family app's backend ([ADR 0011](../docs/adr/0011-backend-runs-on-functions-flex-consumption.md)), deployed by `resources.bicep`:
