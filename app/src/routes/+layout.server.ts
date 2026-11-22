@@ -12,7 +12,8 @@ export const load: LayoutServerLoad = async ({ url }) => {
 	// Sleep shows the next Event, which overnight is usually tomorrow's first.
 	const [weather, heating, calendar, clockFormat, themeChoice] = await Promise.all([
 		loadWeather(),
-		loadHeating(),
+		// `?heating=eco`, `off` or `not-reporting` shows that state of the sample heating, to try it on the PC.
+		loadHeating(url.searchParams.get('heating')),
 		loadCalendar(today, addDays(today, 2)),
 		readClockFormat(),
 		readThemeChoice()

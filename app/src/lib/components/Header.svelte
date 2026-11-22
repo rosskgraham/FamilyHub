@@ -6,6 +6,7 @@
 	import { RAIN_HOURS, type Weather } from '#lib/weather.ts';
 	import { dayKey, formatDayMonth, formatWeekday } from '#lib/time.ts';
 	import { showTime } from '#lib/show-time.svelte.ts';
+	import { heatingPanel } from '#lib/heating-panel.svelte.ts';
 
 	let { weather, heating }: { weather: Weather | null; heating: Heating | null } = $props();
 
@@ -22,9 +23,20 @@
 	</div>
 
 	<div class="readings">
-		<!-- Inside, from the Nest (ADR 0013). Nothing until it's connected, as with no weather. -->
+		<!-- Inside, from the Nest (ADR 0013). Nothing until it's connected, as with no weather. Tapping it opens the
+			Heating panel, to change the target. -->
 		{#if heating}
 			<div
+				role="button"
+				tabindex="0"
+				aria-haspopup="dialog"
+				aria-label="Heating, change the target"
+				onclick={() => heatingPanel.show()}
+				onkeydown={(e) => {
+					if (e.key !== 'Enter' && e.key !== ' ') return;
+					e.preventDefault();
+					heatingPanel.show();
+				}}
 				class="heating"
 				class:divided={weather}
 				class:on={heating.reporting && heating.heating}

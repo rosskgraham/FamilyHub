@@ -32,10 +32,16 @@ export class NoThermostat extends Error {
 
 const num = (value: unknown): number | null => (typeof value === 'number' && Number.isFinite(value) ? value : null);
 
-/** The first thermostat's reading, from the answer to listing the project's devices. */
-export function fromSdm(answer: SdmDevices): HeatingReading {
+/** The first thermostat, from the answer to listing the project's devices. */
+export function findThermostat(answer: SdmDevices): SdmDevice {
 	const device = answer.devices?.find((d) => d.type === THERMOSTAT);
 	if (!device) throw new NoThermostat();
+	return device;
+}
+
+/** The first thermostat's reading, from the answer to listing the project's devices. */
+export function fromSdm(answer: SdmDevices): HeatingReading {
+	const device = findThermostat(answer);
 	const trait = (name: string) => device.traits[`sdm.devices.traits.${name}`] ?? {};
 
 	if (trait('Connectivity').status === 'OFFLINE') throw new NestOffline();
