@@ -105,6 +105,7 @@ The Hub signs in as itself, with a certificate kept in the Key Vault. The Pi's s
 
    ```
    az login
+   az account set --subscription FamilyHub
    vault=<keyVaultName>
    az keyvault certificate create --vault-name "$vault" --name hub-entra-certificate \
      --policy "$(az keyvault certificate get-default-policy)"
@@ -112,6 +113,8 @@ The Hub signs in as itself, with a certificate kept in the Key Vault. The Pi's s
    ```
 
    Key Vault's default policy makes a self-signed certificate valid for 12 months, and renews it 90 days before it expires.
+
+   The deployment gives Ross **Key Vault Certificates Officer** on the vault for this, as well as Secrets Officer. If the vault says `ForbiddenByRbac` for `certificates`, the pipeline hasn't deployed that role yet, or the service connection isn't allowed to give it out ([the Azure runbook](azure-setup.md), step 2). `az account set` matters if the CLI is also signed in to the FamilyHub tenant: the vault is in Ross's usual directory.
 
 2. Back in the FamilyHub tenant, register **`FamilyHub Hub`**, with no redirect URI.
 3. **Certificates & secrets → Certificates → Upload certificate:** upload `hub.cer`, with the description `Key Vault hub-entra-certificate`. Then delete `hub.cer` from the PC. It's only the public half, but it has no reason to stay.
@@ -173,7 +176,7 @@ The backend lets in only the accounts in Cosmos DB's `accounts` container ([ADR 
 
 To let another account in later, add its item. To take one out, delete its item. Either counts from the next request.
 
-To check the Hub's sign-in, add `export FAMILYHUB_HUB_CLIENT_ID=<FamilyHub Hub's client ID>` and `export FAMILYHUB_KEY_VAULT=<keyVaultName>`, sign in to the Azure CLI as Ross (`az login`), and run `uv run python scripts/whoami.py hub`. It prints `200` and `{'kind': 'hub', 'member_id': None}`. The script downloads the certificate to a temporary folder and deletes it when it finishes.
+To check the Hub's sign-in, add `export FAMILYHUB_HUB_CLIENT_ID=<FamilyHub Hub's client ID>` and `export FAMILYHUB_KEY_VAULT=<keyVaultName>`, sign in to the Azure CLI as Ross (`az login`, then `az account set --subscription FamilyHub`), and run `uv run python scripts/whoami.py hub`. It prints `200` and `{'kind': 'hub', 'member_id': None}`. The script downloads the certificate to a temporary folder and deletes it when it finishes.
 
 ## If something goes wrong
 

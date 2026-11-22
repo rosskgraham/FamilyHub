@@ -38,6 +38,8 @@ var tags = {
 
 // Built-in role: read and write secrets, nothing else.
 var keyVaultSecretsOfficer = 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7'
+// Built-in role: manage certificates (create, read, renew, delete), nothing else. For the Hub's sign-in certificate.
+var keyVaultCertificatesOfficer = 'a4417e6f-fecd-4de8-b567-7b0420556985'
 
 resource vault 'Microsoft.KeyVault/vaults@2026-05-15' = {
   name: 'kv-familyhub-${suffix}'
@@ -65,6 +67,16 @@ resource adminCanUseSecrets 'Microsoft.Authorization/roleAssignments@2022-04-01'
     principalId: adminObjectId
     principalType: 'User'
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultSecretsOfficer)
+  }
+}
+
+resource adminCanUseCertificates 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(vault.id, adminObjectId, keyVaultCertificatesOfficer)
+  scope: vault
+  properties: {
+    principalId: adminObjectId
+    principalType: 'User'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultCertificatesOfficer)
   }
 }
 
