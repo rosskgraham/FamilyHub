@@ -53,6 +53,14 @@ test('Settings shows how warm the Pi is', async ({ page }) => {
 	await expect(about).toContainText('Fine without a fan.');
 });
 
+test('Settings shows the network the Hub is on', async ({ page }) => {
+	await page.goto('/settings');
+	const about = page.getByRole('region', { name: 'About this Hub' });
+	// The tests' pretend Pi is on the home Wi-Fi.
+	await expect(about).toContainText('Wi-Fi');
+	await expect(about).toContainText('Home Wi-Fi · signal 72% · 192.168.0.240');
+});
+
 test('settings view', async ({ page }) => {
 	await page.goto('/settings');
 	await hideBuildDetails(page);

@@ -12,6 +12,7 @@ import {
 	updateMember
 } from '#lib/server/household.ts';
 import { disconnectNest, isNestConnected, loadHeating, nestConfigured } from '#lib/server/nest/index.ts';
+import { hubNetwork } from '#lib/server/network.ts';
 import { piTemperature } from '#lib/server/pi-temperature.ts';
 import { readSettings, writeSettings, type Settings } from '#lib/server/settings.ts';
 import { serverStartedAt } from '#lib/server/started.ts';
@@ -55,14 +56,20 @@ async function nest(): Promise<Nest> {
 }
 
 export const load: PageServerLoad = async ({ url }) => {
-	const [{ google: g, ended }, settings, backup, n] = await Promise.all([
+	const [{ google: g, ended }, settings, backup, n, network] = await Promise.all([
 		google(),
 		readSettings(),
 		readBackupStatus(),
-		nest()
+		nest(),
+		hubNetwork()
 	]);
 	return {
-		server: { startedAt: serverStartedAt().toISOString(), node: process.version, temperature: piTemperature() },
+		server: {
+			startedAt: serverStartedAt().toISOString(),
+			node: process.version,
+			temperature: piTemperature(),
+			network
+		},
 		household: householdConfig(),
 		choices: {
 			calendars: settings.calendars,

@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """A pretend Azure CLI for the tests: the few `az keyvault` commands read_key_vault.py uses, answered from
-key_vault.json beside it, standing in for the real Key Vault. run.sh puts it on the stand-in's PATH as `az`."""
+key_vault.json beside it, standing in for the real Key Vault. run.sh puts it on the stand-in's PATH as `az`, and sets
+FAMILYHUB_FAKE_VAULT to answer from another file instead."""
 
 import json
+import os
 import sys
 from pathlib import Path
 
-vault = json.loads((Path(__file__).resolve().parent / "key_vault.json").read_text())
+vault_file = os.environ.get("FAMILYHUB_FAKE_VAULT") or Path(__file__).resolve().parent / "key_vault.json"
+vault = json.loads(Path(vault_file).read_text())
 args = sys.argv[1:]
 
 

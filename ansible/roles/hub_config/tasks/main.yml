@@ -45,7 +45,7 @@
   notify: Restart the Hub
 
 # The home Wi-Fi, so the Pi stays on the network without its cable. Raspberry Pi OS keeps Wi-Fi switched off
-# until it knows which country it's in, and the card is written without Wi-Fi (see the Pi runbook), so the
+# until it knows which country it's in, and the SD card is written without Wi-Fi (see the Pi runbook), so the
 # scripts set both.
 - name: Check whether the Pi has NetworkManager and raspi-config
   ansible.builtin.stat:

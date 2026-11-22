@@ -6,6 +6,7 @@
 	import { showTime } from '#lib/show-time.svelte.ts';
 	import { clock } from '#lib/clock.svelte.ts';
 	import { clockFormat } from '#lib/show-time.svelte.ts';
+	import { networkDetails, networkKind } from '#lib/network.ts';
 	import { warmth, warmthNote } from '#lib/pi-temperature.ts';
 	import { DEFAULT_THEME_CHOICE, type ThemeChoice } from '#lib/theme.ts';
 	import { dayKey, formatDayMonth, formatDuration, formatTime, type ClockFormat } from '#lib/time.ts';
@@ -113,6 +114,17 @@
 					<span class="warmth {warmth(t.highest)}">{warmthNote[warmth(t.highest)]}</span>
 				</dd>
 			{/if}
+			<dt>Network</dt>
+			<!-- Like the temperature, only the Pi (or Linux) has one to read. -->
+			{#if !data.server.network}
+				<dd class="none">Only shown on the Pi</dd>
+			{:else}
+				{@const n = data.server.network}
+				<dd class:offline={n.kind === 'none'}>
+					{networkKind(n)}
+					{#if networkDetails(n)}<span class="detail">{networkDetails(n)}</span>{/if}
+				</dd>
+			{/if}
 		</dl>
 		{#if updated.current}
 			<p class="update">A new version is installed. It loads once the Hub has been left alone for two minutes.</p>
@@ -215,13 +227,15 @@
 		font-weight: 400;
 		color: var(--dim);
 	}
-	.warmth {
+	.warmth,
+	.detail {
 		display: block;
 		font-size: 24px;
 		font-weight: 400;
 		color: var(--dim);
 	}
-	.warmth.hot {
+	.warmth.hot,
+	.offline {
 		color: var(--problem);
 	}
 	.update {
