@@ -179,17 +179,30 @@ class Lists:
         self._store = store
         self._clock = clock
 
-    def apply(self, list_id: str, operations: Sequence[Operation], by: str) -> list[Applied]:
-        """Applies the operations in order. by is who sent them: a Member's id, or hub."""
+    def apply(
+        self, list_id: str, operations: Sequence[Operation], by: str, changes: list[int] | None = None
+    ) -> list[Applied]:
+        """Applies the operations in order. by is who sent them: a Member's id, or hub. The sequence number of
+        each operation that changed the list in this call, not one sent before, is added to changes as soon as
+        it's saved, so a batch that fails partway still says what it changed."""
         partition = self._store.partition(list_id)
-        return [self._apply_one(partition, list_id, operation, by) for operation in operations]
+        results = []
+        for operation in operations:
+            applied, fresh = self._apply_one(partition, list_id, operation, by)
+            if fresh and applied.changed and changes is not None:
+                changes.append(applied.seq)
+            results.append(applied)
+        return results
 
-    def _apply_one(self, partition: Partition, list_id: str, operation: Operation, by: str) -> Applied:
+    def _apply_one(
+        self, partition: Partition, list_id: str, operation: Operation, by: str
+    ) -> tuple[Applied, bool]:
+        """What happened, and whether it happened now rather than when the operation was first sent."""
         for _ in range(ATTEMPTS):
             # Sent before: the same answer as the first time.
             logged = partition.read(_operation_key(operation.id))
             if logged is not None:
-                return Applied(id=operation.id, seq=logged["seq"], changed=logged["changed"])
+                return Applied(id=operation.id, seq=logged["seq"], changed=logged["changed"]), False
 
             counter = partition.read(_COUNTER)
             stored = partition.read(_item_key(operation.item_id))
@@ -213,7 +226,7 @@ class Lists:
                 partition.commit(writes)
             except Clash:
                 continue
-            return Applied(id=operation.id, seq=seq, changed=new is not None)
+            return Applied(id=operation.id, seq=seq, changed=new is not None), True
         raise Busy
 
     def changed_since(self, list_id: str, after: int) -> CaughtUp:
@@ -300,5 +313,5 @@ def _operation_doc(
         "seq": seq,
         "changed": changed,
         "at": _timestamp(now),
-        "by": by,
+        "sentBy": by,
     }

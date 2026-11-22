@@ -163,7 +163,7 @@ def test_each_operation_changes_the_item_and_gets_the_next_number(
 
     assert [r["seq"] for r in results] == [1, 2, 3, 4, 5]
     assert all(r["changed"] for r in results)
-    assert [(d["type"], d["seq"], d["by"], d["text"]) for d in store.shopping.log()] == [
+    assert [(d["type"], d["seq"], d["sentBy"], d["text"]) for d in store.shopping.log()] == [
         ("add", 1, "ross", "Milk"),
         ("tick", 2, "ross", "Milk"),
         ("untick", 3, "ross", "Milk"),
@@ -213,7 +213,7 @@ def test_the_hub_can_change_the_list_and_is_logged_as_the_hub(client: TestClient
     response = send(client, add("Milk"), bearer=hub_token())
 
     assert response.status_code == 200
-    assert store.shopping.log()[0]["by"] == "hub"
+    assert store.shopping.log()[0]["sentBy"] == "hub"
     assert len(items(client, bearer=hub_token())["items"]) == 1
 
 

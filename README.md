@@ -74,7 +74,7 @@ The plan is in [docs/requirements.md](docs/requirements.md). Progress so far:
 | ⬜ | The heating from the Nest ([ADR 0013](docs/adr/0013-the-nest-through-googles-sdm-api.md), [design](design/mockups/heating/README.md)) | In progress: shown in the header. Still to come: changing the target from the Hub, and the bathroom floor |
 | ⬜ | A Raspberry Pi set up from scripts, showing the Hub full-screen | In progress: set up from scripts, pulling its own releases, full-screen, with its secrets from the Key Vault, and an on-screen keyboard. Still to come: the screen powering down for Sleep |
 | ⬜ | On the kitchen wall: **v1** | |
-| ⬜ | The Shopping list and To-dos in a backend of the Hub's own, with a family app for phones ([design](design/family-app/notes.md)) | In progress: the backend's Azure resources and sign-in, with each Member's own Google account, are built ([ADR 0014](docs/adr/0014-household-accounts-in-cosmos-db.md)), and the backend keeps a Shopping list, with test items only. Still to come: live updates, the app, and the Hub using it |
+| ⬜ | The Shopping list and To-dos in a backend of the Hub's own, with a family app for phones ([design](design/family-app/notes.md)) | In progress: the backend's Azure resources and sign-in, with each Member's own Google account, are built ([ADR 0014](docs/adr/0014-household-accounts-in-cosmos-db.md)), and the backend keeps a Shopping list, with test items only, and tells connected devices when it changes. Still to come: the app, and the Hub using it |
 | ⬜ | Recipe videos from a YouTube playlist | After v1 |
 | ⬜ | A motion sensor that wakes it when someone walks in | After v1 |
 | ⬜ | The rest of the chore chart: streaks, the family jar and Rewards | After v1 |
