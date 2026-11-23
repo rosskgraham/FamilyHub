@@ -45,6 +45,43 @@ export function releasesToPrune(installed, { keep, current, previous }) {
 	return newest.filter((v) => !kept.has(v));
 }
 
+/**
+ * Whether an installed release looks whole: its package.json parses and names its own version. Files are unpacked
+ * together, so a power cut soon after unpacking leaves them all empty, package.json included (AB#60).
+ */
+export async function intact(releasesDir, version) {
+	try {
+		const pkg = JSON.parse(await readFile(join(releasesDir, version, 'package.json'), 'utf8'));
+		return pkg?.version === version;
+	} catch {
+		return false;
+	}
+}
+
+/** The newest installed release that's whole, other than the one given, or null. */
+export async function newestIntact(releasesDir, except) {
+	let installed;
+	try {
+		installed = await readdir(releasesDir);
+	} catch (error) {
+		if (error.code === 'ENOENT') return null;
+		throw error;
+	}
+	const newest = installed.filter((v) => versionPattern.test(v) && v !== except).sort(compareVersions).reverse();
+	for (const version of newest) {
+		if (await intact(releasesDir, version)) return version;
+	}
+	return null;
+}
+
+/**
+ * Writes everything waiting in memory to the SD card. Without it, a power cut soon after an update can leave a
+ * release's names and the current link on disk with no contents, and the Hub can't start (AB#60).
+ */
+async function flush() {
+	await run('sync');
+}
+
 /** The SHA-256 from a .sha256 file written the way `sha256sum` writes it. */
 export function parseChecksum(text) {
 	const hash = text.trim().split(/\s+/)[0]?.toLowerCase();
@@ -97,6 +134,8 @@ async function download(release, version, releasesDir) {
 	try {
 		await writeFile(join(work, name), tarball);
 		await run('tar', ['-xzf', join(work, name), '-C', staging, '--no-same-owner']);
+		// The files are on the card before the release is moved into place and used.
+		await flush();
 		const target = join(releasesDir, version);
 		await rm(target, { recursive: true, force: true });
 		await rename(join(staging, `familyhub-${version}`), target);
@@ -112,6 +151,31 @@ async function switchTo(home, version) {
 	await rm(next, { force: true });
 	await symlink(join('releases', version), next);
 	await rename(next, join(home, 'current'));
+	await flush();
+}
+
+/**
+ * Restarts the Hub. A release that won't start makes systemd restart it over and over, past its limit, after which
+ * systemd refuses to start it again until told to forget the failures, so it's told first (AB#60).
+ */
+async function restart(service) {
+	await run('systemctl', ['reset-failed', service]);
+	await run('systemctl', ['restart', service]);
+}
+
+/** Goes back to a whole release when the current one is broken and can't be installed again. */
+async function fallBack(config, target) {
+	if (!target) {
+		console.error('There is no whole release installed to go back to');
+		return false;
+	}
+	console.error(`Going back to ${target}`);
+	await switchTo(config.home, target);
+	await restart(config.service);
+	if (!(await answers(config.healthUrl, target, config.healthTimeoutSeconds))) {
+		console.error(`${target} isn't answering either`);
+	}
+	return false;
 }
 
 async function answers(url, version, timeoutSeconds) {
@@ -133,21 +197,32 @@ export async function update(config) {
 	const { home, stateDir, service } = config;
 	const releasesDir = join(home, 'releases');
 	const failedFile = join(stateDir, 'failed.json');
-	const current = await installedVersion(join(home, 'current'));
+	const installed = await installedVersion(join(home, 'current'));
+	// A current release that isn't whole can't start, and restarting it won't help, so it's installed again, and
+	// anything that goes wrong falls back to the newest whole release instead.
+	const broken = installed && !(await intact(releasesDir, installed)) ? installed : null;
+	const current = broken ? await newestIntact(releasesDir, broken) : installed;
+	if (broken) console.error(`${broken} isn't whole, as after a power cut, so installing a release again`);
 	const failed = await readJson(failedFile, []);
 
-	const release = await (await get(config.releasesUrl)).json();
-	const latest = versionOf(release);
-	const decision = decide({ latest, current, failed });
-	if (!decision.install) {
-		console.log(decision.reason);
-		return true;
+	let latest;
+	try {
+		const release = await (await get(config.releasesUrl)).json();
+		latest = versionOf(release);
+		const decision = broken ? { install: true } : decide({ latest, current, failed });
+		if (!decision.install) {
+			console.log(decision.reason);
+			return true;
+		}
+		console.log(`Installing ${latest}${installed ? `, replacing ${installed}` : ''}`);
+		await download(release, latest, releasesDir);
+	} catch (error) {
+		if (!broken) throw error;
+		console.error(`Couldn't install a release: ${error.message}`);
+		return fallBack(config, current);
 	}
-
-	console.log(`Installing ${latest}${current ? `, replacing ${current}` : ''}`);
-	await download(release, latest, releasesDir);
 	await switchTo(home, latest);
-	await run('systemctl', ['restart', service]);
+	await restart(service);
 
 	if (await answers(config.healthUrl, latest, config.healthTimeoutSeconds)) {
 		console.log(`Installed ${latest}`);
@@ -166,7 +241,7 @@ export async function update(config) {
 	}
 	console.error(`${latest} didn't answer its health check, so going back to ${current}`);
 	await switchTo(home, current);
-	await run('systemctl', ['restart', service]);
+	await restart(service);
 	await rm(join(releasesDir, latest), { recursive: true, force: true });
 	if (!(await answers(config.healthUrl, current, config.healthTimeoutSeconds))) {
 		console.error(`${current} isn't answering either`);
