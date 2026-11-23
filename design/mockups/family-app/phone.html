@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>Family app mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<!--
+  The family app on a phone (AB#10: #56 sign-in, #57 the list, #58 offline, #59 live updates). Each screen is drawn at
+  390×844, a common Android size, in the Hub's Day theme (light) and Evening theme (dark) from app/src/lib/theme.ts,
+  which the app follows from the phone's setting. Sample items only. Open this file in a browser.
+-->
+<style>
+	.light {
+		--bg: #F3F5F8; --card: #FFFFFF; --ink: #161B22; --on-ink: #FFFFFF; --dim: #4A5565; --line: #C3CBD7;
+		--soft: #EDF0F5; --box: #5B6676; --warn-bg: #FFDDB8; --warn-fg: #6B2E00; --danger: #B42318;
+		--tile: #161B22; --tile-edge: transparent; --bar: #161B22; --key: #FFFFFF; --keys: #DDE2EA;
+	}
+	.dark {
+		--bg: #0E1116; --card: #171C24; --ink: #F2F4F8; --on-ink: #0E1116; --dim: #A6B0BF; --line: #3A4553;
+		--soft: #212A36; --box: #8A94A3; --warn-bg: #4A2A0E; --warn-fg: #FFD8B0; --danger: #FF9C94;
+		/* The logo's own tile is near the page's colour in dark, so it gets an edge (#55's note). */
+		--tile: #161B22; --tile-edge: #3A4553; --bar: #0E1116; --key: #2B3340; --keys: #1A2029;
+	}
+	body { margin: 0; background: #6B7586; font-family: 'Figtree', system-ui, sans-serif; }
+	header.page { color: #fff; padding: 32px 40px 8px; max-width: 1400px; }
+	header.page h1 { font-size: 30px; margin: 0 0 8px; }
+	header.page p { font-size: 17px; margin: 0 0 8px; line-height: 1.45; }
+	section.screen { padding: 24px 40px 40px; }
+	section.screen h2 { color: #fff; font-size: 22px; margin: 0 0 4px; }
+	section.screen p.note { color: #E8ECF2; font-size: 16px; margin: 0 0 16px; max-width: 900px; line-height: 1.45; }
+	.pair { display: flex; gap: 40px; flex-wrap: wrap; }
+
+	.frame {
+		width: 390px; height: 844px; position: relative; overflow: hidden; border-radius: 28px;
+		background: var(--bg); color: var(--ink); display: flex; flex-direction: column;
+		box-shadow: 0 12px 40px rgb(0 0 0 / 0.35);
+	}
+	.status, .nav { background: var(--bar); color: #F2F4F8; flex: none; }
+	.status { height: 32px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
+		font-size: 14px; font-weight: 600; }
+	.nav { height: 48px; display: flex; align-items: center; justify-content: space-around; font-size: 20px; opacity: 0.9; }
+	.body { flex: 1; display: flex; flex-direction: column; min-height: 0; position: relative; }
+
+	/* Sign-in and refusal */
+	.centre { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+		padding: 32px; text-align: center; }
+	.tile { width: 112px; height: 112px; border-radius: 28px; background: var(--tile); box-shadow: 0 0 0 2px var(--tile-edge);
+		display: grid; place-items: center; }
+	.tile svg { width: 84px; height: 84px; }
+	.centre h1 { margin: 8px 0 0; font-size: 30px; }
+	.centre p { margin: 0; font-size: 17px; line-height: 1.45; color: var(--dim); max-width: 300px; }
+	.centre p.strong { color: var(--ink); font-weight: 600; }
+	.btn { height: 56px; border-radius: 18px; border: 2px solid var(--ink); background: none; color: var(--ink);
+		font: 700 18px Figtree, sans-serif; padding: 0 24px; display: inline-flex; align-items: center; gap: 12px; }
+	.btn.primary { background: var(--ink); color: var(--on-ink); }
+	.btn.wide { width: 100%; justify-content: center; box-sizing: border-box; }
+	.btn.danger { border-color: var(--danger); color: var(--danger); }
+	.g { width: 22px; height: 22px; border-radius: 50%; background: #fff; display: grid; place-items: center;
+		font: 700 15px Figtree, sans-serif; color: #2456C9; }
+	.small { font-size: 14px; color: var(--dim); }
+
+	/* The list */
+	.top { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 10px; }
+	.top h1 { margin: 0; font-size: 30px; }
+	.top .count { font-size: 16px; color: var(--dim); font-weight: 600; margin-top: 2px; }
+	.me { width: 40px; height: 40px; border-radius: 50%; background: #2456C9; color: #fff; display: grid; place-items: center;
+		font-weight: 700; font-size: 18px; }
+	.banner { margin: 4px 16px 8px; padding: 12px 14px; border-radius: 14px; background: var(--warn-bg); color: var(--warn-fg);
+		font-size: 15px; line-height: 1.4; display: flex; gap: 10px; align-items: flex-start; }
+	.banner b { display: block; }
+	.banner .act { margin-left: auto; align-self: center; font-weight: 700; text-decoration: underline; white-space: nowrap; }
+	ul.items { list-style: none; margin: 0; padding: 0 8px; flex: 1; overflow: hidden; }
+	ul.items li { display: flex; align-items: center; gap: 14px; height: 60px; padding: 0 12px; border-radius: 14px;
+		font-size: 19px; font-weight: 600; }
+	ul.items li.new { background: var(--soft); }
+	.box { width: 30px; height: 30px; border-radius: 9px; border: 2.5px solid var(--box); flex: none; box-sizing: border-box;
+		display: grid; place-items: center; }
+	li.done .box { background: var(--ink); border-color: var(--ink); color: var(--on-ink); font-size: 18px; }
+	li.done .text { text-decoration: line-through; color: var(--dim); font-weight: 400; }
+	.text { flex: 1; }
+	.waiting { font-size: 13px; color: var(--dim); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+	.empty { flex: 1; display: grid; place-items: center; text-align: center; color: var(--dim); font-size: 18px; padding: 32px; }
+	.empty b { display: block; color: var(--ink); font-size: 22px; margin-bottom: 6px; }
+	.add { flex: none; display: flex; gap: 10px; padding: 12px 16px 16px; border-top: 1px solid var(--line); background: var(--bg); }
+	.field { flex: 1; height: 54px; border-radius: 16px; border: 2px solid var(--line); background: var(--card);
+		display: flex; align-items: center; padding: 0 16px; font-size: 18px; color: var(--dim); box-sizing: border-box; }
+	.field.typing { border-color: var(--ink); color: var(--ink); }
+	.caret { display: inline-block; width: 2px; height: 22px; background: var(--ink); margin-left: 1px; vertical-align: middle; }
+	.add .btn { height: 54px; }
+
+	/* An Android keyboard, roughly */
+	.keyboard { flex: none; height: 270px; background: var(--keys); padding: 10px 4px; box-sizing: border-box;
+		display: flex; flex-direction: column; gap: 9px; }
+	.keyboard .row { display: flex; gap: 5px; justify-content: center; }
+	.keyboard .row span { width: 33px; height: 46px; border-radius: 7px; background: var(--key); color: var(--ink);
+		display: grid; place-items: center; font-size: 19px; }
+	.keyboard .row span.wide { width: 170px; }
+	.keyboard .row span.mid { width: 52px; font-size: 15px; }
+	.keyboard .row span.go { width: 70px; background: var(--ink); color: var(--on-ink); font-size: 15px; font-weight: 700; }
+
+	/* Edit sheet */
+	.shade { position: absolute; inset: 0; background: rgb(0 0 0 / 0.45); }
+	.sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--card); border-radius: 26px 26px 0 0;
+		padding: 12px 20px 24px; display: flex; flex-direction: column; gap: 14px; }
+	.grip { width: 44px; height: 5px; border-radius: 3px; background: var(--line); align-self: center; }
+	.sheet h3 { margin: 4px 0 0; font-size: 20px; }
+	.sheet .field { flex: none; }
+	.sheet .row2 { display: flex; gap: 10px; }
+	.sheet .row2 .btn { flex: 1; justify-content: center; }
+	.toast { position: absolute; left: 16px; right: 16px; bottom: 96px; background: var(--ink); color: var(--on-ink);
+		border-radius: 14px; padding: 14px 16px; font-size: 16px; display: flex; justify-content: space-between; }
+	.toast b { text-decoration: underline; }
+</style>
+</head>
+<body>
+<header class="page">
+	<h1>The family app on a phone</h1>
+	<p>Slice 3 (AB#10). Each screen in the light theme, then the dark one, following the phone's setting, in the Hub's
+	colours and Figtree. Sample items only. The notes under each screen say what it's for; README.md says what's decided and
+	what's still open.</p>
+</header>
+
+<template id="logo">
+	<svg viewBox="0 0 120 120" aria-hidden="true">
+		<path d="M24 58 L60 27 L96 58" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+		<rect x="34" y="52" width="52" height="42" rx="7" fill="#FFFFFF"/>
+		<rect x="41" y="59" width="11" height="11" rx="2.5" fill="#2456C9"/><rect x="54.5" y="59" width="11" height="11" rx="2.5" fill="#2456C9"/>
+		<rect x="68" y="59" width="11" height="11" rx="2.5" fill="#F2B42C"/><rect x="41" y="75" width="11" height="11" rx="2.5" fill="#2456C9"/>
+		<rect x="54.5" y="75" width="11" height="11" rx="2.5" fill="#2456C9"/><rect x="68" y="75" width="11" height="11" rx="2.5" fill="#2456C9"/>
+	</svg>
+</template>
+
+<div id="screens"></div>
+
+<script>
+	const logo = document.getElementById('logo').innerHTML;
+	const status = (offline) => `<div class="status"><span>15:58</span><span>${offline ? '✈ ' : '▂▄▆ '}44%</span></div>`;
+	const nav = '<div class="nav"><span>|||</span><span>◯</span><span>‹</span></div>';
+	const items = (list) =>
+		'<ul class="items">' +
+		list
+			.map(
+				([text, cls = '', extra = '']) =>
+					`<li class="${cls}"><span class="box">${cls.includes('done') ? '✓' : ''}</span><span class="text">${text}</span>${extra}</li>`
+			)
+			.join('') +
+		'</ul>';
+	const heading = (count) =>
+		`<div class="top"><div><h1>Shopping</h1><div class="count">${count}</div></div><div class="me" title="Signed in">R</div></div>`;
+	const addBar = (typing) =>
+		`<div class="add"><div class="field ${typing ? 'typing' : ''}">${typing ? `${typing}<span class="caret"></span>` : 'Add an item'}</div><button class="btn primary">Add</button></div>`;
+	const keyboard =
+		'<div class="keyboard">' +
+		['qwertyuiop', 'asdfghjkl', 'zxcvbnm']
+			.map((r) => `<div class="row">${[...r].map((k) => `<span>${k}</span>`).join('')}</div>`)
+			.join('') +
+		'<div class="row"><span class="mid">?123</span><span>,</span><span class="wide">space</span><span>.</span><span class="go">Add</span></div></div>';
+	const regulars = [
+		['Milk'], ['Eggs'], ['Bananas'], ['Cheddar'], ['Washing-up liquid'], ['Lunchbox snacks'], ['Wholemeal bread', 'done']
+	];
+
+	const screens = [
+		{
+			id: 'A',
+			title: 'A · Sign in (#56)',
+			note: 'The first time the app opens, and after signing out. One button: it goes to the FamilyHub sign-in page, where Google is the way in, and comes back signed in. The logo gets an edge in dark, so its tile doesn\'t vanish.',
+			body: () => `<div class="centre"><div class="tile">${logo}</div><h1>FamilyHub</h1>
+				<p>The family's Shopping list, on your phone.</p>
+				<div style="height:18px"></div>
+				<button class="btn primary wide"><span class="g">G</span>Sign in with Google</button>
+				<p class="small">Use your own Google account.</p></div>`
+		},
+		{
+			id: 'B',
+			title: 'B · Not one of the Household\'s accounts (#56)',
+			note: 'Signed in with a Google account the backend doesn\'t know (a 403). Says which account it was, and offers another. Nothing about the Household is shown.',
+			body: () => `<div class="centre"><div class="tile">${logo}</div><h1>Not this account</h1>
+				<p class="strong">someone@gmail.com isn't one of the Household's accounts.</p>
+				<p>If it should be, ask Ross to add it.</p>
+				<div style="height:18px"></div>
+				<button class="btn wide">Use another account</button></div>`
+		},
+		{
+			id: 'C',
+			title: 'C · The Shopping list (#57)',
+			note: 'Items to get, then those ticked off in the last 10 minutes, struck through, as on the Hub. Tap the box to tick or untick. Tap the words to change or remove an item (E). The add box stays at the bottom, where a thumb reaches it. The circle is who\'s signed in: tap it to sign out.',
+			body: () => heading('6 to get') + items(regulars) + addBar()
+		},
+		{
+			id: 'D',
+			title: 'D · Adding (#57)',
+			note: 'Typing in the add box brings up the phone\'s keyboard; Add on the keyboard or the button adds it. The new item shows at the top straight away, before the backend has answered, and the box stays open for the next one.',
+			body: () =>
+				heading('7 to get') +
+				items([['Oat milk', 'new'], ['Milk'], ['Eggs'], ['Bananas']]) +
+				addBar('Pasta') +
+				keyboard
+		},
+		{
+			id: 'E',
+			title: 'E · Changing or removing an item (#57)',
+			note: 'Tapping an item\'s words opens a sheet to fix its text or remove it. Removing asks nothing more: an Undo shows for a few seconds instead (as in F\'s toast).',
+			body: () =>
+				heading('6 to get') +
+				items(regulars) +
+				addBar() +
+				`<div class="shade"></div><div class="sheet"><div class="grip"></div><h3>Change item</h3>
+				<div class="field typing">Washing-up liquid<span class="caret"></span></div>
+				<div class="row2"><button class="btn danger">Remove</button><button class="btn primary">Save</button></div></div>`
+		},
+		{
+			id: 'F',
+			title: 'F · No signal, changes waiting (#58)',
+			note: 'The list opens from the phone\'s own copy. Changes made with no signal show straight away, marked "waiting", and a banner says how many will send. When the signal\'s back they send by themselves and the banner goes. The toast is the Undo after a remove.',
+			body: () =>
+				`<div class="banner"><span>⚠</span><span><b>No signal</b>2 changes will send when you're back online.</span></div>` +
+				heading('6 to get') +
+				items([
+					['Plasters', '', '<span class="waiting">◷ waiting</span>'],
+					['Milk'], ['Eggs'], ['Bananas'], ['Cheddar'],
+					['Washing-up liquid', 'done', '<span class="waiting">◷ waiting</span>']
+				]) +
+				addBar() +
+				'<div class="toast"><span>Lunchbox snacks removed</span><b>Undo</b></div>',
+			offline: true
+		},
+		{
+			id: 'G',
+			title: 'G · Sign-in has run out (#56, #58)',
+			note: 'If the sign-in can\'t be renewed quietly, the list stays usable from the phone\'s copy and changes keep queuing; a banner asks to sign in again, and they send afterwards.',
+			body: () =>
+				`<div class="banner"><span>⚠</span><span><b>Sign in again</b>Changes are kept until you do.</span><span class="act">Sign in</span></div>` +
+				heading('6 to get') + items(regulars.slice(0, 6)) + addBar()
+		},
+		{
+			id: 'H',
+			title: 'H · Nothing to get (#57)',
+			note: 'An empty list, with the add box ready.',
+			body: () => heading('Nothing to get') + '<div class="empty"><div><b>All done</b>Add something with the box below.</div></div>' + addBar()
+		}
+	];
+
+	document.getElementById('screens').innerHTML = screens
+		.map(
+			(s) => `<section class="screen" id="${s.id}"><h2>${s.title}</h2><p class="note">${s.note}</p><div class="pair">` +
+				['light', 'dark']
+					.map(
+						(theme) => `<div class="frame ${theme}" data-shot="${s.id}-${theme}">${status(s.offline)}<div class="body">${s.body()}</div>${nav}</div>`
+					)
+					.join('') +
+				'</div></section>'
+		)
+		.join('');
+</script>
+</body>
+</html>
