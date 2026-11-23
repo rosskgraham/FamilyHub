@@ -44,6 +44,6 @@ export default defineConfig({
 	],
 	test: {
 		// Playwright's tests live in e2e/.
-		include: ['src/**/*.test.ts']
+		include: ['src/**/*.test.ts', 'scripts/**/*.test.ts']
 	}
 });

@@ -102,7 +102,7 @@ npm install
 npm run dev
 ```
 
-Open <http://localhost:5173>. It starts with sample data. To show real Google Calendars and the Shopping list, follow [the Google Cloud runbook](docs/runbooks/google-cloud-setup.md), then choose **Sample data · set up Google** in the corner, unlock Household and Google, sign in, and add the Household. More detail is in [app/README.md](app/README.md).
+Open <http://localhost:5173>. It starts with sample data. To show real Google Calendars and the Shopping list, follow [the Google Cloud runbook](docs/runbooks/google-cloud-setup.md), then choose **Sample data · set up Google** in the corner, unlock Household and Google, sign in, and add the Household. More detail is in [app/README.md](app/README.md), including `node scripts/card-dev.mjs`, which runs a card's work in progress with the real setup at its own address while it's built.
 
 ## Find your way around
 
