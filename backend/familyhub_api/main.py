@@ -83,8 +83,9 @@ def create_app(
         return lists
 
     app = FastAPI(title="FamilyHub API", docs_url=None, redoc_url=None, openapi_url=None)
-    # The family app is served from Static Web Apps, another origin, so the browser asks first (AB#56). Only
-    # the app's own address and the PC's dev server are let in, sending a bearer token, never cookies.
+    # CORS for running the API on a PC (ALLOWED_ORIGINS). In Azure the Functions host answers the browser's
+    # preflight itself, so CORS there is the function app's own setting, in infra/backend.bicep (AB#56); this
+    # stays off there, as both at once would send the header twice. Bearer tokens only, never cookies.
     app.add_middleware(
         CORSMiddleware,
         allow_origins=allowed_origins if allowed_origins is not None else _origins_from_environment(),

@@ -218,6 +218,14 @@ resource api 'Microsoft.Web/sites@2025-03-01' = {
     siteConfig: {
       minTlsVersion: '1.2'
       ftpsState: 'Disabled'
+      // The origins the browser may call the API from (AB#56): the family app, and its dev server on the PC. The
+      // Functions host answers the browser's OPTIONS preflight itself, before FastAPI sees it, so CORS has to be the
+      // platform's. FastAPI's own CORS is for the PC only (ALLOWED_ORIGINS), as both at once would send the header
+      // twice, which browsers refuse. Bearer tokens only, never cookies.
+      cors: {
+        allowedOrigins: filter([familyAppUrl, 'http://localhost:5173'], origin => !empty(origin))
+        supportCredentials: false
+      }
       appSettings: [
         // The host's own state, reached with the managed identity rather than a connection string.
         {
@@ -252,11 +260,6 @@ resource api 'Microsoft.Web/sites@2025-03-01' = {
         {
           name: 'API_CLIENT_ID'
           value: apiClientId
-        }
-        // The origins the browser may call the API from (AB#56): the family app, and its dev server on the PC.
-        {
-          name: 'ALLOWED_ORIGINS'
-          value: join(filter([familyAppUrl, 'http://localhost:5173'], origin => !empty(origin)), ',')
         }
       ]
     }
