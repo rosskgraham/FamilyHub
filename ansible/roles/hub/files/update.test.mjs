@@ -1,6 +1,28 @@
 import assert from 'node:assert/strict';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { test } from 'node:test';
-import { compareVersions, decide, parseChecksum, releasesToPrune, versionOf } from './update.mjs';
+import {
+	compareVersions,
+	decide,
+	intact,
+	newestIntact,
+	parseChecksum,
+	releasesToPrune,
+	versionOf
+} from './update.mjs';
+
+/** A releases folder with each release's package.json as given: an object, raw text, or null for none. */
+async function releases(packages) {
+	const dir = await mkdtemp(join(tmpdir(), 'releases-'));
+	for (const [version, pkg] of Object.entries(packages)) {
+		await mkdir(join(dir, version));
+		if (pkg === null) continue;
+		await writeFile(join(dir, version, 'package.json'), typeof pkg === 'string' ? pkg : JSON.stringify(pkg));
+	}
+	return dir;
+}
 
 test('versions order by date, then run number', () => {
 	assert.ok(compareVersions('2026.11.13.60', '2026.11.12.99') > 0);
@@ -44,4 +66,54 @@ test('reads the checksum the way sha256sum writes it', () => {
 	const hash = 'a'.repeat(64);
 	assert.equal(parseChecksum(`${hash}  familyhub-2026.11.13.60.tar.gz\n`), hash);
 	assert.throws(() => parseChecksum('not a hash'), /malformed/);
+});
+
+test('a release is whole when its package.json names its own version', async () => {
+	const dir = await releases({ '2026.11.22.210': { name: 'familyhub', version: '2026.11.22.210' } });
+	try {
+		assert.equal(await intact(dir, '2026.11.22.210'), true);
+	} finally {
+		await rm(dir, { recursive: true });
+	}
+});
+
+test("a release emptied by a power cut, or missing its package.json, isn't whole", async () => {
+	const dir = await releases({
+		'2026.11.22.220': '',
+		'2026.11.22.221': '{"name": "famil',
+		'2026.11.22.222': { name: 'familyhub', version: '2026.11.22.1' },
+		'2026.11.22.223': null
+	});
+	try {
+		for (const version of ['2026.11.22.220', '2026.11.22.221', '2026.11.22.222', '2026.11.22.223', 'nope']) {
+			assert.equal(await intact(dir, version), false, version);
+		}
+	} finally {
+		await rm(dir, { recursive: true });
+	}
+});
+
+test('falls back to the newest whole release, never the broken one', async () => {
+	const dir = await releases({
+		'2026.11.22.206': { version: '2026.11.22.206' },
+		'2026.11.22.210': { version: '2026.11.22.210' },
+		'2026.11.22.215': '',
+		'2026.11.22.220': ''
+	});
+	try {
+		assert.equal(await newestIntact(dir, '2026.11.22.220'), '2026.11.22.210');
+		assert.equal(await newestIntact(dir, '2026.11.22.210'), '2026.11.22.206');
+	} finally {
+		await rm(dir, { recursive: true });
+	}
+});
+
+test('with no whole release, or no releases folder, there is nothing to fall back to', async () => {
+	const dir = await releases({ '2026.11.22.220': '', '.unpacking-x': null });
+	try {
+		assert.equal(await newestIntact(dir, '2026.11.22.220'), null);
+		assert.equal(await newestIntact(join(dir, 'missing'), null), null);
+	} finally {
+		await rm(dir, { recursive: true });
+	}
 });

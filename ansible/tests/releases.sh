@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 # Plays out releases arriving on the stand-in Pi, from fake_releases.py: a working one, a broken one, a
-# tampered one, enough to prune old ones, and the Hub hanging and crashing. run.sh runs it after the
+# tampered one, enough to prune old ones, one emptied by a power cut, and the Hub hanging and crashing. run.sh runs it after the
 # playbook has installed 2026.01.01.1.
 set -euo pipefail
 
 publish() { python3 /ansible/tests/fake_releases.py "$@"; }
-update() { systemctl start familyhub-update.service; }
+# The tests start the updater far more often than its timer does, past systemd's limit of five starts in ten
+# seconds, so the count is cleared each time.
+update() { systemctl reset-failed familyhub-update.service; systemctl start familyhub-update.service; }
 answers() { curl --fail --silent --max-time 5 http://127.0.0.1:3000/api/health | grep -q "\"version\":\"$1\""; }
 current() { basename "$(readlink /opt/familyhub/current)"; }
 installed() { ls /opt/familyhub/releases | sort | tr '\n' ' '; }
@@ -52,6 +54,25 @@ for version in 2026.01.05.5 2026.01.06.6 2026.01.07.7; do
   update || fail "installing $version"
 done
 [[ $(installed) == "2026.01.05.5 2026.01.06.6 2026.01.07.7 " ]] || fail "installed releases are $(installed)"
+
+echo "A release emptied by a power cut is installed again"
+# As on the Pi on 2026-11-23 (AB#60): the names survived, every file was empty, and the Hub couldn't start.
+find /opt/familyhub/releases/2026.01.07.7 -type f -exec truncate -s 0 {} +
+update || fail "repairing the emptied release"
+answers 2026.01.07.7 || fail "the Hub isn't answering as 2026.01.07.7 after the repair"
+[[ $(current) == 2026.01.07.7 ]] || fail "current is $(current)"
+[[ -s /opt/familyhub/releases/2026.01.07.7/package.json ]] || fail "the repaired release is still empty"
+
+echo "If the emptied release can't be downloaded again, the Hub goes back to the newest whole one"
+find /opt/familyhub/releases/2026.01.07.7 -type f -exec truncate -s 0 {} +
+mv /srv/releases/familyhub-2026.01.07.7.tar.gz /tmp/
+if update; then fail "falling back wasn't reported"; fi
+answers 2026.01.06.6 || fail "the Hub didn't go back to 2026.01.06.6"
+[[ $(current) == 2026.01.06.6 ]] || fail "current is $(current)"
+# Once the release can be downloaded again, it's installed as usual.
+mv /tmp/familyhub-2026.01.07.7.tar.gz /srv/releases/
+update || fail "installing 2026.01.07.7 again"
+answers 2026.01.07.7 || fail "the Hub isn't answering as 2026.01.07.7 again"
 
 echo "The watchdog restarts the Hub when it hangs"
 hung=$(systemctl show --property MainPID --value familyhub.service)
