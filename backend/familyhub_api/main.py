@@ -2,6 +2,7 @@
 Consumption through function_app.py (ADR 0011)."""
 
 import logging
+import os
 import time
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
@@ -10,6 +11,7 @@ from typing import Annotated, Literal
 
 from azure.cosmos.exceptions import CosmosHttpResponseError
 from fastapi import Depends, FastAPI, HTTPException, Query, status
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from familyhub_api.accounts import CosmosAccounts
@@ -60,6 +62,7 @@ def create_app(
     store: Store | None = None,
     live: Live | None = None,
     clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+    allowed_origins: list[str] | None = None,
 ) -> FastAPI:
     """The app. Without a checker, accounts, store or live updates, it makes them from the app settings, as in
     Azure."""
@@ -80,6 +83,16 @@ def create_app(
         return lists
 
     app = FastAPI(title="FamilyHub API", docs_url=None, redoc_url=None, openapi_url=None)
+    # The family app is served from Static Web Apps, another origin, so the browser asks first (AB#56). Only
+    # the app's own address and the PC's dev server are let in, sending a bearer token, never cookies.
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=allowed_origins if allowed_origins is not None else _origins_from_environment(),
+        allow_methods=["GET", "POST"],
+        allow_headers=["Authorization", "Content-Type"],
+        allow_credentials=False,
+        max_age=3600,
+    )
 
     @app.get("/health")
     def health() -> Health:
@@ -138,6 +151,11 @@ def create_app(
         return ChangedItems(items=caught_up.items, seq=caught_up.seq)
 
     return app
+
+
+def _origins_from_environment() -> list[str]:
+    """The origins in ALLOWED_ORIGINS, comma-separated, which the Bicep fills in. None when it's unset."""
+    return [origin.strip() for origin in os.environ.get("ALLOWED_ORIGINS", "").split(",") if origin.strip()]
 
 
 def _tell(live: Live | None, list_id: str, seq: int) -> None:

@@ -87,10 +87,6 @@ stages:
               npm run build
             displayName: Test and build the family app
 
-          - publish: family-app/build
-            artifact: family-app
-            displayName: Keep the family app's files for the deploy
-
           # Pull requests from forks of the public repo never get near the subscription.
           - task: AzureCLI@2
             displayName: Show what deploying would change
@@ -156,8 +152,29 @@ stages:
                         --src "$(Pipeline.Workspace)/backend/backend.zip" \
                         --build-remote true
 
+                # The app is built here rather than in the Check stage, as its settings include the API's address, which
+                # the resources step has only just given (AB#56). They come from the familyhub variable group and the
+                # Bicep's outputs, and none is secret. A missing one leaves the app saying sign-in isn't set up.
+                - task: UseNode@1
+                  displayName: Use Node 24, as CI does
+                  inputs:
+                    version: '24.x'
+
+                - script: |
+                    set -euo pipefail
+                    cd family-app
+                    npm ci --no-audit --no-fund
+                    npm run build
+                  displayName: Build the family app with its settings
+                  env:
+                    VITE_FAMILYHUB_ENTRA_TENANT_ID: $(FAMILYHUB_ENTRA_TENANT_ID)
+                    VITE_FAMILYHUB_ENTRA_SUBDOMAIN: $(FAMILYHUB_ENTRA_SUBDOMAIN)
+                    VITE_FAMILYHUB_API_CLIENT_ID: $(FAMILYHUB_API_CLIENT_ID)
+                    VITE_FAMILYHUB_APP_CLIENT_ID: $(FAMILYHUB_APP_CLIENT_ID)
+                    VITE_FAMILYHUB_API_URL: $(apiUrl)
+
                 # The deployment token is read here and used straight away, so it's never stored: not in the repo, not
-                # in the variable group. The Check stage built the files; the CLI only uploads them.
+                # in the variable group. The CLI only uploads the files built above.
                 - task: AzureCLI@2
                   displayName: Deploy the family app
                   inputs:
@@ -170,7 +187,7 @@ stages:
                         --name "$(familyAppName)" --resource-group "$(resourceGroup)" \
                         --query properties.apiKey --output tsv)
                       echo "##vso[task.setsecret]$token"
-                      npx --yes @azure/static-web-apps-cli@2.1.0 deploy "$(Pipeline.Workspace)/family-app" \
+                      npx --yes @azure/static-web-apps-cli@2.1.0 deploy family-app/build \
                         --deployment-token "$token" --env production
                       curl --fail --silent --show-error --max-time 30 --output /dev/null "$(familyAppUrl)/"
                       echo "The family app is at $(familyAppUrl)"

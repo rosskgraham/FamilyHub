@@ -28,6 +28,9 @@ param entraSubdomain string = ''
 @description('The client ID of the FamilyHub API app registration: the audience its access tokens are for.')
 param apiClientId string = ''
 
+@description('The family app\'s address on Static Web Apps, such as https://lively-beach-0.azurestaticapps.net. The API answers CORS for it.')
+param familyAppUrl string = ''
+
 var tags = {
   project: 'familyhub'
 }
@@ -249,6 +252,11 @@ resource api 'Microsoft.Web/sites@2025-03-01' = {
         {
           name: 'API_CLIENT_ID'
           value: apiClientId
+        }
+        // The origins the browser may call the API from (AB#56): the family app, and its dev server on the PC.
+        {
+          name: 'ALLOWED_ORIGINS'
+          value: join(filter([familyAppUrl, 'http://localhost:5173'], origin => !empty(origin)), ',')
         }
       ]
     }

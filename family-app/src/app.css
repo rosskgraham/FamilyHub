@@ -4,7 +4,11 @@
 	--bg: #f3f5f8;
 	--card: #ffffff;
 	--ink: #161b22;
+	--on-ink: #ffffff;
+	--dim: #4a5565;
 	--line: #c3cbd7;
+	/* The logo's dark tile needs no edge on a light page. */
+	--tile-edge: transparent;
 	color-scheme: light dark;
 }
 
@@ -13,7 +17,10 @@
 		--bg: #0e1116;
 		--card: #171c24;
 		--ink: #f2f4f8;
+		--on-ink: #0e1116;
+		--dim: #a6b0bf;
 		--line: #3a4553;
+		--tile-edge: #3a4553;
 	}
 }
 
@@ -24,4 +31,35 @@ body {
 	background: var(--bg);
 	color: var(--ink);
 	font-family: var(--font);
+}
+
+button {
+	font-family: inherit;
+	cursor: pointer;
+}
+
+.button {
+	height: 56px;
+	padding: 0 24px;
+	border-radius: 18px;
+	border: 2px solid var(--ink);
+	background: none;
+	color: var(--ink);
+	font-size: 18px;
+	font-weight: 700;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;
+}
+
+.button.primary {
+	background: var(--ink);
+	color: var(--on-ink);
+}
+
+.button.wide {
+	width: 100%;
+	max-width: 340px;
+	box-sizing: border-box;
 }

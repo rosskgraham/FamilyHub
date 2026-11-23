@@ -11,6 +11,7 @@ Members sign in with their own Google account through Microsoft Entra External I
 - `GET /me` says who the caller is: `{"kind": "member", "member_id": "…"}` or `{"kind": "hub", "member_id": null}`.
 - No token, or a bad one, is a 401. A good token for an account not on the list, or without the scope or role, is a 403. Before the tenant's details are set (the app settings `ENTRA_TENANT_ID`, `ENTRA_SUBDOMAIN` and `API_CLIENT_ID`), it's a 503.
 - `/health` needs no sign-in.
+- The family app calls from another origin, its Static Web Apps address, so the API answers CORS for that and `http://localhost:5173` only, from the `ALLOWED_ORIGINS` app setting the Bicep fills in. It allows `GET` and `POST` with `Authorization`, and never cookies.
 
 The tenant is set up by hand, as the [sign-in runbook](../docs/runbooks/sign-in-setup.md) says. `scripts/whoami.py` signs in as a Member or the Hub and calls `/me`, to check it by hand.
 
