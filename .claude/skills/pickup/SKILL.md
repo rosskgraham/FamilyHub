@@ -26,8 +26,10 @@ session reviews. Never review your own work, and never merge.
 
 - Make a worktree from the latest main, so Ross's own checkout is untouched:
   `git fetch origin && git worktree add -b ab<id>-<short-name> .claude/worktrees/ab<id> origin/main`, and work there.
-- `node scripts/board.mjs move <id> Active`, then post a **Started** comment (branch, and the plan in a few lines) with
-  `node scripts/board.mjs comment <id>` reading HTML from stdin.
+- If the card changes anything on the screen, start its dev server, so Ross can see it while it's built: in the
+  worktree's `app/`, `node scripts/card-dev.mjs`. It prints the address, `http://localhost:<6000 + id>`.
+- `node scripts/board.mjs move <id> Active`, then post a **Started** comment (branch, the dev server's address if there
+  is one, and the plan in a few lines) with `node scripts/board.mjs comment <id>` reading HTML from stdin.
 
 ## 3. Build
 
@@ -39,6 +41,8 @@ session reviews. Never review your own work, and never merge.
   needed.
 - Screenshots: if anyone can see the change, take them (in each theme it affects) for the evidence. For a UI bug, show
   it fixed. Use sample data for anything going in the PR.
+- The card's dev server reloads as files change. A change to `vite.config.ts` or the packages needs
+  `node scripts/card-dev.mjs --stop` and starting it again. Tell Ross when there's something new to see on it.
 - Anything the card didn't foresee that's Ross's to decide: ask. Anything out of scope: create a new card in Idea with
   `node scripts/board.mjs create`, rather than doing it.
 
@@ -54,6 +58,7 @@ session reviews. Never review your own work, and never merge.
 Post an **Evidence** comment on the card (HTML on stdin to `node scripts/board.mjs comment <id>`):
 
 - the PR link and its latest commit;
+- the card's dev server address, if it has one;
 - a table of each acceptance criterion and its proof: test names and results, commands and what they showed, what was
   checked by hand;
 - **what wasn't checked, and why**;
@@ -77,4 +82,7 @@ Attach screenshots with `node scripts/board.mjs attach <id> <file> "<caption>"`.
 - Post a **Verified** comment (what was checked, where, which release, screenshots if visible) and
   `node scripts/board.mjs move <id> Done`.
 - If it can't be checked yet, say what's waiting and leave it in review.
-- Remove the worktree: `git worktree remove .claude/worktrees/ab<id>`.
+- Update Ross's dev server to what's merged: `node scripts/card-dev.mjs --main` (in any worktree's `app/`). If it says
+  the main checkout is changed or on a branch, tell Ross rather than touching it.
+- Stop the card's dev server, `node scripts/card-dev.mjs --stop` in its worktree's `app/`, then remove the worktree:
+  `git worktree remove .claude/worktrees/ab<id>`.

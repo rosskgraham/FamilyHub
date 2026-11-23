@@ -33,7 +33,7 @@ Every move by Claude posts a comment on the card saying why. A move without its 
 | Move               | Who                                | Only when                                                           | Comment                                                     |
 | ------------------ | ---------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------- |
 | Idea → Refined     | Ross, or `/refine-story`           | It meets the Definition of Ready                                    | **Refined**: what was decided, and anything Ross was asked  |
-| Refined → Active   | `/pickup`                          | Fewer than 2 cards are Active                                       | **Started**: the branch                                     |
+| Refined → Active   | `/pickup`                          | Fewer than 2 cards are Active                                       | **Started**: the branch, and its dev server's address       |
 | Active → In review | `/pickup`                          | A PR is open with `AB#<id>`, CI is green and the evidence is posted | **Evidence** (below)                                        |
 | In review → Active | `/review-story`                    | It requests changes                                                 | **Review** (below)                                          |
 | Merge              | Ross only                          | The `story-review` status is green on the PR's latest commit        | —                                                           |
@@ -67,6 +67,23 @@ fully kitted, and anything left to answer goes in a comment on it. Refined means
 - It fits in one PR. If it doesn't, it's split; a Feature is split into User Stories.
 - Nothing it depends on is unfinished.
 
+### Seeing it while it's built
+
+No change is built blind. Ross sees and tries each card's work on the PC with the Hub's real setup, while it's built:
+
+- A card that changes anything on the screen gets its own dev server when it's picked up. In its worktree,
+  `node scripts/card-dev.mjs` (in `app/`) starts it at `http://localhost:<6000 + id>`, such as 6054 for AB#54, with the
+  main checkout's `app/.env` and a copy of its `app/data`. The sign-ins, calendars and Nest are real, so trying a change
+  does it for real. The Hub's own databases are a copy, so changes to Stars or Settings stay in it. `--fresh-data`
+  copies them again.
+- The address goes in the **Started** and **Evidence** comments, so Ross can try it before the review.
+- Ross's own dev server, on 5173, shows what's merged: after each merge, `node scripts/card-dev.mjs --main` moves the
+  main checkout to origin/main and restarts it. If anything in the main checkout is changed, or it's on a branch, it's
+  left alone and the script says so.
+- `node scripts/card-dev.mjs --stop` stops a card's dev server, before its worktree is removed.
+
+The servers run on their own, so they outlive the session, and log to `app/data/dev-server.log`.
+
 ### Evidence
 
 Posted by `/pickup` when it hands a card to review, and repeated in the PR description:
@@ -79,7 +96,8 @@ Posted by `/pickup` when it hands a card to review, and repeated in the PR descr
 - whether the root README changed, and if not, why not;
 - for a PR that only changes `docs/`, `design/`, `site/` or Markdown outside `app/`, that CI skipped its checks
   (they show as passed without running), in place of CI being green;
-- for a change anyone can see on the screen, **screenshots** of it, and for a UI bug, of it fixed.
+- for a change anyone can see on the screen, **screenshots** of it, and for a UI bug, of it fixed, and the address of
+  its dev server.
 
 Unverified is fine if it's said. Claiming something was checked when it wasn't is the one thing that isn't.
 
@@ -109,7 +127,8 @@ Ross can also run `/review-story <id>` in a new terminal. Never in the session t
 The card stays In review until it's checked where it runs: on the Pi for the Hub, which installs each release itself,
 or on the backend after its deploy. Changes under `ansible/` reach the Pi only when the playbook is run; see
 [Pi setup](runbooks/pi-setup.md). The **Verified** comment says what was checked and on which release, and the card
-moves to Done. Something that only runs in CI or on a PC is Done at merge, saying so.
+moves to Done. Something that only runs in CI or on a PC is Done at merge, saying so. Either way, Ross's dev server is
+updated with `node scripts/card-dev.mjs --main`, and the card's is stopped before its worktree is removed.
 
 ## Commits and pull requests
 

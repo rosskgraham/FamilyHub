@@ -34,6 +34,16 @@ This runs the same dev server and shows it on the Pi's screen, so a saved change
 
 It needs the Pi's SSH key in `C:\Users\<you>\.ssh` (copy it from Ubuntu if it was made there, as in [the Pi runbook](../docs/runbooks/pi-setup.md)). The Pi is `familyhub.local`, or `FAMILYHUB_PI_HOST` if that's set.
 
+### Or a card's work, with the real setup
+
+```
+node scripts/card-dev.mjs
+```
+
+Run in a card's worktree, on its branch `ab<id>-…`, this starts its dev server at `http://localhost:<6000 + id>`, so a change can be seen and tried with the real Calendars, Nest and sign-ins while it's built ([how work is done](../docs/ways-of-working.md#seeing-it-while-its-built)). It takes the main checkout's `app/.env`, read each time it starts, and a copy of its `app/data`, so changes to the Hub's own databases, such as Stars and Settings, stay in the copy. Everything else it reaches is real: changing the heating there changes the Nest. `--fresh-data` copies the data again, and `--stop` stops it. The server runs on its own, logging to `data/dev-server.log`.
+
+`node scripts/card-dev.mjs --main` moves the main checkout to the latest `origin/main` and restarts its dev server on 5173, so that always shows what's merged. It leaves the checkout alone if anything in it is changed or it's on a branch.
+
 ## Show the real Calendars, Shopping list and To-dos
 
 1. Follow [the Google Cloud runbook](../docs/runbooks/google-cloud-setup.md), and put `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `app/.env`.
