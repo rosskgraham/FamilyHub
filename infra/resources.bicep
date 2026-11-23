@@ -127,6 +127,7 @@ module backend 'backend.bicep' = {
     entraTenantId: entraTenantId
     entraSubdomain: entraSubdomain
     apiClientId: apiClientId
+    familyAppUrl: 'https://${familyApp.properties.defaultHostname}'
   }
 }
 

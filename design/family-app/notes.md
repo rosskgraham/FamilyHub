@@ -62,6 +62,7 @@ Every part stays on a free tier, as ADR 0008 requires, except the function app's
 - **Updates:** a new release reaches each phone the next time the app opens.
 - **Its address is public**, at `*.azurestaticapps.net`. Only the app's files are public. The lists are behind sign-in, in the API.
 - **Sign-in happens in the app**, with MSAL against Entra External ID. Static Web Apps' own sign-in on the free tier doesn't offer Google.
+- **A single-page app's sign-in lasts 24 hours before renewing** (decided 23 November 2026). Entra gives a single-page app a 24-hour refresh token; after that MSAL renews through the tenant's session in a hidden frame, or asks to sign in again. Built that way and measured on Ross's phone. If it asks too often, sign-in moves behind the backend, which can hold a longer session. How often it asked: to be recorded after the check (AB#56).
 
 ## How sync works
 
@@ -112,7 +113,7 @@ Ticking off or removing affects one occurrence, as now.
 
 1. **Backend skeleton:** Bicep for the Flex Consumption function app and its storage account, Cosmos DB, Web PubSub and the budget; a FastAPI service with `/health` behind `AsgiFunctionApp`, deployed by the pipeline; telemetry; sign-in with Entra External ID and Google. Measure the scale-to-zero wait and the cold start. Started: the function app, its storage account, the budget, `/health`, the deploy, Cosmos DB, Web PubSub and sign-in are in. Sign-in's setup by hand is in the [sign-in runbook](../../docs/runbooks/sign-in-setup.md), and the API checks it with `GET /me`. Not done yet: the measurements.
 2. **The Shopping list in the backend:** its operations, log and live updates, with Python tests. Test data only. Built: the operations, log and catch-up (`POST /lists/shopping/operations` and `GET /lists/shopping/items`, in the [backend README](../../backend/README.md#the-shopping-list)), and live updates (`GET /live`, in the [backend README](../../backend/README.md#live-updates)).
-3. **The family app, first version:** Static Web Apps in Bicep, and the app deployed to it by the pipeline; install, sign in, the Shopping list, offline queue, live updates. Static Web Apps waits until here (decided 17 November 2026), as there's nothing to host on it before the app. Started: the app installs on a phone from Static Web Apps, so far as a holding page ([`family-app/`](../../family-app/README.md)). Not done yet: sign-in, the list, offline, live updates.
+3. **The family app, first version:** Static Web Apps in Bicep, and the app deployed to it by the pipeline; install, sign in, the Shopping list, offline queue, live updates. Static Web Apps waits until here (decided 17 November 2026), as there's nothing to host on it before the app. Started: the app installs on a phone from Static Web Apps and signs in with Google ([`family-app/`](../../family-app/README.md)). Not done yet: the list, offline, live updates.
 4. **The Hub on the backend:** a Shopping list client behind the same interface as the Google Tasks one, so the Shopping Section and Today card don't change.
 5. **The switch:** import the Household's list from Google Tasks once, then use the backend.
 6. **To-dos and repeats**, in the backend, the app and the Hub, with an import from Tasks.

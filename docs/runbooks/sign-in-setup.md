@@ -89,7 +89,7 @@ Three app registrations: the backend's API, the family app, and the Hub (step 6)
 
 **The family app: `FamilyHub app`.**
 
-1. **Authentication → Add a platform → Single-page application**, with the redirect URI `http://localhost:5173/`, for the app running on the PC. Its Static Web Apps address is added in slice 3, when it exists.
+1. **Authentication → Add a platform → Single-page application**, with these four redirect URIs: `http://localhost:5173/` and `http://localhost:5173/auth/bridge`, for the app running on the PC, and the same two at the family app's Static Web Apps address, `https://<its address>/` and `https://<its address>/auth/bridge`. The address is the Bicep's `familyAppUrl` output, or `az staticwebapp show --name swa-familyhub-<suffix> --resource-group rg-familyhub --query defaultHostname`. `/` is where sign-in comes back to; `/auth/bridge` is where the app renews its sign-in quietly (AB#56).
    Then **Add a platform → Mobile and desktop applications**, with the custom redirect URI `http://localhost`, for `backend/scripts/whoami.py`, which checks sign-in by hand (step 8).
    Then, still on **Authentication** (its **Settings** tab, or **Advanced settings** in older portals), set **Allow public client flows** to **Yes**, and save. `whoami.py` has no secret, and without this its sign-in fails with `AADSTS7000218`. The family app has no secret either, so nothing is lost.
 2. **API permissions → Add a permission:**
@@ -134,10 +134,11 @@ None of these is secret, but the repo is public, so they're kept in the `familyh
 | `FAMILYHUB_ENTRA_TENANT_ID` | The FamilyHub tenant's **Tenant ID** (step 1) |
 | `FAMILYHUB_ENTRA_SUBDOMAIN` | Its subdomain, such as `familyhubgraham` (step 1) |
 | `FAMILYHUB_API_CLIENT_ID` | `FamilyHub API`'s **Application (client) ID** (step 5) |
+| `FAMILYHUB_APP_CLIENT_ID` | `FamilyHub app`'s **Application (client) ID** (step 5), which the pipeline builds into the family app |
 
 The pipeline passes them to the function app as app settings on its next deploy. If the sign-in pull request has already merged, run the pipeline again from Azure DevOps. Until they're set, the API answers `/me` and anything else that needs sign-in with a 503, "Sign-in isn't set up yet".
 
-The family app's and the Hub's client IDs aren't needed by the backend. The family app gets its own in slice 3, and the Pi gets the Hub's in slice 4.
+The pipeline also builds the first three, `FAMILYHUB_APP_CLIENT_ID` and the API's address into the family app, which signs in with them. Until all are set, the app says sign-in isn't set up. The Hub's client ID isn't needed by either: the Pi gets it in slice 4.
 
 ## 8. Let the Household in
 
