@@ -1,0 +1,62 @@
+# A watch on the Pi's network, to find out why the Hub loses the internet for short spells (AB#62). It checks every
+# few seconds and logs only changes, to its own journal: journalctl -u familyhub-netcheck.
+- name: Install what the network check needs
+  ansible.builtin.apt:
+    name:
+      - iputils-ping
+      - iproute2
+    state: present
+
+- name: Create the folder for the journal's settings
+  ansible.builtin.file:
+    path: /etc/systemd/journald.conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+# Kept across restarts, so a run of days can be compared with the Hub's own log. Capped, to spare the SD card.
+- name: Keep the journal across restarts
+  ansible.builtin.copy:
+    dest: /etc/systemd/journald.conf.d/familyhub.conf
+    content: |
+      [Journal]
+      Storage=persistent
+      SystemMaxUse=500M
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart the journal
+
+- name: Create the folder for the network check
+  ansible.builtin.file:
+    path: /usr/local/lib/familyhub
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install the network check
+  ansible.builtin.copy:
+    src: netcheck.mjs
+    dest: /usr/local/lib/familyhub/netcheck.mjs
+    owner: root
+    group: root
+    mode: "0755"
+  notify: Restart the network check
+
+- name: Install the network check's service
+  ansible.builtin.template:
+    src: familyhub-netcheck.service.j2
+    dest: /etc/systemd/system/familyhub-netcheck.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart the network check
+
+- name: Run the network check all the time
+  ansible.builtin.systemd_service:
+    name: familyhub-netcheck.service
+    enabled: true
+    state: started
+    daemon_reload: true

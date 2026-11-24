@@ -43,8 +43,8 @@ fi
 echo "Checking the result"
 in_pi ansible-playbook -i tests/inventory.yml tests/verify.yml
 
-echo "Unit testing the updater"
-in_pi node --test roles/hub/files/update.test.mjs
+echo "Unit testing the updater and the network check"
+in_pi node --test roles/hub/files/update.test.mjs roles/netcheck/files/netcheck.test.mjs
 
 echo "Unit testing the screen service"
 in_pi node --test roles/kiosk/files/screen.test.mjs

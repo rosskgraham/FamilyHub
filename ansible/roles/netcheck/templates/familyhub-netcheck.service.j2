@@ -1,0 +1,24 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Watch the network for the Hub's short internet drops (AB#62)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/bin/node /usr/local/lib/familyhub/netcheck.mjs
+Environment=FAMILYHUB_NETCHECK_SECONDS={{ hub_netcheck_seconds }}
+Restart=always
+RestartSec=10s
+
+# It only reads and connects out. Ping needs raw sockets, and nothing else.
+DynamicUser=true
+AmbientCapabilities=CAP_NET_RAW
+CapabilityBoundingSet=CAP_NET_RAW
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+
+[Install]
+WantedBy=multi-user.target
