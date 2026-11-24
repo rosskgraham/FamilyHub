@@ -36,7 +36,7 @@
 	function start(input: HTMLInputElement) {
 		input.focus();
 		input.setSelectionRange(value.length, value.length);
-		if (!page.state.editing) void goto(page.url, { state: { editing: true }, shallow: true, reset: false });
+		if (!page.state.editing) void goto(page.url.href, { state: { editing: true }, shallow: true, reset: false });
 	}
 </script>
 
