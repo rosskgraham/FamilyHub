@@ -17,8 +17,7 @@ checked yourself.
 ## 1. Find the work
 
 - With an id in `$ARGUMENTS`, use it; a second number is the PR.
-- Without one, `node scripts/board.mjs next "In review"` and take the first card whose open PR has no `story-review`
-  status on its latest commit (`gh pr checks <pr>`).
+- Without one, ask Ross which card to review. Reviews run only on the PRs he chooses.
 - Read the card: `node scripts/board.mjs show <id>`: the acceptance criteria, the parent, and the Evidence comment.
 - Find the PR: `gh pr list --search "AB#<id>" --state open`, and read it with `gh pr view <pr>` and `gh pr diff <pr>`.
 - Check the code you're reading is the PR's latest commit: `git rev-parse HEAD` matches `headRefOid` from

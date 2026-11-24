@@ -10,8 +10,8 @@ Most work is done by Claude Code sessions, with Ross deciding what matters and m
 | Skill                | Picks up                                                                 | Leaves it in                                         |
 | -------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------- |
 | `/refine-story [id]` | the top card in Idea, or the one given                                   | Refined, or still in Idea with what's left to answer |
-| `/pickup [id]`       | the top card in Refined, or the one given; or a card sent back to Active | In review, with the review started                   |
-| `/review-story [id]` | the top card in In review with no review on its latest commit            | In review (approved) or Active (changes requested)   |
+| `/pickup [id]`       | the top card in Refined, or the one given; or a card sent back to Active | In review                                            |
+| `/review-story [id]` | the card Ross names, only when he asks for a review                      | In review (approved) or Active (changes requested)   |
 
 ## The board
 
@@ -36,7 +36,7 @@ Every move by Claude posts a comment on the card saying why. A move without its 
 | Refined → Active   | `/pickup`                          | Fewer than 2 cards are Active                                       | **Started**: the branch, and its dev server's address       |
 | Active → In review | `/pickup`                          | A PR is open with `AB#<id>`, CI is green and the evidence is posted | **Evidence** (below)                                        |
 | In review → Active | `/review-story`                    | It requests changes                                                 | **Review** (below)                                          |
-| Merge              | Ross only                          | The `story-review` status is green on the PR's latest commit        | —                                                           |
+| Merge              | Ross only                          | CI is green, and the review is green if Ross asked for one          | —                                                           |
 | In review → Done   | Ross, or `/pickup` after the merge | It's checked where it runs                                          | **Verified**: what was checked, where, and in which release |
 | Refined → Idea     | Ross, or `/pickup`                 | It turns out not to be ready                                        | What's missing                                              |
 
@@ -103,8 +103,10 @@ Unverified is fine if it's said. Claiming something was checked when it wasn't i
 
 ### Review
 
-Every PR is reviewed by a Claude session that didn't write it. `/pickup` starts it on handing over with
-`node scripts/review-story.mjs <id>`, which runs `/review-story` in a new, headless Claude Code session:
+Reviews cost tokens, so they run only when Ross asks for one, on the PRs he chooses. Nothing starts one
+automatically, and `/pickup` hands over without one. When he wants a PR reviewed, he runs
+`node scripts/review-story.mjs <id>` (or asks a session to), which runs `/review-story` in a new, headless Claude Code
+session that didn't write the code:
 
 - It starts in a fresh worktree at the PR's latest commit, with no conversation behind it. It gets only the card number;
   it reads the card and the PR itself. The implementing session can't brief it.
@@ -115,10 +117,9 @@ Every PR is reviewed by a Claude session that didn't write it. `/pickup` starts 
 - It posts a **Review** comment on the card and the PR: a verdict for each criterion (met, not met or unverified),
   findings with files and lines, and the commands it ran.
 - It sets the `story-review` status on the commit it reviewed, never on whatever is latest when it finishes: green to
-  approve, red for changes. `Protect main` requires it, so a PR can't
-  merge until it's green, and any new push needs a new review. GitHub won't let Ross approve his own PRs, which is why
-  it's a status, not an approval. The ruleset has no bypass, so getting past a broken review means fixing it, or
-  changing `Protect main` on purpose.
+  approve, red for changes. `Protect main` doesn't require it, so it doesn't block a merge by itself; a red review means
+  don't merge until it's addressed. It's a status rather than an approval because GitHub won't let Ross approve his own
+  PRs.
 
 Ross can also run `/review-story <id>` in a new terminal. Never in the session that wrote the code.
 
