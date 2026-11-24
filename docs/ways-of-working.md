@@ -33,7 +33,7 @@ Every move by Claude posts a comment on the card saying why. A move without its 
 | Move               | Who                                | Only when                                                           | Comment                                                     |
 | ------------------ | ---------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------- |
 | Idea → Refined     | Ross, or `/refine-story`           | It meets the Definition of Ready                                    | **Refined**: what was decided, and anything Ross was asked  |
-| Refined → Active   | `/pickup`                          | Fewer than 2 cards are Active                                       | **Started**: the branch, and its dev server's address       |
+| Refined → Active   | `/pickup`                          | It's Refined                                                        | **Started**: the branch, and its dev server's address       |
 | Active → In review | `/pickup`                          | A PR is open with `AB#<id>`, CI is green and the evidence is posted | **Evidence** (below)                                        |
 | In review → Active | `/review-story`                    | It requests changes                                                 | **Review** (below)                                          |
 | Merge              | Ross only                          | CI is green, and the review is green if Ross asked for one          | —                                                           |
