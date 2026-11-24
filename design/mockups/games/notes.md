@@ -48,7 +48,11 @@ SCOWL comes as a SQLite database. The Hub doesn't ship it, and never reads it wh
 - **Allowed guesses are fully generated:** every five-letter word up to one of SCOWL's larger sizes, so re-running the script recreates the file exactly.
 - **Answers start as candidates** from SCOWL's most common sizes, and are then edited by hand. The script never overwrites the answer file. A re-run only reports new candidates, so the hand edits survive.
 - **What's committed:** the two word files, the script and SCOWL's copyright notice, not the database.
-- The database's tables, and the exact size cut-offs, are settled when the card is built, by looking at what each cut-off lets through.
+- **What was used (AB#67):** SCOWL's v2 branch at commit 1e5b7d3 (24 June 2026), through its `scowl_v0` view. The script is `app/scripts/word-lists.mjs`, and the lists and the copyright notice are in `app/src/lib/server/games/words/`.
+  - **Allowed guesses (7,051 words):** SCOWL sizes up to 70 (its large spellchecker dictionary), in every dialect, American and British. Size 80 and above adds mostly obscure words.
+  - **Answer candidates (1,914 words):** SCOWL's smallest size, 35 (it has nothing smaller). Only a word's own form, so no plurals or tenses, in British spelling, not regional to anywhere but Britain (no Australian slang), and with no usage note such as vulgar, offensive or informal.
+  - **Answers (1,461 words, about four years):** the candidates with obscure, adult and gloomy words taken out by hand, such as abhor, death and fetid.
+  - Every list leaves out Roman numerals, programmers' slang, abbreviations, non-words and SCOWL's rarer spelling variants.
 
 Not chosen: the New York Times' own Wordle lists. They're widely copied, but they're the NYT's work, and their answers are in American English.
 
