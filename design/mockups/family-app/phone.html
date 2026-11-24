@@ -116,6 +116,7 @@
 		border: 1px solid var(--line); box-shadow: 0 12px 32px rgb(0 0 0 / 0.25); display: flex; flex-direction: column; gap: 12px;
 		box-sizing: border-box; }
 	.menu p { margin: 0; font-size: 15px; color: var(--dim); }
+	.menu p.unsent { color: var(--warn-fg); background: var(--warn-bg); border-radius: 10px; padding: 8px 10px; line-height: 1.35; }
 	.toast { position: absolute; left: 16px; right: 16px; bottom: 96px; background: var(--ink); color: var(--on-ink);
 		border-radius: 14px; padding: 14px 16px; font-size: 16px; display: flex; justify-content: space-between; }
 	.toast b { text-decoration: underline; }
@@ -250,12 +251,12 @@
 		{
 			id: 'I',
 			title: 'I · Sign out, from the circle (#56)',
-			note: 'Tapping the circle opens a small menu saying who\'s signed in, with Sign out, which goes back to A. Tapping the circle again, or anywhere else, closes it.',
+			note: 'Tapping the circle opens a small menu saying who\'s signed in, with Sign out, which goes back to A and clears the list from the phone. If changes are still waiting to send, it says how many first; Sign out still works, and they\'re lost (#58). Tapping the circle again, or anywhere else, closes it.',
 			body: () =>
 				heading('6 to get') +
 				items(regulars) +
 				addBar() +
-				'<div class="menu"><p>Signed in as Ross</p><button class="btn primary wide">Sign out</button></div>'
+				'<div class="menu"><p>Signed in as Ross</p><p class="unsent">2 changes haven\'t sent yet. Signing out loses them.</p><button class="btn primary wide">Sign out</button></div>'
 		}
 	];
 

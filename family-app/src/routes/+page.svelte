@@ -3,14 +3,16 @@
 	import { backendList } from '#lib/api.ts';
 	import { msalAuth, type Auth } from '#lib/auth.ts';
 	import { readConfig } from '#lib/config.ts';
+	import { indexedDbCopy } from '#lib/copy.ts';
 	import Problem from '#lib/Problem.svelte';
 	import Refused from '#lib/Refused.svelte';
-	import { CANT_REACH, decide, SIGN_IN_FAILED, type Screen } from '#lib/session.ts';
+	import { CANT_REACH, open, SIGN_IN_FAILED, type Screen } from '#lib/session.ts';
 	import Shopping from '#lib/Shopping.svelte';
-	import { ShoppingList, SignedOut } from '#lib/shopping.svelte.ts';
+	import type { ShoppingList } from '#lib/shopping.svelte.ts';
 	import SignIn from '#lib/SignIn.svelte';
 
 	const config = readConfig();
+	const copy = indexedDbCopy();
 	let screen: Screen = $state({ kind: 'loading' });
 	let list: ShoppingList | null = $state(null);
 	let auth: Auth | null = null;
@@ -20,33 +22,31 @@
 			screen = { kind: 'not-set-up' };
 			return;
 		}
-		auth ??= msalAuth(config, location.origin);
+		const signIn = (auth ??= msalAuth(config, location.origin));
 		list?.stop();
 		list = null;
 		try {
-			const decided = await decide(auth, (token) =>
-				fetch(`${config.apiUrl}/me`, { headers: { Authorization: `Bearer ${token}` } })
-			);
-			if (decided.kind === 'member') {
-				const shopping = new ShoppingList(
-					backendList(config.apiUrl, () => auth!.token()),
-					{ onsignedout: signedOut }
-				);
-				await shopping.load();
-				list = shopping;
-			}
-			screen = decided;
-		} catch (error) {
-			if (error instanceof SignedOut) signedOut();
-			else screen = { kind: 'problem', message: CANT_REACH };
+			await open({
+				auth: signIn,
+				fetchMe: (token) => fetch(`${config.apiUrl}/me`, { headers: { Authorization: `Bearer ${token}` } }),
+				api: backendList(config.apiUrl, () => signIn.token()),
+				copy,
+				show: (shown, shownList) => {
+					if (list && list !== shownList) list.stop();
+					list = shownList;
+					screen = shown;
+				}
+			});
+		} catch {
+			screen = { kind: 'problem', message: CANT_REACH };
 		}
 	}
 
-	// The backend wants a fresh sign-in. Changes not sent yet are lost until the list is kept on the phone (AB#58).
-	function signedOut() {
+	// Sign out clears the list from the phone, so the next person to use it doesn't see it (AB#58).
+	async function signOut() {
 		list?.stop();
-		list = null;
-		screen = { kind: 'sign-in' };
+		await copy.clear().catch(() => {});
+		await auth?.signOut();
 	}
 
 	onMount(() => {
@@ -55,7 +55,7 @@
 			if (document.visibilityState === 'hidden') list?.hidden();
 			else void list?.visible();
 		};
-		const online = () => void list?.flush();
+		const online = () => void list?.visible();
 		document.addEventListener('visibilitychange', changed);
 		addEventListener('online', online);
 		return () => {
@@ -69,7 +69,13 @@
 {#if screen.kind === 'sign-in'}
 	<SignIn onsignin={() => auth?.signIn()} />
 {:else if screen.kind === 'member' && list}
-	<Shopping {list} firstName={screen.firstName} initial={screen.initial} onsignout={() => auth?.signOut()} />
+	<Shopping
+		{list}
+		firstName={screen.firstName}
+		initial={screen.initial}
+		onsignout={signOut}
+		onsignin={() => auth?.signIn()}
+	/>
 {:else if screen.kind === 'refused'}
 	<Refused email={screen.email} onanother={() => auth?.anotherAccount()} />
 {:else if screen.kind === 'sign-in-failed'}

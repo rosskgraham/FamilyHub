@@ -99,6 +99,7 @@ describe('signing in', () => {
 		const client = fakeClient({ handleRedirectPromise: vi.fn(async () => ({ account: signedIn })) });
 
 		expect(await auth(client).start()).toEqual({
+			id: 'home',
 			username: 'ross@example.com',
 			name: 'Ross Graham',
 			givenName: 'Ross'

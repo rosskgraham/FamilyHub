@@ -13,6 +13,8 @@ import type { Config } from './config.ts';
 
 /** Who's signed in, as far as the app shows it. */
 export interface Account {
+	/** MSAL's id for the account, which the phone's copy of the list belongs to. */
+	id: string;
 	/** Their email address. */
 	username: string;
 	name?: string;
@@ -66,6 +68,7 @@ export function msalConfig(config: Config, origin: string) {
 function toAccount(account: AccountInfo): Account {
 	const givenName = account.idTokenClaims?.given_name;
 	return {
+		id: account.homeAccountId,
 		username: account.username,
 		name: account.name || undefined,
 		givenName: typeof givenName === 'string' && givenName ? givenName : undefined
