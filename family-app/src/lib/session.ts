@@ -1,16 +1,18 @@
 // Which screen to show when the app opens (design/mockups/family-app): sign in (A), the Household's Member, or an
 // account that isn't the Household's (B), decided by the backend's GET /me.
-import type { Account, Auth } from './auth.ts';
+import { SignInFailed, type Account, type Auth } from './auth.ts';
 
 export type Screen =
 	| { kind: 'loading' }
 	| { kind: 'not-set-up' }
 	| { kind: 'sign-in' }
+	| { kind: 'sign-in-failed' }
 	| { kind: 'member'; firstName: string; initial: string }
 	| { kind: 'refused'; email: string }
 	| { kind: 'problem'; message: string };
 
 export const CANT_REACH = "Can't reach FamilyHub right now. Check the signal, then try again.";
+export const SIGN_IN_FAILED = "Signing in didn't finish.";
 
 export function firstName(account: Account): string {
 	return account.givenName ?? account.name?.trim().split(/\s+/)[0] ?? account.username.split('@')[0]!;
@@ -20,8 +22,22 @@ export function firstName(account: Account): string {
 export type FetchMe = (token: string) => Promise<Response>;
 
 export async function decide(auth: Auth, fetchMe: FetchMe): Promise<Screen> {
-	const account = await auth.start();
-	if (!account) return { kind: 'sign-in' };
+	let account: Account | null;
+	try {
+		account = await auth.start();
+	} catch (error) {
+		// Cancelled at the account choice, or refused by the tenant: not a signal problem.
+		if (error instanceof SignInFailed) return { kind: 'sign-in-failed' };
+		throw error;
+	}
+	if (!account) {
+		// Back from signing out on screen B: straight on to choosing another account.
+		if (auth.wantsAnotherAccount()) {
+			await auth.signIn();
+			return { kind: 'loading' };
+		}
+		return { kind: 'sign-in' };
+	}
 	const token = await auth.token();
 	if (!token) return { kind: 'sign-in' };
 

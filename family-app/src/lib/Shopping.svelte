@@ -1,0 +1,269 @@
+<script lang="ts">
+	// The Shopping list (design/mockups/family-app, screens C, D, E and H). Tap the box to tick or untick; tap the
+	// words to change or remove the item (decided 2026-11-23). The add box sits at the bottom, where a thumb reaches
+	// it, and stays open after adding so several items go in one after another.
+	import EditSheet from './EditSheet.svelte';
+	import Me from './Me.svelte';
+	import { MOST_TEXT, type ShoppingList } from './shopping.svelte.ts';
+
+	let {
+		list,
+		firstName,
+		initial,
+		onsignout,
+		menuOpen = $bindable(false),
+		editing = $bindable(null)
+	}: {
+		list: ShoppingList;
+		firstName: string;
+		initial: string;
+		onsignout: () => void;
+		menuOpen?: boolean;
+		/** The item whose sheet is open. */
+		editing?: { id: string; text: string } | null;
+	} = $props();
+
+	let adding = $state('');
+	// The item just added, picked out for a moment so the eye finds it.
+	let fresh: string | null = $state(null);
+	let freshTimer: ReturnType<typeof setTimeout> | undefined;
+
+	function add(event: SubmitEvent) {
+		event.preventDefault();
+		const before = new Set(list.items.map((item) => item.id));
+		if (!list.add(adding)) return;
+		adding = '';
+		fresh = list.items.find((item) => !before.has(item.id))?.id ?? null;
+		clearTimeout(freshTimer);
+		freshTimer = setTimeout(() => (fresh = null), 1500);
+	}
+</script>
+
+<div class="screen">
+	<header>
+		<div>
+			<h1>Shopping</h1>
+			<p class="count">{list.toGet ? `${list.toGet} to get` : 'Nothing to get'}</p>
+		</div>
+		<Me {firstName} {initial} {onsignout} bind:open={menuOpen} />
+	</header>
+
+	{#if list.items.length}
+		<ul>
+			{#each list.items as item (item.id)}
+				<li class:done={item.tickedOff} class:fresh={item.id === fresh}>
+					<button
+						class="box"
+						role="checkbox"
+						aria-checked={item.tickedOff}
+						aria-label={item.text}
+						onclick={() => list.toggle(item.id)}
+					>
+						<span class="mark">{item.tickedOff ? '✓' : ''}</span>
+					</button>
+					<button class="text" onclick={() => (editing = { id: item.id, text: item.text })}>{item.text}</button>
+				</li>
+			{/each}
+		</ul>
+	{:else}
+		<div class="empty">
+			<p><b>All done</b>Add something with the box below.</p>
+		</div>
+	{/if}
+
+	{#if list.undoable}
+		<div class="toast" role="status">
+			<span>{list.undoable} removed</span>
+			<button onclick={() => list.undo()}>Undo</button>
+		</div>
+	{/if}
+
+	<form class="add" onsubmit={add}>
+		<input
+			class="field"
+			aria-label="Add an item"
+			placeholder="Add an item"
+			bind:value={adding}
+			maxlength={MOST_TEXT}
+			enterkeyhint="enter"
+			autocomplete="off"
+		/>
+		<!-- Keeps the keyboard up when Add is tapped, so the next item can go straight in. -->
+		<button class="button primary" onpointerdown={(event) => event.preventDefault()}>Add</button>
+	</form>
+</div>
+
+{#if editing}
+	{@const { id, text } = editing}
+	<EditSheet
+		{text}
+		onclose={() => (editing = null)}
+		onsave={(changed) => {
+			list.rename(id, changed);
+			editing = null;
+		}}
+		onremove={() => {
+			list.remove(id);
+			editing = null;
+		}}
+	/>
+{/if}
+
+<style>
+	.screen {
+		height: 100dvh;
+		display: flex;
+		flex-direction: column;
+	}
+
+	header {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 18px 20px 10px;
+	}
+
+	h1 {
+		margin: 0;
+		font-size: 30px;
+	}
+
+	.count {
+		margin: 2px 0 0;
+		font-size: 16px;
+		font-weight: 600;
+		color: var(--dim);
+	}
+
+	ul {
+		list-style: none;
+		margin: 0;
+		padding: 0 8px 16px;
+		flex: 1;
+		overflow-y: auto;
+	}
+
+	li {
+		display: flex;
+		align-items: center;
+		min-height: 60px;
+		border-radius: 14px;
+		transition: background 0.4s;
+	}
+
+	li.fresh {
+		background: var(--soft);
+	}
+
+	/* The button is bigger than the box drawn in it, so it's easy to hit. */
+	button.box {
+		flex: none;
+		width: 56px;
+		height: 60px;
+		padding: 0 0 0 12px;
+		border: none;
+		background: none;
+		display: flex;
+		align-items: center;
+	}
+
+	.mark {
+		width: 30px;
+		height: 30px;
+		box-sizing: border-box;
+		border-radius: 9px;
+		border: 2.5px solid var(--box);
+		display: grid;
+		place-items: center;
+		color: var(--on-ink);
+		font-size: 18px;
+		line-height: 1;
+	}
+
+	li.done .mark {
+		background: var(--ink);
+		border-color: var(--ink);
+	}
+
+	button.text {
+		flex: 1;
+		min-height: 60px;
+		padding: 8px 12px 8px 2px;
+		border: none;
+		background: none;
+		color: var(--ink);
+		text-align: left;
+		font-size: 19px;
+		font-weight: 600;
+		overflow-wrap: anywhere;
+	}
+
+	li.done button.text {
+		text-decoration: line-through;
+		color: var(--dim);
+		font-weight: 400;
+	}
+
+	.empty {
+		flex: 1;
+		display: grid;
+		place-items: center;
+		padding: 32px;
+		text-align: center;
+	}
+
+	.empty p {
+		margin: 0;
+		font-size: 18px;
+		color: var(--dim);
+	}
+
+	.empty b {
+		display: block;
+		margin-bottom: 6px;
+		font-size: 22px;
+		color: var(--ink);
+	}
+
+	.toast {
+		margin: 0 16px 12px;
+		padding: 14px 16px;
+		border-radius: 14px;
+		background: var(--ink);
+		color: var(--on-ink);
+		font-size: 16px;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+	}
+
+	.toast button {
+		border: none;
+		background: none;
+		color: inherit;
+		font-size: 16px;
+		font-weight: 700;
+		text-decoration: underline;
+		padding: 4px 0 4px 12px;
+	}
+
+	.add {
+		flex: none;
+		display: flex;
+		gap: 10px;
+		padding: 12px 16px calc(16px + env(safe-area-inset-bottom));
+		border-top: 1px solid var(--line);
+		background: var(--bg);
+	}
+
+	.add .field {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.add .button {
+		height: 54px;
+	}
+</style>

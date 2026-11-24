@@ -1,6 +1,6 @@
 import { InteractionRequiredAuthError, type AccountInfo, type IPublicClientApplication } from '@azure/msal-browser';
 import { describe, expect, it, vi } from 'vitest';
-import { msalAuth, msalConfig, scopesFor } from './auth.ts';
+import { msalAuth, msalConfig, scopesFor, SignInFailed } from './auth.ts';
 import { readConfig, type Config } from './config.ts';
 
 const CONFIG: Config = {
@@ -38,8 +38,17 @@ function fakeClient(overrides: Record<string, unknown> = {}) {
 	};
 }
 
-const auth = (client: ReturnType<typeof fakeClient>) =>
-	msalAuth(CONFIG, ORIGIN, client as unknown as IPublicClientApplication);
+function flags() {
+	const stored = new Map<string, string>();
+	return {
+		getItem: (key: string) => stored.get(key) ?? null,
+		setItem: (key: string, value: string) => void stored.set(key, value),
+		removeItem: (key: string) => void stored.delete(key)
+	};
+}
+
+const auth = (client: ReturnType<typeof fakeClient>, storage = flags()) =>
+	msalAuth(CONFIG, ORIGIN, client as unknown as IPublicClientApplication, storage);
 
 describe('the settings', () => {
 	it('come from the build, without a trailing slash on the API', () => {
@@ -172,5 +181,28 @@ describe('signing in', () => {
 			account: signedIn,
 			postLogoutRedirectUri: 'https://app.example/'
 		});
+	});
+
+	it('fails to sign in, rather than seeming offline, when the sign-in comes back with an error', async () => {
+		const client = fakeClient({
+			handleRedirectPromise: vi.fn(async () => {
+				throw new Error('access_denied: the user cancelled');
+			})
+		});
+
+		await expect(auth(client).start()).rejects.toBeInstanceOf(SignInFailed);
+	});
+
+	it('uses another account by signing out, then once back, going straight on to choosing one', async () => {
+		const client = fakeClient();
+		const storage = flags();
+		await auth(client, storage).anotherAccount();
+		expect(client.logoutRedirect).toHaveBeenCalledOnce();
+
+		// The sign-out has come back: a new page, so a new Auth, with the same session storage.
+		const back = auth(fakeClient(), storage);
+		expect(back.wantsAnotherAccount()).toBe(true);
+		expect(back.wantsAnotherAccount()).toBe(false);
+		expect(auth(fakeClient()).wantsAnotherAccount()).toBe(false);
 	});
 });
