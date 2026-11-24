@@ -196,6 +196,8 @@ test('the celebration in the Evening theme, closed with Nice one!', async ({ pag
 	await check(page);
 	const end = page.getByRole('alertdialog', { name: 'You got it, Sam!' });
 	await expect(end).toContainText('In 1 go. That’s 4 days in a row.');
+	// The heating tests change this Hub's target while they run, so the header's heating is hidden.
+	await page.addStyleTag({ content: '.heating { visibility: hidden; }' });
 	await page.evaluate(() => document.fonts.ready);
 	await expect(page).toHaveScreenshot('games-celebration-evening.png');
 	await end.getByRole('button', { name: 'Nice one!' }).click();
