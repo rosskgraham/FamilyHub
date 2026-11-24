@@ -1,20 +1,20 @@
 ---
 name: pickup
-description: Pick up a Refined FamilyHub card (or one sent back from review, or one merged and waiting to be checked), implement it on a branch, post the evidence on the card, open the PR and start the independent review. Use when Ross asks to pick up, start, build or implement the next card or a given one.
+description: Pick up a Refined FamilyHub card (or one sent back from review, or one merged and waiting to be checked), implement it on a branch, post the evidence on the card, open the PR. Use when Ross asks to pick up, start, build or implement the next card or a given one.
 argument-hint: '[work item id]'
 ---
 
 # Pick up a card
 
-Follow [docs/ways-of-working.md](../../../docs/ways-of-working.md); it's the source of truth. You implement; another
-session reviews. Never review your own work, and never merge.
+Follow [docs/ways-of-working.md](../../../docs/ways-of-working.md); it's the source of truth. You implement. Reviews run
+only when Ross asks, in another session. Never review your own work, never start a review yourself, and never merge.
 
 ## 1. Pick the card
 
 - With an id (`$ARGUMENTS`), use it and read it: `node scripts/board.mjs show <id>`.
   - **In Active with a Review comment asking for changes**: address every finding, then carry on from step 4.
   - **In review, and its PR is merged**: go to step 7.
-  - **In review, PR open**: it's waiting for review; say so and stop.
+  - **In review, PR open**: it's waiting for Ross; say so and stop.
 - Without one, run `node scripts/board.mjs next Active` for cards sent back from review first, then
   `node scripts/board.mjs next Refined`. Offer the top one.
 - Check it meets the Definition of Ready. If it doesn't, stop, suggest `/refine-story <id>`, and move it back to Idea
@@ -66,13 +66,11 @@ Post an **Evidence** comment on the card (HTML on stdin to `node scripts/board.m
 
 Attach screenshots with `node scripts/board.mjs attach <id> <file> "<caption>"`. Never claim a check that didn't happen.
 
-## 6. Hand over to review
+## 6. Hand over
 
 - `node scripts/board.mjs move <id> "In review"`.
-- Start the reviewer in the background: `node scripts/review-story.mjs <id>`. Pass nothing else: it reads the card and
-  the PR itself, so nothing you say can steer it.
-- When it finishes, report its verdict to Ross. If it asked for changes, the card is back in Active: offer to address
-  them (step 1).
+- Don't start a review. Tell Ross the PR is ready, and that he can have it reviewed with
+  `node scripts/review-story.mjs <id>` if he wants one.
 
 ## 7. After the merge
 

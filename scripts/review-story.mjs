@@ -6,7 +6,7 @@
 //
 // It takes only the card's number, on purpose: the session that wrote the code can't brief the reviewer. The reviewer
 // can read and run tests but not edit, commit or push. It posts its own verdict; if it doesn't finish, this marks the
-// story-review status red so the PR can't merge unreviewed.
+// story-review status red. Reviews run only when Ross asks for one.
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';

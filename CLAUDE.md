@@ -12,7 +12,8 @@ Follow [docs/ways-of-working.md](docs/ways-of-working.md). In short:
 - Branches are `ab<id>-<short-name>`. Every commit message and PR description mentions `AB#<id>`.
 - Every move across the board gets a comment on the card with its evidence. Say what wasn't checked; never claim a check
   that didn't happen.
-- Never review work this session wrote. Reviews run in a separate session through `scripts/review-story.mjs`.
+- Reviews run only when Ross asks for one, in a separate session through `scripts/review-story.mjs`. Never start one
+  unasked, and never review work this session wrote.
 - Never merge a PR, and never move a card to Done without checking the change where it runs.
 - Every PR updates the root README when what the Hub does changes.
 - The repo is public: Household members' names, and anything else private, never go in it. Only Ross's name may.
