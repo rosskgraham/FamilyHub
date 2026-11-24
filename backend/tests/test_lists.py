@@ -132,6 +132,7 @@ def test_an_added_item_is_on_the_list(client: TestClient) -> None:
                 "ticked_off_at": None,
                 "removed": False,
                 "seq": 1,
+                "added_seq": 1,
             }
         ],
         "seq": 1,
@@ -190,6 +191,7 @@ def test_each_step_shows_in_the_catch_up(client: TestClient) -> None:
         "ticked_off_at": None,
         "removed": False,
         "seq": None,
+        "added_seq": 1,
     }
 
     send(client, op("rename", item_id, "Oat milk"))
@@ -294,6 +296,27 @@ def test_a_rename_does_not_untick_and_a_tick_does_not_undo_a_rename(client: Test
 
     ticked = items(client)["items"][0]
     assert (ticked["text"], ticked["ticked_off"]) == ("Oat milk", True)
+
+
+def test_an_item_keeps_the_number_it_was_added_at(client: TestClient) -> None:
+    eggs_id = str(uuid4())
+    send(client, add("Milk"), add("Eggs", eggs_id))
+
+    send(client, op("tick", eggs_id), op("rename", eggs_id, "Big eggs"), op("untick", eggs_id))
+
+    eggs = items(client, after=2)["items"][0]
+    assert (eggs["text"], eggs["seq"], eggs["added_seq"]) == ("Big eggs", 5, 2)
+
+
+def test_an_item_stored_without_its_added_number_uses_its_seq(client: TestClient, store: FakeStore) -> None:
+    item_id = str(uuid4())
+    send(client, add("Milk", item_id), op("tick", item_id))
+    del store.shopping.docs[f"item-{item_id}"]["addedSeq"]
+
+    assert items(client)["items"][0]["added_seq"] == 2
+
+    send(client, op("untick", item_id))
+    assert items(client)["items"][0]["added_seq"] == 2
 
 
 def test_a_no_change_still_gets_a_number_and_is_logged(client: TestClient, store: FakeStore) -> None:

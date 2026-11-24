@@ -2,7 +2,7 @@
 
 The Household's app for phones ([ADR 0010](../docs/adr/0010-shared-lists-in-an-azure-backend-with-an-installable-family-app.md)): an installable web app, built with SvelteKit like the Hub, served by Azure Static Web Apps' free plan. Open its address in Chrome on an Android phone and tap **Install**. The plan and its slices are in the [design notes](../design/family-app/notes.md).
 
-So far it installs on a phone, opens with no signal, and signs in (slice 3's first two stories). The Shopping list, working offline and live updates come next.
+So far it installs on a phone, opens with no signal, signs in, and shows the Shopping list (slice 3's first three stories). Working offline with the list and live updates come next.
 
 ## Signing in
 
@@ -10,7 +10,20 @@ Each Member signs in with their own Google account, through the FamilyHub tenant
 
 - **Sign in with Google** is a full-page redirect to the tenant, asking which Google account every time, and back to `/`. An installed app handles a redirect better than a popup.
 - Tokens are kept in the phone's local storage, so the app stays signed in between openings. A single-page app's refresh token lasts 24 hours. After that, MSAL renews through the tenant's session in a hidden frame that lands on `/auth/bridge` (MSAL v5's redirect bridge), or the app asks to sign in again. How often that happens is measured in AB#56.
-- The app then asks the backend's `GET /me` who it is (`src/lib/session.ts`): one of the Household shows their first name and the circle, whose menu has **Sign out**; anyone else gets "Not this account", with **Use another account** (`design/mockups/family-app/`, screens A and B).
+- The app then asks the backend's `GET /me` who it is (`src/lib/session.ts`): one of the Household gets the Shopping list, with the circle and their initial at the top, whose menu has **Sign out** (`design/mockups/family-app/`, screen I); anyone else gets "Not this account" (screen B), with **Use another account**, which signs out and goes straight on to choosing an account.
+- A sign-in that comes back with an error, as when it's cancelled at the account choice, says signing in didn't finish, with **Sign in again**.
+
+## The Shopping list
+
+Screens C, D, E and H in `design/mockups/family-app/`, through the backend's list API ([backend README](../backend/README.md#the-shopping-list)). `src/lib/shopping.svelte.ts` holds the list; `src/lib/Shopping.svelte` shows it.
+
+- **Items to get, newest first, then those ticked off in the last 10 minutes,** struck through, as on the Hub. The order is the backend's `added_seq`, so ticking or changing an item doesn't move it. A ticked item drops off the phone once its 10 minutes are up.
+- **Tap the box to tick or untick. Tap the words to change or remove the item,** in a sheet from the bottom. The add box at the bottom stays open after adding.
+- **Every tap shows straight away.** Each change is an operation, with its id and a new item's id made on the phone, queued and sent in the background. The phone shows the backend's items with its own unsent changes replayed on top; the backend decides how changes merge.
+- **A failed send is tried again,** after 1 second, then twice as long each time up to a minute, and whenever the app comes back to the front or the phone comes back online. Sending an operation again is safe: the backend applies it once. A 401 goes back to sign in.
+- **Removing shows Undo for 5 seconds.** The remove waits on the phone until then, or is sent at once if the app is put away, so Undo needs nothing from the backend, which never brings a removed item back.
+- **Changes made elsewhere show** after each send and whenever the app comes back to the front, by asking the backend for everything after the last number it gave. Live updates come in AB#59.
+- **Nothing is kept on the phone yet:** closing the app with changes still unsent loses them, and with no signal the list doesn't open. Both are AB#58.
 
 The settings are built in by the pipeline, from the `familyhub` variable group and the Bicep's outputs. None is secret. Without them, the app says sign-in isn't set up. To sign in on the PC, put them in `family-app/.env`, which Git ignores:
 

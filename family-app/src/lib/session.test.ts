@@ -1,15 +1,17 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { Account, Auth } from './auth.ts';
+import { SignInFailed, type Account, type Auth } from './auth.ts';
 import { CANT_REACH, decide, firstName } from './session.ts';
 
 const ROSS: Account = { username: 'ross@example.com', name: 'Ross Graham', givenName: 'Ross' };
 
-function fakeAuth(account: Account | null, token: string | null = 'token-1'): Auth {
+function fakeAuth(account: Account | null, token: string | null = 'token-1', anotherAccount = false): Auth {
 	return {
 		start: vi.fn(async () => account),
 		token: vi.fn(async () => token),
 		signIn: vi.fn(async () => {}),
-		signOut: vi.fn(async () => {})
+		signOut: vi.fn(async () => {}),
+		anotherAccount: vi.fn(async () => {}),
+		wantsAnotherAccount: vi.fn(() => anotherAccount)
 	};
 }
 
@@ -62,6 +64,31 @@ describe('which screen the app opens on', () => {
 			kind: 'problem',
 			message: CANT_REACH
 		});
+	});
+});
+
+describe('signing in again', () => {
+	it('says signing in did not finish, not that there is no signal, when the sign-in came back with an error', async () => {
+		const auth = fakeAuth(null);
+		auth.start = vi.fn(async () => {
+			throw new SignInFailed('access_denied');
+		});
+
+		expect(await decide(auth, answer(200))).toEqual({ kind: 'sign-in-failed' });
+	});
+
+	it('goes straight on to choosing an account after Use another account', async () => {
+		const auth = fakeAuth(null, null, true);
+
+		expect(await decide(auth, answer(200))).toEqual({ kind: 'loading' });
+		expect(auth.signIn).toHaveBeenCalledOnce();
+	});
+
+	it('shows sign in (A) after an ordinary sign-out', async () => {
+		const auth = fakeAuth(null);
+
+		expect(await decide(auth, answer(200))).toEqual({ kind: 'sign-in' });
+		expect(auth.signIn).not.toHaveBeenCalled();
 	});
 });
 

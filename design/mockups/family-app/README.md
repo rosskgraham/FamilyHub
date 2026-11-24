@@ -12,6 +12,7 @@ The family app on a phone (AB#10, slice 3). `phone.html` draws each screen at 39
 | `phone-f.png` | F · No signal, with changes waiting, and Undo after remove | AB#58     |
 | `phone-g.png` | G · The sign-in has run out                                | AB#56, 58 |
 | `phone-h.png` | H · Nothing to get                                         | AB#57     |
+| `phone-i.png` | I · Sign out, from the circle                              | AB#56     |
 
 ## Decided (23 November 2026, with Ross)
 
@@ -22,7 +23,11 @@ The family app on a phone (AB#10, slice 3). `phone.html` draws each screen at 39
 - **Who's signed in is the circle at the top,** with their initial. Tapping it offers Sign out. It's one colour for everyone for now: Member colours live in the Hub's Settings, which the backend doesn't know.
 - **No signal is a banner, not a block.** The list keeps working from the phone's copy; each waiting change is marked, and they send by themselves when the signal's back.
 - **The logo gets an edge in the dark theme,** as its own dark tile nearly vanishes on the Evening background (seen on Ross's phone, AB#55).
-
 - **A change made elsewhere just appears** (AB#59), at the Hub or on another phone, with no flash.
+
+## Decided (24 November 2026, with Ross, AB#57)
+
+- **A removed item waits on the phone until its Undo has gone,** then the remove is sent, or at once if the app is put away. Undo just puts it back, and nothing reaches the backend: the backend never brings a removed item back.
+- **Newest at the top, and it stays there:** the order is the one items were added in, so ticking, unticking or changing an item doesn't move it.
 
 Render the PNGs again after changing `phone.html`: open it in Chromium and screenshot each screen's `.pair`.

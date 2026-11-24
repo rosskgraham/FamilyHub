@@ -1,8 +1,9 @@
 <script lang="ts">
-	// When the app can't go on: the backend can't be reached, or sign-in isn't set up in this build.
+	// When the app can't go on: the backend can't be reached, signing in didn't finish, or sign-in isn't set up in
+	// this build.
 	import Centred from './Centred.svelte';
 
-	let { message, onretry }: { message: string; onretry?: () => void } = $props();
+	let { message, onretry, retry = 'Try again' }: { message: string; onretry?: () => void; retry?: string } = $props();
 </script>
 
 <Centred>
@@ -10,6 +11,6 @@
 	<p class="strong">{message}</p>
 	{#if onretry}
 		<div class="gap"></div>
-		<button class="button wide" onclick={onretry}>Try again</button>
+		<button class="button wide" onclick={onretry}>{retry}</button>
 	{/if}
 </Centred>

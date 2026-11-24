@@ -7,6 +7,9 @@
 	--on-ink: #ffffff;
 	--dim: #4a5565;
 	--line: #c3cbd7;
+	--soft: #edf0f5;
+	--box: #5b6676;
+	--danger: #b42318;
 	/* The logo's dark tile needs no edge on a light page. */
 	--tile-edge: transparent;
 	color-scheme: light dark;
@@ -20,6 +23,10 @@
 		--on-ink: #0e1116;
 		--dim: #a6b0bf;
 		--line: #3a4553;
+		--soft: #212a36;
+		--box: #8a94a3;
+		/* The Hub's problem colour, as its danger red is hard to read on a dark card. */
+		--danger: #ff9c94;
 		--tile-edge: #3a4553;
 	}
 }
@@ -56,6 +63,26 @@ button {
 .button.primary {
 	background: var(--ink);
 	color: var(--on-ink);
+}
+
+.field {
+	height: 54px;
+	padding: 0 16px;
+	box-sizing: border-box;
+	border-radius: 16px;
+	border: 2px solid var(--line);
+	background: var(--card);
+	color: var(--ink);
+	font: 18px var(--font);
+}
+
+.field:focus {
+	outline: none;
+	border-color: var(--ink);
+}
+
+.field::placeholder {
+	color: var(--dim);
 }
 
 .button.wide {
