@@ -152,6 +152,6 @@ Everything up to the Pi can be built and tested on the PC, so it comes first. Th
 - It's on the kitchen wall and the Household has used it for two weeks.
 - Nobody goes back to checking their phone for the day's plan.
 - Calendar, Shopping, weather and Sleep all work.
-- It survives a Wi-Fi drop, and after a power cut it comes back up by itself.
+- It survives a network drop, and after a power cut it comes back up by itself.
 
 There's no deadline. The aim is something on the wall, even rough, within a month or two.

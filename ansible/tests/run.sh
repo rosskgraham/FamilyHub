@@ -51,17 +51,3 @@ in_pi bash tests/kiosk.sh
 
 echo "Playing out new releases"
 in_pi bash tests/releases.sh
-
-echo "Taking the Wi-Fi out of the vault, which takes it off the Pi"
-in_pi python3 -c '
-import json
-vault = json.load(open("tests/key_vault.json"))
-for name in ("wifi-ssid", "wifi-password"):
-    del vault["secrets"][name]
-json.dump(vault, open("/tmp/no_wifi.json", "w"))'
-in_pi env FAMILYHUB_FAKE_VAULT=/tmp/no_wifi.json ansible-playbook -i tests/inventory.yml site.yml --tags config >/dev/null
-if in_pi test -e /etc/NetworkManager/system-connections/familyhub-wifi.nmconnection; then
-  echo "The Wi-Fi is still on the Pi after the vault stopped having it." >&2
-  exit 1
-fi
-echo "The Wi-Fi was taken off"

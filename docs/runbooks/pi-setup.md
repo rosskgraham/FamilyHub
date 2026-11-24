@@ -41,7 +41,7 @@ Use [Raspberry Pi Imager](https://www.raspberrypi.com/software/) on Windows. Ima
 2. Choose to customise the settings:
    - **Hostname:** `familyhub`
    - **Username:** `hubadmin`, with a long password kept in the password manager. The scripts ask for it each run, because Raspberry Pi OS needs it for `sudo`. It's also the way in at the Pi's own keyboard if SSH ever breaks.
-   - **Wi-Fi:** skip it. The Pi starts on its network cable, and the scripts give it the Wi-Fi from the Key Vault (step 5), so it stays on the network if the cable comes out.
+   - **Wi-Fi:** skip it. The Pi is wired only, and the scripts switch its Wi-Fi and Bluetooth off ([ADR 0015](../adr/0015-the-pi-is-wired-only.md)).
    - **Locale:** Europe/London, keyboard `gb`.
    - **SSH:** on, **public-key authentication only**. Paste in the output of `cat ~/.ssh/id_ed25519.pub` from Ubuntu.
    - **Raspberry Pi Connect:** off. Nothing outside the house reaches the Hub ([ADR 0002](../adr/0002-everything-runs-on-the-pi.md)).
@@ -90,7 +90,7 @@ It answers `{"status":"ok","version":"…"}` with the newest release's version.
 
 ## 5. Give the Hub its secrets
 
-The Google, Octopus and Zappi secrets, the Nest's Device Access project ID, home's location and the home Wi-Fi (`wifi-ssid` and `wifi-password`) are kept in the Key Vault ([ADR 0008](../adr/0008-azure-resources-from-bicep-through-azure-devops.md)), never in the repo. Each run of the scripts reads them on the PC and writes them into `/etc/familyhub/hub.env` on the Pi, which only root can read, and gives the Pi the Wi-Fi, which it uses whenever its network cable is out. Whatever isn't in the vault is left out, and the Hub shows sample data for it. The run says which vault it read and what it left out. The Household is set up afterwards in Settings at the Hub, and kept in its own database ([ADR 0012](../adr/0012-household-and-settings-in-the-hub-database.md)).
+The Google, Octopus and Zappi secrets, the Nest's Device Access project ID, and home's location are kept in the Key Vault ([ADR 0008](../adr/0008-azure-resources-from-bicep-through-azure-devops.md)), never in the repo. Each run of the scripts reads them on the PC and writes them into `/etc/familyhub/hub.env` on the Pi, which only root can read. Whatever isn't in the vault is left out, and the Hub shows sample data for it. The run says which vault it read and what it left out. The Household is set up afterwards in Settings at the Hub, and kept in its own database ([ADR 0012](../adr/0012-household-and-settings-in-the-hub-database.md)).
 
 1. Set up Azure and put the secrets in the Key Vault, following [the Azure runbook](azure-setup.md), steps 1 to 3.
 2. Install the Azure CLI in Ubuntu (WSL), then sign in as the person who can read the secrets:

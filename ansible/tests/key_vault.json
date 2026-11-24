@@ -6,8 +6,6 @@
     "nest-project-id": "0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0",
     "home-latitude": "51.50",
     "home-longitude": "-0.12",
-    "wifi-ssid": "Home Wi-Fi",
-    "wifi-password": "a\\tricky pass",
     "appinsights-connection-string": "InstrumentationKey=not-for-the-hub",
     "household-json": "{\"members\": [{\"name\": \"Sam\", \"colour\": \"blue\"}], \"everyone\": {\"colour\": \"slate\"}}\n"
   }
