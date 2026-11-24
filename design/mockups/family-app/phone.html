@@ -108,6 +108,14 @@
 	.sheet .field { flex: none; }
 	.sheet .row2 { display: flex; gap: 10px; }
 	.sheet .row2 .btn { flex: 1; justify-content: center; }
+	.sheet.above-keys { bottom: 270px; }
+	.keys-under { position: absolute; left: 0; right: 0; bottom: 0; }
+
+	/* The circle's menu */
+	.menu { position: absolute; top: 66px; right: 16px; width: 240px; padding: 16px; border-radius: 18px; background: var(--card);
+		border: 1px solid var(--line); box-shadow: 0 12px 32px rgb(0 0 0 / 0.25); display: flex; flex-direction: column; gap: 12px;
+		box-sizing: border-box; }
+	.menu p { margin: 0; font-size: 15px; color: var(--dim); }
 	.toast { position: absolute; left: 16px; right: 16px; bottom: 96px; background: var(--ink); color: var(--on-ink);
 		border-radius: 14px; padding: 14px 16px; font-size: 16px; display: flex; justify-content: space-between; }
 	.toast b { text-decoration: underline; }
@@ -117,8 +125,7 @@
 <header class="page">
 	<h1>The family app on a phone</h1>
 	<p>Slice 3 (AB#10). Each screen in the light theme, then the dark one, following the phone's setting, in the Hub's
-	colours and Figtree. Sample items only. The notes under each screen say what it's for; README.md says what's decided and
-	what's still open.</p>
+	colours and Figtree. Sample items only. The notes under each screen say what it's for; README.md says what's decided.</p>
 </header>
 
 <template id="logo">
@@ -150,12 +157,12 @@
 		`<div class="top"><div><h1>Shopping</h1><div class="count">${count}</div></div><div class="me" title="Signed in">R</div></div>`;
 	const addBar = (typing) =>
 		`<div class="add"><div class="field ${typing ? 'typing' : ''}">${typing ? `${typing}<span class="caret"></span>` : 'Add an item'}</div><button class="btn primary">Add</button></div>`;
-	const keyboard =
+	const keyboard = (go) =>
 		'<div class="keyboard">' +
 		['qwertyuiop', 'asdfghjkl', 'zxcvbnm']
 			.map((r) => `<div class="row">${[...r].map((k) => `<span>${k}</span>`).join('')}</div>`)
 			.join('') +
-		'<div class="row"><span class="mid">?123</span><span>,</span><span class="wide">space</span><span>.</span><span class="go">Add</span></div></div>';
+		`<div class="row"><span class="mid">?123</span><span>,</span><span class="wide">space</span><span>.</span><span class="go">${go}</span></div></div>`;
 	const regulars = [
 		['Milk'], ['Eggs'], ['Bananas'], ['Cheddar'], ['Washing-up liquid'], ['Lunchbox snacks'], ['Wholemeal bread', 'done']
 	];
@@ -192,10 +199,10 @@
 			title: 'D · Adding (#57)',
 			note: 'Typing in the add box brings up the phone\'s keyboard; Add on the keyboard or the button adds it. The new item shows at the top straight away, before the backend has answered, and the box stays open for the next one.',
 			body: () =>
-				heading('7 to get') +
-				items([['Oat milk', 'new'], ['Milk'], ['Eggs'], ['Bananas']]) +
+				heading('5 to get') +
+				items([['Oat milk', 'new'], ['Milk'], ['Eggs'], ['Bananas'], ['Cheddar']]) +
 				addBar('Pasta') +
-				keyboard
+				keyboard('Add')
 		},
 		{
 			id: 'E',
@@ -205,17 +212,18 @@
 				heading('6 to get') +
 				items(regulars) +
 				addBar() +
-				`<div class="shade"></div><div class="sheet"><div class="grip"></div><h3>Change item</h3>
+				`<div class="shade"></div><div class="sheet above-keys"><div class="grip"></div><h3>Change item</h3>
 				<div class="field typing">Washing-up liquid<span class="caret"></span></div>
-				<div class="row2"><button class="btn danger">Remove</button><button class="btn primary">Save</button></div></div>`
+				<div class="row2"><button class="btn danger">Remove</button><button class="btn primary">Save</button></div></div>
+				<div class="keys-under">${keyboard('Done')}</div>`
 		},
 		{
 			id: 'F',
 			title: 'F · No signal, changes waiting (#58)',
-			note: 'The list opens from the phone\'s own copy. Changes made with no signal show straight away, marked "waiting", and a banner says how many will send. When the signal\'s back they send by themselves and the banner goes. The toast is the Undo after a remove.',
+			note: 'The list opens from the phone\'s own copy. Changes made with no signal show straight away, marked "waiting", and a banner says how many will send. When the signal\'s back they send by themselves and the banner goes. The toast is the Undo after a remove: the remove waits on the phone until the Undo has gone (#57), so the banner doesn\'t count it yet.',
 			body: () =>
 				`<div class="banner"><span>⚠</span><span><b>No signal</b>2 changes will send when you're back online.</span></div>` +
-				heading('6 to get') +
+				heading('5 to get') +
 				items([
 					['Plasters', '', '<span class="waiting">◷ waiting</span>'],
 					['Milk'], ['Eggs'], ['Bananas'], ['Cheddar'],
@@ -238,6 +246,16 @@
 			title: 'H · Nothing to get (#57)',
 			note: 'An empty list, with the add box ready.',
 			body: () => heading('Nothing to get') + '<div class="empty"><div><b>All done</b>Add something with the box below.</div></div>' + addBar()
+		},
+		{
+			id: 'I',
+			title: 'I · Sign out, from the circle (#56)',
+			note: 'Tapping the circle opens a small menu saying who\'s signed in, with Sign out, which goes back to A. Tapping the circle again, or anywhere else, closes it.',
+			body: () =>
+				heading('6 to get') +
+				items(regulars) +
+				addBar() +
+				'<div class="menu"><p>Signed in as Ross</p><button class="btn primary wide">Sign out</button></div>'
 		}
 	];
 
