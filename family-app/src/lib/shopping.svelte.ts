@@ -269,6 +269,11 @@ export class ShoppingList {
 		await this.flush();
 	}
 
+	/** A live update says the list changed up to seq (AB#59). Catches up only if that's past what the list has. */
+	async heard(seq: number): Promise<void> {
+		if (seq > this.#seq) await this.catchUp();
+	}
+
 	/** Asks the backend what's changed since it last said. A failure is tried again later. */
 	async catchUp(): Promise<void> {
 		try {

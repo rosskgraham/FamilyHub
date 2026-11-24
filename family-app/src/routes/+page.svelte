@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { backendList } from '#lib/api.ts';
+	import { backendList, type BackendList } from '#lib/api.ts';
 	import { msalAuth, type Auth } from '#lib/auth.ts';
 	import { readConfig } from '#lib/config.ts';
 	import { indexedDbCopy } from '#lib/copy.ts';
+	import { Live } from '#lib/live.ts';
 	import Problem from '#lib/Problem.svelte';
 	import Refused from '#lib/Refused.svelte';
 	import { CANT_REACH, open, SIGN_IN_FAILED, type Screen } from '#lib/session.ts';
@@ -16,6 +17,26 @@
 	let screen: Screen = $state({ kind: 'loading' });
 	let list: ShoppingList | null = $state(null);
 	let auth: Auth | null = null;
+	// Live updates for the list showing, while the app's in front (AB#59).
+	let live: Live | null = null;
+
+	function showList(shown: ShoppingList | null, api: BackendList) {
+		if (list && list !== shown) list.stop();
+		if (list === shown) return;
+		live?.stop();
+		live = null;
+		list = shown;
+		if (!shown) return;
+		live = new Live({
+			liveUrl: () => api.liveUrl(),
+			onchanged: (changed, seq) => {
+				if (changed === 'shopping') void shown.heard(seq);
+			},
+			onconnected: () => void shown.catchUp(),
+			onsignedout: () => shown.signedOut()
+		});
+		if (document.visibilityState !== 'hidden') live.start();
+	}
 
 	async function load() {
 		if (!config) {
@@ -23,17 +44,16 @@
 			return;
 		}
 		const signIn = (auth ??= msalAuth(config, location.origin));
-		list?.stop();
-		list = null;
+		const api = backendList(config.apiUrl, () => signIn.token());
+		showList(null, api);
 		try {
 			await open({
 				auth: signIn,
 				fetchMe: (token) => fetch(`${config.apiUrl}/me`, { headers: { Authorization: `Bearer ${token}` } }),
-				api: backendList(config.apiUrl, () => signIn.token()),
+				api,
 				copy,
 				show: (shown, shownList) => {
-					if (list && list !== shownList) list.stop();
-					list = shownList;
+					showList(shownList, api);
 					screen = shown;
 				}
 			});
@@ -44,6 +64,7 @@
 
 	// Sign out clears the list from the phone, so the next person to use it doesn't see it (AB#58).
 	async function signOut() {
+		live?.stop();
 		list?.stop();
 		await copy.clear().catch(() => {});
 		await auth?.signOut();
@@ -52,8 +73,13 @@
 	onMount(() => {
 		void load();
 		const changed = () => {
-			if (document.visibilityState === 'hidden') list?.hidden();
-			else void list?.visible();
+			if (document.visibilityState === 'hidden') {
+				list?.hidden();
+				live?.stop();
+			} else {
+				void list?.visible();
+				live?.start();
+			}
 		};
 		const online = () => void list?.visible();
 		document.addEventListener('visibilitychange', changed);
@@ -61,6 +87,7 @@
 		return () => {
 			document.removeEventListener('visibilitychange', changed);
 			removeEventListener('online', online);
+			live?.stop();
 			list?.stop();
 		};
 	});

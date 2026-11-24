@@ -20,6 +20,16 @@ describe("the backend's Shopping list", () => {
 		expect(JSON.parse(init?.body as string)).toEqual({ operations });
 	});
 
+	it('asks GET /live for a live updates URL', async () => {
+		const fetchFn = answer(200, { url: 'wss://live.example/client?access_token=t' });
+
+		expect(await backendList(API, async () => 'token-1', fetchFn).liveUrl()).toBe(
+			'wss://live.example/client?access_token=t'
+		);
+		expect(fetchFn.mock.calls[0]![0]).toBe('https://api.example/live');
+		await expect(backendList(API, async () => 't', answer(401)).liveUrl()).rejects.toBeInstanceOf(SignedOut);
+	});
+
 	it('asks for the changes after a number', async () => {
 		const fetchFn = answer(200, { items: [], seq: 7 });
 

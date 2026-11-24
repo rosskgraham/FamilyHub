@@ -4,7 +4,12 @@ import { Rejected, SignedOut, type Changes, type ListApi, type Operation } from 
 /** An access token for the API, or null when the person must sign in again. */
 export type Token = () => Promise<string | null>;
 
-export function backendList(apiUrl: string, token: Token, fetchFn: typeof fetch = fetch): ListApi {
+export interface BackendList extends ListApi {
+	/** A Web PubSub URL for live updates, from GET /live (AB#59). */
+	liveUrl(): Promise<string>;
+}
+
+export function backendList(apiUrl: string, token: Token, fetchFn: typeof fetch = fetch): BackendList {
 	async function call(path: string, init: RequestInit = {}): Promise<Response> {
 		const bearer = await token();
 		if (!bearer) throw new SignedOut();
@@ -20,6 +25,10 @@ export function backendList(apiUrl: string, token: Token, fetchFn: typeof fetch 
 	}
 
 	return {
+		async liveUrl() {
+			const { url } = (await (await call('/live')).json()) as { url: string };
+			return url;
+		},
 		async send(operations: Operation[]) {
 			await call('/lists/shopping/operations', {
 				method: 'POST',
