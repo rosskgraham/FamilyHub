@@ -1,19 +1,37 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, type Snippet } from 'svelte';
 	import { chime } from '#lib/chime.ts';
 	import type { Owner } from '#lib/household.ts';
 	import Badge from './Badge.svelte';
 	import Star from './Star.svelte';
 
-	let { owner, routine, stars, onclose }: { owner: Owner; routine: string; stars: number; onclose: () => void } =
-		$props();
+	let {
+		owner,
+		title,
+		stars,
+		cheer = true,
+		close = 'Nice one!',
+		onclose,
+		children
+	}: {
+		owner: Owner;
+		title: string;
+		/** Stars earned, for finishing a Routine. */
+		stars?: number;
+		/** The chime and the burst of stars. Without them it's a quieter ending, such as a word not found. */
+		cheer?: boolean;
+		/** The button that closes it. */
+		close?: string;
+		onclose: () => void;
+		children?: Snippet;
+	} = $props();
 
 	// It closes by itself, so the next child isn't kept waiting.
 	const SHOW_MS = 6000;
 	const BURST = 12;
 
 	onMount(() => {
-		chime();
+		if (cheer) chime();
 		const timer = setTimeout(onclose, SHOW_MS);
 		return () => clearTimeout(timer);
 	});
@@ -22,14 +40,19 @@
 <div class="backdrop" role="presentation" onclick={onclose}>
 	<div class="card" role="alertdialog" aria-labelledby="celebration-title">
 		<div class="burst" aria-hidden="true">
-			{#each { length: BURST } as _, i (i)}
-				<span class="spark" style:--angle="{(360 / BURST) * i}deg"><Star size={44} /></span>
-			{/each}
+			{#if cheer}
+				{#each { length: BURST } as _, i (i)}
+					<span class="spark" style:--angle="{(360 / BURST) * i}deg"><Star size={44} /></span>
+				{/each}
+			{/if}
 			<Badge {owner} size={140} />
 		</div>
-		<h2 id="celebration-title">{routine} done, {owner.name}!</h2>
-		<p class="earned tabular"><Star size={48} />+{stars} {stars === 1 ? 'Star' : 'Stars'}</p>
-		<button class="close" style:background={owner.solid} style:color={owner.on} onclick={onclose}>Nice one!</button>
+		<h2 id="celebration-title">{title}</h2>
+		{#if stars !== undefined}
+			<p class="earned tabular"><Star size={48} />+{stars} {stars === 1 ? 'Star' : 'Stars'}</p>
+		{/if}
+		{@render children?.()}
+		<button class="close" style:background={owner.solid} style:color={owner.on} onclick={onclose}>{close}</button>
 	</div>
 </div>
 

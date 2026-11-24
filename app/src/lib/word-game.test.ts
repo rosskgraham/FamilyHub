@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { gameState, keyboardMarks, score, type Go } from './word-game.ts';
+import { gameState, gameStatus, keyboardMarks, score, streak, type Go } from './word-game.ts';
 
 const go = (answer: string, word: string): Go => ({ word, marks: score(answer, word) });
 
@@ -52,5 +52,37 @@ describe('gameState', () => {
 	it('is solved on the sixth go if that one is right', () => {
 		const goes = [...Array.from({ length: 5 }, () => go('plant', 'storm')), go('plant', 'plant')];
 		expect(gameState(goes)).toBe('solved');
+	});
+});
+
+describe('streak', () => {
+	const days = (...d: string[]) => new Set(d);
+
+	it('counts the days in a row with a finished game, ending today', () => {
+		expect(streak(days('2026-11-22', '2026-11-23', '2026-11-24'), '2026-11-24')).toBe(3);
+	});
+
+	it('keeps yesterday’s streak while today isn’t played yet', () => {
+		expect(streak(days('2026-11-22', '2026-11-23'), '2026-11-24')).toBe(2);
+	});
+
+	it('ends at a day with no finished game', () => {
+		expect(streak(days('2026-11-21', '2026-11-23', '2026-11-24'), '2026-11-24')).toBe(2);
+		expect(streak(days('2026-11-21', '2026-11-22'), '2026-11-24')).toBe(0);
+		expect(streak(days(), '2026-11-24')).toBe(0);
+	});
+
+	it('runs across the clocks changing, spring and autumn', () => {
+		expect(streak(days('2026-03-28', '2026-03-29', '2026-03-30'), '2026-03-30')).toBe(3);
+		expect(streak(days('2026-10-24', '2026-10-25', '2026-10-26'), '2026-10-26')).toBe(3);
+	});
+});
+
+describe('gameStatus', () => {
+	it('says where a game is in words', () => {
+		expect(gameStatus('new', 0)).toBe('Not played yet');
+		expect(gameStatus('playing', 2)).toBe('2 of 6 goes so far');
+		expect(gameStatus('solved', 4)).toBe('Got it in 4');
+		expect(gameStatus('lost', 6)).toBe('Not this time');
 	});
 });

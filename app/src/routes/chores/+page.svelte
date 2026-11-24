@@ -31,7 +31,7 @@
 {#if celebrating}
 	<Celebration
 		owner={data.owners[celebrating.child]!}
-		routine={celebrating.routine}
+		title="{celebrating.routine} done, {data.owners[celebrating.child]!.name}!"
 		stars={celebrating.stars}
 		onclose={() => (celebrating = null)}
 	/>

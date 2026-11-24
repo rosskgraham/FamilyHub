@@ -1,7 +1,17 @@
 import { CALENDAR_SOURCE } from '$app/env/private';
 import { EVERYONE, sampleHousehold, type Household } from '#lib/household.ts';
-import { dayKey, type DayKey } from '#lib/time.ts';
-import { gameState, isFinished, score, WORD_LENGTH, type GameState, type Go, type PlayerCard } from '#lib/word-game.ts';
+import { addDays, dayKey, type DayKey } from '#lib/time.ts';
+import {
+	gameState,
+	isFinished,
+	score,
+	streak,
+	WORD_LENGTH,
+	type GameEnd,
+	type GameState,
+	type Go,
+	type PlayerCard
+} from '#lib/word-game.ts';
 import { configuredHousehold } from '../household.ts';
 import { hubDatabase } from '../hub-db.ts';
 import { now } from '../now.ts';
@@ -58,11 +68,29 @@ function gameOf(store: GameStore, member: string, day: DayKey): Game {
 	return { goes, state: gameState(goes) };
 }
 
+/** A Member's streak up to a day: the days in a row on which they finished a game, solved or not. */
+export function streakOf(store: GameStore, member: string, day: DayKey): number {
+	const byDay = new Map<DayKey, string[]>();
+	for (const go of store.goesBy(member)) byDay.set(go.day, [...(byDay.get(go.day) ?? []), go.word]);
+	const finished = new Set<DayKey>();
+	for (const [d, words] of byDay) {
+		const answer = wordFor(d, answers);
+		if (isFinished(gameState(words.map((word) => ({ word, marks: score(answer, word) }))))) finished.add(d);
+	}
+	return streak(finished, day);
+}
+
 /** Each Member's card for the Games Section. A finished game gives only its marks, never its letters. */
 export function playerCards({ household, store }: GamesSetup, day: DayKey = dayKey(now())): PlayerCard[] {
 	return players(household).map((member) => {
 		const { goes, state } = gameOf(store, member, day);
-		return { member, state, goes: goes.length, marks: isFinished(state) ? goes.map((g) => g.marks) : [] };
+		return {
+			member,
+			state,
+			goes: goes.length,
+			marks: isFinished(state) ? goes.map((g) => g.marks) : [],
+			streak: streakOf(store, member, day)
+		};
 	});
 }
 
@@ -72,9 +100,9 @@ export function gameToPlay({ store }: GamesSetup, member: string, day: DayKey = 
 	return isFinished(game.state) ? null : game;
 }
 
-/** What happened to a go: its marks, and the word once the game is finished. Or why it didn't count. */
+/** What happened to a go: its marks, and how the game ended if it did. Or why it didn't count. */
 export type GoResult =
-	| { ok: true; go: Go; state: GameState; answer?: string }
+	| { ok: true; go: Go; state: GameState; end?: GameEnd }
 	| { ok: false; problem: 'not a player' | 'finished' | 'too short' | 'not a word' };
 
 /** Makes a go, if it's five letters and a word the Hub knows. One that isn't uses no go. */
@@ -92,12 +120,24 @@ export function makeGo(setup: GamesSetup, member: string, guess: string): GoResu
 	const answer = wordFor(day, answers);
 	const go = { word, marks: score(answer, word) };
 	const state = gameState([...game.goes, go]);
-	return { ok: true, go, state, ...(isFinished(state) ? { answer } : {}) };
+	if (!isFinished(state)) return { ok: true, go, state };
+	const end = { answer, streak: streakOf(setup.store, member, day), cards: playerCards(setup, day) };
+	return { ok: true, go, state, end };
 }
 
-// Sample games for today, so the Games Section shows one in progress and some finished: Ross solved it in three and
-// Maya in four, Leo has had two goes, and Sam hasn't played.
+// Sample games, so the Games Section shows one in progress, some finished and some streaks. Today Ross solved it in
+// three and Maya in four, Leo has had two goes, and Sam hasn't played. Before today, Maya finished five days running,
+// Leo four and Sam three, so their streaks are six, four and three; Ross is new to it.
 function sampleGoes(day: DayKey) {
+	const before = (member: string, days: number) =>
+		Array.from({ length: days }, (_, i) => {
+			const d = addDays(day, -(i + 1));
+			return { day: d, member, word: wordFor(d, answers), at: `${d}T07:00:00.000Z` };
+		});
+	return [...before('maya', 5), ...before('leo', 4), ...before('sam', 3), ...sampleToday(day)];
+}
+
+function sampleToday(day: DayKey) {
 	const answer = wordFor(day, answers);
 	const tries = ['storm', 'clean', 'brick', 'judge'].filter((w) => w !== answer);
 	const at = `${day}T07:00:00.000Z`;

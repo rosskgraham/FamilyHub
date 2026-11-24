@@ -1,18 +1,21 @@
 <script lang="ts">
 	import Badge from '#lib/components/Badge.svelte';
 	import WordTile from '#lib/components/WordTile.svelte';
-	import { MAX_GOES, type PlayerCard } from '#lib/word-game.ts';
+	import { gameStatus, STREAK_SHOWN_FROM, type PlayerCard } from '#lib/word-game.ts';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
 
-	function status(card: PlayerCard): string {
-		if (card.state === 'new') return 'Not played yet';
-		if (card.state === 'solved') return `Got it in ${card.goes}`;
-		if (card.state === 'lost') return 'Not this time';
-		return `${card.goes} of ${MAX_GOES} goes so far`;
-	}
+	const status = (card: PlayerCard) => gameStatus(card.state, card.goes);
 </script>
+
+{#snippet who(card: PlayerCard)}
+	<span class="who">
+		<span class="name">{data.owners[card.member]!.name}</span>
+		<span class="status">{status(card)}</span>
+		{#if card.streak >= STREAK_SHOWN_FROM}<span class="streak">{card.streak} days in a row</span>{/if}
+	</span>
+{/snippet}
 
 <!-- The Games Section: Word of the day, with a card for each Member to start or carry on their game. -->
 <div class="games">
@@ -47,10 +50,7 @@
 					{#if card.state === 'new' || card.state === 'playing'}
 						<a class="card" href="/games/{card.member}" style:background={owner.bg} style:color={owner.fg}>
 							<Badge {owner} size={96} />
-							<span class="who">
-								<span class="name">{owner.name}</span>
-								<span class="status">{status(card)}</span>
-							</span>
+							{@render who(card)}
 							<span class="action" style:background={owner.solid} style:color={owner.on}
 								>{card.state === 'new' ? 'Play' : 'Carry on'}</span
 							>
@@ -58,10 +58,7 @@
 					{:else}
 						<div class="card" style:background={owner.bg} style:color={owner.fg}>
 							<Badge {owner} size={96} />
-							<span class="who">
-								<span class="name">{owner.name}</span>
-								<span class="status">{status(card)}</span>
-							</span>
+							{@render who(card)}
 							<span class="grid" role="img" aria-label="{owner.name}: {status(card)}">
 								{#each card.marks as row, r (r)}
 									<span class="row">
@@ -203,6 +200,9 @@
 	}
 	.status {
 		font-size: 26px;
+	}
+	.streak {
+		font-size: 22px;
 	}
 	.action {
 		flex: none;

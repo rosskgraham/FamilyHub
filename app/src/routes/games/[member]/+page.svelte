@@ -1,8 +1,17 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
 	import Badge from '#lib/components/Badge.svelte';
+	import Celebration from '#lib/components/Celebration.svelte';
 	import WordTile from '#lib/components/WordTile.svelte';
-	import { keyboardMarks, MAX_GOES, WORD_LENGTH, type Go, type Mark } from '#lib/word-game.ts';
+	import {
+		gameStatus,
+		keyboardMarks,
+		MAX_GOES,
+		WORD_LENGTH,
+		type GameEnd,
+		type Go,
+		type Mark
+	} from '#lib/word-game.ts';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -17,7 +26,7 @@
 	let problem: string | null = $state(null);
 	let checking = $state(false);
 	// A game that's just finished: its last go stays on the board until the end is seen.
-	let ended = $state<{ goes: Go[]; solved: boolean; answer: string } | null>(null);
+	let ended = $state<(GameEnd & { goes: Go[]; solved: boolean }) | null>(null);
 
 	const goes = $derived(ended?.goes ?? data.goes);
 	const keys = $derived(keyboardMarks(goes));
@@ -60,8 +69,8 @@
 				problem = 'That didn’t save. Try again.';
 			} else {
 				typed = '';
-				if (result.answer) {
-					ended = { goes: [...data.goes, result.go], solved: result.state === 'solved', answer: result.answer };
+				if (result.end) {
+					ended = { ...result.end, goes: [...data.goes, result.go], solved: result.state === 'solved' };
 				} else {
 					await invalidateAll();
 				}
@@ -131,24 +140,26 @@
 </div>
 
 {#if ended}
-	<div class="backdrop" role="presentation">
-		<div class="end" role="alertdialog" aria-labelledby="end-title">
-			<Badge owner={data.owner} size={120} />
-			<h2 id="end-title">
-				{ended.solved ? `You got it, ${data.owner.name}!` : `The word was ${ended.answer.toUpperCase()}`}
-			</h2>
-			<p>
-				{ended.solved
-					? `${ended.answer.toUpperCase()} in ${ended.goes.length} ${ended.goes.length === 1 ? 'go' : 'goes'}.`
-					: 'Better luck tomorrow.'}
-			</p>
-			<button
-				style:background={data.owner.solid}
-				style:color={data.owner.on}
-				onclick={() => goto('/games', { invalidateAll: true })}>Back to Games</button
-			>
-		</div>
-	</div>
+	{@const days = `${ended.streak} ${ended.streak === 1 ? 'day' : 'days'} in a row`}
+	<Celebration
+		owner={data.owner}
+		title={ended.solved ? `You got it, ${data.owner.name}!` : `The word was ${ended.answer.toUpperCase()}`}
+		cheer={ended.solved}
+		close={ended.solved ? 'Nice one!' : 'OK'}
+		onclose={() => goto('/games', { invalidateAll: true })}
+	>
+		<p class="how">
+			{ended.solved
+				? `In ${ended.goes.length} ${ended.goes.length === 1 ? 'go' : 'goes'}. That’s ${days}.`
+				: `Good try! Your streak carries on: ${days}.`}
+		</p>
+		<ul class="family" aria-label="Everyone today">
+			{#each ended.cards as card (card.member)}
+				{@const owner = data.owners[card.member]!}
+				<li><Badge {owner} size={56} /><span>{gameStatus(card.state, card.goes)}</span></li>
+			{/each}
+		</ul>
+	</Celebration>
 {/if}
 
 <style>
@@ -285,40 +296,28 @@
 		box-shadow: inset 0 0 0 2px var(--line);
 		color: var(--dim);
 	}
-	.backdrop {
-		position: fixed;
-		inset: 0;
-		z-index: 10;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: rgb(22 27 34 / 0.55);
+	.how {
+		font-size: 36px;
+		color: var(--dim);
 	}
-	.end {
-		width: 860px;
+	.family {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		display: flex;
+		gap: 16px;
+	}
+	.family li {
+		width: 180px;
 		box-sizing: border-box;
+		padding: 16px;
+		border-radius: 20px;
+		background: var(--soft);
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 24px;
-		padding: 56px 64px;
-		border-radius: 40px;
-		background: var(--card);
-		text-align: center;
-	}
-	.end h2 {
-		font-size: 64px;
-	}
-	.end p {
-		font-size: 34px;
-		color: var(--dim);
-	}
-	.end button {
-		height: 96px;
-		padding: 0 56px;
-		border: none;
-		border-radius: 48px;
-		font-size: 34px;
-		font-weight: 700;
+		gap: 10px;
+		font-size: 24px;
+		font-weight: 600;
 	}
 </style>
