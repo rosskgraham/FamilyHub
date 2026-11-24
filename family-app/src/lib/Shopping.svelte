@@ -1,10 +1,11 @@
 <script lang="ts">
-	// The Shopping list (design/mockups/family-app, screens C, D, E, F, G and H). Tap the box to tick or untick; tap the
-	// words to change or remove the item (decided 2026-11-23). The add box sits at the bottom, where a thumb reaches
-	// it, and stays open after adding so several items go in one after another.
-	import EditSheet from './EditSheet.svelte';
+	// The Shopping list (design/mockups/family-app, screens C to J). Tap the box to tick or untick; tap the words to
+	// change them in the row; swipe the item either way to remove it (AB#79). The add box sits at the bottom, where a
+	// thumb reaches it, and stays open after adding so several items go in one after another.
+	import ItemEdit from './ItemEdit.svelte';
 	import Me from './Me.svelte';
 	import { MOST_TEXT, type ShoppingList } from './shopping.svelte.ts';
+	import { swipeable } from './swipe.ts';
 
 	let {
 		list,
@@ -22,8 +23,8 @@
 		/** Signs in again when sign-in has run out (screen G). */
 		onsignin: () => void;
 		menuOpen?: boolean;
-		/** The item whose sheet is open. */
-		editing?: { id: string; text: string } | null;
+		/** The id of the item whose text is being changed. */
+		editing?: string | null;
 	} = $props();
 
 	const changes = (n: number) => (n === 1 ? '1 change' : `${n} changes`);
@@ -76,18 +77,38 @@
 	{#if list.items.length}
 		<ul>
 			{#each list.items as item (item.id)}
-				<li class:done={item.tickedOff} class:fresh={item.id === fresh}>
-					<button
-						class="box"
-						role="checkbox"
-						aria-checked={item.tickedOff}
-						aria-label={item.text}
-						onclick={() => list.toggle(item.id)}
-					>
-						<span class="mark">{item.tickedOff ? '✓' : ''}</span>
-					</button>
-					<button class="text" onclick={() => (editing = { id: item.id, text: item.text })}>{item.text}</button>
-					{#if item.waiting}<span class="waiting">◷ waiting</span>{/if}
+				<li
+					class:done={item.tickedOff}
+					class:fresh={item.id === fresh}
+					{@attach editing !== item.id && swipeable(() => list.remove(item.id))}
+				>
+					<span class="band" aria-hidden="true">Remove</span>
+					<div class="slide" data-slide>
+						<button
+							class="box"
+							role="checkbox"
+							aria-checked={item.tickedOff}
+							aria-label={item.text}
+							onclick={() => list.toggle(item.id)}
+						>
+							<span class="mark">{item.tickedOff ? '✓' : ''}</span>
+						</button>
+						{#if editing === item.id}
+							<ItemEdit
+								text={item.text}
+								onsave={(changed) => {
+									list.rename(item.id, changed);
+									if (editing === item.id) editing = null;
+								}}
+								oncancel={() => {
+									if (editing === item.id) editing = null;
+								}}
+							/>
+						{:else}
+							<button class="text" onclick={() => (editing = item.id)}>{item.text}</button>
+							{#if item.waiting}<span class="waiting">◷ waiting</span>{/if}
+						{/if}
+					</div>
 				</li>
 			{/each}
 		</ul>
@@ -118,22 +139,6 @@
 		<button class="button primary" onpointerdown={(event) => event.preventDefault()}>Add</button>
 	</form>
 </div>
-
-{#if editing}
-	{@const { id, text } = editing}
-	<EditSheet
-		{text}
-		onclose={() => (editing = null)}
-		onsave={(changed) => {
-			list.rename(id, changed);
-			editing = null;
-		}}
-		onremove={() => {
-			list.remove(id);
-			editing = null;
-		}}
-	/>
-{/if}
 
 <style>
 	.screen {
@@ -209,15 +214,45 @@
 	}
 
 	li {
+		position: relative;
+		border-radius: 14px;
+		overflow: hidden;
+		/* A vertical drag stays the browser's, for scrolling; a sideways one is a swipe (swipe.ts). */
+		touch-action: pan-y;
+	}
+
+	.slide {
+		position: relative;
 		display: flex;
 		align-items: center;
 		min-height: 60px;
-		border-radius: 14px;
+		background: var(--bg);
 		transition: background 0.4s;
 	}
 
-	li.fresh {
+	li.fresh .slide {
 		background: var(--soft);
+	}
+
+	/* Screen J: the red band behind an item being swiped, with Remove on the side it uncovers. */
+	.band {
+		position: absolute;
+		inset: 0;
+		display: none;
+		align-items: center;
+		padding: 0 22px;
+		background: var(--danger);
+		color: var(--card);
+		font-size: 17px;
+		font-weight: 700;
+	}
+
+	li:global([data-swiping]) .band {
+		display: flex;
+	}
+
+	li:global([data-side='left']) .band {
+		justify-content: flex-end;
 	}
 
 	/* The button is bigger than the box drawn in it, so it's easy to hit. */

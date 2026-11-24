@@ -6,8 +6,10 @@ import Shopping from './Shopping.svelte';
 import { ShoppingList, SignedOut, type ServerItem } from './shopping.svelte.ts';
 import SignIn from './SignIn.svelte';
 
+// The text as read out: what's hidden from screen readers, such as the band behind a swipe, is left out.
 const text = (html: string) =>
 	html
+		.replace(/<span[^>]*aria-hidden="true"[^>]*>[^<]*<\/span>/g, ' ')
 		.replace(/<[^>]+>/g, ' ')
 		.replace(/\s+/g, ' ')
 		.trim();
@@ -103,15 +105,23 @@ describe('the Shopping list screens', () => {
 		expect(text(body)).toContain('All done Add something with the box below.');
 	});
 
-	it('E: the sheet to change or remove an item', async () => {
-		const list = await shopping(item('1', 'Washing-up liquid', 1));
-		const body = render(Shopping, {
-			props: { list, ...signedIn, editing: { id: '1', text: 'Washing-up liquid' } }
-		}).body;
+	it('E: an item being changed is a text field in its row, with no sheet', async () => {
+		const list = await shopping(item('1', 'Washing-up liquid', 1), item('2', 'Milk', 2));
+		const body = render(Shopping, { props: { list, ...signedIn, editing: '1' } }).body;
 
-		expect(text(body)).toContain('Change item');
-		expect(body).toContain('value="Washing-up liquid"');
-		expect(text(body)).toMatch(/Remove Save/);
+		expect(body).toMatch(/<input[^>]*aria-label="Change Washing-up liquid"[^>]*value="Washing-up liquid"/);
+		expect(body).toMatch(/<input[^>]*enterkeyhint="done"/);
+		expect(text(body)).not.toContain('Change item');
+		expect(text(body)).not.toContain('Save');
+		expect(body).toMatch(/<button class="text[^"]*">Milk<\/button>/);
+	});
+
+	it('J: each item has a Remove band behind it, for swiping, and no remove button', async () => {
+		const list = await shopping(item('1', 'Milk', 1), item('2', 'Eggs', 2));
+		const body = render(Shopping, { props: { list, ...signedIn } }).body;
+
+		expect(body.match(/class="band[^"]*" aria-hidden="true">Remove</g)).toHaveLength(2);
+		expect(body.match(/data-slide/g)).toHaveLength(2);
 	});
 
 	it('Undo after removing an item', async () => {
