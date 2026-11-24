@@ -1,0 +1,19 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-11-24T09:00:00Z" },
+  "title": "FamilyHub Games Mockups",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1920, "h": 1080, "title": "A · Games: Word of the day, who's playing" },
+    "Play.dc.html": { "x": 2000, "y": 0, "w": 1920, "h": 1080, "title": "B · Playing: Leo's third go" },
+    "Solved.dc.html": { "x": 0, "y": 1500, "w": 1920, "h": 1080, "title": "C · Solved: the celebration, without spoilers" },
+    "Together.dc.html": { "x": 2000, "y": 1500, "w": 1920, "h": 1080, "title": "D · Alternative: one family board, taking turns" }
+  },
+  "order": ["Main.dc.html", "Play.dc.html", "Solved.dc.html", "Together.dc.html"],
+  "notes": {
+    "t1": { "x": 0, "y": -260, "text": "Games: picking a player, and playing at the wall", "kind": "title1", "maxW": 3920 },
+    "t2": { "x": 0, "y": 1240, "text": "Finishing, and the shared-board alternative", "kind": "title1", "maxW": 3920 }
+  },
+  "designSystems": []
+}

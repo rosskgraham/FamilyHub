@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Word of the day, solved</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+button{font-family:inherit}
+a{color:#161B22}a:hover{color:#161B22}
+</style>
+</helmet>
+<div style="width: 1920px; height: 1080px; box-sizing: border-box; padding: 32px; background: #F3F5F8; font-family: 'Figtree', system-ui, sans-serif; color: #161B22; display: flex; flex-direction: column; gap: 24px">
+
+<header style="height: 128px; flex: none; display: flex; align-items: center; justify-content: space-between; gap: 32px">
+<div style="display: flex; align-items: center; gap: 28px">
+<div style="font-size: 112px; font-weight: 600; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums">16:46</div>
+<div>
+<div style="font-size: 44px; font-weight: 600; line-height: 1.1">Tuesday</div>
+<div style="font-size: 28px; color: #4A5565; margin-top: 4px">24 November</div>
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 16px">
+<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#161B22" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+<div style="font-size: 56px; font-weight: 600; line-height: 1">7°</div>
+<div>
+<div style="font-size: 24px; font-weight: 600">Cloudy</div>
+<div style="font-size: 22px; color: #4A5565">High 9° · Low 3°</div>
+</div>
+</div>
+</header>
+
+<main style="flex: 1; min-height: 0; display: flex; gap: 24px">
+
+<section aria-label="Leo's board" style="width: 660px; flex: none; box-sizing: border-box; padding: 24px; border-radius: 28px; background: #FFFFFF; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px">
+<sc-for list="{{board}}" as="row" hint-placeholder-count="6">
+<div style="display: flex; gap: 10px">
+<sc-for list="{{row}}" as="t" hint-placeholder-count="5">
+<span style="width: 104px; height: 104px; box-sizing: border-box; border-radius: 14px; border: 3px solid {{t.border}}; background: {{t.bg}}; color: {{t.fg}}; font-size: 56px; font-weight: 700; display: flex; align-items: center; justify-content: center">{{t.ch}}</span>
+</sc-for>
+</div>
+</sc-for>
+</section>
+
+<section style="flex: 1; min-width: 0; box-sizing: border-box; padding: 40px; border-radius: 28px; background: #EEE8FB; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; text-align: center">
+
+<div style="position: relative; width: 220px; height: 220px; flex: none">
+<span style="position: absolute; left: 50px; top: 50px; width: 120px; height: 120px; border-radius: 60px; background: #6D3FD1; color: #FFFFFF; font-size: 60px; font-weight: 700; display: flex; align-items: center; justify-content: center">L</span>
+<svg style="position: absolute; left: 92px; top: 0" width="36" height="36" viewBox="0 0 24 24" fill="#F5B400" stroke="#8A5A00" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+<svg style="position: absolute; left: 172px; top: 40px" width="30" height="30" viewBox="0 0 24 24" fill="#F5B400" stroke="#8A5A00" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+<svg style="position: absolute; left: 184px; top: 130px" width="34" height="34" viewBox="0 0 24 24" fill="#F5B400" stroke="#8A5A00" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+<svg style="position: absolute; left: 100px; top: 186px" width="28" height="28" viewBox="0 0 24 24" fill="#F5B400" stroke="#8A5A00" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+<svg style="position: absolute; left: 8px; top: 140px" width="34" height="34" viewBox="0 0 24 24" fill="#F5B400" stroke="#8A5A00" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+<svg style="position: absolute; left: 14px; top: 36px" width="30" height="30" viewBox="0 0 24 24" fill="#F5B400" stroke="#8A5A00" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+</div>
+
+<div>
+<div style="font-size: 80px; font-weight: 700; line-height: 1.05">You got it, Leo!</div>
+<div style="font-size: 36px; color: #2E3644; margin-top: 12px">In 3 goes. That's 6 days in a row.</div>
+</div>
+
+<div style="display: flex; gap: 16px">
+<sc-for list="{{family}}" as="f" hint-placeholder-count="4">
+<div style="width: 180px; box-sizing: border-box; padding: 16px; border-radius: 20px; background: #FFFFFF; display: flex; flex-direction: column; align-items: center; gap: 10px">
+<span style="width: 56px; height: 56px; border-radius: 28px; background: {{f.solid}}; color: #FFFFFF; font-size: 28px; font-weight: 700; display: flex; align-items: center; justify-content: center">{{f.initial}}</span>
+<div style="font-size: 24px; font-weight: 600">{{f.result}}</div>
+</div>
+</sc-for>
+</div>
+
+<button type="button" style="height: 96px; padding: 0 64px; border-radius: 48px; border: none; background: #6D3FD1; color: #FFFFFF; font-size: 36px; font-weight: 700">Nice one!</button>
+<div style="font-size: 22px; color: #4A5565">Closes by itself in a few seconds, and hides the word again</div>
+
+</section>
+
+</main>
+
+<nav style="height: 76px; flex: none; display: flex; align-items: center; justify-content: space-between">
+<div style="display: flex; align-items: center; gap: 4px; padding: 6px; border-radius: 22px; background: #E3E7ED">
+<a href="#" style="height: 64px; padding: 0 30px; border-radius: 16px; display: flex; align-items: center; font-size: 26px; font-weight: 600; text-decoration: none">Today</a>
+<a href="#" style="height: 64px; padding: 0 30px; border-radius: 16px; display: flex; align-items: center; font-size: 26px; font-weight: 600; text-decoration: none">Day</a>
+<a href="#" style="height: 64px; padding: 0 30px; border-radius: 16px; display: flex; align-items: center; font-size: 26px; font-weight: 600; text-decoration: none">Week</a>
+<a href="#" style="height: 64px; padding: 0 30px; border-radius: 16px; display: flex; align-items: center; font-size: 26px; font-weight: 600; text-decoration: none">Shopping</a>
+<a href="#" style="height: 64px; padding: 0 30px; border-radius: 16px; display: flex; align-items: center; font-size: 26px; font-weight: 600; text-decoration: none">To-dos</a>
+<a href="#" style="height: 64px; padding: 0 30px; border-radius: 16px; display: flex; align-items: center; font-size: 26px; font-weight: 600; text-decoration: none">Chores</a>
+<a href="#" style="height: 64px; padding: 0 30px; border-radius: 16px; display: flex; align-items: center; font-size: 26px; font-weight: 600; text-decoration: none">Energy</a>
+<a href="Main.dc.html" aria-current="page" style="height: 64px; padding: 0 30px; border-radius: 16px; background: #FFFFFF; display: flex; align-items: center; font-size: 26px; font-weight: 600; text-decoration: none">Games</a>
+<a href="#" aria-label="Settings" style="width: 64px; height: 64px; border-radius: 16px; display: flex; align-items: center; justify-content: center"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#161B22" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></a>
+</div>
+<div style="height: 56px; padding: 0 24px; border-radius: 28px; border: 2px dashed #C9D0D9; display: flex; align-items: center; font-size: 24px; color: #2E3644">Sample data</div>
+</nav>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1920,"height":1080}}'>
+class Component extends DCLogic {
+renderVals() {
+const answer = 'PLANT';
+const guesses = ['STORM', 'CLEAN', 'PLANT'];
+const look = {
+c: { bg: '#1F5FBF', fg: '#FFFFFF', border: '#1F5FBF' },
+p: { bg: '#F08A24', fg: '#2B1600', border: '#F08A24' },
+x: { bg: '#D5DAE1', fg: '#3A4350', border: '#D5DAE1' },
+empty: { bg: '#FFFFFF', fg: '#161B22', border: '#E3E7ED' }
+};
+const score = (g) => g.split('').map((ch, i) => (answer[i] === ch ? 'c' : answer.includes(ch) ? 'p' : 'x'));
+const board = guesses.map((g) => {
+const s = score(g);
+return g.split('').map((ch, i) => ({ ch, ...look[s[i]] }));
+});
+while (board.length < 6) board.push([0, 1, 2, 3, 4].map(() => ({ ch: '', ...look.empty })));
+return {
+board,
+family: [
+{ initial: 'M', solid: '#0E7C66', result: 'Got it in 4' },
+{ initial: 'L', solid: '#6D3FD1', result: 'Got it in 3' },
+{ initial: 'R', solid: '#B5179E', result: 'Got it in 3' },
+{ initial: 'S', solid: '#A15C07', result: 'Not yet' }
+]
+};
+}
+}
+</script>
+</body>
+</html>
