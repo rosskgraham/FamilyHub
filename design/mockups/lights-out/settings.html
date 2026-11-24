@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lights out mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<!--
+  Sleep and Lights out hours in Settings (AB#64). Each frame is 1920×1080, drawn over the Settings screenshot test images
+  so the new card sits on the real screen, scrolled until Clock is out of sight. Day and Evening theme colours from
+  app/src/lib/theme.ts. Open this file in a browser from the repo.
+-->
+<style>
+	.day {
+		--bg: #F3F5F8; --card: #FFFFFF; --ink: #161B22; --dim: #4A5565; --line: #C3CBD7; --segment: #E3E8F0;
+		--selected: #FFFFFF; --shot: url('../../../app/e2e/__screenshots__/settings.png');
+	}
+	.evening {
+		--bg: #0E1116; --card: #171C24; --ink: #F2F4F8; --dim: #A6B0BF; --line: #3A4553; --segment: #1F2630;
+		--selected: #3A4553; --shot: url('../../../app/e2e/__screenshots__/settings-evening.png');
+	}
+	body { margin: 0; background: #888; font-family: 'Figtree', system-ui, sans-serif; }
+	h1.title { font: 700 28px Figtree, sans-serif; color: #fff; margin: 32px 32px 12px; }
+	p.note { color: #fff; margin: 0 32px 16px; font-size: 18px; max-width: 1400px; }
+	.frame {
+		position: relative; width: 1920px; height: 1080px; margin: 0 32px 48px; overflow: hidden; color: var(--ink);
+		background: var(--shot) no-repeat; background-size: 1920px 1080px;
+	}
+	/* Covers Settings' scrolling area, between the header and the bottom bar. */
+	.page {
+		position: absolute; left: 0; right: 0; top: 168px; height: 760px; overflow: hidden; background: var(--bg);
+		padding: 22px 32px 0; box-sizing: border-box; font-size: 28px;
+	}
+	h2 { margin: 0; font-size: 32px; }
+	p { margin: 4px 0 0; color: var(--dim); }
+
+	/* As Settings' rows: a card with the words on the left and the choices on the right. */
+	.row {
+		max-width: 1100px; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between;
+		gap: 32px; padding: 28px 32px; border-radius: 28px; background: var(--card);
+	}
+	.choices { display: flex; padding: 6px; gap: 6px; border-radius: 26px; background: var(--segment); }
+	.choices span {
+		width: 200px; height: 96px; border-radius: 20px; display: flex; flex-direction: column; align-items: center;
+		justify-content: center; gap: 2px;
+	}
+	.choices span.on { background: var(--selected); }
+	.choices b { font-size: 26px; }
+	.choices small { font-size: 22px; color: var(--dim); }
+	.choices.short span { width: 150px; height: 80px; }
+
+	/* The new card: full width, like Household and Google, so both pairs of times fit beside their words. */
+	.sleep { margin-top: 24px; padding: 8px 32px; border-radius: 28px; background: var(--card); }
+	.part { display: flex; align-items: center; justify-content: space-between; gap: 48px; padding: 24px 0; }
+	.part + .part { border-top: 2px solid var(--line); }
+	.words { max-width: 640px; }
+	.words .choices { margin-top: 20px; width: max-content; }
+	.times { display: flex; gap: 56px; }
+	.time { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+	.time .label { font-size: 24px; font-weight: 600; color: var(--dim); }
+	.stepper { display: flex; align-items: center; gap: 16px; }
+	.stepper span.b {
+		width: 88px; height: 88px; box-sizing: border-box; border-radius: 24px; border: 3px solid var(--ink);
+		background: var(--card); display: flex; align-items: center; justify-content: center;
+		font-size: 52px; font-weight: 700; line-height: 1;
+	}
+	.stepper .t { font-size: 56px; font-weight: 700; min-width: 170px; text-align: center; font-variant-numeric: tabular-nums; }
+	.stepper span.b.disabled { color: var(--line); border-color: var(--line); }
+	.off .times { opacity: 0.4; }
+	.peek { margin-top: 24px; padding: 28px 32px; border-radius: 28px; background: var(--card); }
+	.limit { margin-top: 12px; font-size: 24px; font-weight: 600; color: var(--ink); }
+</style>
+</head>
+<body>
+
+<h1 class="title">A · Sleep and Lights out in Settings (Day theme)</h1>
+<p class="note">Below Theme, above Household and Google. The defaults: Sleep 22:00–06:30, Lights out 00:00–06:00. Each − and + moves a time by 30 minutes and saves straight away, like the Clock and Theme choices. Times follow the clock format chosen above.</p>
+<div class="frame day">
+	<div class="page">
+		<div class="row">
+			<div><h2>Theme</h2><p>Auto is light from sunrise and dark after sunset.</p></div>
+			<div class="choices"><span class="on"><b>Auto</b><small>By the sun</small></span><span><b>Light</b><small>Always</small></span><span><b>Dark</b><small>Always</small></span></div>
+		</div>
+		<div class="sleep">
+			<div class="part">
+				<div class="words"><h2>Sleep</h2><p>A dim clock and the next Event overnight. A touch wakes the Hub for two minutes.</p></div>
+				<div class="times">
+					<div class="time"><span class="label">From</span><div class="stepper"><span class="b">−</span><span class="t">22:00</span><span class="b">+</span></div></div>
+					<div class="time"><span class="label">Until</span><div class="stepper"><span class="b">−</span><span class="t">06:30</span><span class="b">+</span></div></div>
+				</div>
+			</div>
+			<div class="part">
+				<div class="words">
+					<h2>Lights out</h2><p>The screen goes dark during Sleep. A touch lights it for two minutes.</p>
+					<div class="choices short"><span class="on"><b>On</b></span><span><b>Off</b></span></div>
+				</div>
+				<div class="times">
+					<div class="time"><span class="label">From</span><div class="stepper"><span class="b">−</span><span class="t">00:00</span><span class="b">+</span></div></div>
+					<div class="time"><span class="label">Until</span><div class="stepper"><span class="b">−</span><span class="t">06:00</span><span class="b">+</span></div></div>
+				</div>
+			</div>
+		</div>
+		<div class="peek"><h2>Household and Google</h2><p>Who’s in the Household, their colours and Calendars, and the Hub’s Google account.</p></div>
+	</div>
+</div>
+
+<h1 class="title">B · Lights out turned off</h1>
+<p class="note">Its times stay as they were, faded and not changeable, so turning it on again brings them back. Sleep's dim clock shows all night.</p>
+<div class="frame day">
+	<div class="page">
+		<div class="row">
+			<div><h2>Theme</h2><p>Auto is light from sunrise and dark after sunset.</p></div>
+			<div class="choices"><span class="on"><b>Auto</b><small>By the sun</small></span><span><b>Light</b><small>Always</small></span><span><b>Dark</b><small>Always</small></span></div>
+		</div>
+		<div class="sleep">
+			<div class="part">
+				<div class="words"><h2>Sleep</h2><p>A dim clock and the next Event overnight. A touch wakes the Hub for two minutes.</p></div>
+				<div class="times">
+					<div class="time"><span class="label">From</span><div class="stepper"><span class="b">−</span><span class="t">22:00</span><span class="b">+</span></div></div>
+					<div class="time"><span class="label">Until</span><div class="stepper"><span class="b">−</span><span class="t">06:30</span><span class="b">+</span></div></div>
+				</div>
+			</div>
+			<div class="part off">
+				<div class="words">
+					<h2>Lights out</h2><p>The screen goes dark during Sleep. A touch lights it for two minutes.</p>
+					<div class="choices short"><span><b>On</b></span><span class="on"><b>Off</b></span></div>
+				</div>
+				<div class="times">
+					<div class="time"><span class="label">From</span><div class="stepper"><span class="b disabled">−</span><span class="t">00:00</span><span class="b disabled">+</span></div></div>
+					<div class="time"><span class="label">Until</span><div class="stepper"><span class="b disabled">−</span><span class="t">06:00</span><span class="b disabled">+</span></div></div>
+				</div>
+			</div>
+		</div>
+		<div class="peek"><h2>Household and Google</h2><p>Who’s in the Household, their colours and Calendars, and the Hub’s Google account.</p></div>
+	</div>
+</div>
+
+<h1 class="title">C · Lights out stays inside Sleep</h1>
+<p class="note">Lights out can't start before Sleep or end after it. At the edge its button is greyed and a line says why, like the heating's 22° limit. Here Lights out runs to 06:30, where Sleep ends. Moving Sleep's times in past Lights out moves Lights out with them.</p>
+<div class="frame day">
+	<div class="page">
+		<div class="row">
+			<div><h2>Theme</h2><p>Auto is light from sunrise and dark after sunset.</p></div>
+			<div class="choices"><span class="on"><b>Auto</b><small>By the sun</small></span><span><b>Light</b><small>Always</small></span><span><b>Dark</b><small>Always</small></span></div>
+		</div>
+		<div class="sleep">
+			<div class="part">
+				<div class="words"><h2>Sleep</h2><p>A dim clock and the next Event overnight. A touch wakes the Hub for two minutes.</p></div>
+				<div class="times">
+					<div class="time"><span class="label">From</span><div class="stepper"><span class="b">−</span><span class="t">22:00</span><span class="b">+</span></div></div>
+					<div class="time"><span class="label">Until</span><div class="stepper"><span class="b">−</span><span class="t">06:30</span><span class="b">+</span></div></div>
+				</div>
+			</div>
+			<div class="part">
+				<div class="words">
+					<h2>Lights out</h2><p>The screen goes dark during Sleep. A touch lights it for two minutes.</p>
+					<div class="choices short"><span class="on"><b>On</b></span><span><b>Off</b></span></div>
+				</div>
+				<div>
+					<div class="times">
+						<div class="time"><span class="label">From</span><div class="stepper"><span class="b">−</span><span class="t">00:00</span><span class="b">+</span></div></div>
+						<div class="time"><span class="label">Until</span><div class="stepper"><span class="b">−</span><span class="t">06:30</span><span class="b disabled">+</span></div></div>
+					</div>
+					<p class="limit">Lights out ends by the end of Sleep, 06:30.</p>
+				</div>
+			</div>
+		</div>
+		<div class="peek"><h2>Household and Google</h2><p>Who’s in the Household, their colours and Calendars, and the Hub’s Google account.</p></div>
+	</div>
+</div>
+
+<h1 class="title">D · Evening theme</h1>
+<p class="note">The same as A, in the Evening theme.</p>
+<div class="frame evening">
+	<div class="page">
+		<div class="row">
+			<div><h2>Theme</h2><p>Auto is light from sunrise and dark after sunset.</p></div>
+			<div class="choices"><span class="on"><b>Auto</b><small>By the sun</small></span><span><b>Light</b><small>Always</small></span><span><b>Dark</b><small>Always</small></span></div>
+		</div>
+		<div class="sleep">
+			<div class="part">
+				<div class="words"><h2>Sleep</h2><p>A dim clock and the next Event overnight. A touch wakes the Hub for two minutes.</p></div>
+				<div class="times">
+					<div class="time"><span class="label">From</span><div class="stepper"><span class="b">−</span><span class="t">22:00</span><span class="b">+</span></div></div>
+					<div class="time"><span class="label">Until</span><div class="stepper"><span class="b">−</span><span class="t">06:30</span><span class="b">+</span></div></div>
+				</div>
+			</div>
+			<div class="part">
+				<div class="words">
+					<h2>Lights out</h2><p>The screen goes dark during Sleep. A touch lights it for two minutes.</p>
+					<div class="choices short"><span class="on"><b>On</b></span><span><b>Off</b></span></div>
+				</div>
+				<div class="times">
+					<div class="time"><span class="label">From</span><div class="stepper"><span class="b">−</span><span class="t">00:00</span><span class="b">+</span></div></div>
+					<div class="time"><span class="label">Until</span><div class="stepper"><span class="b">−</span><span class="t">06:00</span><span class="b">+</span></div></div>
+				</div>
+			</div>
+		</div>
+		<div class="peek"><h2>Household and Google</h2><p>Who’s in the Household, their colours and Calendars, and the Hub’s Google account.</p></div>
+	</div>
+</div>
+
+</body>
+</html>
