@@ -294,10 +294,10 @@
     - name: Check it said it started, and logged the route, the router and each public IP
       ansible.builtin.assert:
         that:
-          - netcheck_log.stdout is search('Network check started: every 5 s, logging only changes')
-          - netcheck_log.stdout is search('^eth0 cable:', multiline=True)
-          - netcheck_log.stdout is search('^router:', multiline=True)
-          - netcheck_log.stdout is search('^internet 1\.1\.1\.1:', multiline=True)
-          - netcheck_log.stdout is search('^internet 8\.8\.8\.8:', multiline=True)
-          - netcheck_log.stdout is search('^internet 2606:4700:4700::1111:', multiline=True)
-          - netcheck_log.stdout is search('^internet 2001:4860:4860::8888:', multiline=True)
+          - "netcheck_log.stdout is search('Network check started: every 5 s, logging only changes')"
+          - "netcheck_log.stdout is search('^eth0 cable:', multiline=True)"
+          - "netcheck_log.stdout is search('^router:', multiline=True)"
+          - "netcheck_log.stdout is search('^internet 1\.1\.1\.1:', multiline=True)"
+          - "netcheck_log.stdout is search('^internet 8\.8\.8\.8:', multiline=True)"
+          - "netcheck_log.stdout is search('^internet 2606:4700:4700::1111:', multiline=True)"
+          - "netcheck_log.stdout is search('^internet 2001:4860:4860::8888:', multiline=True)"
