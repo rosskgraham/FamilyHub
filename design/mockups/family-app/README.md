@@ -28,6 +28,7 @@ The family app on a phone (AB#10, slice 3). `phone.html` draws each screen at 39
 ## Decided (24 November 2026, with Ross, AB#57)
 
 - **A removed item waits on the phone until its Undo has gone,** then the remove is sent, or at once if the app is put away. Undo just puts it back, and nothing reaches the backend: the backend never brings a removed item back.
+- **Signing out with changes still waiting warns, but doesn't block** (AB#58): the circle's menu says how many haven't sent yet. Signing out clears the list from the phone, so they're lost.
 - **Newest at the top, and it stays there:** the order is the one items were added in, so ticking, unticking or changing an item doesn't move it.
 
 Render the PNGs again after changing `phone.html`: open it in Chromium and screenshot each screen's `.pair`.
