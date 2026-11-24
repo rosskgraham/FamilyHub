@@ -77,6 +77,9 @@ const text = (p: Palette): [string, string, string][] => [
 	['problem', p.problem, p.card],
 	['danger', p.onDanger, p.danger],
 	['Next cheap', p.cheapFg, p.offPeakBg],
+	['Word of the day: right place', p.onWordRight, p.wordRight],
+	['Word of the day: in the word', p.onWordPresent, p.wordPresent],
+	['Word of the day: not in the word', p.onWordAbsent, p.wordAbsent],
 	...memberColours.flatMap((m): [string, string, string][] => [
 		[`${m} Event`, p.members[m].fg, p.members[m].bg],
 		[`${m} all-day Event`, p.members[m].fg, p.card],

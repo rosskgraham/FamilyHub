@@ -122,6 +122,13 @@ export interface Palette {
 	/** The cake on a birthday, and its candle's flame. */
 	cake: string;
 	flame: string;
+	/** Word of the day's tiles and keys: a letter in the right place, in the word somewhere else, or not in it. */
+	wordRight: string;
+	onWordRight: string;
+	wordPresent: string;
+	onWordPresent: string;
+	wordAbsent: string;
+	onWordAbsent: string;
 	members: Record<(typeof memberColours)[number], MemberColours>;
 }
 
@@ -166,6 +173,12 @@ export const palettes: Record<Theme, Palette> = {
 		binPurple: '#6C3FC4',
 		cake: '#C2306B',
 		flame: '#B86200',
+		wordRight: '#1F5FBF',
+		onWordRight: '#FFFFFF',
+		wordPresent: '#F08A24',
+		onWordPresent: '#2B1600',
+		wordAbsent: '#D5DAE1',
+		onWordAbsent: '#3A4350',
 		members: {
 			blue: { bg: '#D6E4FF', fg: '#0F2F78', solid: '#2456C9', on: '#FFFFFF' },
 			orange: { bg: '#FFDDB8', fg: '#6B2E00', solid: '#B85200', on: '#FFFFFF' },
@@ -222,6 +235,12 @@ export const palettes: Record<Theme, Palette> = {
 		binPurple: '#B99BFF',
 		cake: '#FF85B4',
 		flame: '#FFB547',
+		wordRight: '#7FA8FF',
+		onWordRight: '#0B1A3F',
+		wordPresent: '#FFA85C',
+		onWordPresent: '#3A1800',
+		wordAbsent: '#3A4553',
+		onWordAbsent: '#DCE1EA',
 		members: {
 			blue: { bg: '#1C2B52', fg: '#C4D6FF', solid: '#7FA8FF', on: '#0B1A3F' },
 			orange: { bg: '#4A2A0E', fg: '#FFD8B0', solid: '#FFA85C', on: '#3A1800' },

@@ -140,6 +140,16 @@ _Avoid_: Points, score
 An extra job, shown as Up for grabs, that any child can do for Stars. It can be done once a day, by one child or by several together, and each child who did it gets its Stars.
 _Avoid_: Extra chore, task
 
+### Games
+
+**Word of the day**:
+The Games Section's daily word game: a five-letter word, the same for every Member, with six Goes to find it. Each Member plays their own game, and a new word comes at midnight.
+_Avoid_: Wordle (another game's name), puzzle
+
+**Go**:
+One guess at Word of the day. Each letter is marked as in the right place, in the word somewhere else, or not in the word. A guess that isn't a word the Hub knows doesn't use up a Go.
+_Avoid_: Guess, try, turn
+
 ### Energy
 
 **Peak rate / Off-peak rate**:
