@@ -2,7 +2,7 @@
 
 The Household's app for phones ([ADR 0010](../docs/adr/0010-shared-lists-in-an-azure-backend-with-an-installable-family-app.md)): an installable web app, built with SvelteKit like the Hub, served by Azure Static Web Apps' free plan. Open its address in Chrome on an Android phone and tap **Install**. The plan and its slices are in the [design notes](../design/family-app/notes.md).
 
-So far it installs on a phone, opens with no signal, signs in, and shows the Shopping list (slice 3's first three stories). Working offline with the list and live updates come next.
+So far it installs on a phone, signs in, and shows the Shopping list, which keeps working with no signal (slice 3's first four stories). Live updates come next.
 
 ## Signing in
 
@@ -20,10 +20,20 @@ Screens C, D, E and H in `design/mockups/family-app/`, through the backend's lis
 - **Items to get, newest first, then those ticked off in the last 10 minutes,** struck through, as on the Hub. The order is the backend's `added_seq`, so ticking or changing an item doesn't move it. A ticked item drops off the phone once its 10 minutes are up.
 - **Tap the box to tick or untick. Tap the words to change or remove the item,** in a sheet from the bottom. The add box at the bottom stays open after adding.
 - **Every tap shows straight away.** Each change is an operation, with its id and a new item's id made on the phone, queued and sent in the background. The phone shows the backend's items with its own unsent changes replayed on top; the backend decides how changes merge.
-- **A failed send is tried again,** after 1 second, then twice as long each time up to a minute, and whenever the app comes back to the front or the phone comes back online. Sending an operation again is safe: the backend applies it once. A 401 goes back to sign in.
+- **A failed send is tried again,** after 1 second, then twice as long each time up to a minute, and whenever the app comes back to the front or the phone comes back online. Sending an operation again is safe: the backend applies it once.
 - **Removing shows Undo for 5 seconds.** The remove waits on the phone until then, or is sent at once if the app is put away, so Undo needs nothing from the backend, which never brings a removed item back.
 - **Changes made elsewhere show** after each send and whenever the app comes back to the front, by asking the backend for everything after the last number it gave. Live updates come in AB#59.
-- **Nothing is kept on the phone yet:** closing the app with changes still unsent loses them, and with no signal the list doesn't open. Both are AB#58.
+
+## With no signal
+
+Shops often have no signal, so the phone keeps its own copy of the list (AB#58, screens F and G).
+
+- **The copy is in IndexedDB** (`src/lib/copy.ts`): the items the phone knows, the backend's last number, the changes it hasn't sent, and who's signed in. Every change is saved before it's sent, so closing the app loses nothing.
+- **The app opens from the copy straight away,** every time there's one for the account that's signed in, then gets a token, checks `GET /me`, catches up and sends what's waiting, in the background (`src/lib/session.ts`). With no copy yet, it loads from the backend.
+- **While the backend can't be reached,** a banner says "No signal" and how many changes will send, and each item with a change waiting is marked "waiting". It keeps trying, on the same backoff, and when the phone comes back online.
+- **When sign-in has run out** (the token can't be renewed quietly, or the backend says 401), the list stays usable, changes are kept, and a banner asks to sign in again. They send after signing in with the same account. A 403 from `GET /me` goes to "Not this account", and the copy goes.
+- **The copy belongs to one account.** Signing in with a different one starts afresh, and **Sign out clears it**, so the next person to use the phone doesn't see the list. If changes haven't sent yet, the circle's menu says how many, and signing out loses them.
+- With no copy, as on a first sign-in, the app still needs the signal to open the list.
 
 The settings are built in by the pipeline, from the `familyhub` variable group and the Bicep's outputs. None is secret. Without them, the app says sign-in isn't set up. To sign in on the PC, put them in `family-app/.env`, which Git ignores:
 

@@ -2,8 +2,8 @@
 // away. Every change is an operation with ids made here, queued and sent in the background, and sent again until
 // the backend has it, which is safe as the backend ignores one it already has. The backend decides how changes
 // merge (design/family-app/notes.md, How sync works); the phone only replays its own unsent changes over what it
-// last heard, so a tap never flicks back while it's on its way. Nothing is kept on the phone yet: closing the app
-// with changes unsent loses them, until AB#58.
+// last heard, so a tap never flicks back while it's on its way. Everything worth keeping is saved to the phone's
+// copy as it changes (copy.ts, AB#58), so the list opens with no signal and closing the app loses nothing unsent.
 
 import { SvelteSet } from 'svelte/reactivity';
 
@@ -57,6 +57,22 @@ export interface Shown {
 	id: string;
 	text: string;
 	tickedOff: boolean;
+	/** A change to it hasn't reached the backend yet (screen F's "waiting"). */
+	waiting: boolean;
+}
+
+/**
+ * Whether the backend can be reached: yes, no (screen F's banner), or only after signing in again (screen G's).
+ * It's what the last try found.
+ */
+export type Reach = 'ok' | 'offline' | 'signed-out';
+
+/** What the phone keeps of the list between openings (AB#58): what it last heard, and what it hasn't sent. */
+export interface SavedList {
+	seq: number;
+	known: Record<string, Known>;
+	queue: Pending[];
+	gone: string[];
 }
 
 interface Known {
@@ -77,8 +93,8 @@ interface Pending {
 }
 
 export interface Options {
-	/** Called when the backend wants a fresh sign-in. */
-	onsignedout: () => void;
+	/** Called after anything worth keeping changes, for the phone's copy to be saved. */
+	onchange?: () => void;
 	newId?: () => string;
 }
 
@@ -89,7 +105,7 @@ export function validText(text: string): string | null {
 
 export class ShoppingList {
 	#api: ListApi;
-	#onsignedout: () => void;
+	#onchange: () => void;
 	#newId: () => string;
 
 	#known: Record<string, Known> = $state({});
@@ -104,15 +120,20 @@ export class ShoppingList {
 	#retryTimer: ReturnType<typeof setTimeout> | undefined;
 	#clock: ReturnType<typeof setInterval> | undefined;
 
+	/** What the last try to reach the backend found. */
+	reach: Reach = $state('ok');
+
 	/** Items to get, newest first, then those ticked off in the last 10 minutes. */
 	readonly items: Shown[] = $derived.by(() => this.#view());
 	readonly toGet: number = $derived(this.items.filter((item) => !item.tickedOff).length);
 	/** The text of the item just removed, while its Undo shows. */
 	readonly undoable: string | null = $derived(this.#held?.text ?? null);
+	/** How many changes haven't reached the backend yet. */
+	readonly waiting: number = $derived(this.#queue.length);
 
-	constructor(api: ListApi, options: Options) {
+	constructor(api: ListApi, options: Options = {}) {
 		this.#api = api;
-		this.#onsignedout = options.onsignedout;
+		this.#onchange = options.onchange ?? (() => {});
 		this.#newId = options.newId ?? (() => crypto.randomUUID());
 	}
 
@@ -121,7 +142,27 @@ export class ShoppingList {
 		const changes = await this.#api.changes(0);
 		this.#known = {};
 		this.#merge(changes);
-		this.#clock ??= setInterval(() => (this.#now = Date.now()), CLOCK_EVERY);
+		this.#startClock();
+	}
+
+	/** Starts from the phone's copy, with no wait for the backend. refresh() then catches up and sends. */
+	restore(saved: SavedList): void {
+		this.#known = structuredClone(saved.known);
+		this.#queue = structuredClone(saved.queue);
+		this.#gone.clear();
+		for (const id of saved.gone) this.#gone.add(id);
+		this.#seq = saved.seq;
+		this.#startClock();
+	}
+
+	/** What to keep on the phone. A remove waiting for its Undo isn't in it: it's sent when the app's put away. */
+	snapshot(): SavedList {
+		return {
+			seq: this.#seq,
+			known: $state.snapshot(this.#known),
+			queue: $state.snapshot(this.#queue),
+			gone: [...this.#gone]
+		};
 	}
 
 	/** Stops the list's timers. Anything unsent is lost. */
@@ -135,8 +176,7 @@ export class ShoppingList {
 	add(text: string): boolean {
 		const valid = validText(text);
 		if (!valid) return false;
-		this.#queue.push({ op: { id: this.#newId(), type: 'add', item_id: this.#newId(), text: valid }, at: Date.now() });
-		void this.flush();
+		this.#push({ id: this.#newId(), type: 'add', item_id: this.#newId(), text: valid });
 		return true;
 	}
 
@@ -151,8 +191,7 @@ export class ShoppingList {
 		const valid = validText(text);
 		const item = this.items.find((shown) => shown.id === id);
 		if (!valid || !item || valid === item.text) return false;
-		this.#queue.push({ op: { id: this.#newId(), type: 'rename', item_id: id, text: valid }, at: Date.now() });
-		void this.flush();
+		this.#push({ id: this.#newId(), type: 'rename', item_id: id, text: valid });
 		return true;
 	}
 
@@ -184,10 +223,24 @@ export class ShoppingList {
 	/** The app's back in front: send anything waiting, and catch up with changes made elsewhere. */
 	async visible(): Promise<void> {
 		this.#now = Date.now();
+		await this.refresh();
+	}
+
+	/** Sends anything waiting and catches up, as when the app opens from the phone's copy. */
+	async refresh(): Promise<void> {
 		await Promise.all([this.flush(), this.catchUp()]);
 	}
 
-	/** Sends what's waiting. A failure is tried again later; a 401 means signing in again. */
+	/** Signing in again is needed (screen G). The list stays usable, and changes are kept until then. */
+	signedOut(): void {
+		clearTimeout(this.#retryTimer);
+		this.reach = 'signed-out';
+	}
+
+	/**
+	 * Sends what's waiting. A failure is tried again later, with what's waiting kept; a 401 means signing in
+	 * again first.
+	 */
 	async flush(): Promise<void> {
 		if (this.#sending || this.#queue.length === 0) return;
 		clearTimeout(this.#retryTimer);
@@ -200,19 +253,15 @@ export class ShoppingList {
 				if (!(error instanceof Rejected)) throw error;
 				// Never sent again, as it would never work. The catch-up below shows what the backend has.
 			}
-			this.#retryIn = RETRY_FIRST;
+			this.#reached();
 			// Catch up before dropping the sent changes, so the list goes straight from showing them to showing
 			// the backend's answer, without a moment of neither.
 			await this.catchUp();
 			const sent = batch.map((op) => op.id);
 			this.#queue = this.#queue.filter((pending) => !sent.includes(pending.op.id));
+			this.#onchange();
 		} catch (error) {
-			if (error instanceof SignedOut) {
-				this.#onsignedout();
-				return;
-			}
-			this.#retryTimer = setTimeout(() => void this.flush(), this.#retryIn);
-			this.#retryIn = Math.min(this.#retryIn * 2, RETRY_MOST);
+			this.#failed(error);
 			return;
 		} finally {
 			this.#sending = false;
@@ -220,18 +269,46 @@ export class ShoppingList {
 		await this.flush();
 	}
 
-	/** Asks the backend what's changed since it last said. A failure waits for the next time. */
+	/** Asks the backend what's changed since it last said. A failure is tried again later. */
 	async catchUp(): Promise<void> {
 		try {
 			this.#merge(await this.#api.changes(this.#seq));
+			this.#reached();
+			this.#onchange();
 		} catch (error) {
-			if (error instanceof SignedOut) this.#onsignedout();
+			this.#failed(error);
 		}
 	}
 
-	#change(id: string, type: 'tick' | 'untick'): void {
-		this.#queue.push({ op: { id: this.#newId(), type, item_id: id }, at: Date.now() });
+	#reached(): void {
+		this.#retryIn = RETRY_FIRST;
+		if (this.reach === 'offline') this.reach = 'ok';
+	}
+
+	#failed(error: unknown): void {
+		if (error instanceof SignedOut) {
+			this.signedOut();
+			return;
+		}
+		if (this.reach === 'signed-out') return;
+		this.reach = 'offline';
+		clearTimeout(this.#retryTimer);
+		this.#retryTimer = setTimeout(() => void this.refresh(), this.#retryIn);
+		this.#retryIn = Math.min(this.#retryIn * 2, RETRY_MOST);
+	}
+
+	#startClock(): void {
+		this.#clock ??= setInterval(() => (this.#now = Date.now()), CLOCK_EVERY);
+	}
+
+	#push(op: Operation, at = Date.now()): void {
+		this.#queue.push({ op, at });
+		this.#onchange();
 		void this.flush();
+	}
+
+	#change(id: string, type: 'tick' | 'untick'): void {
+		this.#push({ id: this.#newId(), type, item_id: id });
 	}
 
 	#sendHeld(): void {
@@ -239,8 +316,7 @@ export class ShoppingList {
 		const { op, at, timer } = this.#held;
 		clearTimeout(timer);
 		this.#held = null;
-		this.#queue.push({ op, at });
-		void this.flush();
+		this.#push(op, at);
 	}
 
 	#merge(changes: Changes): void {
@@ -296,9 +372,10 @@ export class ShoppingList {
 					break;
 			}
 		});
+		const unsent = this.#queue.map(({ op }) => op.item_id);
 		return Object.values(items)
 			.filter((item) => !item.tickedOff || (item.tickedOffAt ?? 0) > this.#now - TICKED_OFF_SHOWN_FOR)
 			.sort((a, b) => Number(a.tickedOff) - Number(b.tickedOff) || b.order - a.order)
-			.map(({ id, text, tickedOff }) => ({ id, text, tickedOff }));
+			.map(({ id, text, tickedOff }) => ({ id, text, tickedOff, waiting: unsent.includes(id) }));
 	}
 }

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import Problem from './Problem.svelte';
 import Refused from './Refused.svelte';
 import Shopping from './Shopping.svelte';
-import { ShoppingList, type ServerItem } from './shopping.svelte.ts';
+import { ShoppingList, SignedOut, type ServerItem } from './shopping.svelte.ts';
 import SignIn from './SignIn.svelte';
 
 const text = (html: string) =>
@@ -59,16 +59,31 @@ function item(id: string, text: string, addedSeq: number, tickedOff = false): Se
 }
 
 async function shopping(...items: ServerItem[]) {
-	const list = new ShoppingList(
-		{ send: async () => {}, changes: async () => ({ items, seq: items.length }) },
-		{ onsignedout: noop }
-	);
+	const list = new ShoppingList({ send: async () => {}, changes: async () => ({ items, seq: items.length }) }, {});
 	await list.load();
 	list.stop();
 	return list;
 }
 
-const signedIn = { firstName: 'Ross', initial: 'R', onsignout: noop };
+const signedIn = { firstName: 'Ross', initial: 'R', onsignout: noop, onsignin: noop };
+
+/** A list whose sends fail as given, with one change made and waiting. */
+async function waiting(error: Error) {
+	const list = new ShoppingList(
+		{
+			send: async () => {
+				throw error;
+			},
+			changes: async () => ({ items: [item('1', 'Milk', 1), item('2', 'Eggs', 2)], seq: 2 })
+		},
+		{}
+	);
+	await list.load();
+	list.toggle('1');
+	await new Promise((resolve) => setTimeout(resolve, 0));
+	list.stop();
+	return list;
+}
 
 describe('the Shopping list screens', () => {
 	it('C: items to get newest first, then those ticked off, struck through, and how many to get', async () => {
@@ -117,5 +132,46 @@ describe('the Shopping list screens', () => {
 		expect(closed).toContain('aria-label="Signed in as Ross"');
 		expect(text(closed)).not.toContain('Sign out');
 		expect(text(open)).toContain('Signed in as Ross Sign out');
+	});
+});
+
+describe('with no signal, or sign-in run out (AB#58)', () => {
+	it('F: a banner saying no signal and how many changes will send, and each waiting item marked', async () => {
+		const list = await waiting(new TypeError('Failed to fetch'));
+		const body = render(Shopping, { props: { list, ...signedIn } }).body;
+
+		expect(text(body)).toContain("No signal 1 change will send when you're back online.");
+		expect(text(body)).toMatch(/Eggs ✓ Milk ◷ waiting/);
+		expect(text(body).match(/waiting/g)).toHaveLength(1);
+	});
+
+	it('F with nothing waiting: the list as it was last seen', async () => {
+		const list = await shopping(item('1', 'Milk', 1));
+		list.reach = 'offline';
+		const body = render(Shopping, { props: { list, ...signedIn } }).body;
+
+		expect(text(body)).toContain('No signal This is the list as it was last seen.');
+	});
+
+	it('G: a banner asking to sign in again, saying changes are kept', async () => {
+		const list = await waiting(new SignedOut());
+		const body = render(Shopping, { props: { list, ...signedIn } }).body;
+
+		expect(text(body)).toContain('Sign in again Changes are kept until you do. Sign in');
+		expect(text(body)).not.toContain('No signal');
+	});
+
+	it('no banner while the backend can be reached', async () => {
+		const body = render(Shopping, { props: { list: await shopping(item('1', 'Milk', 1)), ...signedIn } }).body;
+
+		expect(text(body)).not.toContain('No signal');
+		expect(text(body)).not.toContain('Sign in again');
+	});
+
+	it("I: the circle's menu says how many changes haven't sent, when some haven't", async () => {
+		const list = await waiting(new TypeError('Failed to fetch'));
+		const body = render(Shopping, { props: { list, ...signedIn, menuOpen: true } }).body;
+
+		expect(text(body)).toContain("Signed in as Ross 1 change hasn't sent yet. Signing out loses it. Sign out");
 	});
 });

@@ -5,8 +5,15 @@
 		firstName,
 		initial,
 		onsignout,
+		unsent = 0,
 		open = $bindable(false)
-	}: { firstName: string; initial: string; onsignout: () => void; open?: boolean } = $props();
+	}: { firstName: string; initial: string; onsignout: () => void; unsent?: number; open?: boolean } = $props();
+
+	const warning = $derived(
+		unsent === 1
+			? "1 change hasn't sent yet. Signing out loses it."
+			: `${unsent} changes haven't sent yet. Signing out loses them.`
+	);
 </script>
 
 <button class="me" aria-label="Signed in as {firstName}" aria-expanded={open} onclick={() => (open = !open)}>
@@ -16,6 +23,10 @@
 	<button class="away" aria-label="Close" tabindex="-1" onclick={() => (open = false)}></button>
 	<div class="menu" role="menu">
 		<p>Signed in as {firstName}</p>
+		{#if unsent}
+			<!-- Signing out clears the list from the phone, so these would be lost (AB#58). -->
+			<p class="unsent">{warning}</p>
+		{/if}
 		<button class="button primary wide" role="menuitem" onclick={onsignout}>Sign out</button>
 	</div>
 {/if}
@@ -62,5 +73,13 @@
 		margin: 0;
 		font-size: 15px;
 		color: var(--dim);
+	}
+
+	.menu p.unsent {
+		padding: 8px 10px;
+		border-radius: 10px;
+		background: var(--warn-bg);
+		color: var(--warn-fg);
+		line-height: 1.35;
 	}
 </style>

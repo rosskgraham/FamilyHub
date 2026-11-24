@@ -1,5 +1,5 @@
 <script lang="ts">
-	// The Shopping list (design/mockups/family-app, screens C, D, E and H). Tap the box to tick or untick; tap the
+	// The Shopping list (design/mockups/family-app, screens C, D, E, F, G and H). Tap the box to tick or untick; tap the
 	// words to change or remove the item (decided 2026-11-23). The add box sits at the bottom, where a thumb reaches
 	// it, and stays open after adding so several items go in one after another.
 	import EditSheet from './EditSheet.svelte';
@@ -11,6 +11,7 @@
 		firstName,
 		initial,
 		onsignout,
+		onsignin,
 		menuOpen = $bindable(false),
 		editing = $bindable(null)
 	}: {
@@ -18,10 +19,14 @@
 		firstName: string;
 		initial: string;
 		onsignout: () => void;
+		/** Signs in again when sign-in has run out (screen G). */
+		onsignin: () => void;
 		menuOpen?: boolean;
 		/** The item whose sheet is open. */
 		editing?: { id: string; text: string } | null;
 	} = $props();
+
+	const changes = (n: number) => (n === 1 ? '1 change' : `${n} changes`);
 
 	let adding = $state('');
 	// The item just added, picked out for a moment so the eye finds it.
@@ -40,12 +45,32 @@
 </script>
 
 <div class="screen">
+	{#if list.reach === 'signed-out'}
+		<div class="banner" role="status">
+			<span aria-hidden="true">⚠</span>
+			<span>
+				<b>Sign in again</b>
+				{list.waiting ? 'Changes are kept until you do.' : 'To keep the list up to date.'}
+			</span>
+			<button onclick={onsignin}>Sign in</button>
+		</div>
+	{:else if list.reach === 'offline'}
+		<div class="banner" role="status">
+			<span aria-hidden="true">⚠</span>
+			<span>
+				<b>No signal</b>
+				{list.waiting
+					? `${changes(list.waiting)} will send when you're back online.`
+					: 'This is the list as it was last seen.'}
+			</span>
+		</div>
+	{/if}
 	<header>
 		<div>
 			<h1>Shopping</h1>
 			<p class="count">{list.toGet ? `${list.toGet} to get` : 'Nothing to get'}</p>
 		</div>
-		<Me {firstName} {initial} {onsignout} bind:open={menuOpen} />
+		<Me {firstName} {initial} {onsignout} unsent={list.waiting} bind:open={menuOpen} />
 	</header>
 
 	{#if list.items.length}
@@ -62,6 +87,7 @@
 						<span class="mark">{item.tickedOff ? '✓' : ''}</span>
 					</button>
 					<button class="text" onclick={() => (editing = { id: item.id, text: item.text })}>{item.text}</button>
+					{#if item.waiting}<span class="waiting">◷ waiting</span>{/if}
 				</li>
 			{/each}
 		</ul>
@@ -114,6 +140,44 @@
 		height: 100dvh;
 		display: flex;
 		flex-direction: column;
+	}
+
+	.banner {
+		margin: 8px 16px 0;
+		padding: 12px 14px;
+		border-radius: 14px;
+		background: var(--warn-bg);
+		color: var(--warn-fg);
+		font-size: 15px;
+		line-height: 1.4;
+		display: flex;
+		gap: 10px;
+		align-items: flex-start;
+	}
+
+	.banner b {
+		display: block;
+	}
+
+	.banner button {
+		margin-left: auto;
+		align-self: center;
+		border: none;
+		background: none;
+		color: inherit;
+		font-size: 15px;
+		font-weight: 700;
+		text-decoration: underline;
+		white-space: nowrap;
+		padding: 4px 0 4px 8px;
+	}
+
+	.waiting {
+		flex: none;
+		padding-right: 12px;
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--dim);
 	}
 
 	header {

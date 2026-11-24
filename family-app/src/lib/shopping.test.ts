@@ -1,86 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-	Rejected,
-	ShoppingList,
-	SignedOut,
-	TICKED_OFF_SHOWN_FOR,
-	UNDO_FOR,
-	type Changes,
-	type ListApi,
-	type Operation,
-	type ServerItem
-} from './shopping.svelte.ts';
-
-/** The backend's Shopping list in memory, merging as backend/familyhub_api/lists.py does. */
-class FakeBackend implements ListApi {
-	items = new Map<string, ServerItem>();
-	seq = 0;
-	applied = new Set<string>();
-	sent: Operation[][] = [];
-	failing: Error | null = null;
-	failChanges: Error | null = null;
-
-	async send(operations: Operation[]): Promise<void> {
-		this.sent.push(operations);
-		if (this.failing) throw this.failing;
-		for (const op of operations) this.apply(op);
-	}
-
-	async changes(after: number): Promise<Changes> {
-		if (this.failChanges) throw this.failChanges;
-		const items = [...this.items.values()].filter(
-			(item) => item.seq > after && (after > 0 || (!item.removed && !item.ticked_off))
-		);
-		return structuredClone({ items, seq: this.seq });
-	}
-
-	apply(op: Operation): void {
-		if (this.applied.has(op.id)) return;
-		this.applied.add(op.id);
-		const seq = ++this.seq;
-		const item = this.items.get(op.item_id);
-		if (op.type === 'add') {
-			if (!item) {
-				this.items.set(op.item_id, {
-					id: op.item_id,
-					text: op.text,
-					ticked_off: false,
-					ticked_off_at: null,
-					removed: false,
-					seq,
-					added_seq: seq
-				});
-			}
-			return;
-		}
-		if (!item || item.removed) return;
-		if (op.type === 'tick') Object.assign(item, { ticked_off: true, ticked_off_at: new Date().toISOString() });
-		if (op.type === 'untick') Object.assign(item, { ticked_off: false, ticked_off_at: null });
-		if (op.type === 'rename') item.text = op.text;
-		if (op.type === 'remove') item.removed = true;
-		item.seq = seq;
-	}
-
-	/** A change made somewhere else: the Hub or another phone. */
-	elsewhere(type: Operation['type'], itemId: string, text?: string): void {
-		this.apply({ id: crypto.randomUUID(), type, item_id: itemId, text } as Operation);
-	}
-}
-
-function ids() {
-	let n = 0;
-	return () => `id-${++n}`;
-}
+import { FakeBackend, ids } from './fakes.ts';
+import { Rejected, ShoppingList, SignedOut, TICKED_OFF_SHOWN_FOR, UNDO_FOR } from './shopping.svelte.ts';
 
 const texts = (list: ShoppingList) => list.items.map((item) => (item.tickedOff ? `[x] ${item.text}` : item.text));
 
 async function setUp(...start: string[]) {
 	const backend = new FakeBackend();
 	for (const text of start) backend.elsewhere('add', `start-${text}`, text);
-	const onsignedout = vi.fn();
-	const list = new ShoppingList(backend, { onsignedout, newId: ids() });
+	const onchange = vi.fn();
+	const list = new ShoppingList(backend, { onchange, newId: ids() });
 	await list.load();
-	return { backend, list, onsignedout };
+	return { backend, list, onchange };
 }
 
 /** Lets the background sends and catch-ups finish. */
@@ -310,14 +240,17 @@ describe('sending, and when it fails', () => {
 		expect(backend.items.get('start-Milk')?.ticked_off).toBe(true);
 	});
 
-	it('asks to sign in again when the backend says 401', async () => {
-		const { list, backend, onsignedout } = await setUp('Milk');
+	it('asks to sign in again when the backend says 401, keeping the change and not trying again until then', async () => {
+		const { list, backend } = await setUp('Milk');
 		backend.failing = new SignedOut();
 
 		list.toggle('start-Milk');
-		await settle();
+		await vi.advanceTimersByTimeAsync(60_000);
 
-		expect(onsignedout).toHaveBeenCalledOnce();
+		expect(list.reach).toBe('signed-out');
+		expect(backend.sent).toHaveLength(1);
+		expect(texts(list)).toEqual(['[x] Milk']);
+		expect(list.waiting).toBe(1);
 	});
 
 	it('drops a batch the backend refuses as invalid, as it would never be accepted', async () => {
@@ -384,5 +317,96 @@ describe('changes made elsewhere', () => {
 		await list.catchUp();
 
 		expect(texts(list)).toEqual([]);
+	});
+});
+
+describe("the phone's copy (AB#58)", () => {
+	it('is saved after every change, and a list started from it has the same items and unsent changes', async () => {
+		const { list, backend, onchange } = await setUp('Milk', 'Eggs');
+		backend.failing = new TypeError('Failed to fetch');
+
+		list.add('Pasta');
+		list.toggle('start-Milk');
+		list.rename('start-Eggs', 'Big eggs');
+		await settle();
+		expect(onchange).toHaveBeenCalledTimes(3);
+
+		// The app's closed and opened again, still with no signal.
+		const saved = structuredClone(list.snapshot());
+		list.stop();
+		const again = new ShoppingList(backend, { newId: ids() });
+		again.restore(saved);
+
+		expect(texts(again)).toEqual(['Pasta', 'Big eggs', '[x] Milk']);
+		expect(again.waiting).toBe(3);
+		expect(again.items.every((item) => item.waiting)).toBe(true);
+
+		// The signal's back.
+		backend.failing = null;
+		await again.refresh();
+		expect(backend.items.get('start-Milk')?.ticked_off).toBe(true);
+		expect(backend.items.get('start-Eggs')?.text).toBe('Big eggs');
+		expect([...backend.items.values()].map((item) => item.text)).toContain('Pasta');
+		expect(again.waiting).toBe(0);
+		expect(again.items.some((item) => item.waiting)).toBe(false);
+		again.stop();
+	});
+
+	it('keeps a removed item gone after starting again from the copy', async () => {
+		const { list, backend } = await setUp('Milk');
+		backend.elsewhere('remove', 'start-Milk');
+		await list.catchUp();
+		const stale = { items: [{ ...backend.items.get('start-Milk')!, removed: false, seq: 1 }], seq: 1 };
+
+		const again = new ShoppingList(backend);
+		again.restore(structuredClone(list.snapshot()));
+		backend.changes = async () => stale;
+		await again.catchUp();
+
+		expect(texts(again)).toEqual([]);
+		again.stop();
+	});
+
+	it("doesn't keep a remove waiting for its Undo, which is sent when the app's put away instead", async () => {
+		const { list } = await setUp('Milk');
+
+		list.remove('start-Milk');
+
+		expect(list.snapshot().queue).toEqual([]);
+	});
+});
+
+describe('whether the backend can be reached (AB#58)', () => {
+	it('is offline when a send fails, back to ok when one succeeds, with each waiting item marked', async () => {
+		const { list, backend } = await setUp('Milk', 'Eggs');
+		backend.failing = new TypeError('Failed to fetch');
+
+		list.toggle('start-Milk');
+		await settle();
+		expect(list.reach).toBe('offline');
+		expect(list.waiting).toBe(1);
+		expect(list.items.map((item) => [item.text, item.waiting])).toEqual([
+			['Eggs', false],
+			['Milk', true]
+		]);
+
+		backend.failing = null;
+		await vi.advanceTimersByTimeAsync(1_000);
+		expect(list.reach).toBe('ok');
+		expect(list.waiting).toBe(0);
+	});
+
+	it('is offline when a catch-up fails, and keeps trying until it works', async () => {
+		const { list, backend } = await setUp('Milk');
+		backend.failChanges = new TypeError('Failed to fetch');
+		backend.elsewhere('add', 'hub-1', 'Plasters');
+
+		await list.catchUp();
+		expect(list.reach).toBe('offline');
+
+		backend.failChanges = null;
+		await vi.advanceTimersByTimeAsync(1_000);
+		expect(list.reach).toBe('ok');
+		expect(texts(list)).toEqual(['Plasters', 'Milk']);
 	});
 });
