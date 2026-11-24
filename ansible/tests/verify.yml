@@ -270,17 +270,17 @@
       vars:
         lines: "{{ (journald.content | b64decode).splitlines() }}"
 
-    - name: Read whether the network check runs, and starts with the Pi
-      ansible.builtin.command: systemctl show familyhub-netcheck --property=ActiveState,UnitFileState,User,DynamicUser
+    - name: Read the network check's unit
+      ansible.builtin.systemd_service:
+        name: familyhub-netcheck.service
       register: netcheck
-      changed_when: false
 
     - name: Check the network check runs, starts with the Pi, and isn't root
       ansible.builtin.assert:
         that:
-          - "'ActiveState=active' in netcheck.stdout_lines"
-          - "'UnitFileState=enabled' in netcheck.stdout_lines"
-          - "'DynamicUser=yes' in netcheck.stdout_lines"
+          - netcheck.status.ActiveState == 'active'
+          - netcheck.status.UnitFileState == 'enabled'
+          - netcheck.status.DynamicUser == 'yes'
 
     # It logs every state on its first round, a few seconds after starting.
     - name: Wait for the network check's first round
@@ -299,3 +299,5 @@
           - netcheck_log.stdout is search('^router:', multiline=True)
           - netcheck_log.stdout is search('^internet 1\.1\.1\.1:', multiline=True)
           - netcheck_log.stdout is search('^internet 8\.8\.8\.8:', multiline=True)
+          - netcheck_log.stdout is search('^internet 2606:4700:4700::1111:', multiline=True)
+          - netcheck_log.stdout is search('^internet 2001:4860:4860::8888:', multiline=True)

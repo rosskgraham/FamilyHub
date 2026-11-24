@@ -1,6 +1,6 @@
 // Watches the Pi's network every few seconds, to find out why the Hub loses the internet for short spells (AB#62).
-// familyhub-netcheck.service runs it all the time. Each round asks every nameserver for one name, connects to two
-// public IPs without DNS, pings the router, and reads which link has the default route and whether eth0 has a cable.
+// familyhub-netcheck.service runs it all the time. Each round asks every nameserver for one name, connects to public
+// IPs over IPv4 and IPv6 without DNS, pings the router, and reads which link has the default route and whether eth0 has a cable.
 // It logs a line only when one of those changes, so the journal stays small, and says how long each spell lasted.
 import { execFile } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
@@ -17,8 +17,11 @@ export const SLOW_MS = 1000;
 export const TIMEOUT_MS = 3000;
 /** The name every nameserver is asked for: one the Hub uses for the Calendars, lists and backups. */
 export const NAME = 'www.googleapis.com';
-/** Public IPs reached without DNS, so a DNS failure and a dead line can be told apart. */
-export const PUBLIC_IPS = ['1.1.1.1', '8.8.8.8'];
+/**
+ * Public IPs reached without DNS, so a DNS failure and a dead line can be told apart, over IPv4 and IPv6: the home
+ * network's IPv6 doesn't always reach the internet, and the Hub's requests may go either way.
+ */
+export const PUBLIC_IPS = ['1.1.1.1', '8.8.8.8', '2606:4700:4700::1111', '2001:4860:4860::8888'];
 
 /** ok, slow or fail, from whether it worked and how long it took. */
 export function grade(ok, ms) {
