@@ -2,3 +2,9 @@
   ansible.builtin.service:
     name: ssh
     state: restarted
+
+# The boot settings only take effect from the next start. The tests' stand-in can't restart.
+- name: Restart the Pi for its boot settings
+  ansible.builtin.reboot:
+    msg: Restarting to switch off the Wi-Fi and Bluetooth
+  when: hub_restart_for_boot_settings

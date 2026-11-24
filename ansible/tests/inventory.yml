@@ -9,3 +9,5 @@ hub:
       hub_health_timeout_seconds: 10
       # No screen to show it on.
       hub_kiosk_start: false
+      # A container can't restart itself.
+      hub_restart_for_boot_settings: false

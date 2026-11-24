@@ -27,10 +27,11 @@ hub_env_secrets:
   ZAPPI_GLO_API_KEY: zappi-glo-api-key
   HOME_LATITUDE: home-latitude
   HOME_LONGITUDE: home-longitude
-# ...and the home Wi-Fi, so the Pi uses it whenever it has no network cable. Both are needed, or the Pi gets no Wi-Fi.
-hub_wifi_ssid_secret: wifi-ssid
-hub_wifi_password_secret: wifi-password
-hub_wifi_country: GB
+
+# The Pi's boot settings, where its Wi-Fi and Bluetooth are switched off (ADR 0015), and whether a change to them
+# restarts the Pi straight away, as they only take effect from the next start.
+hub_boot_config: /boot/firmware/config.txt
+hub_restart_for_boot_settings: true
 
 # Who shows the Hub on the screen (ADR 0009), and whether the setup scripts start it straight away. The
 # tests' stand-in has no screen, so it only checks the kiosk is set up to start with the Pi.

@@ -1,5 +1,2 @@
 # Every secret the role asks the Key Vault for.
-hub_config_vault_names: "{{ (hub_env_secrets.values() | list) + [hub_wifi_ssid_secret, hub_wifi_password_secret] }}"
-
-# NetworkManager's settings for the home Wi-Fi.
-hub_config_wifi_connection: /etc/NetworkManager/system-connections/familyhub-wifi.nmconnection
+hub_config_vault_names: "{{ hub_env_secrets.values() | list }}"
