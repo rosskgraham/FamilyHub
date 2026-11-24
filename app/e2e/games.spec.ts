@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { NOW } from '../playwright.config.ts';
+import { HEATING_URL, NOW } from '../playwright.config.ts';
 import { wordFor } from '../src/lib/server/games/today.ts';
 import { dayKey } from '../src/lib/time.ts';
 
@@ -20,6 +20,18 @@ const has = (html: string, word: string) => new RegExp(`\\b${word}\\b`, 'i').tes
 test.beforeEach(async ({ page }) => {
 	// The time runs on from NOW, so the Hub can go back to Today when it's left alone.
 	await page.clock.install({ time: new Date(NOW) });
+	// Counts the chimes: each one makes an AudioContext.
+	await page.addInitScript(() => {
+		const w = window as unknown as { chimes: number; AudioContext: typeof AudioContext };
+		w.chimes = 0;
+		const Real = w.AudioContext;
+		w.AudioContext = class extends Real {
+			constructor() {
+				super();
+				w.chimes++;
+			}
+		};
+	});
 });
 
 async function typeWord(page: Page, word: string) {
@@ -39,6 +51,11 @@ test('the Games tab opens Word of the day, with a card for each Member', async (
 	await expect(card(page, 'Ross')).toContainText('Got it in 3');
 	await expect(card(page, 'Sam')).toContainText('Not played yet');
 	await expect(card(page, 'Leo')).toContainText('2 of 6 goes so far');
+	// Streaks show from two days: Ross is only on his first.
+	await expect(card(page, 'Maya')).toContainText('6 days in a row');
+	await expect(card(page, 'Sam')).toContainText('3 days in a row');
+	await expect(card(page, 'Leo')).toContainText('4 days in a row');
+	await expect(card(page, 'Ross')).not.toContainText('in a row');
 	await expect(page.getByRole('img', { name: 'Maya: Got it in 4' })).toBeVisible();
 
 	await page.evaluate(() => document.fonts.ready);
@@ -105,11 +122,26 @@ test('solving the word ends the game, and the Games Section shows only its colou
 	await typeWord(page, ANSWER);
 	await check(page);
 
+	// The celebration: the chime, Sam's goes and streak, and everyone's results, with no letters.
 	const end = page.getByRole('alertdialog', { name: 'You got it, Sam!' });
 	await expect(end).toBeVisible();
-	await end.getByRole('button', { name: 'Back to Games' }).click();
+	expect(await page.evaluate(() => (window as unknown as { chimes: number }).chimes)).toBe(1);
+	await expect(end).toContainText('In 2 goes. That’s 4 days in a row.');
+	await expect(end.getByRole('list', { name: 'Everyone today' }).getByRole('listitem')).toHaveText([
+		/^R\s*Got it in 3$/,
+		/^S\s*Got it in 2$/,
+		/^M\s*Got it in 4$/,
+		/^L\s*2 of 6 goes so far$/
+	]);
+	expect(has(await end.innerHTML(), ANSWER)).toBe(false);
+	await page.evaluate(() => document.fonts.ready);
+	await expect(page).toHaveScreenshot('games-celebration.png');
+
+	// It closes by itself, as the Chores celebration does, and hides the word again.
+	await page.clock.fastForward('00:06');
 	await expect(page).toHaveURL(/\/games$/);
 	await expect(card(page, 'Sam')).toContainText('Got it in 2');
+	await expect(card(page, 'Sam')).toContainText('4 days in a row');
 	await expect(page.getByRole('img', { name: 'Sam: Got it in 2' })).toBeVisible();
 	expect(has(await page.content(), ANSWER)).toBe(false);
 
@@ -146,9 +178,29 @@ test('six goes without the word ends the game and shows the word', async ({ page
 		await check(page);
 		await expect(page.getByText(`Go ${6 + i} of 6`).or(page.getByRole('alertdialog'))).toBeVisible();
 	}
+	// A kind ending: the word, and the streak carries on. No chime for a word not found.
 	const end = page.getByRole('alertdialog', { name: `The word was ${ANSWER.toUpperCase()}` });
 	await expect(end).toBeVisible();
-	await end.getByRole('button', { name: 'Back to Games' }).click();
+	await expect(end).toContainText('Good try! Your streak carries on: 5 days in a row.');
+	expect(await page.evaluate(() => (window as unknown as { chimes: number }).chimes)).toBe(0);
+	await end.getByRole('button', { name: 'OK' }).click();
 	await expect(card(page, 'Leo')).toContainText('Not this time');
+	await expect(card(page, 'Leo')).toContainText('5 days in a row');
 	expect(has(await page.content(), ANSWER)).toBe(false);
+});
+
+test('the celebration in the Evening theme, closed with Nice one!', async ({ page }) => {
+	// The heating tests' Hub has its own sample games, where Sam hasn't played yet.
+	await page.goto(`${HEATING_URL}/games/sam?theme=evening`);
+	await typeWord(page, ANSWER);
+	await check(page);
+	const end = page.getByRole('alertdialog', { name: 'You got it, Sam!' });
+	await expect(end).toContainText('In 1 go. That’s 4 days in a row.');
+	// The heating tests change this Hub's target while they run, so the header's heating is hidden.
+	await page.addStyleTag({ content: '.heating { visibility: hidden; }' });
+	await page.evaluate(() => document.fonts.ready);
+	await expect(page).toHaveScreenshot('games-celebration-evening.png');
+	await end.getByRole('button', { name: 'Nice one!' }).click();
+	await expect(page).toHaveURL(/\/games(\?theme=evening)?$/);
+	await expect(card(page, 'Sam')).toContainText('Got it in 1');
 });

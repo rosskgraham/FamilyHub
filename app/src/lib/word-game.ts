@@ -1,8 +1,12 @@
 // Word of the day (AB#68): a five-letter word a day, six goes to find it. What the screen and the server share; the
 // word itself only ever lives on the server.
 
+import { addDays, type DayKey } from './time.ts';
+
 export const WORD_LENGTH = 5;
 export const MAX_GOES = 6;
+/** A streak shows on a Member's card from this many days. */
+export const STREAK_SHOWN_FROM = 2;
 
 /** How a letter of a go did: in the right place, in the word somewhere else, or not in the word. */
 export type Mark = 'right' | 'present' | 'absent';
@@ -10,6 +14,13 @@ export type Mark = 'right' | 'present' | 'absent';
 export interface Go {
 	word: string;
 	marks: Mark[];
+}
+
+/** The end of a game: the word, the Member's streak, and how everyone has done today, without letters. */
+export interface GameEnd {
+	answer: string;
+	streak: number;
+	cards: PlayerCard[];
 }
 
 /** Where a Member is with today's word. */
@@ -21,6 +32,8 @@ export interface PlayerCard {
 	state: GameState;
 	goes: number;
 	marks: Mark[][];
+	/** Days in a row with a finished game. */
+	streak: number;
 }
 
 /**
@@ -66,3 +79,22 @@ export function gameState(goes: readonly Go[]): GameState {
 }
 
 export const isFinished = (state: GameState) => state === 'solved' || state === 'lost';
+
+/**
+ * A Member's streak: the days in a row, up to today or yesterday, on which they finished a game, solved or not. A day
+ * with no finished game ends it, so a hard word never does. Today still counts until midnight, if not played yet.
+ */
+export function streak(finished: ReadonlySet<DayKey>, today: DayKey): number {
+	let day = finished.has(today) ? today : addDays(today, -1);
+	let days = 0;
+	for (; finished.has(day); day = addDays(day, -1)) days++;
+	return days;
+}
+
+/** How a Member's game today is going, in words. */
+export function gameStatus(state: GameState, goes: number): string {
+	if (state === 'new') return 'Not played yet';
+	if (state === 'solved') return `Got it in ${goes}`;
+	if (state === 'lost') return 'Not this time';
+	return `${goes} of ${MAX_GOES} goes so far`;
+}

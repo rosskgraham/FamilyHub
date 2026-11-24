@@ -16,6 +16,8 @@ export interface WordGo {
 export interface GameStore {
 	/** Every go on a day, oldest first. */
 	goes(day: DayKey): WordGo[];
+	/** Every go a Member has made, on every day, oldest first. */
+	goesBy(member: string): WordGo[];
 	record(go: WordGo): void;
 	close(): void;
 }
@@ -29,10 +31,14 @@ export function openGameStore(at: string | DatabaseSync): GameStore {
 	const db = owned ? openHubDatabase(at) : at;
 
 	const select = db.prepare('SELECT day, member, word, at FROM word_goes WHERE day = ? ORDER BY id');
+	const selectBy = db.prepare('SELECT day, member, word, at FROM word_goes WHERE member = ? ORDER BY id');
 	const insert = db.prepare('INSERT INTO word_goes (day, member, word, at) VALUES (?, ?, ?, ?)');
 	return {
 		goes(day) {
 			return select.all(day) as unknown as WordGo[];
+		},
+		goesBy(member) {
+			return selectBy.all(member) as unknown as WordGo[];
 		},
 		record(go) {
 			insert.run(go.day, go.member, go.word, go.at);
