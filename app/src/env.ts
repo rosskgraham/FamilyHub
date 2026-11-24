@@ -43,6 +43,32 @@ export const variables = defineEnvVars({
 		description: 'The myenergi account’s API key, from myaccount.myenergi.com. Never commit it.',
 		schema: optional
 	},
+	BACKEND_URL: {
+		description:
+			'The family app’s backend, such as https://func-familyhub-xxxxxx.azurewebsites.net. Without it and the five below, the Hub doesn’t sign in to the backend. See docs/runbooks/sign-in-setup.md, step 9.',
+		schema: optional
+	},
+	ENTRA_TENANT_ID: {
+		description: 'The FamilyHub tenant’s ID, which the Hub signs in to the backend through.',
+		schema: optional
+	},
+	ENTRA_SUBDOMAIN: {
+		description: 'The FamilyHub tenant’s subdomain, as in <subdomain>.ciamlogin.com.',
+		schema: optional
+	},
+	BACKEND_API_CLIENT_ID: {
+		description: 'The FamilyHub API registration’s client ID, which the Hub’s token is for.',
+		schema: optional
+	},
+	HUB_CLIENT_ID: {
+		description: 'The FamilyHub Hub registration’s client ID: who the Hub is to the backend.',
+		schema: optional
+	},
+	HUB_CERTIFICATE: {
+		description:
+			'The Hub’s sign-in certificate and its private key, as base64 of the PEM in the Key Vault. Never commit it, print it or paste it in a chat.',
+		schema: optional
+	},
 	HUB_DATA_DIR: {
 		description:
 			'The folder for what the Hub writes itself: the Google sign-in, settings, saved answers and databases. On the Pi, a folder on the data partition outside the releases. Defaults to app/data.',

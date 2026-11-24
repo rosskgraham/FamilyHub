@@ -27,6 +27,17 @@ hub_env_secrets:
   ZAPPI_GLO_API_KEY: zappi-glo-api-key
   HOME_LATITUDE: home-latitude
   HOME_LONGITUDE: home-longitude
+  # The family app's backend, which the Hub signs in to as itself (the sign-in runbook, step 9). The certificate is
+  # the Key Vault's own, with its private key, as PEM.
+  BACKEND_URL: backend-url
+  ENTRA_TENANT_ID: entra-tenant-id
+  ENTRA_SUBDOMAIN: entra-subdomain
+  BACKEND_API_CLIENT_ID: api-client-id
+  HUB_CLIENT_ID: hub-client-id
+  HUB_CERTIFICATE: hub-entra-certificate
+
+# Secrets that span lines, which go into hub.env as base64 so each stays on one.
+hub_env_base64: [HUB_CERTIFICATE]
 
 # The Pi's boot settings, where its Wi-Fi and Bluetooth are switched off (ADR 0015), and whether a change to them
 # restarts the Pi straight away, as they only take effect from the next start.

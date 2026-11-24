@@ -100,7 +100,7 @@ Three app registrations: the backend's API, the family app, and the Hub (step 6)
 
 ## 6. Register the Hub, with a certificate
 
-The Hub signs in as itself, with a certificate kept in the Key Vault. The Pi's setup scripts copy it to the Pi when the Hub moves to the backend (slice 4).
+The Hub signs in as itself, with a certificate kept in the Key Vault. The Pi's setup scripts copy it to the Pi, and `app/scripts/backend-env.mjs` to the PC (step 9).
 
 1. In Git Bash, in Ross's usual directory, make the certificate in the Key Vault, and download its public half:
 
@@ -109,11 +109,11 @@ The Hub signs in as itself, with a certificate kept in the Key Vault. The Pi's s
    az account set --subscription FamilyHub
    vault=<keyVaultName>
    az keyvault certificate create --vault-name "$vault" --name hub-entra-certificate \
-     --policy "$(az keyvault certificate get-default-policy | sed 's/CN=CLIGetDefaultPolicy/CN=FamilyHub Hub/')"
+     --policy "$(az keyvault certificate get-default-policy | sed -e 's/CN=CLIGetDefaultPolicy/CN=FamilyHub Hub/' -e 's#application/x-pkcs12#application/x-pem-file#')"
    az keyvault certificate download --vault-name "$vault" --name hub-entra-certificate --file hub.cer
    ```
 
-   Key Vault's default policy makes a self-signed certificate valid for 12 months, and renews it 90 days before it expires. The `sed` gives it a subject that says what it's for, instead of the default `CN=CLIGetDefaultPolicy`.
+   Key Vault's default policy makes a self-signed certificate valid for 12 months, and renews it 90 days before it expires. The `sed` gives it a subject that says what it's for, instead of the default `CN=CLIGetDefaultPolicy`, and keeps it as PEM rather than PKCS#12, as the Hub reads it with Node's own crypto, which can't read PKCS#12. A certificate made before 24 November 2026 is PKCS#12: run the same `create` again, which makes a PEM version under the same name, then step 3 with the new `hub.cer`, and remove the old certificate from `FamilyHub Hub` once the Hub signs in with the new one.
 
    The deployment gives Ross **Key Vault Certificates Officer** on the vault for this, as well as Secrets Officer. If the vault says `ForbiddenByRbac` for `certificates`, the pipeline hasn't deployed that role yet, or the service connection isn't allowed to give it out ([the Azure runbook](azure-setup.md), step 2). `az account set` matters if the CLI is also signed in to the FamilyHub tenant: the vault is in Ross's usual directory.
 
@@ -181,7 +181,33 @@ To take an account out, `uv run python scripts/accounts.py remove <their Google 
 
 **The fallback, by hand:** in the [Azure portal](https://portal.azure.com), open the Cosmos DB account, then **Data Explorer**. The account has no keys, so Data Explorer signs in as Ross: if it says it can't read the data, open its **Settings** (the cog) and choose **Entra ID** for authentication. Then **familyhub → accounts → Items → New Item**, replace what's there with `{"id": "<the user's Object ID>", "memberId": "<the Member's id>"}`, and **Save**. An item's `id` must be the Object ID exactly.
 
-To check the Hub's sign-in, add `export FAMILYHUB_HUB_CLIENT_ID=<FamilyHub Hub's client ID>` and `export FAMILYHUB_KEY_VAULT=<keyVaultName>`, sign in to the Azure CLI as Ross (`az login`, then `az account set --subscription FamilyHub`), and run `uv run python scripts/whoami.py hub`. It prints `200` and `{'kind': 'hub', 'member_id': None}`. The script downloads the certificate to a temporary folder and deletes it when it finishes.
+To check the Hub's sign-in, add `export FAMILYHUB_HUB_CLIENT_ID=<FamilyHub Hub's client ID>` and `export FAMILYHUB_KEY_VAULT=<keyVaultName>`, sign in to the Azure CLI as Ross (`az login`, then `az account set --subscription FamilyHub`), and run `uv run python scripts/whoami.py hub`. It prints `200` and `{'kind': 'hub', 'member_id': None}`. The script reads the certificate into memory only.
+
+## 9. Give the Hub the backend's details
+
+The Hub signs in with the certificate from step 6 and these settings, all kept in the Key Vault, as the Pi's other secrets are. Only the certificate is secret; the rest are there so the Pi and the PC get them in one place, and out of the public repo.
+
+| Secret | Value | The Hub's variable |
+|---|---|---|
+| `backend-url` | The function app's address, `https://<function app>.azurewebsites.net` | `BACKEND_URL` |
+| `entra-tenant-id` | The FamilyHub tenant's **Tenant ID** (step 1) | `ENTRA_TENANT_ID` |
+| `entra-subdomain` | Its subdomain (step 1) | `ENTRA_SUBDOMAIN` |
+| `api-client-id` | `FamilyHub API`'s **Application (client) ID** (step 5) | `BACKEND_API_CLIENT_ID` |
+| `hub-client-id` | `FamilyHub Hub`'s **Application (client) ID** (step 6) | `HUB_CLIENT_ID` |
+| `hub-entra-certificate` | The certificate itself, made in step 6: nothing to add | `HUB_CERTIFICATE`, as base64 of the PEM |
+
+1. Add the first five, in Git Bash, signed in as Ross. The first three are also the function app's own settings, `ENTRA_TENANT_ID`, `ENTRA_SUBDOMAIN` and `API_CLIENT_ID`:
+
+   ```
+   vault=<keyVaultName>
+   az keyvault secret set --vault-name "$vault" --name hub-client-id --value <FamilyHub Hub's client ID> --output none
+   ```
+
+   and the same for each of the others.
+2. **The Pi:** run the playbook with `--tags config` ([the Pi runbook](pi-setup.md)). It puts them in `/etc/familyhub/hub.env` and restarts the Hub.
+3. **The PC:** in the main checkout's `app/`, run `node scripts/backend-env.mjs`. It puts them in `app/.env` without printing them. Restart the dev server.
+
+When the Hub starts with them, its log says "Signed in to the backend as the Hub", or why not: `journalctl -u familyhub` on the Pi, `data/dev-server.log` on the PC. Without them, it doesn't try. Nothing on screen changes yet: the Shopping list stays on Google Tasks until the switch (slice 5). When Key Vault renews the certificate, run the playbook and the script again, after uploading its public half (step 6).
 
 ## If something goes wrong
 
@@ -192,6 +218,8 @@ To check the Hub's sign-in, add `export FAMILYHUB_HUB_CLIENT_ID=<FamilyHub Hub's
 - **Signing in works, but the backend says 403:** the account has no item in `accounts`, or its Object ID was copied wrongly (step 8). An item's `id` must be the Object ID exactly.
 - **The backend says 503, "Sign-in isn't set up yet":** the variables in step 7 are missing, or the pipeline hasn't deployed since they were added.
 - **`whoami.py member` fails with "AADSTS7000218: The request body must contain the following parameter: 'client_assertion' or 'client_secret'":** **Allow public client flows** is off on `FamilyHub app` (step 5).
+- **The Hub's log says "Backend sign-in refused: 401 invalid_client 700027":** `FamilyHub Hub` doesn't have this certificate's public half. Upload it (step 6, step 3). The same after Key Vault renews the certificate, until the new one is uploaded.
+- **The Hub's log says "HUB_CERTIFICATE is not a PEM private key and certificate":** the certificate is still PKCS#12 (step 6, step 1), or `HUB_CERTIFICATE` was put in by hand, not as base64.
 - **The `hub.db` command says "unable to open database file":** the path is wrong. It's `/var/lib/familyhub/hub.db` on the Pi (step 8).
 - **`whoami.py member` says the redirect URI isn't valid:** `http://localhost` is missing from `FamilyHub app`'s **Mobile and desktop applications** platform (step 5).
 - **The family app's silent sign-in fails with Google's "400 invalid_request" about a `username` parameter:** a [known issue](https://learn.microsoft.com/en-us/answers/questions/5822108/entra-external-id-google-federation-username-param) with External ID and Google. It's for slice 3 to handle.
