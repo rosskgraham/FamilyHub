@@ -14,7 +14,8 @@ import {
 import { disconnectNest, isNestConnected, loadHeating, nestConfigured } from '#lib/server/nest/index.ts';
 import { hubNetwork } from '#lib/server/network.ts';
 import { piTemperature } from '#lib/server/pi-temperature.ts';
-import { readSettings, writeSettings, type Settings } from '#lib/server/settings.ts';
+import { readSettings, readSleepHours, writeSettings, type Settings } from '#lib/server/settings.ts';
+import { sleepTimes, STEP_MINUTES, stepHours, type SleepTime } from '#lib/sleep.ts';
 import { serverStartedAt } from '#lib/server/started.ts';
 import { listTaskLists, type GoogleTaskList } from '#lib/server/tasks/google.ts';
 import { themeChoices, type ThemeChoice } from '#lib/theme.ts';
@@ -121,6 +122,21 @@ export const actions = {
 		if (!themeChoices.includes(chosen as ThemeChoice))
 			return fail(400, { form: 'theme', message: 'Choose Auto, Light or Dark.' });
 		await writeSettings({ ...(await readSettings()), theme: chosen as ThemeChoice });
+	},
+	sleepHours: async ({ request }) => {
+		const [time, delta] = String((await request.formData()).get('step')).split(':');
+		const valid = sleepTimes.includes(time as SleepTime) && Math.abs(Number(delta)) === STEP_MINUTES;
+		const hours = valid && stepHours(await readSleepHours(), time as SleepTime, Number(delta));
+		if (!hours) return fail(400, { form: 'sleep', message: 'That time can’t move any further.' });
+		await writeSettings({ ...(await readSettings()), sleepHours: hours });
+	},
+	lightsOut: async ({ request }) => {
+		const chosen = (await request.formData()).get('lightsOutOn');
+		if (chosen !== 'on' && chosen !== 'off') return fail(400, { form: 'sleep', message: 'Choose On or Off.' });
+		await writeSettings({
+			...(await readSettings()),
+			sleepHours: { ...(await readSleepHours()), lightsOutOn: chosen === 'on' }
+		});
 	},
 	addMember: async ({ request }) => {
 		const form = await request.formData();

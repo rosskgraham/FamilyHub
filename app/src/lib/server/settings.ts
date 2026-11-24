@@ -1,4 +1,5 @@
 import type { OwnerId } from '#lib/household.ts';
+import { validSleepHours, type SleepHours } from '#lib/sleep.ts';
 import { DEFAULT_THEME_CHOICE, themeChoices, type ThemeChoice } from '#lib/theme.ts';
 import { clockFormats, DEFAULT_CLOCK_FORMAT, type ClockFormat } from '#lib/time.ts';
 import { getSetting, hubDatabase, setSetting } from './hub-db.ts';
@@ -17,10 +18,20 @@ export interface Settings {
 	clockFormat?: ClockFormat;
 	/** Light, Dark, or Auto (the Day theme until sunset), chosen on the Settings page. Auto unless chosen otherwise. */
 	theme?: ThemeChoice;
+	/** When the Hub sleeps, and when its screen is dark. The defaults unless chosen otherwise. */
+	sleepHours?: SleepHours;
 }
 
 /** Each setting's own key in the database, so saving one never touches another. */
-export const SETTING_KEYS = ['calendars', 'shoppingList', 'todoList', 'birthdays', 'clockFormat', 'theme'] as const;
+export const SETTING_KEYS = [
+	'calendars',
+	'shoppingList',
+	'todoList',
+	'birthdays',
+	'clockFormat',
+	'theme',
+	'sleepHours'
+] as const;
 
 export async function readSettings(): Promise<Settings> {
 	const db = hubDatabase();
@@ -48,4 +59,9 @@ export async function readClockFormat(): Promise<ClockFormat> {
 export async function readThemeChoice(): Promise<ThemeChoice> {
 	const chosen = (await readSettings()).theme;
 	return chosen && themeChoices.includes(chosen) ? chosen : DEFAULT_THEME_CHOICE;
+}
+
+/** The Sleep and Lights out hours chosen in Settings, or the defaults. */
+export async function readSleepHours(): Promise<SleepHours> {
+	return validSleepHours((await readSettings()).sleepHours);
 }

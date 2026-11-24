@@ -53,8 +53,12 @@ The Calendar section's seven-day view of all Members' Events, one column per day
 _Avoid_: Calendar view, week columns
 
 **Sleep**:
-The Hub's overnight state: a dim clock and the next Event, on a set schedule. A touch wakes it briefly.
+The Hub's overnight state: a dim clock and the next Event, during the Sleep hours chosen in Settings (22:00 to 06:30 unless changed). A touch wakes it for two minutes.
 _Avoid_: Standby, screensaver, off, night mode
+
+**Lights out**:
+Part of Sleep when the screen is dark, with its backlight off, during hours chosen in Settings (00:00 to 06:00 unless changed). A touch lights the screen and wakes the Hub for two minutes. It can be turned off, and always falls inside Sleep.
+_Avoid_: Screen off, blank, standby, display sleep
 
 **Day theme / Evening theme**:
 The light look the Hub uses until sunset, and the dark look it uses after.

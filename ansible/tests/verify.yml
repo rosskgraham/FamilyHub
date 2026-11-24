@@ -176,7 +176,7 @@
     - name: Read the kiosk's and the first console's units
       ansible.builtin.systemd_service:
         name: "{{ item }}"
-      loop: [familyhub-kiosk.service, getty@tty1.service]
+      loop: [familyhub-kiosk.service, getty@tty1.service, familyhub-screen.service]
       register: screen_units
 
     - name: Read what the Pi starts into
@@ -194,6 +194,26 @@
           # ProtectHome hides /run/user, where cage makes its Wayland socket.
           - screen_units.results[0].status.ProtectHome == 'no'
           - default_target.stdout == 'graphical.target'
+
+    - name: Look for wlr-randr
+      ansible.builtin.stat:
+        path: /usr/bin/wlr-randr
+      register: wlr_randr
+
+    - name: Check the screen service starts with the Pi, as the kiosk's user, and can find cage and the touchscreen
+      vars:
+        screen: "{{ screen_units.results[2].status }}"
+      ansible.builtin.assert:
+        that:
+          - screen.UnitFileState == 'enabled'
+          - screen.User == 'kiosk'
+          - screen.Restart == 'always'
+          - screen.ExecStart is search('/usr/bin/node /usr/local/lib/familyhub/screen.mjs')
+          - screen.Environment is search('XDG_RUNTIME_DIR=/run/user/' ~ ansible_facts.getent_passwd.kiosk[1])
+          - screen.Environment is search('FAMILYHUB_TOUCHSCREEN=/dev/input/by-id/usb-ILITEK_ILITEK-TOUCH-event-if00')
+          - screen.Environment is search('FAMILYHUB_URL=http://localhost:3000')
+          - screen.ProtectHome == 'no'
+          - wlr_randr.stat.exists
 
     - name: Check the rule that hides the pointer is installed and valid
       ansible.builtin.command: udevadm verify /etc/udev/rules.d/90-familyhub-touchscreen.rules
@@ -214,26 +234,25 @@
           - >-
             'ATTRS{name}=="vc4-hdmi-*", ENV{LIBINPUT_IGNORE_DEVICE}="1"' in (pointer_rule.content | b64decode)
 
-    - name: Read the home Wi-Fi's settings
+    - name: Read the boot settings
       ansible.builtin.slurp:
-        path: /etc/NetworkManager/system-connections/familyhub-wifi.nmconnection
-      register: wifi
-      no_log: true
+        src: /boot/firmware/config.txt
+      register: boot_config
 
-    - name: Read who can read them
+    - name: Read whether the old Wi-Fi settings are still there
       ansible.builtin.stat:
         path: /etc/NetworkManager/system-connections/familyhub-wifi.nmconnection
       register: wifi_file
 
-    # NetworkManager's keyfiles double a backslash.
-    - name: Check only root can read the Wi-Fi's settings, and they're the vault's network and password
+    # The overlays come after an [all] of their own, so no [pi5] or other section above them can hide them.
+    - name: Check the Wi-Fi and Bluetooth are switched off for every Pi, once, and the old Wi-Fi settings are gone
       ansible.builtin.assert:
         that:
-          - wifi_file.stat.pw_name == 'root' and wifi_file.stat.mode == '0600'
-          - "'ssid=Home Wi-Fi' in lines"
-          - expected_psk in lines
-          - "'autoconnect=true' in lines"
-        quiet: true
+          - lines | select('equalto', 'dtoverlay=disable-wifi') | list | length == 1
+          - lines | select('equalto', 'dtoverlay=disable-bt') | list | length == 1
+          - lines[lines.index('dtoverlay=disable-wifi') - 1] == '[all]'
+          - lines[lines.index('dtoverlay=disable-bt') - 2] == '[all]'
+          - "'dtparam=audio=on' in lines"
+          - not wifi_file.stat.exists
       vars:
-        lines: "{{ (wifi.content | b64decode).splitlines() }}"
-        expected_psk: 'psk=a\\tricky pass'
+        lines: "{{ (boot_config.content | b64decode).splitlines() }}"

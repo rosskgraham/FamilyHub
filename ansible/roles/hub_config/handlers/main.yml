@@ -1,5 +1,0 @@
-# NetworkManager joins the Wi-Fi by itself once it has read the settings. The tests' stand-in has no NetworkManager.
-- name: Load the Wi-Fi settings
-  ansible.builtin.command: nmcli connection reload
-  changed_when: true
-  when: hub_config_nmcli.stat.exists

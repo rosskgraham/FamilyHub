@@ -53,8 +53,9 @@ Ross, Sam, Maya and Leo. Everyone sees every Event and can use every Quick actio
 
 ### Sleep
 
-- Sleep on a fixed overnight schedule (for example 22:00–06:30): a dim clock and the next Event.
+- Sleep overnight, during hours chosen in Settings (22:00–06:30 unless changed): a dim clock and the next Event.
 - A touch wakes the Hub; it goes back to Sleep after about 2 minutes untouched.
+- Lights out: during hours inside Sleep, also chosen in Settings (00:00–06:00 unless changed, and it can be turned off), the screen is dark with its backlight off. A touch lights it and wakes the Hub, and it goes dark again 2 minutes after the last touch.
 
 ### Look and locale
 
@@ -106,7 +107,8 @@ Out of scope: Spotify (Alexa already handles it), the Month view, and creating o
 - **Settings:** the repo is public, so settings are split by whether they're personal.
   - Personal settings stay out of the repo. The Household's names and colours, whose each Google Calendar is, and which Tasks lists are the Shopping list and To-dos are chosen in Settings at the Hub and kept in its database, backed up nightly ([ADR 0012](adr/0012-household-and-settings-in-the-hub-database.md)). The Household part of Settings is locked until held for a second.
   - Secrets and settings that differ between environments, such as API keys and home's location, are in `app/.env` on the PC and in the Key Vault for the Pi, which the setup scripts copy from Ross's PC.
-  - Everything else, such as the Sleep schedule, lives in the repo, so changing it is a pull request.
+  - The Sleep and Lights out hours are chosen in Settings too, and kept in the same database.
+  - Everything else lives in the repo, so changing it is a pull request.
   - Settings also chooses a 24-hour or 12-hour clock, and says which version is running.
 - **Azure:** the Key Vault, Log Analytics and Application Insights are built from Bicep in the repo by an Azure DevOps pipeline ([ADR 0008](adr/0008-azure-resources-from-bicep-through-azure-devops.md)). Every resource uses a free tier or stays inside a free allowance unless Ross approves otherwise; Key Vault Standard is approved.
 - **Secrets:** stored in Azure Key Vault (Standard tier, which costs effectively nothing). The setup scripts run from Ross's PC, read the secrets with his Azure sign-in, and place them on the Pi. The Pi holds no Azure credentials apart from the Application Insights connection string, and, once the family app's backend is built, the certificate it signs in to the backend with ([ADR 0010](adr/0010-shared-lists-in-an-azure-backend-with-an-installable-family-app.md)). The Google sign-in token is created on the Hub and lives only there. Energy adds the Octopus account number and API key, and the Zappi's serial and myenergi API key. No secret is ever in the repo.
@@ -152,6 +154,6 @@ Everything up to the Pi can be built and tested on the PC, so it comes first. Th
 - It's on the kitchen wall and the Household has used it for two weeks.
 - Nobody goes back to checking their phone for the day's plan.
 - Calendar, Shopping, weather and Sleep all work.
-- It survives a Wi-Fi drop, and after a power cut it comes back up by itself.
+- It survives a network drop, and after a power cut it comes back up by itself.
 
 There's no deadline. The aim is something on the wall, even rough, within a month or two.

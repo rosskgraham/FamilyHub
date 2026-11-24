@@ -19,8 +19,6 @@ only when Ross asks, in another session. Never review your own work, never start
   `node scripts/board.mjs next Refined`. Offer the top one.
 - Check it meets the Definition of Ready. If it doesn't, stop, suggest `/refine-story <id>`, and move it back to Idea
   with a comment saying what's missing.
-- Check the WIP limit: `node scripts/board.mjs next Active` shows fewer than 2 cards (not counting this one if it was
-  sent back). If it's full, say which cards are holding it and stop.
 
 ## 2. Start
 

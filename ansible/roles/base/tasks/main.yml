@@ -68,3 +68,22 @@
     state: enabled
     default: deny
     direction: incoming
+
+# The Pi is wired only (ADR 0015): it sits inside the screen's metal housing, where the Wi-Fi barely reaches the
+# router, and nothing uses Bluetooth. Switching both radios off at boot keeps a link that comes and goes from
+# getting a default route beside the cable's. Under its own [all], so it applies whichever section comes before it.
+- name: Switch off the Wi-Fi and Bluetooth radios
+  ansible.builtin.blockinfile:
+    path: "{{ hub_boot_config }}"
+    marker: "# {mark} FamilyHub: wired only (ADR 0015)"
+    block: |
+      [all]
+      dtoverlay=disable-wifi
+      dtoverlay=disable-bt
+  notify: Restart the Pi for its boot settings
+
+# Earlier versions of these scripts gave the Pi the home Wi-Fi from the Key Vault.
+- name: Take the old Wi-Fi settings off the Pi
+  ansible.builtin.file:
+    path: /etc/NetworkManager/system-connections/familyhub-wifi.nmconnection
+    state: absent

@@ -4,6 +4,10 @@ FROM debian:trixie
 RUN apt-get update \
  && apt-get install -y --no-install-recommends systemd systemd-sysv python3 python3-venv git ca-certificates iproute2 \
  && rm -rf /var/lib/apt/lists/*
+# The end of Raspberry Pi OS's boot settings, as the Pi has them, with an old Wi-Fi connection from earlier scripts.
+RUN mkdir -p /boot/firmware /etc/NetworkManager/system-connections \
+ && printf 'dtparam=audio=on\n\n[pi5]\ndtoverlay=nospi10\n\n[all]\n' > /boot/firmware/config.txt \
+ && printf '[connection]\nid=familyhub-wifi\n' > /etc/NetworkManager/system-connections/familyhub-wifi.nmconnection
 COPY requirements.txt requirements.yml /tmp/
 RUN python3 -m venv /opt/ansible \
  && /opt/ansible/bin/pip install --no-cache-dir -r /tmp/requirements.txt \

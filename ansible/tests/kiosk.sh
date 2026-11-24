@@ -12,6 +12,10 @@ fail() {
 echo "systemd accepts the kiosk's service"
 systemd-analyze verify /etc/systemd/system/familyhub-kiosk.service || fail "systemd-analyze verify"
 
+echo "systemd accepts the screen service's unit, and node can load the service"
+systemd-analyze verify /etc/systemd/system/familyhub-screen.service || fail "systemd-analyze verify the screen service"
+node --check /usr/local/lib/familyhub/screen.mjs || fail "node --check screen.mjs"
+
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 mkdir "$work/bin" "$work/runtime"
