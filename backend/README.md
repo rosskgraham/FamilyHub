@@ -13,7 +13,7 @@ Members sign in with their own Google account through Microsoft Entra External I
 - `/health` needs no sign-in.
 - The family app calls from another origin, its Static Web Apps address, so the API answers CORS for that and `http://localhost:5173` only. In Azure that's the function app's own CORS setting, in `infra/backend.bicep`: the Functions host answers the browser's preflight itself, before FastAPI sees it. On a PC, set `ALLOWED_ORIGINS` (comma-separated) and FastAPI answers instead, allowing `GET` and `POST` with `Authorization`. Never both, as the header would be sent twice, and never cookies.
 
-The tenant is set up by hand, as the [sign-in runbook](../docs/runbooks/sign-in-setup.md) says. `scripts/whoami.py` signs in as a Member or the Hub and calls `/me`, to check it by hand.
+The tenant is set up by hand, as the [sign-in runbook](../docs/runbooks/sign-in-setup.md) says. `scripts/whoami.py` signs in as a Member or the Hub and calls `/me`, to check it by hand. `scripts/accounts.py` lists, adds and removes the Household's accounts, finding each one in the tenant by its Google address.
 
 ## The Shopping list
 
@@ -51,7 +51,7 @@ Web PubSub's keys are off, so the API makes each token through Web PubSub's own 
 - `function_app.py`: the Azure Functions entry point. `AsgiFunctionApp` hands every HTTP request to the FastAPI app.
 - `host.json`: the Functions host's settings. Routes have no `/api` prefix, so it's `/health`, not `/api/health`.
 - `tests/`: pytest tests, run with FastAPI's test client. Sign-in's tests sign their own tokens with a key made for the test. The tests use stand-ins for Cosmos DB, the lists' one refusing clashing writes as a transactional batch would.
-- `scripts/`: tools for checking by hand, not deployed.
+- `scripts/`: tools for checking and running the backend by hand, not deployed.
 - `pyproject.toml` and `uv.lock`: the dependencies, managed with [uv](https://docs.astral.sh/uv/). The pipeline makes `requirements.txt` from `uv.lock` for the deploy, as Flex builds the app from that.
 
 ## Run it on the PC
