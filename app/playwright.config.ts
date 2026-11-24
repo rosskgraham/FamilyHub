@@ -57,6 +57,8 @@ export default defineConfig({
 				OCTOPUS_API_KEY: '',
 				ZAPPI_GLO_SN: '',
 				ZAPPI_GLO_API_KEY: '',
+				// Without its certificate, the Hub never signs in to the backend.
+				HUB_CERTIFICATE: '',
 				HUB_NOW: NOW,
 				HUB_THERMAL_ZONE: THERMAL_ZONE,
 				HUB_NETWORK_FILE: NETWORK,
@@ -82,6 +84,8 @@ export default defineConfig({
 				OCTOPUS_API_KEY: '',
 				ZAPPI_GLO_SN: '',
 				ZAPPI_GLO_API_KEY: '',
+				// Without its certificate, the Hub never signs in to the backend.
+				HUB_CERTIFICATE: '',
 				HUB_NOW: NOW,
 				HUB_THERMAL_ZONE: THERMAL_ZONE,
 				HUB_NETWORK_FILE: NETWORK,
@@ -107,6 +111,8 @@ export default defineConfig({
 				OCTOPUS_API_KEY: '',
 				ZAPPI_GLO_SN: '',
 				ZAPPI_GLO_API_KEY: '',
+				// Without its certificate, the Hub never signs in to the backend.
+				HUB_CERTIFICATE: '',
 				HUB_NOW: NOW,
 				HUB_THERMAL_ZONE: THERMAL_ZONE,
 				HUB_NETWORK_FILE: NETWORK,

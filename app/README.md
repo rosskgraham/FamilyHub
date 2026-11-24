@@ -93,6 +93,18 @@ The Chores are imported once from `app/chores.json` on the Hub's first start wit
 
 Ticks are kept in `app/data/hub.db`, a SQLite database ([ADR 0006](../docs/adr/0006-hub-owned-data-in-sqlite.md)). Without Chores, or with `CALENDAR_SOURCE=sample`, the Chores section shows sample Chores for Maya and Leo with a made-up week, kept in memory, which resets when the app restarts.
 
+## Sign in to the family app's backend
+
+The Hub signs in to the backend as itself, with a certificate from the Key Vault ([ADR 0010](../docs/adr/0010-shared-lists-in-an-azure-backend-with-an-installable-family-app.md)). In the main checkout's `app/`, signed in with `az login`:
+
+```
+node scripts/backend-env.mjs
+```
+
+This puts `BACKEND_URL`, `ENTRA_TENANT_ID`, `ENTRA_SUBDOMAIN`, `BACKEND_API_CLIENT_ID`, `HUB_CLIENT_ID` and `HUB_CERTIFICATE` in `app/.env`, from the Key Vault, without printing them. The certificate holds the Hub's private key, so it never goes in a commit or a chat. On the Pi, the playbook puts the same in `hub.env`. [The sign-in runbook](../docs/runbooks/sign-in-setup.md), step 9, has the details.
+
+With them, the Hub signs in once when it starts and asks the backend's `/me` who it is. The log says "Signed in to the backend as the Hub", or why not. It gets an app-only token by signing a client assertion with the certificate, keeps it until five minutes before it expires, and gets a new one if the backend turns it down. Without them, it doesn't try. Nothing on screen uses the backend yet.
+
 ## Check types and run the tests
 
 ```

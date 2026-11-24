@@ -18,15 +18,16 @@ Nothing is kept: the token and the certificate are thrown away when it finishes.
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
-import tempfile
 import urllib.error
 import urllib.request
-from pathlib import Path
 
 import msal
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes
 
 
 def setting(name: str) -> str:
@@ -47,20 +48,25 @@ def member_token(authority: str, api_client_id: str) -> dict:
 def hub_token(authority: str, api_client_id: str) -> dict:
     vault = setting("FAMILYHUB_KEY_VAULT")
     az = shutil.which("az") or sys.exit("The Azure CLI isn't installed.")
-    with tempfile.TemporaryDirectory() as folder:
-        pfx = Path(folder) / "hub.pfx"
-        # The certificate's secret holds the private key too, as a PFX.
-        subprocess.run(
-            [az, "keyvault", "secret", "download", "--vault-name", vault, "--name", "hub-entra-certificate"]
-            + ["--encoding", "base64", "--file", str(pfx)],
-            check=True,
-        )
-        app = msal.ConfidentialClientApplication(
-            setting("FAMILYHUB_HUB_CLIENT_ID"),
-            authority=authority,
-            client_credential={"private_key_pfx_path": str(pfx)},
-        )
-        return app.acquire_token_for_client(scopes=[f"api://{api_client_id}/.default"])
+    # The certificate's secret holds the private key too, as PEM. It stays in memory.
+    pem = subprocess.run(
+        [az, "keyvault", "secret", "show", "--vault-name", vault, "--name", "hub-entra-certificate"]
+        + ["--query", "value", "--output", "tsv"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    key = re.search(r"-----BEGIN PRIVATE KEY-----.+?-----END PRIVATE KEY-----", pem, re.DOTALL)
+    certificate = re.search(r"-----BEGIN CERTIFICATE-----.+?-----END CERTIFICATE-----", pem, re.DOTALL)
+    if not key or not certificate:
+        sys.exit("hub-entra-certificate isn't PEM. See the sign-in runbook, step 6.")
+    thumbprint = x509.load_pem_x509_certificate(certificate[0].encode()).fingerprint(hashes.SHA1()).hex()
+    app = msal.ConfidentialClientApplication(
+        setting("FAMILYHUB_HUB_CLIENT_ID"),
+        authority=authority,
+        client_credential={"private_key": key[0], "thumbprint": thumbprint},
+    )
+    return app.acquire_token_for_client(scopes=[f"api://{api_client_id}/.default"])
 
 
 def main() -> None:

@@ -154,6 +154,13 @@
           - ('GOOGLE_CLIENT_SECRET=' ~ vault.secrets['google-client-secret']) in hub_environment.stdout_lines
           - ('NEST_PROJECT_ID=' ~ vault.secrets['nest-project-id']) in hub_environment.stdout_lines
           - "'HOME_LATITUDE=51.50' in hub_environment.stdout_lines"
+          - ('BACKEND_URL=' ~ vault.secrets['backend-url']) in hub_environment.stdout_lines
+          - ('ENTRA_TENANT_ID=' ~ vault.secrets['entra-tenant-id']) in hub_environment.stdout_lines
+          - ('ENTRA_SUBDOMAIN=' ~ vault.secrets['entra-subdomain']) in hub_environment.stdout_lines
+          - ('BACKEND_API_CLIENT_ID=' ~ vault.secrets['api-client-id']) in hub_environment.stdout_lines
+          - ('HUB_CLIENT_ID=' ~ vault.secrets['hub-client-id']) in hub_environment.stdout_lines
+          # The certificate spans lines, so it arrives as base64 on one.
+          - ('HUB_CERTIFICATE=' ~ (vault.secrets['hub-entra-certificate'] | b64encode)) in hub_environment.stdout_lines
           - hub_environment.stdout is not search('OCTOPUS|ZAPPI|InstrumentationKey')
         quiet: true
 

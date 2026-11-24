@@ -7,6 +7,12 @@
     "home-latitude": "51.50",
     "home-longitude": "-0.12",
     "appinsights-connection-string": "InstrumentationKey=not-for-the-hub",
-    "household-json": "{\"members\": [{\"name\": \"Sam\", \"colour\": \"blue\"}], \"everyone\": {\"colour\": \"slate\"}}\n"
+    "household-json": "{\"members\": [{\"name\": \"Sam\", \"colour\": \"blue\"}], \"everyone\": {\"colour\": \"slate\"}}\n",
+    "backend-url": "https://func-familyhub-test.azurewebsites.net",
+    "entra-tenant-id": "00000000-0000-4000-8000-000000000001",
+    "entra-subdomain": "familyhubtest",
+    "api-client-id": "00000000-0000-4000-8000-000000000002",
+    "hub-client-id": "00000000-0000-4000-8000-000000000003",
+    "hub-entra-certificate": "-----BEGIN PRIVATE KEY-----\nnot a real key\n-----END PRIVATE KEY-----\n-----BEGIN CERTIFICATE-----\nnot a real certificate\n-----END CERTIFICATE-----\n"
   }
 }

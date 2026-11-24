@@ -40,7 +40,10 @@ def main() -> None:
     )
     if not vault:
         sys.exit(f"There's no Key Vault in {RESOURCE_GROUP} yet. See the Azure runbook, or skip this with --skip-tags config.")
-    existing = set(az("keyvault", "secret", "list", "--vault-name", vault, "--query", "[].name") or [])
+    # --include-managed, or the certificate's own secret, which Key Vault manages, is left out.
+    existing = set(
+        az("keyvault", "secret", "list", "--vault-name", vault, "--include-managed", "true", "--query", "[].name") or []
+    )
     secrets = {
         name: az("keyvault", "secret", "show", "--vault-name", vault, "--name", name, "--query", "value")
         for name in sys.argv[1:]
