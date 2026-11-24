@@ -256,3 +256,48 @@
           - not wifi_file.stat.exists
       vars:
         lines: "{{ (boot_config.content | b64decode).splitlines() }}"
+
+    - name: Read the journal's settings
+      ansible.builtin.slurp:
+        src: /etc/systemd/journald.conf.d/familyhub.conf
+      register: journald
+
+    - name: Check the journal is kept across restarts, and capped
+      ansible.builtin.assert:
+        that:
+          - "'Storage=persistent' in lines"
+          - "'SystemMaxUse=500M' in lines"
+      vars:
+        lines: "{{ (journald.content | b64decode).splitlines() }}"
+
+    - name: Read the network check's unit
+      ansible.builtin.systemd_service:
+        name: familyhub-netcheck.service
+      register: netcheck
+
+    - name: Check the network check runs, starts with the Pi, and isn't root
+      ansible.builtin.assert:
+        that:
+          - netcheck.status.ActiveState == 'active'
+          - netcheck.status.UnitFileState == 'enabled'
+          - netcheck.status.DynamicUser == 'yes'
+
+    # It logs every state on its first round, a few seconds after starting.
+    - name: Wait for the network check's first round
+      ansible.builtin.command: journalctl -u familyhub-netcheck -b --no-pager -o cat
+      register: netcheck_log
+      changed_when: false
+      until: netcheck_log.stdout is search('^default route:', multiline=True)
+      retries: 10
+      delay: 2
+
+    - name: Check it said it started, and logged the route, the router and each public IP
+      ansible.builtin.assert:
+        that:
+          - "netcheck_log.stdout is search('Network check started: every 5 s, logging only changes')"
+          - "netcheck_log.stdout is search('^eth0 cable:', multiline=True)"
+          - "netcheck_log.stdout is search('^router:', multiline=True)"
+          - "netcheck_log.stdout is search('^internet 1\\.1\\.1\\.1:', multiline=True)"
+          - "netcheck_log.stdout is search('^internet 8\\.8\\.8\\.8:', multiline=True)"
+          - "netcheck_log.stdout is search('^internet 2606:4700:4700::1111:', multiline=True)"
+          - "netcheck_log.stdout is search('^internet 2001:4860:4860::8888:', multiline=True)"

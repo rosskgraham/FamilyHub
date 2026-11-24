@@ -1,0 +1,10 @@
+- name: Restart the journal
+  ansible.builtin.systemd_service:
+    name: systemd-journald.service
+    state: restarted
+
+- name: Restart the network check
+  ansible.builtin.systemd_service:
+    name: familyhub-netcheck.service
+    state: restarted
+    daemon_reload: true

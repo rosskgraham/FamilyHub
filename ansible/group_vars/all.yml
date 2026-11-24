@@ -48,3 +48,6 @@ hub_screen_output: HDMI-A-1
 hub_releases_url: https://api.github.com/repos/rosskgraham/FamilyHub/releases/latest
 hub_update_interval: 5min
 hub_health_timeout_seconds: 90
+
+# How often the network check looks (AB#62). The Hub's internet drops last 10 to 20 seconds, so a minute would miss most.
+hub_netcheck_seconds: 5
