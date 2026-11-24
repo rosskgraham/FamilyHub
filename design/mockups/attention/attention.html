@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Needs attention mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<!--
+  A count on the Settings cog, and the Needs attention list at the top of Settings (AB#71). Each frame is 1920×1080,
+  drawn over the screenshot test images (Week and Settings) so the badge and the list sit on the real screen. Day and
+  Evening theme colours from app/src/lib/theme.ts; amber is the theme's peak orange, as warnBg is too faint on the bar. Open this file in a browser from the repo.
+-->
+<style>
+	.day {
+		--bg: #F3F5F8; --card: #FFFFFF; --ink: #161B22; --dim: #4A5565; --line: #C3CBD7; --segment: #E3E8F0;
+		--selected: #FFFFFF; --warn-bg: #FFDDB8; --warn-fg: #6B2E00; --danger: #B42318; --on-danger: #FFFFFF;
+		--amber: #B85200; --on-amber: #FFFFFF;
+	}
+	.evening {
+		--bg: #0E1116; --card: #171C24; --ink: #F2F4F8; --dim: #A6B0BF; --line: #3A4553; --segment: #1F2630;
+		--selected: #3A4553; --warn-bg: #4A2A0E; --warn-fg: #FFD8B0; --danger: #C4362C; --on-danger: #FFFFFF;
+		--amber: #FFA85C; --on-amber: #0E1116;
+	}
+	.day.week { --shot: url('../../../app/e2e/__screenshots__/week.png'); }
+	.evening.week { --shot: url('../../../app/e2e/__screenshots__/week-evening.png'); }
+	.day.settings { --shot: url('../../../app/e2e/__screenshots__/settings.png'); }
+	.evening.settings { --shot: url('../../../app/e2e/__screenshots__/settings-evening.png'); }
+	body { margin: 0; background: #888; font-family: 'Figtree', system-ui, sans-serif; }
+	h1.title { font: 700 28px Figtree, sans-serif; color: #fff; margin: 32px 32px 12px; }
+	p.note { color: #fff; margin: 0 32px 16px; font-size: 18px; max-width: 1400px; }
+	.frame {
+		position: relative; width: 1920px; height: 1080px; margin: 0 32px 48px; overflow: hidden; color: var(--ink);
+		background: var(--shot) no-repeat; background-size: 1920px 1080px;
+	}
+
+	/* The count on the cog: over the top-right corner of its 80×64 button, ringed in the bar's colour to stand off it. */
+	.count {
+		position: absolute; left: 1060px; top: 950px; min-width: 44px; height: 44px; padding: 0 10px; box-sizing: border-box;
+		border-radius: 22px; border: 3px solid var(--segment); display: flex; align-items: center; justify-content: center;
+		font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums;
+	}
+	.count.red { background: var(--danger); color: var(--on-danger); }
+	.count.amber { background: var(--amber); color: var(--on-amber); }
+
+	/* Covers the bottom bar's status, to show the one that goes with each frame. */
+	.status {
+		position: absolute; right: 28px; top: 960px; height: 80px; width: 380px; background: var(--bg);
+		display: flex; align-items: center; justify-content: flex-end;
+	}
+	.status span {
+		height: 56px; padding: 0 22px; box-sizing: border-box; border-radius: 28px; display: flex; align-items: center;
+		font-size: 22px; font-weight: 600; color: var(--dim);
+	}
+	.status span.problem { background: var(--warn-bg); color: var(--warn-fg); }
+
+	/* Covers Settings' scrolling area below its heading, down to the bottom bar. */
+	.page {
+		position: absolute; left: 0; right: 0; top: 250px; height: 678px; overflow: hidden; background: var(--bg);
+		padding: 18px 32px 0; box-sizing: border-box; font-size: 28px;
+	}
+	h2 { margin: 0; font-size: 32px; }
+	p { margin: 4px 0 0; color: var(--dim); }
+
+	/* The new card: first in Settings, full width like Household and Google, edged in the colour of its worst item. */
+	.attention { border-radius: 28px; background: var(--card); padding: 24px 32px 8px; border: 3px solid var(--danger); }
+	.attention.amber { border-color: var(--amber); }
+	.attention h2 { display: flex; align-items: center; gap: 14px; }
+	.item { display: flex; align-items: center; gap: 24px; padding: 20px 0; }
+	.item + .item { border-top: 2px solid var(--line); }
+	.attention h2 + .item { margin-top: 8px; }
+	.mark {
+		flex: none; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+		font-size: 34px; font-weight: 700;
+	}
+	.mark.red { background: var(--danger); color: var(--on-danger); }
+	.mark.amber { background: var(--amber); color: var(--on-amber); }
+	.what { flex: 1; min-width: 0; }
+	.what b { font-size: 30px; }
+	.what p { font-size: 24px; }
+	.since { flex: none; font-size: 24px; font-weight: 600; color: var(--dim); text-align: right; }
+
+	/* As Settings' rows: a card with the words on the left and the choices on the right. */
+	.row {
+		margin-top: 24px; max-width: 1100px; box-sizing: border-box; display: flex; align-items: center;
+		justify-content: space-between; gap: 32px; padding: 28px 32px; border-radius: 28px; background: var(--card);
+	}
+	.choices { display: flex; padding: 6px; gap: 6px; border-radius: 26px; background: var(--segment); }
+	.choices span {
+		width: 200px; height: 96px; border-radius: 20px; display: flex; flex-direction: column; align-items: center;
+		justify-content: center; gap: 2px;
+	}
+	.choices span.on { background: var(--selected); }
+	.choices b { font-size: 26px; }
+	.choices small { font-size: 22px; color: var(--dim); }
+</style>
+</head>
+<body>
+
+<h1 class="title">A · Something needs Ross (Day theme)</h1>
+<p class="note">A number on the cog: how many items. Red when any of them needs doing, amber when they only need watching. With nothing to show there's no badge, so the cog looks as it does now. The family's status line on the right is unchanged.</p>
+<div class="frame day week">
+	<div class="count red">2</div>
+	<div class="status"><span>Updated 08:15</span></div>
+</div>
+
+<h1 class="title">B · Settings opens with the list</h1>
+<p class="note">Tapping the cog opens Settings with Needs attention first, above Clock. One line per item: what's wrong, what it means, what to do, and since when. The worst item comes first, and the card's edge takes its colour. Items go away by themselves once fixed: there's nothing to dismiss.</p>
+<div class="frame day settings">
+	<div class="page">
+		<div class="attention">
+			<h2>Needs attention</h2>
+			<div class="item">
+				<div class="mark red">!</div>
+				<div class="what"><b>Google needs signing in again</b><p>The Calendars, lists and backup aren't updating. Hold to change under Household and Google, then sign in.</p></div>
+				<div class="since">Since yesterday<br>21:14</div>
+			</div>
+			<div class="item">
+				<div class="mark amber">!</div>
+				<div class="what"><b>The Pi is warm: 74 °C</b><p>The highest in the last hour. Fine for now. From 80 °C it slows itself down and needs a fan.</p></div>
+				<div class="since">Since 07:40</div>
+			</div>
+		</div>
+		<div class="row">
+			<div><h2>Clock</h2><p>How times are shown, on every screen.</p></div>
+			<div class="choices"><span class="on"><b>24-hour</b><small>08:15</small></span><span><b>12-hour</b><small>8:15 am</small></span></div>
+		</div>
+	</div>
+	<div class="count red">2</div>
+	<div class="status"><span>Updated 08:15</span></div>
+</div>
+
+<h1 class="title">C · Everything failing at once is one item</h1>
+<p class="note">When every source fails together for an hour, that's the internet, not six separate problems, so there's one item instead of one per source. The family still sees "Offline" in the bottom bar as now.</p>
+<div class="frame day settings">
+	<div class="page">
+		<div class="attention">
+			<h2>Needs attention</h2>
+			<div class="item">
+				<div class="mark red">!</div>
+				<div class="what"><b>Can't reach the internet</b><p>Everything is showing what it last had. Check the router, then the Hub's network cable.</p></div>
+				<div class="since">Since 07:02</div>
+			</div>
+		</div>
+		<div class="row">
+			<div><h2>Clock</h2><p>How times are shown, on every screen.</p></div>
+			<div class="choices"><span class="on"><b>24-hour</b><small>08:15</small></span><span><b>12-hour</b><small>8:15 am</small></span></div>
+		</div>
+		<div class="row">
+			<div><h2>Theme</h2><p>Auto is light from sunrise and dark after sunset.</p></div>
+			<div class="choices"><span class="on"><b>Auto</b><small>By the sun</small></span><span><b>Light</b><small>Always</small></span><span><b>Dark</b><small>Always</small></span></div>
+		</div>
+	</div>
+	<div class="count red">1</div>
+	<div class="status"><span class="problem">Offline · updated 07:02</span></div>
+</div>
+
+<h1 class="title">D · Only something to watch (Evening theme)</h1>
+<p class="note">With only amber items, the number is amber: worth a look, not urgent.</p>
+<div class="frame evening week">
+	<div class="count amber">1</div>
+	<div class="status"><span>Updated 08:15</span></div>
+</div>
+
+<h1 class="title">E · The list in the Evening theme</h1>
+<p class="note">As B, with the one amber item.</p>
+<div class="frame evening settings">
+	<div class="page">
+		<div class="attention amber">
+			<h2>Needs attention</h2>
+			<div class="item">
+				<div class="mark amber">!</div>
+				<div class="what"><b>The Pi is warm: 74 °C</b><p>The highest in the last hour. Fine for now. From 80 °C it slows itself down and needs a fan.</p></div>
+				<div class="since">Since 07:40</div>
+			</div>
+		</div>
+		<div class="row">
+			<div><h2>Clock</h2><p>How times are shown, on every screen.</p></div>
+			<div class="choices"><span class="on"><b>24-hour</b><small>08:15</small></span><span><b>12-hour</b><small>8:15 am</small></span></div>
+		</div>
+		<div class="row">
+			<div><h2>Theme</h2><p>Auto is light from sunrise and dark after sunset.</p></div>
+			<div class="choices"><span class="on"><b>Auto</b><small>By the sun</small></span><span><b>Light</b><small>Always</small></span><span><b>Dark</b><small>Always</small></span></div>
+		</div>
+	</div>
+	<div class="count amber">1</div>
+	<div class="status"><span>Updated 08:15</span></div>
+</div>
+
+</body>
+</html>
