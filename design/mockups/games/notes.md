@@ -11,6 +11,7 @@ A design with the main choices made. No code yet. Mockups: [`canvas.json`](canva
 - **At the wall only**, not in the family app on phones.
 - **The answer list is kept in plain text.** It's visible in the public repo, and that's fine.
 - **Rude words stay in the allowed guesses.** They never show unless someone types one, and they're never answers.
+- **Members are drawn in their real Household colours.** The mockups give Ross magenta and Sam brown, which aren't Hub colours. The build uses each Member's own colour, so in the sample Household Ross is blue and Sam is orange, the same as the "right place" and "in the word" tiles. That's accepted, and the mockups aren't redrawn: Members only appear as round badges and tinted cards, and results are square tiles with letters.
 - **Results and streaks are kept in the Hub's SQLite database**, as Chores are ([ADR 0006](../../../docs/adr/0006-hub-owned-data-in-sqlite.md)).
 
 ## The idea
@@ -23,9 +24,9 @@ It is our own game in the same genre, not a copy of Wordle. It has its own name 
 
 - **A new tab, Games**, in the bottom bar, after Energy. It lists the games, with one so far (board A).
 - **Everyone gets the same word each day**, with a new word at midnight.
-- **Who's playing (board A):** a card for each Member says whether they've played today, their result and their streak. A tap on your card starts your game, or carries on one you've already started.
+- **Who's playing (board A):** a card for each Member says whether they've played today, their result, and their streak once it's two days or more. A tap on your card starts your game, or carries on one you've already started.
 - **Playing (board B):** big 104px tiles, and a big on-screen keyboard that colours the letters already tried. A key to the three colours sits above the keyboard for children still learning the game. **Stop for now** leaves the game to come back to.
-- **Solved (board C):** "You got it!" with a burst of stars, the number of goes, the streak and how the rest of the family has done today. It closes by itself, as the Chores celebration does.
+- **Solved (board C):** "You got it!" with a burst of stars, the number of goes, the streak and how the rest of the family has done today. The word shows while the celebration is open, which is only for the player who just finished. It closes by itself, as the Chores celebration does, and the word is hidden again.
 - **No spoilers.** The screen is in the kitchen, where everyone can see it. A finished game shows only its colours, and the celebration hides the word again when it closes.
 
 ## Where the words come from
@@ -71,4 +72,4 @@ Not chosen: the New York Times' own Wordle lists. They're widely copied, but the
 
 ## Still open
 
-Nothing. The design is ready to refine into a card.
+Nothing. The work is split into AB#67 (word lists), AB#68 (playing) and AB#69 (the celebration and streaks).

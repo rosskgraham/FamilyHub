@@ -7,7 +7,7 @@
   "boards": {
     "Main.dc.html": { "x": 0, "y": 0, "w": 1920, "h": 1080, "title": "A · Games: Word of the day, who's playing" },
     "Play.dc.html": { "x": 2000, "y": 0, "w": 1920, "h": 1080, "title": "B · Playing: Leo's third go" },
-    "Solved.dc.html": { "x": 0, "y": 1500, "w": 1920, "h": 1080, "title": "C · Solved: the celebration, without spoilers" },
+    "Solved.dc.html": { "x": 0, "y": 1500, "w": 1920, "h": 1080, "title": "C · Solved: the celebration" },
     "Together.dc.html": { "x": 2000, "y": 1500, "w": 1920, "h": 1080, "title": "D · Alternative: one family board, taking turns" }
   },
   "order": ["Main.dc.html", "Play.dc.html", "Solved.dc.html", "Together.dc.html"],
