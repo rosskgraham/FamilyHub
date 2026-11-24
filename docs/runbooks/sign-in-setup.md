@@ -157,7 +157,7 @@ The backend lets in only the accounts in Cosmos DB's `accounts` container ([ADR 
    ```
 
 2. Sign in as the Member: `uv run python scripts/whoami.py member`. A browser opens: choose **Google** and sign in with the Member's Google account. The first time, that signs them up. It prints `403` and "This account isn't one of the Household's", which is right: they aren't on the list yet. Start with Ross's account. The children's accounts wait for the Family Link check (AB#7, and the [design notes](../../design/family-app/notes.md#open-questions)).
-3. In the Entra admin center, in the FamilyHub tenant: **Entra ID → Users**. The Member now has a user, with their Google address. Note its **Object ID**.
+3. The Member now has a user in the FamilyHub tenant, with their Google address. `scripts/accounts.py` finds it by that address in step 5, so there's nothing to copy. (It's under **Entra ID → Users** in the Entra admin center, for the fallback.)
 4. Find the Member's id on the Hub. It's made from their name when they were first added, but check rather than guess. On the PC, `ssh hubadmin@familyhub.local`, then on the Pi run this. It asks for hubadmin's password, as `hub.db` is only readable by the Hub:
 
    ```
@@ -166,19 +166,20 @@ The backend lets in only the accounts in Cosmos DB's `accounts` container ([ADR 
 
    Then `exit`. It's two steps because the quotes needed to do it in one line from the PC break in PowerShell. The database is in `HUB_DATA_DIR` (`hub_data_dir` in `ansible/group_vars/all.yml`).
 
-5. In the [Azure portal](https://portal.azure.com), open the Cosmos DB account in `rg-familyhub` (`cosmos-familyhub-…`), then **Data Explorer**. The account has no keys, so Data Explorer signs in as Ross: if it says it can't read the data, open its **Settings** (the cog) and choose **Entra ID** for authentication. Bicep gives Ross Cosmos DB's Data Contributor role for this.
-6. **familyhub → accounts → Items → New Item**, replace what's there with this, and **Save**:
+5. Add the account with `scripts/accounts.py`, signed in to the Azure CLI as Ross. It reads Graph in the FamilyHub tenant to find the account, and writes to Cosmos DB with the Data Contributor role Bicep gives Ross. Set what it needs (the Cosmos DB account is `cosmos-familyhub-…` in `rg-familyhub`), then add the account:
 
-   ```json
-   {
-     "id": "<the Object ID from step 3>",
-     "memberId": "<the Member's id from step 4>"
-   }
+   ```
+   export FAMILYHUB_COSMOS_ENDPOINT=https://<Cosmos DB account>.documents.azure.com:443/
+   uv run python scripts/accounts.py add <their Google address> <the Member's id from step 4>
    ```
 
-7. Run `uv run python scripts/whoami.py member` again, with the same account. It prints `200` and `{'kind': 'member', 'member_id': '<their id>'}`.
+   If it can't get a token for the FamilyHub tenant, run `az login --tenant <tenant ID> --allow-no-subscriptions` once, then `az account set --subscription FamilyHub`. It refuses an address that hasn't signed in yet, one that more than one user has, and an account already on the list. `uv run python scripts/accounts.py list` shows everyone on the list, with their Member and address.
 
-To let another account in later, add its item. To take one out, delete its item. Either counts from the next request.
+6. Run `uv run python scripts/whoami.py member` again, with the same account. It prints `200` and `{'kind': 'member', 'member_id': '<their id>'}`.
+
+To take an account out, `uv run python scripts/accounts.py remove <their Google address or Object ID>`. To point it at another Member, remove it and add it again. Each change counts from the next request.
+
+**The fallback, by hand:** in the [Azure portal](https://portal.azure.com), open the Cosmos DB account, then **Data Explorer**. The account has no keys, so Data Explorer signs in as Ross: if it says it can't read the data, open its **Settings** (the cog) and choose **Entra ID** for authentication. Then **familyhub → accounts → Items → New Item**, replace what's there with `{"id": "<the user's Object ID>", "memberId": "<the Member's id>"}`, and **Save**. An item's `id` must be the Object ID exactly.
 
 To check the Hub's sign-in, add `export FAMILYHUB_HUB_CLIENT_ID=<FamilyHub Hub's client ID>` and `export FAMILYHUB_KEY_VAULT=<keyVaultName>`, sign in to the Azure CLI as Ross (`az login`, then `az account set --subscription FamilyHub`), and run `uv run python scripts/whoami.py hub`. It prints `200` and `{'kind': 'hub', 'member_id': None}`. The script downloads the certificate to a temporary folder and deletes it when it finishes.
 
