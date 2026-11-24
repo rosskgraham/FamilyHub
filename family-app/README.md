@@ -2,7 +2,7 @@
 
 The Household's app for phones ([ADR 0010](../docs/adr/0010-shared-lists-in-an-azure-backend-with-an-installable-family-app.md)): an installable web app, built with SvelteKit like the Hub, served by Azure Static Web Apps' free plan. Open its address in Chrome on an Android phone and tap **Install**. The plan and its slices are in the [design notes](../design/family-app/notes.md).
 
-So far it installs on a phone, signs in, and shows the Shopping list, which keeps working with no signal (slice 3's first four stories). Live updates come next.
+It installs on a phone, signs in, and shows the Shopping list, which keeps working with no signal and shows changes made elsewhere as they happen (slice 3).
 
 ## Signing in
 
@@ -22,7 +22,8 @@ Screens C, D, E and H in `design/mockups/family-app/`, through the backend's lis
 - **Every tap shows straight away.** Each change is an operation, with its id and a new item's id made on the phone, queued and sent in the background. The phone shows the backend's items with its own unsent changes replayed on top; the backend decides how changes merge.
 - **A failed send is tried again,** after 1 second, then twice as long each time up to a minute, and whenever the app comes back to the front or the phone comes back online. Sending an operation again is safe: the backend applies it once.
 - **Removing shows Undo for 5 seconds.** The remove waits on the phone until then, or is sent at once if the app is put away, so Undo needs nothing from the backend, which never brings a removed item back.
-- **Changes made elsewhere show** after each send and whenever the app comes back to the front, by asking the backend for everything after the last number it gave. Live updates come in AB#59.
+- **Changes made elsewhere show within about a second** while the app is open and in front (AB#59, `src/lib/live.ts`). It asks the backend's `GET /live` for a Web PubSub URL and connects a WebSocket. Each message says a list changed up to a number, and if that's past what the phone has, it asks the backend for everything after its last number. It also catches up whenever it connects, and after each send.
+- **The live connection closes when the app is put away,** and opens again, with a new URL, when it's back in front, which keeps within Web PubSub's free 20 connections. A dropped connection reconnects after 1 second, then twice as long each time up to a minute. If `GET /live` says to sign in again, the list shows the sign-in banner.
 
 ## With no signal
 

@@ -410,3 +410,18 @@ describe('whether the backend can be reached (AB#58)', () => {
 		expect(texts(list)).toEqual(['Plasters', 'Milk']);
 	});
 });
+
+describe('live updates (AB#59)', () => {
+	it('catch up when a message is past what the list has, and not otherwise', async () => {
+		const { list, backend } = await setUp('Milk');
+		const changes = vi.spyOn(backend, 'changes');
+
+		await list.heard(1);
+		expect(changes).not.toHaveBeenCalled();
+
+		backend.elsewhere('add', 'hub-1', 'Plasters');
+		await list.heard(2);
+		expect(changes).toHaveBeenCalledWith(1);
+		expect(texts(list)).toEqual(['Plasters', 'Milk']);
+	});
+});
