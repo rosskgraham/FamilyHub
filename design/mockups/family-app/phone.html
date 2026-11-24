@@ -117,6 +117,15 @@
 		box-sizing: border-box; }
 	.menu p { margin: 0; font-size: 15px; color: var(--dim); }
 	.menu p.unsent { color: var(--warn-fg); background: var(--warn-bg); border-radius: 10px; padding: 8px 10px; line-height: 1.35; }
+	/* Editing in place, and swiping (#79) */
+	ul.items li.editing { padding-right: 8px; }
+	.inline { flex: 1; height: 48px; border-radius: 12px; border: 2px solid var(--ink); background: var(--card); display: flex;
+		align-items: center; padding: 0 12px; font-size: 19px; font-weight: 600; box-sizing: border-box; }
+	ul.items li.swipe { position: relative; padding: 0; overflow: hidden; background: var(--danger); }
+	li.swipe .band { position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-start; padding-left: 22px;
+		color: var(--card); font-weight: 700; font-size: 17px; }
+	li.swipe .slide { position: relative; display: flex; align-items: center; gap: 14px; height: 100%; width: 100%; padding: 0 12px;
+		box-sizing: border-box; background: var(--bg); transform: translateX(130px); box-shadow: -6px 0 12px rgb(0 0 0 / 0.12); }
 	.toast { position: absolute; left: 16px; right: 16px; bottom: 96px; background: var(--ink); color: var(--on-ink);
 		border-radius: 14px; padding: 14px 16px; font-size: 16px; display: flex; justify-content: space-between; }
 	.toast b { text-decoration: underline; }
@@ -207,16 +216,16 @@
 		},
 		{
 			id: 'E',
-			title: 'E · Changing or removing an item (#57)',
-			note: 'Tapping an item\'s words opens a sheet to fix its text or remove it. Removing asks nothing more: an Undo shows for a few seconds instead (as in F\'s toast).',
+			title: 'E · Changing an item, in place (#79)',
+			note: 'Tapping an item\'s words turns its row into a text field, with the keyboard up. Done, or tapping anywhere else, saves; Back cancels. Clearing the text puts the old text back: removing is a swipe (J).',
 			body: () =>
 				heading('6 to get') +
-				items(regulars) +
+				'<ul class="items">' +
+				[['Milk'], ['Eggs'], ['Bananas'], ['Cheddar']].map(([t]) => `<li><span class="box"></span><span class="text">${t}</span></li>`).join('') +
+				'<li class="editing"><span class="box"></span><span class="inline typing">Washing-up liq<span class="caret"></span></span></li>' +
+				'</ul>' +
 				addBar() +
-				`<div class="shade"></div><div class="sheet above-keys"><div class="grip"></div><h3>Change item</h3>
-				<div class="field typing">Washing-up liquid<span class="caret"></span></div>
-				<div class="row2"><button class="btn danger">Remove</button><button class="btn primary">Save</button></div></div>
-				<div class="keys-under">${keyboard('Done')}</div>`
+				keyboard('Done')
 		},
 		{
 			id: 'F',
@@ -247,6 +256,20 @@
 			title: 'H · Nothing to get (#57)',
 			note: 'An empty list, with the add box ready.',
 			body: () => heading('Nothing to get') + '<div class="empty"><div><b>All done</b>Add something with the box below.</div></div>' + addBar()
+		},
+		{
+			id: 'J',
+			title: 'J · Swiping to remove (#79)',
+			note: 'An item follows the finger either way. A red band saying Remove shows behind it; let go past about a third of the width, or flick, and it goes, with the Undo as in F. Let go short of that and it slides back. Ticking stays a tap on the box.',
+			body: () =>
+				heading('6 to get') +
+				'<ul class="items">' +
+				[['Milk'], ['Eggs']].map(([t]) => `<li><span class="box"></span><span class="text">${t}</span></li>`).join('') +
+				'<li class="swipe"><span class="band">Remove</span><span class="slide"><span class="box"></span><span class="text">Bananas</span></span></li>' +
+				[['Cheddar'], ['Washing-up liquid'], ['Lunchbox snacks']].map(([t]) => `<li><span class="box"></span><span class="text">${t}</span></li>`).join('') +
+				'<li class="done"><span class="box">✓</span><span class="text">Wholemeal bread</span></li>' +
+				'</ul>' +
+				addBar()
 		},
 		{
 			id: 'I',

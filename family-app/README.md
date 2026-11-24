@@ -18,7 +18,8 @@ Each Member signs in with their own Google account, through the FamilyHub tenant
 Screens C, D, E and H in `design/mockups/family-app/`, through the backend's list API ([backend README](../backend/README.md#the-shopping-list)). `src/lib/shopping.svelte.ts` holds the list; `src/lib/Shopping.svelte` shows it.
 
 - **Items to get, newest first, then those ticked off in the last 10 minutes,** struck through, as on the Hub. The order is the backend's `added_seq`, so ticking or changing an item doesn't move it. A ticked item drops off the phone once its 10 minutes are up.
-- **Tap the box to tick or untick. Tap the words to change or remove the item,** in a sheet from the bottom. The add box at the bottom stays open after adding.
+- **Tap the box to tick or untick. Tap the words to change them, in the row** (`src/lib/ItemEdit.svelte`): Done, or tapping anywhere else, saves; Back or Escape cancels; clearing the text puts the old text back. The add box at the bottom stays open after adding.
+- **Swipe an item either way to remove it** (`src/lib/swipe.ts`): it follows the finger, with a red Remove band behind it, and goes when let go past a third of its width, or flicked. A vertical drag still scrolls. Swiping is the only way to remove (AB#79).
 - **Every tap shows straight away.** Each change is an operation, with its id and a new item's id made on the phone, queued and sent in the background. The phone shows the backend's items with its own unsent changes replayed on top; the backend decides how changes merge.
 - **A failed send is tried again,** after 1 second, then twice as long each time up to a minute, and whenever the app comes back to the front or the phone comes back online. Sending an operation again is safe: the backend applies it once.
 - **Removing shows Undo for 5 seconds.** The remove waits on the phone until then, or is sent at once if the app is put away, so Undo needs nothing from the backend, which never brings a removed item back.
