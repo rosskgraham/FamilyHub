@@ -46,6 +46,9 @@ in_pi ansible-playbook -i tests/inventory.yml tests/verify.yml
 echo "Unit testing the updater"
 in_pi node --test roles/hub/files/update.test.mjs
 
+echo "Unit testing the screen service"
+in_pi node --test roles/kiosk/files/screen.test.mjs
+
 echo "Checking the kiosk"
 in_pi bash tests/kiosk.sh
 

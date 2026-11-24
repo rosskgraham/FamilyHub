@@ -176,7 +176,7 @@
     - name: Read the kiosk's and the first console's units
       ansible.builtin.systemd_service:
         name: "{{ item }}"
-      loop: [familyhub-kiosk.service, getty@tty1.service]
+      loop: [familyhub-kiosk.service, getty@tty1.service, familyhub-screen.service]
       register: screen_units
 
     - name: Read what the Pi starts into
@@ -194,6 +194,26 @@
           # ProtectHome hides /run/user, where cage makes its Wayland socket.
           - screen_units.results[0].status.ProtectHome == 'no'
           - default_target.stdout == 'graphical.target'
+
+    - name: Look for wlr-randr
+      ansible.builtin.stat:
+        path: /usr/bin/wlr-randr
+      register: wlr_randr
+
+    - name: Check the screen service starts with the Pi, as the kiosk's user, and can find cage and the touchscreen
+      vars:
+        screen: "{{ screen_units.results[2].status }}"
+      ansible.builtin.assert:
+        that:
+          - screen.UnitFileState == 'enabled'
+          - screen.User == 'kiosk'
+          - screen.Restart == 'always'
+          - screen.ExecStart is search('/usr/bin/node /usr/local/lib/familyhub/screen.mjs')
+          - screen.Environment is search('XDG_RUNTIME_DIR=/run/user/' ~ ansible_facts.getent_passwd.kiosk[1])
+          - screen.Environment is search('FAMILYHUB_TOUCHSCREEN=/dev/input/by-id/usb-ILITEK_ILITEK-TOUCH-event-if00')
+          - screen.Environment is search('FAMILYHUB_URL=http://localhost:3000')
+          - screen.ProtectHome == 'no'
+          - wlr_randr.stat.exists
 
     - name: Check the rule that hides the pointer is installed and valid
       ansible.builtin.command: udevadm verify /etc/udev/rules.d/90-familyhub-touchscreen.rules

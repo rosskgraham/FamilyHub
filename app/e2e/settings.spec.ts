@@ -68,6 +68,14 @@ test('settings view', async ({ page }) => {
 	await expect(page).toHaveScreenshot('settings.png');
 });
 
+test('sleep hours in Settings, as in the Lights out mockup A', async ({ page }) => {
+	await page.goto('/settings');
+	await page.getByRole('region', { name: 'Sleep' }).scrollIntoViewIfNeeded();
+	await hideBuildDetails(page);
+	await page.evaluate(() => document.fonts.ready);
+	await expect(page).toHaveScreenshot('settings-sleep.png');
+});
+
 test('settings view in the Evening theme', async ({ page }) => {
 	await page.goto('/settings?theme=evening');
 	await hideBuildDetails(page);

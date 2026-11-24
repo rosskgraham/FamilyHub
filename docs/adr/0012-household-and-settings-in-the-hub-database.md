@@ -1,6 +1,6 @@
 # The Household and the Hub's settings live in its database, managed in Settings
 
-The Household (each Member's name, colour, initial and Calendar), Everyone's colour and Calendar, which Calendar holds birthdays, which Google Tasks lists are the Shopping list and To-dos, the clock format, and the Chores' Routines and jobs all live in the Hub's SQLite database, `hub.db`, beside the Chores' record (ADR 0006). They're backed up with it every night.
+The Household (each Member's name, colour, initial and Calendar), Everyone's colour and Calendar, which Calendar holds birthdays, which Google Tasks lists are the Shopping list and To-dos, the clock format, the theme, the Sleep and Lights out hours, and the Chores' Routines and jobs all live in the Hub's SQLite database, `hub.db`, beside the Chores' record (ADR 0006). They're backed up with it every night.
 
 They used to be spread across three places. `household.json` and `chores.json` came from the Key Vault, copied to the Pi by Ansible (ADR 0008). `settings.json` held the Calendar choices in the Hub's data folder, and wasn't backed up. The Key Vault now holds only secrets and settings that differ between environments, such as API keys and home's location. Personal settings that the family changes don't belong there: changing one meant editing a secret in Azure and running the playbook.
 
