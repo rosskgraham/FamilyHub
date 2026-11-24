@@ -14,6 +14,7 @@ FamilyHub is a personal project, built by one family for its own kitchen. Buildi
 - **Keeps the shopping list on the wall.** Add or tick off items on the screen, and in the shop on your phone. The list lives in Google Tasks, so phones need nothing new. Tap to tick off, long-press to remove.
 - **Keeps the family's To-dos in view.** One-off and repeating jobs from a Google Tasks list. The Today view shows what's overdue and due today, then the jobs with no date, which anyone can pick up. Tick them off at the screen or on a phone.
 - **Makes chores a game for the kids.** Each child has a lane of Chores for the morning, after school and the evening, ticks them off at the screen, and earns Stars. Bonus jobs are up for grabs for extra Stars, and children who do one together each get them. Finishing a Routine gets a chime and a burst of stars.
+- **Has a word game for everyone.** Word of the day: a new five-letter word each day, the same for the whole Household, with six goes to find it. Each Member taps their name and plays their own game, can stop and carry on later, and the screen never shows anyone's answer: a finished game shows only its colours.
 - **Shows when electricity is cheap, and where it goes.** It reads the Household's Intelligent Octopus Go rates and Smart-charging slots from Octopus, and the Zappi car charger's usage from myenergi. It shows what the house is using now, what today has cost, and when to start the dishwasher, washing machine and tumble drier so they finish while it's cheap. Each half-hour is split into the house and the car.
 - **Shows how warm the house is.** Beside the outdoor weather, the header shows the inside temperature and humidity from the Nest thermostat, and what the heating is doing: heating to a target, set to one, in Eco or off. If the Nest stops reporting, it says since when rather than show an old temperature. Tap it to turn the heating up or down: − and + change the target half a degree at a time, between 16° and 22°, and it lasts until the Nest's schedule next changes, just like turning the dial. The schedule, Eco and Off stay in the Nest app.
 - **Fits a busy day without scrolling.** Busy days switch to compact rows, and anything that still doesn't fit goes behind a "+N more" that opens the full day. Nothing is cut off silently.
@@ -49,7 +50,12 @@ FamilyHub is a personal project, built by one family for its own kitchen. Buildi
 | ![Settings, unlocked: the clock as 24-hour or 12-hour, and Household and Google with the Family calendar's colour, a row to add a Member with a name and a colour, and a note that Google isn't set up](docs/images/settings-view.png) |
 | A 24-hour clock unless 12-hour is chosen, for every time on the screen. Below it, the Household: each Member's name, colour and Calendar, the Family calendar, the lists and Google, locked until held so nobody changes it by accident. About this Hub says what's running, to check a release reached the Pi. |
 
-The screenshots use the app's built-in sample week, sample Chores, sample To-dos, sample energy and sample heating, and are copied from the screenshot tests. On the real Hub, the corner shows when the Calendars last updated instead of "Sample data".
+| Games | Word of the day |
+|---|---|
+| ![The Games Section: Word of the day, and a card for each Member: Ross and Maya have solved it, shown only as coloured squares, Sam hasn't played and Leo is two goes in](docs/images/games-view.png) | ![Leo's word of the day: two goes marked in blue, orange and grey, a third being typed, and a big keyboard with the letters tried coloured](docs/images/word-of-the-day.png) |
+| Everyone gets the same word each day. A tap on your name starts your game or carries it on. Finished games show only their colours, so nobody sees the word before they've played. | Blue is the right letter in the right place, orange is in the word somewhere else, and grey isn't in it. A word the Hub doesn't know uses no go. |
+
+The screenshots use the app's built-in sample week, sample Chores, sample To-dos, sample energy, sample heating and sample games, and are copied from the screenshot tests. On the real Hub, the corner shows when the Calendars last updated instead of "Sample data".
 
 ## Where it's going
 
@@ -73,6 +79,7 @@ The plan is in [docs/requirements.md](docs/requirements.md). Progress so far:
 | ✅ | The Household set up in Settings and kept in the Hub's database, not the Key Vault ([ADR 0012](docs/adr/0012-household-and-settings-in-the-hub-database.md)) | Done, on a PC |
 | ⬜ | The heating from the Nest ([ADR 0013](docs/adr/0013-the-nest-through-googles-sdm-api.md), [design](design/mockups/heating/README.md)) | In progress: shown in the header, and the target changed from the Hub. Still to come: the bathroom floor |
 | ⬜ | A Raspberry Pi set up from scripts, showing the Hub full-screen | In progress: set up from scripts, pulling its own releases, full-screen, with its secrets from the Key Vault, and an on-screen keyboard. The screen goes dark for Lights out, inside Sleep, and lights at a touch |
+| ⬜ | Games: Word of the day ([design](design/mockups/games/notes.md)) | In progress: playing at the wall. Still to come: the celebration and streaks |
 | ⬜ | On the kitchen wall: **v1** | |
 | ⬜ | The Shopping list and To-dos in a backend of the Hub's own, with a family app for phones ([design](design/family-app/notes.md)) | In progress: the backend's Azure resources and sign-in, with each Member's own Google account, are built ([ADR 0014](docs/adr/0014-household-accounts-in-cosmos-db.md)), and the backend keeps a Shopping list, with test items only, and tells connected devices when it changes. The family app installs on a phone from Static Web Apps, and each Member signs in to it with their own Google account. Still to come: the app's list, and the Hub using the backend |
 | ⬜ | Recipe videos from a YouTube playlist | After v1 |

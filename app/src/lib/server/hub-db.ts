@@ -33,7 +33,16 @@ export const MIGRATIONS = [
 	CREATE TABLE settings (
 		key TEXT PRIMARY KEY,
 		value TEXT NOT NULL
-	);`
+	);`,
+	// Word of the day's goes, one row per go, by the day of the word and the Member who made it.
+	`CREATE TABLE word_goes (
+		id INTEGER PRIMARY KEY,
+		day TEXT NOT NULL,
+		member TEXT NOT NULL,
+		word TEXT NOT NULL,
+		at TEXT NOT NULL
+	);
+	CREATE INDEX word_goes_day ON word_goes (day);`
 ];
 
 /** Opens the database at `path`, creating and upgrading it as needed. `:memory:` keeps it in memory. */

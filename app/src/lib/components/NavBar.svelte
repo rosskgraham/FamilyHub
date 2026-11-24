@@ -9,8 +9,13 @@
 		{ href: '/shopping', label: 'Shopping' },
 		{ href: '/todos', label: 'To-dos' },
 		{ href: '/chores', label: 'Chores' },
-		{ href: '/energy', label: 'Energy' }
+		{ href: '/energy', label: 'Energy' },
+		{ href: '/games', label: 'Games' }
 	];
+
+	// A view's own pages, such as a game in Games, keep its tab marked.
+	const current = (href: string) =>
+		page.url.pathname === href || (href !== '/' && page.url.pathname.startsWith(`${href}/`));
 
 	const status = $derived(page.data.calendarStatus);
 	const updated = (iso: string | null) => (iso ? `last updated ${showTime(iso)}` : 'not loaded yet');
@@ -19,7 +24,7 @@
 <footer>
 	<nav aria-label="Views">
 		{#each links as link (link.href)}
-			<a href={link.href} aria-current={page.url.pathname === link.href ? 'page' : undefined}>{link.label}</a>
+			<a href={link.href} aria-current={current(link.href) ? 'page' : undefined}>{link.label}</a>
 		{/each}
 		<a
 			class="settings"
