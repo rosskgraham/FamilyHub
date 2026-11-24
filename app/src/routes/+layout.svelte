@@ -39,11 +39,30 @@
 	// Overnight the Hub sleeps until it's touched, and goes back to Sleep two minutes after the last touch.
 	// Only in the browser, which has the real clock and the touches.
 	let lastTouch: Date | null = $state(null);
-	const asleep = $derived(browser && isAsleep(clock.now, lastTouch));
+	const asleep = $derived(browser && isAsleep(clock.now, lastTouch, data.sleepHours.sleep));
 	const theme = $derived(asleep ? 'evening' : data.theme);
 	function touched() {
 		if (!asleep) lastTouch = new Date();
 	}
+
+	// In Lights out the screen is dark, and Chromium can't see a touch then, so the Pi's screen service lights the screen
+	// and tells the Hub. Asleep, the page asks every second, and wakes for a touch it hasn't seen yet.
+	let screenTouches: number | null = null;
+	$effect(() => {
+		if (!asleep) return;
+		const ask = async () => {
+			try {
+				const { touches } = (await (await fetch('/api/screen')).json()) as { touches: number };
+				if (screenTouches !== null && touches !== screenTouches) lastTouch = new Date();
+				screenTouches = touches;
+			} catch {
+				// The Hub's server is restarting, as for a new release: ask again in a second.
+			}
+		};
+		ask();
+		const timer = setInterval(ask, 1000);
+		return () => clearInterval(timer);
+	});
 
 	// Two minutes untouched, the Hub goes back to the Today view, keeping a `?theme=` preview.
 	const loadedAt = new Date();

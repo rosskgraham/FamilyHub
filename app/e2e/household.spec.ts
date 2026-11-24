@@ -16,6 +16,8 @@ test.beforeEach(async ({ page }) => {
 
 async function unlock(page: Page) {
 	const hold = page.getByRole('button', { name: 'Hold to change the Household and Google' });
+	// Below the Sleep hours, it starts out of view, so it's scrolled to first, as a finger would.
+	await hold.scrollIntoViewIfNeeded();
 	const box = (await hold.boundingBox())!;
 	await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
 	await page.mouse.down();

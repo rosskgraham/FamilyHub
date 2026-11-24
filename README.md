@@ -64,7 +64,7 @@ The plan is in [docs/requirements.md](docs/requirements.md). Progress so far:
 | ✅ | Real weather (Open-Meteo) | Done, on a PC |
 | ✅ | Tests and CI: unit tests, screenshot tests, GitHub Actions | Done |
 | ✅ | Chore chart, first slice: kids tick off their Chores for Stars ([design](design/mockups/chores/notes.md)) | Done, on a PC |
-| ✅ | Overnight sleep, and a Day and Evening theme, or either all the time | Done, on a PC |
+| ✅ | Overnight sleep, with its hours chosen in Settings, and a Day and Evening theme, or either all the time | Done, on a PC |
 | ✅ | Offline resilience | Done, on a PC |
 | ✅ | A versioned release built on every merge | Done |
 | ✅ | Home energy: cheap and peak times, when to run the dishwasher, the car’s share, and its charge ([design](design/mockups/energy/notes.md)) | Done, on a PC |
@@ -72,7 +72,7 @@ The plan is in [docs/requirements.md](docs/requirements.md). Progress so far:
 | ✅ | Settings, Google Calendar's colours, and tapping an Event for its details | Done, on a PC |
 | ✅ | The Household set up in Settings and kept in the Hub's database, not the Key Vault ([ADR 0012](docs/adr/0012-household-and-settings-in-the-hub-database.md)) | Done, on a PC |
 | ⬜ | The heating from the Nest ([ADR 0013](docs/adr/0013-the-nest-through-googles-sdm-api.md), [design](design/mockups/heating/README.md)) | In progress: shown in the header, and the target changed from the Hub. Still to come: the bathroom floor |
-| ⬜ | A Raspberry Pi set up from scripts, showing the Hub full-screen | In progress: set up from scripts, pulling its own releases, full-screen, with its secrets from the Key Vault, and an on-screen keyboard. Still to come: the screen powering down for Sleep |
+| ⬜ | A Raspberry Pi set up from scripts, showing the Hub full-screen | In progress: set up from scripts, pulling its own releases, full-screen, with its secrets from the Key Vault, and an on-screen keyboard. The screen goes dark for Lights out, inside Sleep, and lights at a touch |
 | ⬜ | On the kitchen wall: **v1** | |
 | ⬜ | The Shopping list and To-dos in a backend of the Hub's own, with a family app for phones ([design](design/family-app/notes.md)) | In progress: the backend's Azure resources and sign-in, with each Member's own Google account, are built ([ADR 0014](docs/adr/0014-household-accounts-in-cosmos-db.md)), and the backend keeps a Shopping list, with test items only, and tells connected devices when it changes. The family app installs on a phone from Static Web Apps, and each Member signs in to it with their own Google account. Still to come: the app's list, and the Hub using the backend |
 | ⬜ | Recipe videos from a YouTube playlist | After v1 |

@@ -75,6 +75,7 @@ After this, the Pi:
 
 - only lets you in over SSH with the key: no passwords, and never as root,
 - turns away anything else that comes in, using `ufw`,
+- darkens the screen during Lights out, the hours chosen in Settings, and lights it at a touch (`familyhub-screen.service`),
 - installs Debian's security updates and all of Raspberry Pi's and Node.js 24's updates by itself, and restarts at 03:30, while the Hub is asleep, when an update needs it,
 - runs the newest release of the Hub, checks for a newer one every 5 minutes, and switches back if a new one doesn't answer its health check,
 - restarts the Hub if it crashes, or stops answering for three minutes,

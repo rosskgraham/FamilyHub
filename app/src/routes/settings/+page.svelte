@@ -3,6 +3,7 @@
 	import { updated } from '$app/state';
 	import { build } from '#lib/build.ts';
 	import HouseholdSettings from '#lib/components/HouseholdSettings.svelte';
+	import SleepSettings from '#lib/components/SleepSettings.svelte';
 	import { showTime } from '#lib/show-time.svelte.ts';
 	import { clock } from '#lib/clock.svelte.ts';
 	import { clockFormat } from '#lib/show-time.svelte.ts';
@@ -72,6 +73,10 @@
 			</div>
 		</div>
 	</form>
+
+	{#if form && 'form' in form && form.form === 'sleep'}<p class="problem sleep-problem">{form.message}</p>{/if}
+
+	<SleepSettings hours={data.sleepHours} />
 
 	<HouseholdSettings
 		household={data.household}
@@ -159,6 +164,10 @@
 	p {
 		margin: 4px 0 0;
 		color: var(--dim);
+	}
+	.problem.sleep-problem {
+		margin: 24px 0 0;
+		max-width: 1100px;
 	}
 	.problem {
 		margin: 0 0 24px;

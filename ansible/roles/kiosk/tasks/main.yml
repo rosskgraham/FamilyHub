@@ -6,6 +6,8 @@
       - cage
       - chromium
       - curl
+      # Switches the screen off for Lights out.
+      - wlr-randr
     state: present
 
 # It can use the screen, the GPU and the touchscreen, and nothing else. It can't log in.
@@ -35,6 +37,30 @@
     group: root
     mode: "0755"
   notify: Restart the kiosk
+
+- name: Install the screen service, which darkens the screen for Lights out
+  ansible.builtin.copy:
+    src: screen.mjs
+    dest: /usr/local/lib/familyhub/screen.mjs
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart the screen service
+
+# Its runtime folder, where cage makes its Wayland socket, is named after its uid.
+- name: Read the kiosk's uid
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ hub_kiosk_user }}"
+
+- name: Install the screen service's unit
+  ansible.builtin.template:
+    src: familyhub-screen.service.j2
+    dest: /etc/systemd/system/familyhub-screen.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart the screen service
 
 # The session systemd opens for the kiosk, which gives it the screen. It never asks for a password.
 - name: Install the kiosk's login session
@@ -87,10 +113,19 @@
     enabled: true
     daemon_reload: true
 
-- name: Show the Hub on the screen now
+- name: Start the screen service whenever the Pi starts
   ansible.builtin.systemd_service:
-    name: familyhub-kiosk.service
+    name: familyhub-screen.service
+    enabled: true
+    daemon_reload: true
+
+- name: Show the Hub on the screen now, and look after the screen
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
     state: started
+  loop:
+    - familyhub-kiosk.service
+    - familyhub-screen.service
   when: hub_kiosk_start
 
 # So the check below sees the kiosk as this run left it, not as it was before.

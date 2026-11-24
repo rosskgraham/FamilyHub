@@ -37,6 +37,11 @@ hub_wifi_country: GB
 hub_kiosk_user: kiosk
 hub_kiosk_start: true
 
+# What the screen service (AB#64) watches for touches and switches off for Lights out: the Waveshare's touch controller,
+# and the HDMI port next to the power socket.
+hub_touchscreen: /dev/input/by-id/usb-ILITEK_ILITEK-TOUCH-event-if00
+hub_screen_output: HDMI-A-1
+
 # Where the updater looks for the newest release (ADR 0004), how often, and how long a new release has
 # to answer its health check before it's rolled back.
 hub_releases_url: https://api.github.com/repos/rosskgraham/FamilyHub/releases/latest

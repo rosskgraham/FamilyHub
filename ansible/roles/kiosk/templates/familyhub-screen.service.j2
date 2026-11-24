@@ -1,0 +1,27 @@
+# {{ ansible_managed }}
+# The Hub's screen, dark in Lights out hours until it's touched (AB#64). It runs as the kiosk's user, so it can reach
+# cage's Wayland socket and read the touchscreen. It copes with cage not running yet, or restarting, by itself.
+[Unit]
+Description=FamilyHub's screen, dark in Lights out hours
+After=familyhub-kiosk.service
+
+[Service]
+User={{ hub_kiosk_user }}
+Environment=FAMILYHUB_URL=http://localhost:{{ hub_port }}
+Environment=XDG_RUNTIME_DIR=/run/user/{{ ansible_facts.getent_passwd[hub_kiosk_user][1] }}
+Environment=FAMILYHUB_TOUCHSCREEN={{ hub_touchscreen }}
+Environment=FAMILYHUB_OUTPUT={{ hub_screen_output }}
+ExecStart=/usr/bin/node /usr/local/lib/familyhub/screen.mjs
+Restart=always
+RestartSec=5
+
+NoNewPrivileges=true
+ProtectSystem=strict
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+# No ProtectHome, as for the kiosk: it hides /run/user, where cage's socket is.
+
+[Install]
+WantedBy=graphical.target
