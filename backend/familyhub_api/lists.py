@@ -85,6 +85,9 @@ class Item(BaseModel):
     removed: bool
     # The sequence number of the last operation that changed it.
     seq: int
+    # The sequence number it was added at, which devices order the list by, newest first. Items stored before
+    # it was kept use their seq.
+    added_seq: int
 
 
 class Busy(Exception):
@@ -126,8 +129,8 @@ class Store(Protocol):
 
 
 def apply(item: Item | None, operation: Operation, now: datetime) -> Item | None:
-    """The item's new state after the operation, or None if it changes nothing. The new state's seq is left
-    for the caller to set."""
+    """The item's new state after the operation, or None if it changes nothing. The new state's seq, and an
+    added item's added_seq, are left for the caller to set."""
     if isinstance(operation, Add):
         # An item id already used, even by a removed item, isn't added again.
         if item is not None:
@@ -139,6 +142,7 @@ def apply(item: Item | None, operation: Operation, now: datetime) -> Item | None
             ticked_off_at=None,
             removed=False,
             seq=0,
+            added_seq=0,
         )
     # Removing beats anything else: an item removed at home doesn't come back if it's ticked in the shop.
     if item is None or item.removed:
@@ -211,7 +215,7 @@ class Lists:
             now = self._clock()
             new = apply(item, operation, now)
             if new is not None:
-                new = new.model_copy(update={"seq": seq})
+                new = new.model_copy(update={"seq": seq, "added_seq": item.added_seq if item else seq})
 
             writes = [
                 Write(
@@ -274,6 +278,7 @@ def _item_from(doc: dict[str, Any]) -> Item:
         ticked_off_at=datetime.fromisoformat(ticked_off_at) if ticked_off_at else None,
         removed=doc["removed"],
         seq=doc["seq"],
+        added_seq=doc.get("addedSeq", doc["seq"]),
     )
 
 
@@ -292,6 +297,7 @@ def _item_doc(
         "tickedOffAt": _timestamp(item.ticked_off_at) if item.ticked_off_at else None,
         "removed": item.removed,
         "seq": item.seq,
+        "addedSeq": item.added_seq,
         "addedAt": _timestamp(now),
         "addedBy": by,
     } | added
