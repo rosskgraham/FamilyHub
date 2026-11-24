@@ -22,8 +22,9 @@ export interface CalendarResult {
 
 // Events change on phones, so this is how soon they reach the wall.
 const REFRESH_MS = 2 * 60_000;
-// This week and next: every view the Hub shows by itself, and the Week and Day views near today.
-const WINDOW_DAYS = 14;
+// Three weeks from this Monday: every view the Hub shows by itself, the Day view for the rest of this week, and the
+// Week view's next 7 days and the 7 after them, however late in the week today is.
+const WINDOW_DAYS = 21;
 
 let windowSync: { key: string; from: DayKey; to: DayKey; events: Sync<CalendarEvent[]> } | undefined;
 
