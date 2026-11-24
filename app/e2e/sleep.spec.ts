@@ -23,7 +23,7 @@ test('a tap wakes it without pressing anything, and two minutes untouched sends 
 	await sleep.click();
 	await expect(sleep).toBeHidden();
 	await expect(page).toHaveURL(/\/week$/);
-	await expect(page.getByText('This week')).toBeVisible();
+	await expect(page.getByText('Next 7 days')).toBeVisible();
 
 	await page.clock.fastForward('01:50');
 	await expect(sleep).toBeHidden();

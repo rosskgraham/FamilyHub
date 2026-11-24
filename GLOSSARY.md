@@ -49,7 +49,7 @@ The Calendar section's view of one day's Events.
 _Avoid_: Agenda, daily view
 
 **Week view**:
-The Calendar section's seven-day view of all Members' Events, one column per day.
+The Calendar section's view of the next 7 days of all Members' Events, one column per day, starting with today. Its arrows step a week at a time.
 _Avoid_: Calendar view, week columns
 
 **Sleep**:

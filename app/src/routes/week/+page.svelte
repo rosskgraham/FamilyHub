@@ -9,6 +9,7 @@
 	import { fitColumn, type Space } from '#lib/fit.ts';
 	import { dayOfMonth, formatDayMonth, formatWeekday, type DayKey } from '#lib/time.ts';
 	import { showTime } from '#lib/show-time.svelte.ts';
+	import { weekTitle } from '#lib/week.ts';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -17,12 +18,7 @@
 	// A card holds a two-line title: 24px padding + 32px time row + 6px gap + 2 × 30px lines.
 	const SPACE: Space = { height: 564, gap: 12, card: 124, row: 44 };
 
-	const title = $derived.by(() => {
-		if (data.offset === 0) return 'This week';
-		if (data.offset === 1) return 'Next week';
-		if (data.offset === -1) return 'Last week';
-		return data.offset > 0 ? `In ${data.offset} weeks` : `${-data.offset} weeks ago`;
-	});
+	const title = $derived(weekTitle(data.offset));
 
 	// "19–25 October", or "29 September – 5 October" across two months.
 	const range = $derived.by(() => {
@@ -80,7 +76,7 @@
 			>
 		</a>
 		{#if data.offset !== 0}
-			<a class="back" href="/week">Back to this week</a>
+			<a class="back" href="/week">Back to today</a>
 		{/if}
 	</div>
 

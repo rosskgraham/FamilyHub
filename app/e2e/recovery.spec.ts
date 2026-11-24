@@ -20,6 +20,6 @@ test('a page that couldn’t load is tried again within a minute', async ({ page
 	// The problem clears, and the next check for changes shows the page.
 	await page.unroute(week);
 	await page.clock.fastForward('01:00');
-	await expect(page.getByText('This week')).toBeVisible();
+	await expect(page.getByText('Next 7 days')).toBeVisible();
 	await expect(page.getByText('This page couldn’t load')).toBeHidden();
 });

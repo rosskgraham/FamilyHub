@@ -27,8 +27,8 @@ FamilyHub is a personal project, built by one family for its own kitchen. Buildi
 
 | Week view | Day view |
 |---|---|
-| ![The Week view: seven columns of Events, with a busy Saturday in compact rows and "+3 more"](docs/images/week-view.png) | ![The Day view: one day's Events with start and end times, in two columns](docs/images/day-view.png) |
-| Seven days at a glance. A busy day switches to compact rows, and "+3 more" opens the full day. All-day Events (outlined, like "Bin day") sit above timed ones (filled, led by their time). | Every Event in one day, in two columns when it's busy. Reached from "+N more", any day's heading, or the bottom bar. |
+| ![The Week view: the next seven days of Events from today, Wednesday, with a busy Saturday in compact rows and "+3 more"](docs/images/week-view.png) | ![The Day view: one day's Events with start and end times, in two columns](docs/images/day-view.png) |
+| The next seven days at a glance, starting with today. A busy day switches to compact rows, and "+3 more" opens the full day. All-day Events (outlined, like "Bin day") sit above timed ones (filled, led by their time). | Every Event in one day, in two columns when it's busy. Reached from "+N more", any day's heading, or the bottom bar. |
 
 | Chores | Finishing a Routine |
 |---|---|
