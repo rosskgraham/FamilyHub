@@ -1,9 +1,13 @@
 <script lang="ts">
-	// The Shopping list (design/mockups/family-app, screens C to J). Tap the box to tick or untick; tap the words to
+	// The Shopping list (design/mockups/family-app, screens C to N). Tap the box to tick or untick; tap the words to
 	// change them in the row; swipe the item either way to remove it (AB#79). The add box sits at the bottom, where a
-	// thumb reaches it, and stays open after adding so several items go in one after another.
+	// thumb reaches it, and stays open after adding so several items go in one after another. With a Shop picked
+	// (AB#86), the items it hasn't placed come first, under "Not placed yet", then the rest in its walking order, and
+	// each item to get has a handle to drag it into place, which teaches the Shop.
+	import { draggable } from './drag.ts';
 	import ItemEdit from './ItemEdit.svelte';
 	import Me from './Me.svelte';
+	import ShopPicker from './ShopPicker.svelte';
 	import { MOST_TEXT, type ShoppingList } from './shopping.svelte.ts';
 	import { swipeable } from './swipe.ts';
 
@@ -14,6 +18,7 @@
 		onsignout,
 		onsignin,
 		menuOpen = $bindable(false),
+		pickerOpen = $bindable(false),
 		editing = $bindable(null)
 	}: {
 		list: ShoppingList;
@@ -23,11 +28,31 @@
 		/** Signs in again when sign-in has run out (screen G). */
 		onsignin: () => void;
 		menuOpen?: boolean;
+		/** The Shop picker is open (screen K). */
+		pickerOpen?: boolean;
 		/** The id of the item whose text is being changed. */
 		editing?: string | null;
 	} = $props();
 
 	const changes = (n: number) => (n === 1 ? '1 change' : `${n} changes`);
+
+	// Where each item to get sits among the items to get, for a drop to say where it landed.
+	const toGet = $derived(list.items.filter((item) => !item.tickedOff));
+	// The divider each item starts, if any: with a Shop picked, the first item it hasn't placed, and the first it has.
+	const dividers = $derived.by(() => {
+		const starts: Record<string, string> = {};
+		if (!list.shop) return starts;
+		const unplaced = toGet.find((item) => !item.placed);
+		const placed = toGet.find((item) => item.placed);
+		if (unplaced) starts[unplaced.id] = 'Not placed yet';
+		if (placed) starts[placed.id] = `In ${list.shop.name} order`;
+		return starts;
+	});
+
+	const grip = [7, 12, 17].flatMap((y) => [
+		[9, y],
+		[15, y]
+	]);
 
 	let adding = $state('');
 	// The item just added, picked out for a moment so the eye finds it.
@@ -70,6 +95,7 @@
 		<div>
 			<h1>Shopping</h1>
 			<p class="count">{list.toGet ? `${list.toGet} to get` : 'Nothing to get'}</p>
+			<ShopPicker {list} bind:open={pickerOpen} />
 		</div>
 		<Me {firstName} {initial} {onsignout} unsent={list.waiting} bind:open={menuOpen} />
 	</header>
@@ -77,9 +103,12 @@
 	{#if list.items.length}
 		<ul>
 			{#each list.items as item (item.id)}
+				{@const divider = dividers[item.id]}
+				{#if divider}<li class="divider">{divider}</li>{/if}
 				<li
 					class:done={item.tickedOff}
 					class:fresh={item.id === fresh}
+					data-drag-row={list.shop && !item.tickedOff ? '' : undefined}
 					{@attach editing !== item.id && swipeable(() => list.remove(item.id))}
 				>
 					<span class="band" aria-hidden="true">Remove</span>
@@ -107,6 +136,19 @@
 						{:else}
 							<button class="text" onclick={() => (editing = item.id)}>{item.text}</button>
 							{#if item.waiting}<span class="waiting">◷ waiting</span>{/if}
+						{/if}
+						{#if list.shop && !item.tickedOff}
+							<span
+								class="handle"
+								role="button"
+								tabindex="-1"
+								aria-label="Move {item.text}"
+								{@attach draggable((to) => list.place(item.id, to))}
+							>
+								<svg viewBox="0 0 24 24" aria-hidden="true">
+									{#each grip as [cx, cy] (`${cx},${cy}`)}<circle {cx} {cy} r="1.8" fill="currentColor" />{/each}
+								</svg>
+							</span>
 						{/if}
 					</div>
 				</li>
@@ -302,6 +344,57 @@
 		text-decoration: line-through;
 		color: var(--dim);
 		font-weight: 400;
+	}
+
+	/* Screen L: the dividers with a Shop picked. */
+	li.divider {
+		margin: 10px 12px 4px;
+		border-radius: 0;
+		overflow: visible;
+		font-size: 13px;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: var(--dim);
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
+
+	li.divider::after {
+		content: '';
+		flex: 1;
+		height: 1px;
+		background: var(--line);
+	}
+
+	/* Only the handle drags; it takes the whole gesture, so the list doesn't scroll under the finger. */
+	.handle {
+		flex: none;
+		width: 48px;
+		height: 60px;
+		display: grid;
+		place-items: center;
+		color: var(--box);
+		touch-action: none;
+		cursor: grab;
+	}
+
+	.handle svg {
+		width: 22px;
+		height: 22px;
+	}
+
+	/* Screen M: the item being dragged lifts above the rest. */
+	li:global([data-dragging]) {
+		z-index: 1;
+		overflow: visible;
+		box-shadow: 0 10px 28px rgb(0 0 0 / 0.28);
+	}
+
+	li:global([data-dragging]) .slide {
+		background: var(--card);
+		border-radius: 14px;
 	}
 
 	.empty {

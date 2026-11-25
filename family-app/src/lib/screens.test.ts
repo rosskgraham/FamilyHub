@@ -92,7 +92,7 @@ describe('the Shopping list screens', () => {
 		const list = await shopping(item('1', 'Milk', 1), item('2', 'Wholemeal bread', 2, true), item('3', 'Eggs', 3));
 		const body = render(Shopping, { props: { list, ...signedIn } }).body;
 
-		expect(text(body)).toMatch(/Shopping 2 to get R Eggs Milk ✓ Wholemeal bread Add/);
+		expect(text(body)).toMatch(/Shopping 2 to get Newest first R Eggs Milk ✓ Wholemeal bread Add/);
 		expect(body).toMatch(/<li class="[^"]*done[^"]*">.*Wholemeal bread/s);
 		expect(body).toContain('aria-checked="true"');
 		expect(body).toContain('placeholder="Add an item"');
@@ -183,5 +183,56 @@ describe('with no signal, or sign-in run out (AB#58)', () => {
 		const body = render(Shopping, { props: { list, ...signedIn, menuOpen: true } }).body;
 
 		expect(text(body)).toContain("Signed in as Ross 1 change hasn't sent yet. Signing out loses it. Sign out");
+	});
+});
+
+describe('sorted for a Shop (AB#86)', () => {
+	const aldi = { id: 'aldi', name: 'Aldi', order: ['bananas', 'cheddar', 'milk'], seq: 4 };
+
+	async function sorted(picked: string | null) {
+		const items = [item('1', 'Milk', 1), item('2', 'Plasters', 2), item('3', 'Bananas', 3), item('4', 'Jam', 4, true)];
+		const list = new ShoppingList(
+			{
+				send: async () => {},
+				changes: async () => ({ items, shops: [aldi, { id: 'lidl', name: 'Lidl', order: [], seq: 5 }], seq: 5 })
+			},
+			{}
+		);
+		await list.load();
+		list.stop();
+		list.pick(picked);
+		return list;
+	}
+
+	it('K: the pill says how the list is sorted, and opens Newest first, each Shop and Add a shop', async () => {
+		const list = await sorted(null);
+		const closed = render(Shopping, { props: { list, ...signedIn } }).body;
+		const open = render(Shopping, { props: { list, ...signedIn, pickerOpen: true } }).body;
+
+		expect(text(closed)).toContain('Shopping 3 to get Newest first');
+		expect(text(closed)).not.toContain('Add a shop');
+		expect(text(open)).toMatch(/Newest first Aldi Lidl Add a shop/);
+		expect(open).toMatch(/aria-checked="true"[^>]*>\s*Newest first/);
+	});
+
+	it("L: with a Shop picked, what it hasn't placed comes first, then its walking order, each with a handle", async () => {
+		const body = render(Shopping, { props: { list: await sorted('aldi'), ...signedIn } }).body;
+
+		expect(body).toMatch(/class="pill[^"]*picked/);
+		expect(text(body)).toMatch(/Not placed yet Plasters In Aldi order Bananas Milk ✓ Jam/);
+		expect(body.match(/aria-label="Move [^"]+"/g)).toEqual([
+			'aria-label="Move Plasters"',
+			'aria-label="Move Bananas"',
+			'aria-label="Move Milk"'
+		]);
+		expect(body.match(/data-drag-row/g)).toHaveLength(3);
+	});
+
+	it('C with Newest first: no dividers and no handles', async () => {
+		const body = render(Shopping, { props: { list: await sorted(null), ...signedIn } }).body;
+
+		expect(text(body)).not.toContain('Not placed yet');
+		expect(body).not.toContain('aria-label="Move');
+		expect(body).not.toContain('data-drag-row');
 	});
 });

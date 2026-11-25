@@ -99,7 +99,7 @@ describe('changes made on the phone', () => {
 		expect(texts(list)).toEqual(['Milk']);
 		await settle();
 
-		expect(backend.sent.flat().map((op) => [op.type, op.item_id])).toEqual([
+		expect(backend.sent.flat().map((op) => [op.type, 'item_id' in op ? op.item_id : op.shop_id])).toEqual([
 			['tick', 'start-Milk'],
 			['untick', 'start-Milk']
 		]);
