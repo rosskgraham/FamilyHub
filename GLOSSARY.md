@@ -120,6 +120,14 @@ _Avoid_: Complete, check, done
 Take a Shopping item off the list straight away, for one added by mistake.
 _Avoid_: Delete, clear
 
+**Shop**:
+A shop the Household buys from, such as Aldi or Lidl, that the Shopping list can be sorted for in the Family app. Each Shop learns its own walking order from the Shopping items dragged into place while it's picked. Shops are shared by the Household; which one is picked is up to each phone.
+_Avoid_: Store, supermarket
+
+**Walking order**:
+The order a Shop's aisles bring Shopping items up in, as the Shop has learned it, by item name, so it carries over from one trip to the next.
+_Avoid_: Sort order, aisle order, layout
+
 ### To-dos
 
 **To-do**:

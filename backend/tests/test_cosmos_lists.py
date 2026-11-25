@@ -113,3 +113,12 @@ def test_it_connects_once(container: FakeContainer) -> None:
     lists.partition("shopping")
 
     assert len(connections) == 1
+
+
+def test_shops_changed_since_a_number_are_read(container: FakeContainer) -> None:
+    partition(container).shops(3)
+
+    [query] = container.queries
+    assert query["partition_key"] == "shopping"
+    assert query["query"] == "SELECT * FROM c WHERE c.kind = 'shop' AND c.seq > @after"
+    assert query["parameters"] == [{"name": "@after", "value": 3}]
