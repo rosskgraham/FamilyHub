@@ -39,13 +39,14 @@
 	// Where each item to get sits among the items to get, for a drop to say where it landed.
 	const toGet = $derived(list.items.filter((item) => !item.tickedOff));
 	// The divider each item starts, if any: with a Shop picked, the first item it hasn't placed, and the first it has.
+	// The one into the Shop's order takes part in a drag (drag.ts, AB#87).
 	const dividers = $derived.by(() => {
-		const starts: Record<string, string> = {};
+		const starts: Record<string, { text: string; drag: boolean }> = {};
 		if (!list.shop) return starts;
 		const unplaced = toGet.find((item) => !item.placed);
 		const placed = toGet.find((item) => item.placed);
-		if (unplaced) starts[unplaced.id] = 'Not placed yet';
-		if (placed) starts[placed.id] = `In ${list.shop.name} order`;
+		if (unplaced) starts[unplaced.id] = { text: 'Not placed yet', drag: false };
+		if (placed) starts[placed.id] = { text: `In ${list.shop.name} order`, drag: true };
 		return starts;
 	});
 
@@ -104,7 +105,9 @@
 		<ul>
 			{#each list.items as item (item.id)}
 				{@const divider = dividers[item.id]}
-				{#if divider}<li class="divider">{divider}</li>{/if}
+				{#if divider}
+					<li class="divider" data-drag-divider={divider.drag ? '' : undefined}>{divider.text}</li>
+				{/if}
 				<li
 					class:done={item.tickedOff}
 					class:fresh={item.id === fresh}

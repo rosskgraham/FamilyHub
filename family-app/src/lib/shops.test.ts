@@ -204,6 +204,19 @@ describe('dragging an item into place', () => {
 		expect(texts(list)).toEqual(['Plasters', 'Jam *', 'Eggs *', 'Milk *']);
 	});
 
+	it('places the last item not placed yet first, when dropped just below the divider (AB#87)', async () => {
+		const { list, backend } = await setUp(['Eggs', 'Milk', 'Plasters'], ['Milk', 'Eggs']);
+		list.pick('aldi');
+		expect(texts(list)).toEqual(['Plasters', 'Milk *', 'Eggs *']);
+
+		// The same position among the items to get as it started at, but now in Aldi's order.
+		list.place('item-Plasters', 0);
+		await settle();
+
+		expect(sentShopOps(backend).map((op) => op.type === 'place' && [op.name, op.after])).toEqual([['Plasters', null]]);
+		expect(texts(list)).toEqual(['Plasters *', 'Milk *', 'Eggs *']);
+	});
+
 	it('moves an item down the walking order', async () => {
 		const { list } = await setUp(['Eggs', 'Milk', 'Bananas'], ['Bananas', 'Milk', 'Eggs']);
 		list.pick('aldi');
