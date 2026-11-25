@@ -51,6 +51,10 @@ class FakePartition:
         # Everything: the most the store is allowed to return, so the API's own filtering is what's tested.
         return [copy.deepcopy(doc) for doc in self.docs.values() if doc["kind"] == "item"]
 
+    def shops(self, after: int) -> list[dict[str, Any]]:
+        # Every shop, so the API's own filtering is what's tested.
+        return [copy.deepcopy(doc) for doc in self.docs.values() if doc["kind"] == "shop"]
+
     def log(self) -> list[dict[str, Any]]:
         return sorted((d for d in self.docs.values() if d["kind"] == "op"), key=lambda d: d["seq"])
 
@@ -135,6 +139,7 @@ def test_an_added_item_is_on_the_list(client: TestClient) -> None:
                 "added_seq": 1,
             }
         ],
+        "shops": [],
         "seq": 1,
     }
 
@@ -328,7 +333,7 @@ def test_a_no_change_still_gets_a_number_and_is_logged(client: TestClient, store
     assert (result["seq"], result["changed"]) == (2, False)
     assert [(d["type"], d["changed"]) for d in store.shopping.log()] == [("add", True), ("untick", False)]
     # The item didn't change, so it isn't in the catch-up after the add.
-    assert items(client, after=1) == {"items": [], "seq": 2}
+    assert items(client, after=1) == {"items": [], "shops": [], "seq": 2}
 
 
 def test_the_catch_up_returns_only_what_changed_after_the_number(client: TestClient) -> None:
@@ -343,7 +348,7 @@ def test_the_catch_up_returns_only_what_changed_after_the_number(client: TestCli
         (bread, True, False),
         (eggs, False, True),
     ]
-    assert items(client, after=5) == {"items": [], "seq": 5}
+    assert items(client, after=5) == {"items": [], "shops": [], "seq": 5}
 
 
 def test_from_nothing_removed_items_and_items_ticked_off_over_10_minutes_ago_are_left_out(

@@ -17,7 +17,7 @@ from pydantic import BaseModel
 from familyhub_api.accounts import CosmosAccounts
 from familyhub_api.auth import Accounts, Caller, EntraSettings, SignIn, TokenChecker
 from familyhub_api.cosmos_lists import CosmosLists
-from familyhub_api.lists import Applied, Busy, Item, Lists, Operations, Store
+from familyhub_api.lists import Applied, Busy, Item, Lists, Operations, ShopShown, Store
 from familyhub_api.live import Live, WebPubSubLive
 
 SHOPPING = "shopping"
@@ -52,6 +52,8 @@ class LiveConnection(BaseModel):
 
 class ChangedItems(BaseModel):
     items: list[Item]
+    # The shops changed after the number asked for, each with its learned walking order (#84).
+    shops: list[ShopShown]
     # Ask for everything after this next time.
     seq: int
 
@@ -145,11 +147,11 @@ def create_app(
         lists: Annotated[Lists, Depends(shared_lists)],
         after: Annotated[int, Query(ge=0)] = 0,
     ) -> ChangedItems:
-        """The Shopping list's items changed after sequence number after, removed ones as markers. From 0,
-        what's still to get and what was ticked off in the last 10 minutes."""
+        """The Shopping list's items and shops changed after sequence number after, removed items as markers.
+        From 0, what's still to get, what was ticked off in the last 10 minutes, and every shop."""
         with _unavailable_if_cosmos_fails():
             caught_up = lists.changed_since(SHOPPING, after)
-        return ChangedItems(items=caught_up.items, seq=caught_up.seq)
+        return ChangedItems(items=caught_up.items, shops=caught_up.shops, seq=caught_up.seq)
 
     return app
 

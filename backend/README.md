@@ -2,7 +2,7 @@
 
 The family app's backend ([ADR 0010](../docs/adr/0010-shared-lists-in-an-azure-backend-with-an-installable-family-app.md)): a Python FastAPI app, run in Azure by Functions Flex Consumption ([ADR 0011](../docs/adr/0011-backend-runs-on-functions-flex-consumption.md)). The plan and its slices are in the [design notes](../design/family-app/notes.md).
 
-So far it's the skeleton from slice 1 (`/health`, sign-in, and `/me`, deployed by the pipeline) and slice 2's Shopping list: its operations, log, catch-up and live updates.
+So far it's the skeleton from slice 1 (`/health`, sign-in, and `/me`, deployed by the pipeline) and slice 2's Shopping list: its operations, log, catch-up and live updates, and its Shops, each learning a walking order (#84).
 
 ## Sign-in
 
@@ -23,13 +23,15 @@ Both endpoints need sign-in, as a Member or the Hub, and either can do everythin
   - `{"id": "<uuid>", "type": "add", "item_id": "<uuid>", "text": "Milk"}`
   - `{"id": "<uuid>", "type": "tick" | "untick" | "remove", "item_id": "<uuid>"}`
   - `{"id": "<uuid>", "type": "rename", "item_id": "<uuid>", "text": "Oat milk"}`
+  - `{"id": "<uuid>", "type": "add_shop", "shop_id": "<uuid>", "name": "Aldi"}`: a Shop the list can be sorted for (#84). The name is trimmed and must be 1 to 50 characters. A shop id already used isn't added again.
+  - `{"id": "<uuid>", "type": "place", "shop_id": "<uuid>", "name": "Plasters", "after": "Cheddar"}`: teaches a Shop its walking order. The name is taken out of the Shop's order and put back straight after `after`, or at the start if `after` is left out or isn't in the order yet. Placing in a Shop that doesn't exist, or a place that leaves the order as it was, changes nothing. A Shop keeps at most 500 names; placing one more drops the name placed longest ago.
 
-  Both ids are made on the device. Text is trimmed and must be 1 to 200 characters. They're applied in order, and the answer is `{"results": [{"id": "…", "seq": 12, "changed": true}, ...]}`. Sending an operation again gets the same answer and changes nothing. Anything invalid is a 422, and none of the batch is applied.
-- `GET /lists/shopping/items?after=N` answers `{"items": [...], "seq": 14}`: every item changed after sequence number N, each with its `id`, `text`, `ticked_off`, `ticked_off_at`, `removed`, `seq` and `added_seq`, the number it was added at, which devices order the list by, newest first (items stored before it was kept give their `seq`). A removed item comes as a marker, with `removed` true, for devices to drop. With `after=0`, it's what a device starting from nothing needs: the items still to get, and those ticked off in the last 10 minutes. Ask for everything after `seq` next time. An item may come twice, which does no harm.
+  Names in a Shop's order are matched lowercase, trimmed, with runs of spaces collapsed and trailing punctuation stripped, so "Milk", " milk " and "Milk." are one name. Plurals aren't merged. The ids are made on the device. Text is trimmed and must be 1 to 200 characters. They're applied in order, and the answer is `{"results": [{"id": "…", "seq": 12, "changed": true}, ...]}`. Sending an operation again gets the same answer and changes nothing. Anything invalid is a 422, and none of the batch is applied.
+- `GET /lists/shopping/items?after=N` answers `{"items": [...], "shops": [...], "seq": 14}`: every item changed after sequence number N, each with its `id`, `text`, `ticked_off`, `ticked_off_at`, `removed`, `seq` and `added_seq`, the number it was added at, which devices order the list by, newest first (items stored before it was kept give their `seq`). A removed item comes as a marker, with `removed` true, for devices to drop. With `after=0`, it's what a device starting from nothing needs: the items still to get, and those ticked off in the last 10 minutes. It also gives the Shops changed after N (every Shop with `after=0`), each with its `id`, `name`, `order` (the matched names, first to last) and `seq`. Ask for everything after `seq` next time. An item or Shop may come twice, which does no harm.
 
 The server decides how operations merge. Removing beats anything later: a removed item never comes back. Ticked-off and the text are separate, so changing one never undoes the other. Otherwise the latest to arrive wins.
 
-Everything is in Cosmos DB's `lists` container, one partition per list (`listId` `shopping`): a counter, an item per item, and the log of every operation with its number, when it arrived and who sent it (`sentBy`: a Member's id, or `hub`). Each operation is written with the counter and the item in one transactional batch, and tried again if another request wrote first. If Cosmos DB can't be reached, or is too busy, it's a 503. The operations before the one that failed are kept, so a client resends the whole batch, which is safe: the ones already applied aren't applied again.
+Everything is in Cosmos DB's `lists` container, one partition per list (`listId` `shopping`): a counter, an item per item, a document per Shop, and the log of every operation with its number, when it arrived and who sent it (`sentBy`: a Member's id, or `hub`). Each operation is written with the counter and the item or Shop in one transactional batch, and tried again if another request wrote first. If Cosmos DB can't be reached, or is too busy, it's a 503. The operations before the one that failed are kept, so a client resends the whole batch, which is safe: the ones already applied aren't applied again.
 
 ## Live updates
 

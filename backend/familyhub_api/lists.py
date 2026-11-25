@@ -6,11 +6,15 @@ an item added offline needs no id swapping. The server applies operations in the
 the list's next sequence number, and decides how they merge. Clients never merge: they send operations, and
 show the items' states the catch-up returns.
 
-Each list is one partition. Applying an operation reads the list's counter and the item, works out the item's
-new state, then writes the counter, the operation and the item together, or not at all. If another request
-wrote first, the write is refused and the operation is tried again from the start.
+The Shopping list's Shops, each with the walking order it has learned (#84), are changed by operations too,
+and kept in the same partition.
+
+Each list is one partition. Applying an operation reads the list's counter and the item or Shop, works out its
+new state, then writes the counter, the operation and the item or Shop together, or not at all. If another
+request wrote first, the write is refused and the operation is tried again from the start.
 """
 
+import string
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -29,7 +33,11 @@ MOST_OPERATIONS = 100
 # How many times an operation is tried when other requests keep writing first.
 ATTEMPTS = 10
 
+# The most item names a shop's order keeps. Placing one more drops the name placed longest ago.
+MOST_PLACED = 500
+
 ItemText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
+ShopName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=50)]
 
 
 class _Operation(BaseModel):
@@ -59,7 +67,28 @@ class Remove(_Operation):
     type: Literal["remove"]
 
 
-Operation = Annotated[Add | Tick | Untick | Rename | Remove, Field(discriminator="type")]
+class AddShop(BaseModel):
+    """A shop the list can be sorted for, in its walking order (#84). The shop's id is made on the device."""
+
+    id: UUID
+    type: Literal["add_shop"]
+    shop_id: UUID
+    name: ShopName
+
+
+class Place(BaseModel):
+    """Teaches a shop where an item goes: straight after the item named after, or at the start with none."""
+
+    id: UUID
+    type: Literal["place"]
+    shop_id: UUID
+    name: ItemText
+    after: ItemText | None = None
+
+
+ItemOperation = Add | Tick | Untick | Rename | Remove
+ShopOperation = AddShop | Place
+Operation = Annotated[ItemOperation | ShopOperation, Field(discriminator="type")]
 
 
 class Operations(BaseModel):
@@ -88,6 +117,37 @@ class Item(BaseModel):
     # The sequence number it was added at, which devices order the list by, newest first. Items stored before
     # it was kept use their seq.
     added_seq: int
+
+
+class Placed(BaseModel):
+    """A name in a shop's order, and the sequence number it was last placed at."""
+
+    name: str
+    seq: int
+
+
+class Shop(BaseModel):
+    id: UUID
+    name: str
+    # Matched item names, first to last in the shop's walking order.
+    order: list[Placed]
+    # The sequence number of the last operation that changed it.
+    seq: int
+
+
+class ShopShown(BaseModel):
+    """A shop as devices get it: the names in its order, without when each was placed."""
+
+    id: UUID
+    name: str
+    order: list[str]
+    seq: int
+
+
+def match_name(text: str) -> str:
+    """The form item names are matched in, so "Milk", " milk " and "Milk." are one name. Plurals aren't
+    merged: "apple" and "apples" are two. Recent items (#15) match names the same way."""
+    return " ".join(text.lower().split()).rstrip(string.punctuation).rstrip()
 
 
 class Busy(Exception):
@@ -123,12 +183,16 @@ class Partition(Protocol):
         items and items ticked off before ticked_off_since."""
         ...
 
+    def shops(self, after: int) -> list[dict[str, Any]]:
+        """At least every shop changed after sequence number after."""
+        ...
+
 
 class Store(Protocol):
     def partition(self, list_id: str) -> Partition: ...
 
 
-def apply(item: Item | None, operation: Operation, now: datetime) -> Item | None:
+def apply(item: Item | None, operation: ItemOperation, now: datetime) -> Item | None:
     """The item's new state after the operation, or None if it changes nothing. The new state's seq, and an
     added item's added_seq, are left for the caller to set."""
     if isinstance(operation, Add):
@@ -160,6 +224,32 @@ def apply(item: Item | None, operation: Operation, now: datetime) -> Item | None
     return None
 
 
+def apply_to_shop(shop: Shop | None, operation: ShopOperation, seq: int) -> Shop | None:
+    """The shop's new state after the operation, at sequence number seq, or None if it changes nothing."""
+    if isinstance(operation, AddShop):
+        # A shop id already used isn't added again.
+        if shop is not None:
+            return None
+        return Shop(id=operation.shop_id, name=operation.name, order=[], seq=seq)
+    if shop is None:
+        return None
+    name = match_name(operation.name)
+    after = match_name(operation.after) if operation.after is not None else None
+    # A name that's all punctuation matches nothing, and a name can't follow itself.
+    if not name or name == after:
+        return None
+    order = [placed for placed in shop.order if placed.name != name]
+    names = [placed.name for placed in order]
+    # Straight after the item it follows, or at the start if that isn't in the shop's order yet.
+    at = names.index(after) + 1 if after in names else 0
+    order.insert(at, Placed(name=name, seq=seq))
+    if len(order) > MOST_PLACED:
+        order.remove(min(order, key=lambda placed: placed.seq))
+    if [placed.name for placed in order] == [placed.name for placed in shop.order]:
+        return None
+    return shop.model_copy(update={"order": order, "seq": seq})
+
+
 def shown(item: Item, now: datetime) -> bool:
     """Whether a device starting from nothing needs the item: still to get, or ticked off recently."""
     if item.removed:
@@ -172,6 +262,7 @@ def shown(item: Item, now: datetime) -> bool:
 @dataclass(frozen=True)
 class CaughtUp:
     items: list[Item]
+    shops: list[ShopShown]
     # Ask for everything after this next time. Items changed after it may be included, and come again.
     seq: int
 
@@ -209,32 +300,43 @@ class Lists:
                 return Applied(id=operation.id, seq=logged["seq"], changed=logged["changed"]), False
 
             counter = partition.read(_COUNTER)
-            stored = partition.read(_item_key(operation.item_id))
-            item = _item_from(stored) if stored is not None else None
             seq = (counter["seq"] if counter is not None else 0) + 1
             now = self._clock()
-            new = apply(item, operation, now)
-            if new is not None:
-                new = new.model_copy(update={"seq": seq, "added_seq": item.added_seq if item else seq})
+            if isinstance(operation, AddShop | Place):
+                stored = partition.read(_shop_key(operation.shop_id))
+                shop = apply_to_shop(_shop_from(stored) if stored is not None else None, operation, seq)
+                changed = shop is not None
+                logged_doc = _shop_operation_doc(list_id, operation, seq, now, by, changed)
+                new_doc = _shop_doc(list_id, shop, stored, now, by) if shop is not None else None
+            else:
+                stored = partition.read(_item_key(operation.item_id))
+                item = _item_from(stored) if stored is not None else None
+                new = apply(item, operation, now)
+                if new is not None:
+                    new = new.model_copy(update={"seq": seq, "added_seq": item.added_seq if item else seq})
+                changed = new is not None
+                logged_doc = _operation_doc(list_id, operation, seq, now, by, new or item, changed)
+                new_doc = _item_doc(list_id, new, stored, now, by) if new is not None else None
 
             writes = [
                 Write(
                     {"id": _COUNTER, "listId": list_id, "kind": "counter", "seq": seq},
                     _etag(counter),
                 ),
-                Write(_operation_doc(list_id, operation, seq, now, by, new or item, new is not None), None),
+                Write(logged_doc, None),
             ]
-            if new is not None:
-                writes.append(Write(_item_doc(list_id, new, stored, now, by), _etag(stored)))
+            if new_doc is not None:
+                writes.append(Write(new_doc, _etag(stored)))
             try:
                 partition.commit(writes)
             except Clash:
                 continue
-            return Applied(id=operation.id, seq=seq, changed=new is not None), True
+            return Applied(id=operation.id, seq=seq, changed=changed), True
         raise Busy
 
     def changed_since(self, list_id: str, after: int) -> CaughtUp:
-        """Every item changed after sequence number after. From 0, only the items a device needs."""
+        """Every item and shop changed after sequence number after. From 0, only the items a device needs,
+        and every shop."""
         partition = self._store.partition(list_id)
         now = self._clock()
         # The counter is read first. Every operation up to it has been written by then, so the items read next
@@ -244,7 +346,13 @@ class Lists:
         ticked_off_since = _timestamp(now - TICKED_OFF_SHOWN_FOR)
         items = [_item_from(doc) for doc in partition.items(after, ticked_off_since)]
         items = [item for item in items if item.seq > after and (after > 0 or shown(item, now))]
-        return CaughtUp(items=sorted(items, key=lambda item: item.seq), seq=seq)
+        shops = [_shop_from(doc) for doc in partition.shops(after)]
+        shown_shops = [
+            ShopShown(id=shop.id, name=shop.name, order=[placed.name for placed in shop.order], seq=shop.seq)
+            for shop in sorted(shops, key=lambda shop: shop.seq)
+            if shop.seq > after
+        ]
+        return CaughtUp(items=sorted(items, key=lambda item: item.seq), shops=shown_shops, seq=seq)
 
 
 # Documents in a list's partition: one counter, an item per item, and the log of operations. Ids are prefixed,
@@ -254,6 +362,10 @@ _COUNTER = "counter"
 
 def _item_key(item_id: UUID) -> str:
     return f"item-{item_id}"
+
+
+def _shop_key(shop_id: UUID) -> str:
+    return f"shop-{shop_id}"
 
 
 def _operation_key(operation_id: UUID) -> str:
@@ -304,7 +416,7 @@ def _item_doc(
 
 
 def _operation_doc(
-    list_id: str, operation: Operation, seq: int, now: datetime, by: str, item: Item | None, changed: bool
+    list_id: str, operation: ItemOperation, seq: int, now: datetime, by: str, item: Item | None, changed: bool
 ) -> dict[str, Any]:
     """The operation in the log. It keeps the item's text as it was after the operation, so recent items (#15)
     can count what was bought without reading every item."""
@@ -321,3 +433,53 @@ def _operation_doc(
         "at": _timestamp(now),
         "sentBy": by,
     }
+
+
+def _shop_from(doc: dict[str, Any]) -> Shop:
+    return Shop(
+        id=UUID(doc["shopId"]),
+        name=doc["name"],
+        order=[Placed(name=placed["name"], seq=placed["seq"]) for placed in doc["order"]],
+        seq=doc["seq"],
+    )
+
+
+def _shop_doc(
+    list_id: str, shop: Shop, stored: dict[str, Any] | None, now: datetime, by: str
+) -> dict[str, Any]:
+    # Who added it, and when, are kept from the add.
+    added = {"addedAt": stored["addedAt"], "addedBy": stored["addedBy"]} if stored else {}
+    return {
+        "id": _shop_key(shop.id),
+        "listId": list_id,
+        "kind": "shop",
+        "shopId": str(shop.id),
+        "name": shop.name,
+        "order": [{"name": placed.name, "seq": placed.seq} for placed in shop.order],
+        "seq": shop.seq,
+        "addedAt": _timestamp(now),
+        "addedBy": by,
+    } | added
+
+
+def _shop_operation_doc(
+    list_id: str, operation: ShopOperation, seq: int, now: datetime, by: str, changed: bool
+) -> dict[str, Any]:
+    """A shop's operation in the log, with the shop's name for an add, and the names as sent for a place."""
+    names = (
+        {"name": operation.name}
+        if isinstance(operation, AddShop)
+        else {"name": operation.name, "after": operation.after}
+    )
+    return {
+        "id": _operation_key(operation.id),
+        "listId": list_id,
+        "kind": "op",
+        "opId": str(operation.id),
+        "type": operation.type,
+        "shopId": str(operation.shop_id),
+        "seq": seq,
+        "changed": changed,
+        "at": _timestamp(now),
+        "sentBy": by,
+    } | names
