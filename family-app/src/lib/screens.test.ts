@@ -226,6 +226,9 @@ describe('sorted for a Shop (AB#86)', () => {
 			'aria-label="Move Milk"'
 		]);
 		expect(body.match(/data-drag-row/g)).toHaveLength(3);
+		// Only the divider into the Shop's order takes part in a drag (AB#87).
+		expect(body).toMatch(/<li class="divider[^"]*" data-drag-divider[^>]*>In Aldi order/);
+		expect(body.match(/data-drag-divider/g)).toHaveLength(1);
 	});
 
 	it('C with Newest first: no dividers and no handles', async () => {
