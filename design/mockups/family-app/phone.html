@@ -129,6 +129,25 @@
 	.toast { position: absolute; left: 16px; right: 16px; bottom: 96px; background: var(--ink); color: var(--on-ink);
 		border-radius: 14px; padding: 14px 16px; font-size: 16px; display: flex; justify-content: space-between; }
 	.toast b { text-decoration: underline; }
+	/* Shop order (#86) */
+	.shop { display: inline-flex; align-items: center; gap: 6px; margin: 8px 0 0; height: 36px; padding: 0 14px; border-radius: 18px;
+		border: 2px solid var(--line); font-size: 16px; font-weight: 700; color: var(--ink); background: var(--card); box-sizing: border-box; }
+	.shop.picked { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+	.handle { width: 44px; height: 44px; margin-right: -8px; display: grid; place-items: center; color: var(--box); flex: none; }
+	.handle svg { width: 22px; height: 22px; }
+	ul.items li.divider { height: auto; border-radius: 0; padding: 0; margin: 10px 12px 4px; font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--dim);
+		display: flex; align-items: center; gap: 10px; }
+	.divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+	ul.items li.lifted { background: var(--card); box-shadow: 0 10px 28px rgb(0 0 0 / 0.28); transform: scale(1.03); position: relative;
+		z-index: 1; margin-top: -68px; margin-bottom: 8px; }
+	ul.items li.gap { height: 60px; border: 2px dashed var(--line); box-sizing: border-box; background: none; }
+	.picker { position: absolute; top: 124px; left: 16px; width: 250px; padding: 8px; border-radius: 18px; background: var(--card);
+		border: 1px solid var(--line); box-shadow: 0 12px 32px rgb(0 0 0 / 0.25); display: flex; flex-direction: column; box-sizing: border-box; }
+	.picker .opt { height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border-radius: 12px;
+		font-size: 18px; font-weight: 600; }
+	.picker .opt.on { background: var(--soft); }
+	.picker .opt.addshop { color: var(--dim); border-top: 1px solid var(--line); border-radius: 0; margin-top: 4px; }
+	.picker .field { flex: none; height: 50px; margin: 6px 4px 4px; }
 </style>
 </head>
 <body>
@@ -173,6 +192,14 @@
 			.map((r) => `<div class="row">${[...r].map((k) => `<span>${k}</span>`).join('')}</div>`)
 			.join('') +
 		`<div class="row"><span class="mid">?123</span><span>,</span><span class="wide">space</span><span>.</span><span class="go">${go}</span></div></div>`;
+	const grip =
+		'<svg viewBox="0 0 24 24" aria-hidden="true">' +
+		[7, 12, 17].map((y) => `<circle cx="9" cy="${y}" r="1.8" fill="currentColor"/><circle cx="15" cy="${y}" r="1.8" fill="currentColor"/>`).join('') +
+		'</svg>';
+	const shopHeading = (count, shop) =>
+		`<div class="top"><div><h1>Shopping</h1><div class="count">${count}</div><span class="shop ${shop ? 'picked' : ''}">${shop ?? 'Newest first'} ▾</span></div><div class="me" title="Signed in">R</div></div>`;
+	const rows = (texts, handles) =>
+		texts.map((t) => `<li><span class="box"></span><span class="text">${t}</span>${handles ? `<span class="handle">${grip}</span>` : ''}</li>`).join('');
 	const regulars = [
 		['Milk'], ['Eggs'], ['Bananas'], ['Cheddar'], ['Washing-up liquid'], ['Lunchbox snacks'], ['Wholemeal bread', 'done']
 	];
@@ -270,6 +297,43 @@
 				'<li class="done"><span class="box">✓</span><span class="text">Wholemeal bread</span></li>' +
 				'</ul>' +
 				addBar()
+		},
+		{
+			id: 'K',
+			title: 'K · Picking a shop (#86)',
+			note: 'A pill under the count says how the list is sorted. Tapping it offers Newest first, each shop the Household has added, and Add a shop (N). The pick stays on this phone, and is still picked next time the app opens. With Newest first, the list is as in C, with no handles.',
+			body: () =>
+				shopHeading('6 to get', null) + items(regulars) + addBar() +
+				`<div class="picker"><div class="opt on">Newest first <span>✓</span></div><div class="opt">Aldi</div><div class="opt">Lidl</div><div class="opt addshop">＋ Add a shop</div></div>`
+		},
+		{
+			id: 'L',
+			title: 'L · Sorted for a shop (#86)',
+			note: 'With Aldi picked, the pill fills in. Items Aldi hasn\'t learned come first, newest first, under "Not placed yet"; then the rest in Aldi\'s walking order, under "In Aldi order"; then ticked-off items, as now. Each item to get has a handle on the right. Only the handle drags: the words still edit and the row still swipes to remove.',
+			body: () =>
+				shopHeading('7 to get', 'Aldi') +
+				'<ul class="items">' + '<li class="divider">Not placed yet</li>' + rows(['Plasters'], true) +
+				'<li class="divider">In Aldi order</li>' + rows(['Bananas', 'Wholemeal bread', 'Cheddar', 'Milk', 'Eggs', 'Washing-up liquid'], true) +
+				'</ul>' + addBar()
+		},
+		{
+			id: 'M',
+			title: 'M · Dragging an item (#86)',
+			note: 'Holding the handle lifts the item, and the others make room where it would land. Letting go drops it there, and it stays put. Aldi learns that Plasters comes after Cheddar, so next trip it starts there. Dragging to the very top of the learned items puts it first in Aldi\'s order. Ticked-off items can\'t be dragged.',
+			body: () =>
+				shopHeading('7 to get', 'Aldi') +
+				'<ul class="items">' + '<li class="divider">In Aldi order</li>' + rows(['Bananas', 'Wholemeal bread', 'Cheddar'], true) +
+				'<li class="gap"></li>' +
+				`<li class="lifted"><span class="box"></span><span class="text">Plasters</span><span class="handle">${grip}</span></li>` +
+				rows(['Milk', 'Eggs', 'Washing-up liquid'], true) + '</ul>' + addBar()
+		},
+		{
+			id: 'N',
+			title: 'N · Adding a shop (#86)',
+			note: 'Add a shop turns into a name box in the picker, with the keyboard up. Add (on the keyboard) adds it for the whole Household and picks it on this phone; Back cancels. A new shop knows nothing yet, so every item starts under "Not placed yet".',
+			body: () =>
+				shopHeading('6 to get', null) + items(regulars.slice(0, 4)) + addBar() + keyboard('Add') +
+				`<div class="picker"><div class="opt on">Newest first <span>✓</span></div><div class="opt">Aldi</div><div class="opt">Lidl</div><div class="field typing">Co-op<span class="caret"></span></div></div>`
 		},
 		{
 			id: 'I',

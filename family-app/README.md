@@ -2,7 +2,7 @@
 
 The Household's app for phones ([ADR 0010](../docs/adr/0010-shared-lists-in-an-azure-backend-with-an-installable-family-app.md)): an installable web app, built with SvelteKit like the Hub, served by Azure Static Web Apps' free plan. Open its address in Chrome on an Android phone and tap **Install**. The plan and its slices are in the [design notes](../design/family-app/notes.md).
 
-It installs on a phone, signs in, and shows the Shopping list, which keeps working with no signal and shows changes made elsewhere as they happen (slice 3).
+It installs on a phone, signs in, and shows the Shopping list, which keeps working with no signal, shows changes made elsewhere as they happen, and sorts for the shop you're in (slice 3).
 
 ## Signing in
 
@@ -20,6 +20,8 @@ Screens C, D, E and H in `design/mockups/family-app/`, through the backend's lis
 - **Items to get, newest first, then those ticked off in the last 10 minutes,** struck through, as on the Hub. The order is the backend's `added_seq`, so ticking or changing an item doesn't move it. A ticked item drops off the phone once its 10 minutes are up.
 - **Tap the box to tick or untick. Tap the words to change them, in the row** (`src/lib/ItemEdit.svelte`): Done, or tapping anywhere else, saves; Back or Escape cancels; clearing the text puts the old text back. The add box at the bottom stays open after adding.
 - **Swipe an item either way to remove it** (`src/lib/swipe.ts`): it follows the finger, with a red Remove band behind it, and goes when let go past a third of its width, or flicked. A vertical drag still scrolls. Swiping is the only way to remove (AB#79).
+- **Sort it for the shop you're in** (AB#86, screens K to N, `src/lib/ShopPicker.svelte`). A pill under the count says how the list is sorted: Newest first, or a Shop, such as Aldi. With a Shop picked, the items it hasn't placed come first, newest first, under "Not placed yet", then the rest in its walking order, under "In Aldi order". Ticked-off items stay below. The pick is kept on this phone, in its copy, and is still picked next time the app opens. **Add a shop** in the pill's menu adds one for the whole Household and picks it here. Back, Escape or tapping elsewhere closes the menu.
+- **Drag an item by its handle to put it in its place in the shop** (`src/lib/drag.ts`). Only the handle drags, so the words still edit and the row still swipes. The item lifts, the others make room, and the list scrolls near its edges. Letting go teaches the Shop with a `place` operation: the item goes straight after the nearest item above it that the Shop knows, or at the start. Shops learn item names, matched as the backend matches them (lowercase, trimmed, spaces collapsed, trailing punctuation stripped), so "Milk" bought next week lands in the same place. Shops and their orders come with the backend's catch-up, and adds and places queue like every other change, so it all works with no signal.
 - **Every tap shows straight away.** Each change is an operation, with its id and a new item's id made on the phone, queued and sent in the background. The phone shows the backend's items with its own unsent changes replayed on top; the backend decides how changes merge.
 - **A failed send is tried again,** after 1 second, then twice as long each time up to a minute, and whenever the app comes back to the front or the phone comes back online. Sending an operation again is safe: the backend applies it once.
 - **Removing shows Undo for 5 seconds.** The remove waits on the phone until then, or is sent at once if the app is put away, so Undo needs nothing from the backend, which never brings a removed item back.
@@ -30,7 +32,7 @@ Screens C, D, E and H in `design/mockups/family-app/`, through the backend's lis
 
 Shops often have no signal, so the phone keeps its own copy of the list (AB#58, screens F and G).
 
-- **The copy is in IndexedDB** (`src/lib/copy.ts`): the items the phone knows, the backend's last number, the changes it hasn't sent, and who's signed in. Every change is saved before it's sent, so closing the app loses nothing.
+- **The copy is in IndexedDB** (`src/lib/copy.ts`): the items and Shops the phone knows, the Shop picked, the backend's last number, the changes it hasn't sent, and who's signed in. Every change is saved before it's sent, so closing the app loses nothing.
 - **The app opens from the copy straight away,** every time there's one for the account that's signed in, then gets a token, checks `GET /me`, catches up and sends what's waiting, in the background (`src/lib/session.ts`). With no copy yet, it loads from the backend.
 - **While the backend can't be reached,** a banner says "No signal" and how many changes will send, and each item with a change waiting is marked "waiting". It keeps trying, on the same backoff, and when the phone comes back online.
 - **When sign-in has run out** (the token can't be renewed quietly, or the backend says 401), the list stays usable, changes are kept, and a banner asks to sign in again. They send after signing in with the same account. A 403 from `GET /me` goes to "Not this account", and the copy goes.

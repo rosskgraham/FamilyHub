@@ -1,9 +1,18 @@
 // For tests: the backend's Shopping list in memory, and ids made in order.
-import type { Changes, ListApi, Operation, ServerItem } from './shopping.svelte.ts';
+import {
+	placeIn,
+	type Changes,
+	type ItemOperation,
+	type ListApi,
+	type Operation,
+	type ServerItem,
+	type ServerShop
+} from './shopping.svelte.ts';
 
 /** The backend's Shopping list in memory, merging as backend/familyhub_api/lists.py does. */
 export class FakeBackend implements ListApi {
 	items = new Map<string, ServerItem>();
+	shops = new Map<string, ServerShop>();
 	seq = 0;
 	applied = new Set<string>();
 	sent: Operation[][] = [];
@@ -21,13 +30,24 @@ export class FakeBackend implements ListApi {
 		const items = [...this.items.values()].filter(
 			(item) => item.seq > after && (after > 0 || (!item.removed && !item.ticked_off))
 		);
-		return structuredClone({ items, seq: this.seq });
+		const shops = [...this.shops.values()].filter((shop) => shop.seq > after);
+		return structuredClone({ items, shops, seq: this.seq });
 	}
 
 	apply(op: Operation): void {
 		if (this.applied.has(op.id)) return;
 		this.applied.add(op.id);
 		const seq = ++this.seq;
+		if (op.type === 'add_shop') {
+			if (!this.shops.has(op.shop_id)) this.shops.set(op.shop_id, { id: op.shop_id, name: op.name, order: [], seq });
+			return;
+		}
+		if (op.type === 'place') {
+			const shop = this.shops.get(op.shop_id);
+			const order = shop && placeIn(shop.order, op.name, op.after);
+			if (shop && order!.join('\n') !== shop.order.join('\n')) Object.assign(shop, { order, seq });
+			return;
+		}
 		const item = this.items.get(op.item_id);
 		if (op.type === 'add') {
 			if (!item) {
@@ -52,7 +72,7 @@ export class FakeBackend implements ListApi {
 	}
 
 	/** A change made somewhere else: the Hub or another phone. */
-	elsewhere(type: Operation['type'], itemId: string, text?: string): void {
+	elsewhere(type: ItemOperation['type'], itemId: string, text?: string): void {
 		this.apply({ id: crypto.randomUUID(), type, item_id: itemId, text } as Operation);
 	}
 }

@@ -14,6 +14,10 @@ The family app on a phone (AB#10, slice 3). `phone.html` draws each screen at 39
 | `phone-h.png` | H · Nothing to get                                         | AB#57     |
 | `phone-i.png` | I · Sign out, from the circle                              | AB#56     |
 | `phone-j.png` | J · Swiping to remove                                      | AB#79     |
+| `phone-k.png` | K · Picking a shop                                         | AB#86     |
+| `phone-l.png` | L · Sorted for a shop                                      | AB#86     |
+| `phone-m.png` | M · Dragging an item                                       | AB#86     |
+| `phone-n.png` | N · Adding a shop                                          | AB#86     |
 
 ## Decided (23 November 2026, with Ross)
 
@@ -31,5 +35,12 @@ The family app on a phone (AB#10, slice 3). `phone.html` draws each screen at 39
 - **A removed item waits on the phone until its Undo has gone,** then the remove is sent, or at once if the app is put away. Undo just puts it back, and nothing reaches the backend: the backend never brings a removed item back.
 - **Signing out with changes still waiting warns, but doesn't block** (AB#58): the circle's menu says how many haven't sent yet. Signing out clears the list from the phone, so they're lost.
 - **Newest at the top, and it stays there:** the order is the one items were added in, so ticking, unticking or changing an item doesn't move it.
+
+## Decided (25 November 2026, with Ross, AB#84)
+
+- **Sort by the shop you're in** (K to N). A pill under the count says how the list is sorted: Newest first, or a shop. The pick stays on this phone. With Newest first there are no handles, and the list is as in C.
+- **Items the shop hasn't placed come first, under a "Not placed yet" divider,** newest first, then the rest under "In Aldi order" (L, chosen over a list with no dividers, as the divider says why an item is out of walking order).
+- **Only the handle on the right drags,** so the words still edit and the row still swipes to remove. Dropping an item teaches the shop where it goes. Ticked-off items can't be dragged.
+- **A shop is added from the picker** (N), for the whole Household, and is picked on this phone.
 
 Render the PNGs again after changing `phone.html`: open it in Chromium and screenshot each screen's `.pair`.

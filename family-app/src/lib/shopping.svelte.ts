@@ -13,6 +13,8 @@ export const TICKED_OFF_SHOWN_FOR = 10 * 60_000;
 export const UNDO_FOR = 5_000;
 /** The longest an item's text can be, as the backend allows. */
 export const MOST_TEXT = 200;
+/** The longest a Shop's name can be, as the backend allows. */
+export const MOST_SHOP_NAME = 50;
 const MOST_OPERATIONS = 100;
 // Sending again after a failure waits 1 second, then twice as long each time, up to a minute.
 const RETRY_FIRST = 1_000;
@@ -31,14 +33,29 @@ export interface ServerItem {
 	added_seq: number;
 }
 
-export interface Changes {
-	items: ServerItem[];
+/** A Shop as GET /lists/shopping/items gives it (#85): its walking order is matched item names, first to last. */
+export interface ServerShop {
+	id: string;
+	name: string;
+	order: string[];
 	seq: number;
 }
 
-export type Operation =
+export interface Changes {
+	items: ServerItem[];
+	shops?: ServerShop[];
+	seq: number;
+}
+
+export type ItemOperation =
 	| { id: string; type: 'add' | 'rename'; item_id: string; text: string }
 	| { id: string; type: 'tick' | 'untick' | 'remove'; item_id: string };
+
+export type ShopOperation =
+	| { id: string; type: 'add_shop'; shop_id: string; name: string }
+	| { id: string; type: 'place'; shop_id: string; name: string; after: string | null };
+
+export type Operation = ItemOperation | ShopOperation;
 
 /** The backend's Shopping list. */
 export interface ListApi {
@@ -59,6 +76,14 @@ export interface Shown {
 	tickedOff: boolean;
 	/** A change to it hasn't reached the backend yet (screen F's "waiting"). */
 	waiting: boolean;
+	/** The picked Shop has learned where it goes (screen L). False with no Shop picked. */
+	placed: boolean;
+}
+
+/** A Shop the list can be sorted for. */
+export interface ShopChoice {
+	id: string;
+	name: string;
 }
 
 /**
@@ -73,6 +98,9 @@ export interface SavedList {
 	known: Record<string, Known>;
 	queue: Pending[];
 	gone: string[];
+	/** The Shops the phone knows, and the one picked on this phone (AB#86). Copies saved before have neither. */
+	shops?: Record<string, ServerShop>;
+	shop?: string | null;
 }
 
 interface Known {
@@ -98,9 +126,29 @@ export interface Options {
 	newId?: () => string;
 }
 
-export function validText(text: string): string | null {
+export function validText(text: string, most = MOST_TEXT): string | null {
 	const trimmed = text.trim();
-	return trimmed && trimmed.length <= MOST_TEXT ? trimmed : null;
+	return trimmed && trimmed.length <= most ? trimmed : null;
+}
+
+const TRAILING_PUNCTUATION = /[!"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~]+$/;
+
+/**
+ * The form item names are matched in, as the backend's match_name: lowercase, trimmed, runs of spaces collapsed,
+ * trailing punctuation stripped, and no plural merging.
+ */
+export function matchName(text: string): string {
+	return text.toLowerCase().split(/\s+/).filter(Boolean).join(' ').replace(TRAILING_PUNCTUATION, '').trimEnd();
+}
+
+/** A Shop's order after placing name straight after after, or at the start, as the backend does it. */
+export function placeIn(order: string[], name: string, after: string | null): string[] {
+	const matched = matchName(name);
+	const follows = after === null ? null : matchName(after);
+	if (!matched || matched === follows) return order;
+	const rest = order.filter((known) => known !== matched);
+	const at = follows !== null && rest.includes(follows) ? rest.indexOf(follows) + 1 : 0;
+	return [...rest.slice(0, at), matched, ...rest.slice(at)];
 }
 
 export class ShoppingList {
@@ -109,6 +157,8 @@ export class ShoppingList {
 	#newId: () => string;
 
 	#known: Record<string, Known> = $state({});
+	#shops: Record<string, ServerShop> = $state({});
+	#picked: string | null = $state(null);
 	#queue: Pending[] = $state([]);
 	#held: (Pending & { text: string; timer: ReturnType<typeof setTimeout> }) | null = $state(null);
 	#now = $state(Date.now());
@@ -123,7 +173,22 @@ export class ShoppingList {
 	/** What the last try to reach the backend found. */
 	reach: Reach = $state('ok');
 
-	/** Items to get, newest first, then those ticked off in the last 10 minutes. */
+	/** The Shops, with the phone's own unsent changes to them on top: each one's walking order, by id. */
+	readonly #shopView: Record<string, ServerShop> = $derived.by(() => this.#viewShops());
+	/** The Shops to pick from, by name. */
+	readonly shops: ShopChoice[] = $derived(
+		Object.values(this.#shopView)
+			.map(({ id, name }) => ({ id, name }))
+			.sort((a, b) => a.name.localeCompare(b.name))
+	);
+	/** The Shop picked on this phone (screen K), or null for newest first. */
+	readonly shop: ShopChoice | null = $derived(
+		this.#picked && this.#shopView[this.#picked] ? { id: this.#picked, name: this.#shopView[this.#picked]!.name } : null
+	);
+	/**
+	 * Items to get, then those ticked off in the last 10 minutes. With no Shop picked, newest first. With one,
+	 * those it hasn't placed come first, newest first, then the rest in its walking order (screen L).
+	 */
 	readonly items: Shown[] = $derived.by(() => this.#view());
 	readonly toGet: number = $derived(this.items.filter((item) => !item.tickedOff).length);
 	/** The text of the item just removed, while its Undo shows. */
@@ -141,6 +206,7 @@ export class ShoppingList {
 	async load(): Promise<void> {
 		const changes = await this.#api.changes(0);
 		this.#known = {};
+		this.#shops = {};
 		this.#merge(changes);
 		this.#startClock();
 	}
@@ -148,6 +214,8 @@ export class ShoppingList {
 	/** Starts from the phone's copy, with no wait for the backend. refresh() then catches up and sends. */
 	restore(saved: SavedList): void {
 		this.#known = structuredClone(saved.known);
+		this.#shops = structuredClone(saved.shops ?? {});
+		this.#picked = saved.shop ?? null;
 		this.#queue = structuredClone(saved.queue);
 		this.#gone.clear();
 		for (const id of saved.gone) this.#gone.add(id);
@@ -161,7 +229,9 @@ export class ShoppingList {
 			seq: this.#seq,
 			known: $state.snapshot(this.#known),
 			queue: $state.snapshot(this.#queue),
-			gone: [...this.#gone]
+			gone: [...this.#gone],
+			shops: $state.snapshot(this.#shops),
+			shop: this.#picked
 		};
 	}
 
@@ -193,6 +263,40 @@ export class ShoppingList {
 		if (!valid || !item || valid === item.text) return false;
 		this.#push({ id: this.#newId(), type: 'rename', item_id: id, text: valid });
 		return true;
+	}
+
+	/** Sorts the list for a Shop, or newest first with null. Kept on this phone only. */
+	pick(shopId: string | null): void {
+		this.#picked = shopId;
+		this.#onchange();
+	}
+
+	/** Adds a Shop for the Household, and picks it on this phone (screen N). */
+	addShop(name: string): boolean {
+		const valid = validText(name, MOST_SHOP_NAME);
+		if (!valid) return false;
+		const shopId = this.#newId();
+		this.#picked = shopId;
+		this.#push({ id: this.#newId(), type: 'add_shop', shop_id: shopId, name: valid });
+		return true;
+	}
+
+	/**
+	 * An item to get has been dragged to position to among the items to get (screen M). Teaches the picked Shop
+	 * that it goes straight after the nearest item above it there that the Shop knows, or at the start.
+	 */
+	place(id: string, to: number): void {
+		const shop = this.shop && this.#shopView[this.shop.id];
+		const toGet = this.items.filter((item) => !item.tickedOff);
+		const moved = toGet.find((item) => item.id === id);
+		if (!shop || !moved) return;
+		const rest = toGet.filter((item) => item !== moved);
+		const self = matchName(moved.text);
+		const known = (item: Shown) => matchName(item.text) !== self && shop.order.includes(matchName(item.text));
+		const above = rest.slice(0, Math.max(0, Math.min(to, rest.length))).findLast(known);
+		const after = above ? above.text : null;
+		if (placeIn(shop.order, moved.text, after).join('\n') === shop.order.join('\n')) return;
+		this.#push({ id: this.#newId(), type: 'place', shop_id: shop.id, name: moved.text, after });
 	}
 
 	/** Takes the item off straight away, and sends the remove once its Undo has gone. */
@@ -341,7 +445,25 @@ export class ShoppingList {
 				};
 			}
 		}
+		for (const shop of changes.shops ?? []) {
+			const known = this.#shops[shop.id];
+			if (!known || shop.seq >= known.seq) this.#shops[shop.id] = shop;
+		}
 		this.#seq = Math.max(this.#seq, changes.seq);
+	}
+
+	#viewShops(): Record<string, ServerShop> {
+		const shops: Record<string, ServerShop> = {};
+		for (const [id, shop] of Object.entries(this.#shops)) shops[id] = { ...shop, order: [...shop.order] };
+		for (const { op } of this.#queue) {
+			if (op.type === 'add_shop') {
+				shops[op.shop_id] ??= { id: op.shop_id, name: op.name, order: [], seq: 0 };
+			} else if (op.type === 'place') {
+				const shop = shops[op.shop_id];
+				if (shop) shop.order = placeIn(shop.order, op.name, op.after);
+			}
+		}
+		return shops;
 	}
 
 	#view(): Shown[] {
@@ -349,6 +471,7 @@ export class ShoppingList {
 		for (const [id, item] of Object.entries(this.#known)) items[id] = { ...item };
 		const waiting = this.#held ? [...this.#queue, this.#held] : this.#queue;
 		waiting.forEach(({ op, at }, index) => {
+			if (op.type === 'add_shop' || op.type === 'place') return;
 			const item = items[op.item_id];
 			switch (op.type) {
 				case 'add':
@@ -377,10 +500,26 @@ export class ShoppingList {
 					break;
 			}
 		});
-		const unsent = this.#queue.map(({ op }) => op.item_id);
+		const unsent = this.#queue.map(({ op }) => ('item_id' in op ? op.item_id : null));
+		// Where the picked Shop has each item, by its matched name; -1 for one it hasn't placed.
+		const walking = this.shop ? this.#shopView[this.shop.id]!.order : null;
+		const at = (item: Known) => (walking ? walking.indexOf(matchName(item.text)) : -1);
 		return Object.values(items)
 			.filter((item) => !item.tickedOff || (item.tickedOffAt ?? 0) > this.#now - TICKED_OFF_SHOWN_FOR)
-			.sort((a, b) => Number(a.tickedOff) - Number(b.tickedOff) || b.order - a.order)
-			.map(({ id, text, tickedOff }) => ({ id, text, tickedOff, waiting: unsent.includes(id) }));
+			.map((item) => ({ item, at: item.tickedOff ? -1 : at(item) }))
+			.sort(
+				(a, b) =>
+					Number(a.item.tickedOff) - Number(b.item.tickedOff) ||
+					Number(a.at >= 0) - Number(b.at >= 0) ||
+					a.at - b.at ||
+					b.item.order - a.item.order
+			)
+			.map(({ item: { id, text, tickedOff }, at }) => ({
+				id,
+				text,
+				tickedOff,
+				waiting: unsent.includes(id),
+				placed: at >= 0
+			}));
 	}
 }
