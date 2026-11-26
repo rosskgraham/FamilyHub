@@ -27,11 +27,14 @@ function fakeBackend() {
 		/** Items a change to is turned down. */
 		refuse: new Set<string>(),
 		/** Applies the next batch, then loses its answer. */
-		loseNextAnswer: false
+		loseNextAnswer: false,
+		/** How often the list was asked for. */
+		gets: 0
 	};
 	const request: BackendRequest = async <T>(method: 'GET' | 'POST', path: string, body?: unknown) => {
 		if (backend.down) throw backend.down;
 		if (method === 'GET') {
+			backend.gets += 1;
 			expect(path).toBe('/lists/shopping/items?after=0');
 			return { items: backend.items(), shops: [], seq } as T;
 		}
@@ -88,8 +91,8 @@ afterEach(async () => {
 	await rm(dir, { recursive: true, force: true });
 });
 
-function feedFor(request: BackendRequest | null, sampleOnly = false) {
-	return createBackendFeed({ api: () => request, sample, sampleOnly, dir, clock: () => time });
+function feedFor(request: BackendRequest | null, sampleOnly = false, live?: () => boolean) {
+	return createBackendFeed({ api: () => request, sample, sampleOnly, live, dir, clock: () => time });
 }
 
 const texts = (items: { text: string; tickedOff: boolean }[]) =>
@@ -214,5 +217,51 @@ describe('the backend Shopping list', () => {
 			expect(await feed.apply({ action: 'add', text: 'Milk' })).toBe(200);
 		}
 		expect(backend.posts).toEqual([]);
+	});
+});
+
+describe('catching up', () => {
+	/** Lets a fetch the read started in the background finish. */
+	const settle = () => new Promise((resolve) => setTimeout(resolve, 10));
+
+	it('asks every 10 minutes while the live connection is open, and every minute while it isn’t', async () => {
+		let connected = true;
+		const { backend, request } = fakeBackend();
+		const feed = feedFor(request, false, () => connected);
+		await feed.load();
+		expect(backend.gets).toBe(1);
+
+		time += 9 * 60_000;
+		await feed.load();
+		await settle();
+		expect(backend.gets).toBe(1);
+		time += 60_000;
+		await feed.load();
+		await settle();
+		expect(backend.gets).toBe(2);
+
+		connected = false;
+		time += 60_000;
+		await feed.load();
+		await settle();
+		expect(backend.gets).toBe(3);
+	});
+
+	it('asks every minute without live updates', async () => {
+		const { backend, request } = fakeBackend();
+		const feed = feedFor(request);
+		await feed.load();
+		time += 60_000;
+		await feed.load();
+		await settle();
+		expect(backend.gets).toBe(2);
+	});
+
+	it('asks at once when told the list changed, such as by a live update', async () => {
+		const { backend, request } = fakeBackend();
+		const feed = feedFor(request, false, () => true);
+		await feed.load();
+		await feed.refresh();
+		expect(backend.gets).toBe(2);
 	});
 });

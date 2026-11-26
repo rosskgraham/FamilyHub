@@ -2,6 +2,7 @@ import { loadCalendar } from '#lib/server/calendar/index.ts';
 import { loadHeating } from '#lib/server/nest/index.ts';
 import { loadWeather, sunTimes } from '#lib/server/weather/index.ts';
 import { now } from '#lib/server/now.ts';
+import { shoppingIsLive } from '#lib/server/shopping/index.ts';
 import { readClockFormat, readSleepHours, readThemeChoice } from '#lib/server/settings.ts';
 import { chosenTheme, themes } from '#lib/theme.ts';
 import { addDays, dayKey } from '#lib/time.ts';
@@ -30,6 +31,8 @@ export const load: LayoutServerLoad = async ({ url }) => {
 		clockFormat,
 		sleepHours,
 		calendarStatus: calendar.status,
-		sleep: { events: calendar.events, owners: calendar.household }
+		sleep: { events: calendar.events, owners: calendar.household },
+		// Only then does the screen listen for changes made on phones.
+		liveUpdates: shoppingIsLive()
 	};
 };

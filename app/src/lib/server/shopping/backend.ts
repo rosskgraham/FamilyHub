@@ -14,8 +14,10 @@ const NAME = 'Shopping list';
 // Files in the Hub's data folder, apart from the Google Tasks list's, so switching back and forth never mixes them.
 const CACHE_FILE = 'shopping-backend-cache.json';
 const QUEUE_FILE = 'shopping-backend-queue.json';
-// Changes at the Hub refresh the list straight away; this is for changes made on phones, until live updates.
+// Changes at the Hub refresh the list straight away, and live updates bring changes made on phones. The catch-up is
+// the safety net for a missed message, and every minute while the live connection is down.
 const REFRESH_MS = 60_000;
+const CATCH_UP_MS = 10 * 60_000;
 // The most the backend takes in one request.
 const BATCH = 100;
 
@@ -104,13 +106,20 @@ export interface BackendFeedOptions {
 	sample: ShoppingSource;
 	/** CALENDAR_SOURCE=sample. */
 	sampleOnly: boolean;
+	/** Whether the live connection is open, so the list can catch up less often. */
+	live?: () => boolean;
 	/** The data folder, for tests. */
 	dir?: string;
 	/** Milliseconds since 1970, for tests. */
 	clock?: () => number;
 }
 
-export function createBackendFeed(options: BackendFeedOptions): Feed<{ text: string }, ShoppingItem> {
+export interface BackendFeed extends Feed<{ text: string }, ShoppingItem> {
+	/** Asks the backend for the list now, such as when a live update says it changed. */
+	refresh(): Promise<void>;
+}
+
+export function createBackendFeed(options: BackendFeedOptions): BackendFeed {
 	const queue = createOperationQueue(QUEUE_FILE, NAME, options.dir);
 	let sync: Sync<ShoppingItem[]> | undefined;
 
@@ -123,7 +132,7 @@ export function createBackendFeed(options: BackendFeedOptions): Feed<{ text: str
 				const { items } = await request<{ items: BackendItem[] }>('GET', '/lists/shopping/items?after=0');
 				return toShoppingItems(items);
 			},
-			everyMs: REFRESH_MS,
+			everyMs: () => (options.live?.() ? CATCH_UP_MS : REFRESH_MS),
 			load: async () => {
 				const cached = await readJson<{ items: ShoppingItem[]; at: string }>(CACHE_FILE, options.dir);
 				return cached && { value: cached.items, at: cached.at };
@@ -170,6 +179,10 @@ export function createBackendFeed(options: BackendFeedOptions): Feed<{ text: str
 			// So the page the screen loads next shows the change.
 			await live.sync.refresh({ fresh: true });
 			return 200;
+		},
+
+		async refresh() {
+			await current()?.sync.refresh({ fresh: true });
 		}
 	};
 }

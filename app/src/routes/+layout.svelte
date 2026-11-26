@@ -100,6 +100,14 @@
 		const timer = setInterval(() => invalidateAll(), 60_000);
 		return () => clearInterval(timer);
 	});
+
+	// With live updates, the server says when a list changes on a phone, and the screen loads it again at once.
+	onMount(() => {
+		if (!data.liveUpdates) return;
+		const changes = new EventSource('/api/changes');
+		changes.onmessage = () => invalidateAll();
+		return () => changes.close();
+	});
 </script>
 
 <svelte:head>
