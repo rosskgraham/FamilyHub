@@ -36,6 +36,9 @@ param entraSubdomain string = ''
 @description('The client ID of the FamilyHub API app registration: the audience its access tokens are for.')
 param apiClientId string = ''
 
+@description('The client ID of the FamilyHub app registration, which the backend signs Members in as, a confidential client (ADR 0016). Its secret is family-app-client-secret in the Key Vault (the sign-in runbook).')
+param appClientId string = ''
+
 resource group 'Microsoft.Resources/resourceGroups@2025-04-01' = {
   name: 'rg-familyhub'
   location: location
@@ -55,6 +58,7 @@ module resources 'resources.bicep' = {
     entraTenantId: entraTenantId
     entraSubdomain: entraSubdomain
     apiClientId: apiClientId
+    appClientId: appClientId
   }
 }
 

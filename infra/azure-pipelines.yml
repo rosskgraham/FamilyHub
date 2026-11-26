@@ -18,7 +18,8 @@ pr:
 
 variables:
   # FAMILYHUB_ADMIN_OBJECT_ID and FAMILYHUB_BUDGET_EMAIL, which main.bicepparam reads, and the sign-in tenant's
-  # FAMILYHUB_ENTRA_TENANT_ID, FAMILYHUB_ENTRA_SUBDOMAIN and FAMILYHUB_API_CLIENT_ID. Kept out of the public repo.
+  # FAMILYHUB_ENTRA_TENANT_ID, FAMILYHUB_ENTRA_SUBDOMAIN, FAMILYHUB_API_CLIENT_ID and FAMILYHUB_APP_CLIENT_ID. Kept out
+  # of the public repo.
   - group: familyhub
   - name: serviceConnection
     value: familyhub-azure

@@ -29,6 +29,9 @@ param entraSubdomain string = ''
 @description('The client ID of the FamilyHub API app registration: the audience its access tokens are for.')
 param apiClientId string = ''
 
+@description('The client ID of the FamilyHub app registration, which the backend signs Members in as, a confidential client (ADR 0016). Its secret is family-app-client-secret in the Key Vault (the sign-in runbook).')
+param appClientId string = ''
+
 // Key Vault, function app and storage account names are global, so a short suffix from the resource group
 // keeps them unique.
 var suffix = take(uniqueString(resourceGroup().id), 6)
@@ -127,6 +130,8 @@ module backend 'backend.bicep' = {
     entraTenantId: entraTenantId
     entraSubdomain: entraSubdomain
     apiClientId: apiClientId
+    appClientId: appClientId
+    keyVaultName: vault.name
     familyAppUrl: 'https://${familyApp.properties.defaultHostname}'
   }
 }

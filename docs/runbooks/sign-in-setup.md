@@ -91,12 +91,26 @@ Three app registrations: the backend's API, the family app, and the Hub (step 6)
 
 1. **Authentication → Add a platform → Single-page application**, with these four redirect URIs: `http://localhost:5173/` and `http://localhost:5173/auth/bridge`, for the app running on the PC, and the same two at the family app's Static Web Apps address, `https://<its address>/` and `https://<its address>/auth/bridge`. The address is the Bicep's `familyAppUrl` output, or `az staticwebapp show --name swa-familyhub-<suffix> --resource-group rg-familyhub --query defaultHostname`. `/` is where sign-in comes back to; `/auth/bridge` is where the app renews its sign-in quietly (AB#56).
    Then **Add a platform → Mobile and desktop applications**, with the custom redirect URI `http://localhost`, for `backend/scripts/whoami.py`, which checks sign-in by hand (step 8).
-   Then, still on **Authentication** (its **Settings** tab, or **Advanced settings** in older portals), set **Allow public client flows** to **Yes**, and save. `whoami.py` has no secret, and without this its sign-in fails with `AADSTS7000218`. The family app has no secret either, so nothing is lost.
+   Then, still on **Authentication** (its **Settings** tab, or **Advanced settings** in older portals), set **Allow public client flows** to **Yes**, and save. `whoami.py` has no secret, and without this its sign-in fails with `AADSTS7000218`.
+   Then **Add a platform → Web**, with the redirect URI `https://<the API's address>/auth/callback`, where the backend signs Members in (ADR 0016). The address is the Bicep's `apiUrl` output. Add `http://localhost:8000/auth/callback` too, for the backend running on the PC. Leave both token boxes unticked.
 2. **API permissions → Add a permission:**
    - **My APIs → FamilyHub API → Delegated permissions → `Lists.ReadWrite`.**
    - **Microsoft Graph → Delegated permissions → `openid` and `offline_access`.**
 3. **Grant admin consent for FamilyHub**, so no Member is asked.
 4. In **External Identities → User flows → `signup-signin` → Applications → Add application**, add `FamilyHub app`.
+5. **The backend's secret.** Do this before a pipeline run deploys with `FAMILYHUB_APP_CLIENT_ID` set (step 7), as the Bicep gives the function app read access to this one secret, and the deploy fails if it isn't there yet.
+   1. **Certificates & secrets → Client secrets → New client secret**, with the description `Key Vault family-app-client-secret` and an expiry of 12 months. Copy its **Value**: the portal shows it once.
+   2. Put it in the Key Vault, in Ross's usual directory, without it going into the shell's history. In Git Bash or WSL:
+
+      ```bash
+      read -rs secret   # paste the value, then Enter; nothing shows
+      az keyvault secret set --vault-name kv-familyhub-<suffix> --name family-app-client-secret \
+        --expires <the secret's expiry, such as 2027-11-26T00:00:00Z> --value "$secret" --output none
+      unset secret
+      ```
+
+      The function app reads it through a Key Vault reference, so it's never in the repo, the pipeline or the app's settings as text.
+   3. **To renew it,** a month before it expires: make a new one the same way, set it in the Key Vault again (a new version), and restart the function app (`az functionapp restart --name func-familyhub-<suffix> --resource-group rg-familyhub`) so it reads the new version. Then delete the old one in **Certificates & secrets**. If it runs out first, new sign-ins fail, but phones already signed in stay in: the backend lets them in and tries again later.
 
 ## 6. Register the Hub, with a certificate
 
@@ -134,7 +148,7 @@ None of these is secret, but the repo is public, so they're kept in the `familyh
 | `FAMILYHUB_ENTRA_TENANT_ID` | The FamilyHub tenant's **Tenant ID** (step 1) |
 | `FAMILYHUB_ENTRA_SUBDOMAIN` | Its subdomain, such as `familyhubgraham` (step 1) |
 | `FAMILYHUB_API_CLIENT_ID` | `FamilyHub API`'s **Application (client) ID** (step 5) |
-| `FAMILYHUB_APP_CLIENT_ID` | `FamilyHub app`'s **Application (client) ID** (step 5), which the pipeline builds into the family app |
+| `FAMILYHUB_APP_CLIENT_ID` | `FamilyHub app`'s **Application (client) ID** (step 5), which the backend signs Members in as, and the pipeline builds into the family app. Make the backend's secret first (step 5, step 5) |
 
 The pipeline passes them to the function app as app settings on its next deploy. If the sign-in pull request has already merged, run the pipeline again from Azure DevOps. Until they're set, the API answers `/me` and anything else that needs sign-in with a 503, "Sign-in isn't set up yet".
 
@@ -222,4 +236,8 @@ When the Hub starts with them, its log says "Signed in to the backend as the Hub
 - **The Hub's log says "HUB_CERTIFICATE is not a PEM private key and certificate":** the certificate is still PKCS#12 (step 6, step 1), or `HUB_CERTIFICATE` was put in by hand, not as base64.
 - **The `hub.db` command says "unable to open database file":** the path is wrong. It's `/var/lib/familyhub/hub.db` on the Pi (step 8).
 - **`whoami.py member` says the redirect URI isn't valid:** `http://localhost` is missing from `FamilyHub app`'s **Mobile and desktop applications** platform (step 5).
-- **The family app's silent sign-in fails with Google's "400 invalid_request" about a `username` parameter:** a [known issue](https://learn.microsoft.com/en-us/answers/questions/5822108/entra-external-id-google-federation-username-param) with External ID and Google. It's for slice 3 to handle.
+- **The family app's silent sign-in fails with Google's "400 invalid_request" about a `username` parameter:** a [known issue](https://learn.microsoft.com/en-us/answers/questions/5822108/entra-external-id-google-federation-username-param) with External ID and Google. It's why sign-in moved into the backend (ADR 0016).
+- **The pipeline's Bicep deploy fails on `apiCanReadClientSecret` with "SecretNotFound" or similar:** `family-app-client-secret` isn't in the Key Vault yet (step 5, step 5). Add it and run the pipeline again.
+- **`/auth/sign-in` says 503, "Signing in isn't set up yet":** `APP_CLIENT_ID` or `APP_CLIENT_SECRET` is missing, or the Key Vault reference hasn't resolved. In the portal, the function app's **Environment variables** show a green tick on `APP_CLIENT_SECRET` when it has. The log says "APP_CLIENT_SECRET is an unresolved Key Vault reference" when it hasn't.
+- **Signing in through the backend ends on the tenant's "AADSTS50011: The redirect URI … does not match":** the Web redirect URI is missing or different (step 5). It must be the API's address exactly, with `/auth/callback`.
+- **It ends on `/auth/done?error=failed`:** the backend couldn't redeem the code. The function app's log says why: often "AADSTS7000215: Invalid client secret", a wrong or expired secret (step 5, step 5).

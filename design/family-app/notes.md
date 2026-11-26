@@ -61,8 +61,9 @@ Every part stays on a free tier, as ADR 0008 requires, except the function app's
 - **Offline:** a service worker keeps the app itself on the phone, so it opens with no signal. The lists are in IndexedDB, and changes wait in a queue until the phone's back online.
 - **Updates:** a new release reaches each phone the next time the app opens.
 - **Its address is public**, at `*.azurestaticapps.net`. Only the app's files are public. The lists are behind sign-in, in the API.
-- **Sign-in happens in the app**, with MSAL against Entra External ID. Static Web Apps' own sign-in on the free tier doesn't offer Google.
-- **A single-page app's sign-in lasts 24 hours before renewing** (decided 23 November 2026). Entra gives a single-page app a 24-hour refresh token; after that MSAL renews through the tenant's session in a hidden frame, or asks to sign in again. Built that way and measured on Ross's phone. If it asks too often, sign-in moves behind the backend, which can hold a longer session. How often it asked: to be recorded after the check (AB#56).
+- **Sign-in happened in the app** at first, with MSAL against Entra External ID. Static Web Apps' own sign-in on the free tier doesn't offer Google.
+- **A single-page app's sign-in lasts 24 hours before renewing** (decided 23 November 2026). Entra gives a single-page app a 24-hour refresh token; after that MSAL renews through the tenant's session in a hidden frame, or asks to sign in again. Built that way and measured on Ross's phone: it asked him to sign in again every day (26 November 2026, AB#56).
+- **So sign-in is held by the backend** (decided 26 November 2026, [ADR 0016](../../docs/adr/0016-sign-in-held-by-the-backend.md)). The backend signs Members in as a confidential client, keeps their Entra tokens, refreshing them at most once a day, and gives each phone a FamilyHub session token. Entra's refresh token slides for 90 days, so a phone in use stays signed in. The backend is AB#93, and the app moves over in AB#94.
 
 ## How sync works
 
