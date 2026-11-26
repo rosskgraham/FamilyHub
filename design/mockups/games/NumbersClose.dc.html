@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Number of the day, finished 5 away</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+button{font-family:inherit}
+a{color:#161B22}a:hover{color:#161B22}
+</style>
+</helmet>
+<div style="width: 1920px; height: 1080px; box-sizing: border-box; padding: 32px; background: #F3F5F8; font-family: 'Figtree', system-ui, sans-serif; color: #161B22; display: flex; flex-direction: column; gap: 24px">
+
+<header style="height: 128px; flex: none; display: flex; align-items: center; justify-content: space-between; gap: 32px">
+<div style="display: flex; align-items: center; gap: 28px">
+<div style="font-size: 112px; font-weight: 600; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums">16:46</div>
+<div>
+<div style="font-size: 44px; font-weight: 600; line-height: 1.1">Tuesday</div>
+<div style="font-size: 28px; color: #4A5565; margin-top: 4px">24 November</div>
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 16px">
+<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#161B22" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+<div style="font-size: 56px; font-weight: 600; line-height: 1">7°</div>
+<div>
+<div style="font-size: 24px; font-weight: 600">Cloudy</div>
+<div style="font-size: 22px; color: #4A5565">High 9° · Low 3°</div>
+</div>
+</div>
+</header>
+
+<main style="flex: 1; min-height: 0; display: flex; gap: 24px">
+
+<section aria-label="Ross's steps, and one way to do it" style="width: 1000px; flex: none; box-sizing: border-box; padding: 28px 32px; border-radius: 28px; background: #FFFFFF; display: flex; flex-direction: column; gap: 24px">
+
+<div style="display: flex; align-items: center; gap: 20px">
+<div style="font-size: 28px; font-weight: 600; color: #4A5565">Target</div>
+<div style="height: 88px; padding: 0 28px; border-radius: 20px; background: #161B22; color: #FFFFFF; font-size: 64px; font-weight: 700; display: flex; align-items: center; font-variant-numeric: tabular-nums">605</div>
+<div style="font-size: 26px; color: #2E3644">from 100, 75, 50, 7, 4 and 4</div>
+</div>
+
+<div style="flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 12px">
+<div style="font-size: 30px; font-weight: 700">Your steps</div>
+<sc-for list="{{mine}}" as="s" hint-placeholder-count="5">
+<div style="height: 72px; box-sizing: border-box; padding: 0 24px; border-radius: 18px; background: {{s.bg}}; color: {{s.fg}}; display: flex; align-items: center; font-size: 38px; font-weight: 600; font-variant-numeric: tabular-nums">{{s.text}}</div>
+</sc-for>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<div style="font-size: 30px; font-weight: 700">One way to do it</div>
+<sc-for list="{{way}}" as="s" hint-placeholder-count="5">
+<div style="height: 72px; box-sizing: border-box; padding: 0 24px; border-radius: 18px; border: 2px solid {{s.border}}; display: flex; align-items: center; font-size: 38px; font-weight: 600; font-variant-numeric: tabular-nums">{{s.text}}</div>
+</sc-for>
+</div>
+</div>
+
+<div style="font-size: 22px; color: #4A5565">Only Ross sees a way to do it, and only until this closes.</div>
+
+</section>
+
+<section style="flex: 1; min-width: 0; box-sizing: border-box; padding: 40px; border-radius: 28px; background: #F9E6F5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; text-align: center">
+
+<div style="display: flex; align-items: center; gap: 28px; flex: none">
+<span style="width: 120px; height: 120px; border-radius: 60px; background: #B5179E; color: #FFFFFF; font-size: 60px; font-weight: 700; display: flex; align-items: center; justify-content: center">R</span>
+<div role="img" aria-label="600 is 5 away from 605" style="display: flex; align-items: center; gap: 12px">
+<span style="height: 88px; padding: 0 24px; border-radius: 20px; background: #FFFFFF; border: 3px solid #B5179E; box-sizing: border-box; font-size: 56px; font-weight: 700; display: flex; align-items: center; font-variant-numeric: tabular-nums">600</span>
+<span style="font-size: 30px; font-weight: 600; color: #2E3644">5 away from</span>
+<span style="height: 88px; padding: 0 24px; border-radius: 20px; background: #161B22; color: #FFFFFF; font-size: 56px; font-weight: 700; display: flex; align-items: center; font-variant-numeric: tabular-nums">605</span>
+</div>
+</div>
+
+<div>
+<div style="font-size: 80px; font-weight: 700; line-height: 1.05">So close, Ross!</div>
+<div style="font-size: 36px; color: #2E3644; margin-top: 12px">Finished with 600. That's 2 days in a row.</div>
+</div>
+
+<div style="display: flex; gap: 16px">
+<sc-for list="{{family}}" as="f" hint-placeholder-count="4">
+<div style="width: 180px; box-sizing: border-box; padding: 16px; border-radius: 20px; background: #FFFFFF; display: flex; flex-direction: column; align-items: center; gap: 10px">
+<span style="width: 56px; height: 56px; border-radius: 28px; background: {{f.solid}}; color: #FFFFFF; font-size: 28px; font-weight: 700; display: flex; align-items: center; justify-content: center">{{f.initial}}</span>
+<div style="font-size: 24px; font-weight: 600">{{f.result}}</div>
+</div>
+</sc-for>
+</div>
+
+<button type="button" style="height: 96px; padding: 0 64px; border-radius: 48px; border: none; background: #B5179E; color: #FFFFFF; font-size: 36px; font-weight: 700">Next time!</button>
+<div style="font-size: 22px; color: #4A5565">Closes by itself in a few seconds, and hides the working again</div>
+
+</section>
+
+</main>
+
+<nav style="height: 76px; flex: none; display: flex; align-items: center; justify-content: space-between">
+<div style="display: flex; align-items: center; gap: 4px; padding: 6px; border-radius: 22px; background: #E3E7ED">
+<a href="#" style="height: 64px; padding: 0 30px; border-radius: 16px; display: flex; align-items: center; font-size: 26px; font-weight: 600; text-decoration: none">Today</a>
+<a href="#" style="height: 64px; padding: 0 30px; border-radius: 16px; display: flex; align-items: center; font-size: 26px; font-weight: 600; text-decoration: none">Day</a>
+<a href="#" style="height: 64px; padding: 0 30px; border-radius: 16px; display: flex; align-items: center; font-size: 26px; font-weight: 600; text-decoration: none">Week</a>
+<a href="#" style="height: 64px; padding: 0 30px; border-radius: 16px; display: flex; align-items: center; font-size: 26px; font-weight: 600; text-decoration: none">Shopping</a>
+<a href="#" style="height: 64px; padding: 0 30px; border-radius: 16px; display: flex; align-items: center; font-size: 26px; font-weight: 600; text-decoration: none">To-dos</a>
+<a href="#" style="height: 64px; padding: 0 30px; border-radius: 16px; display: flex; align-items: center; font-size: 26px; font-weight: 600; text-decoration: none">Chores</a>
+<a href="#" style="height: 64px; padding: 0 30px; border-radius: 16px; display: flex; align-items: center; font-size: 26px; font-weight: 600; text-decoration: none">Energy</a>
+<a href="Numbers.dc.html" aria-current="page" style="height: 64px; padding: 0 30px; border-radius: 16px; background: #FFFFFF; display: flex; align-items: center; font-size: 26px; font-weight: 600; text-decoration: none">Games</a>
+<a href="#" aria-label="Settings" style="width: 64px; height: 64px; border-radius: 16px; display: flex; align-items: center; justify-content: center"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#161B22" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></a>
+</div>
+<div style="height: 56px; padding: 0 24px; border-radius: 28px; border: 2px dashed #C9D0D9; display: flex; align-items: center; font-size: 24px; color: #2E3644">Sample data</div>
+</nav>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1920,"height":1080}}'>
+class Component extends DCLogic {
+renderVals() {
+// Ross's own steps, finishing with 600, and the solver's way for 24 November (100, 75, 50, 7, 4, 4 to 605).
+const step = { bg: '#F3F5F8', fg: '#161B22' };
+const finish = { bg: '#F9E6F5', fg: '#161B22' };
+const mine = ['4 + 4 = 8', '75 × 8 = 600'].map((text) => ({ text, ...step }));
+mine.push({ text: 'Finished with 600', ...finish });
+const way = ['4 + 4 = 8', '75 × 8 = 600', '100 ÷ 50 = 2', '600 − 2 = 598', '598 + 7 = 605'].map((text) => ({ text, border: '#C9D0D9' }));
+return {
+mine,
+way,
+family: [
+{ initial: 'M', solid: '#0E7C66', result: 'Got it' },
+{ initial: 'L', solid: '#6D3FD1', result: 'Got it' },
+{ initial: 'R', solid: '#B5179E', result: '5 away' },
+{ initial: 'S', solid: '#A15C07', result: 'Not yet' }
+]
+};
+}
+}
+</script>
+</body>
+</html>

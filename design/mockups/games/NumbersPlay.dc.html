@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Number of the day, playing</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+button{font-family:inherit}
+a{color:#161B22}a:hover{color:#161B22}
+</style>
+</helmet>
+<div style="width: 1920px; height: 1080px; box-sizing: border-box; padding: 32px; background: #F3F5F8; font-family: 'Figtree', system-ui, sans-serif; color: #161B22; display: flex; flex-direction: column; gap: 24px">
+
+<header style="height: 128px; flex: none; display: flex; align-items: center; justify-content: space-between; gap: 32px">
+<div style="display: flex; align-items: center; gap: 28px">
+<div style="font-size: 112px; font-weight: 600; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums">16:44</div>
+<div>
+<div style="font-size: 44px; font-weight: 600; line-height: 1.1">Tuesday</div>
+<div style="font-size: 28px; color: #4A5565; margin-top: 4px">24 November</div>
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 16px">
+<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#161B22" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+<div style="font-size: 56px; font-weight: 600; line-height: 1">7°</div>
+<div>
+<div style="font-size: 24px; font-weight: 600">Cloudy</div>
+<div style="font-size: 22px; color: #4A5565">High 9° · Low 3°</div>
+</div>
+</div>
+</header>
+
+<main style="flex: 1; min-height: 0; display: flex; gap: 24px">
+
+<section aria-label="Leo's numbers" style="width: 1000px; flex: none; box-sizing: border-box; padding: 28px 32px; border-radius: 28px; background: #FFFFFF; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px">
+
+<div style="display: flex; flex-direction: column; align-items: center; gap: 4px">
+<div style="font-size: 28px; font-weight: 600; color: #4A5565">Target</div>
+<div style="height: 168px; padding: 0 48px; border-radius: 28px; background: #161B22; color: #FFFFFF; font-size: 136px; font-weight: 700; line-height: 1; letter-spacing: 0.02em; display: flex; align-items: center; font-variant-numeric: tabular-nums">605</div>
+<div style="font-size: 26px; color: #2E3644; margin-top: 8px">Closest so far: 600, which is 5 away</div>
+</div>
+
+<div style="display: flex; gap: 16px">
+<sc-for list="{{numbers}}" as="n" hint-placeholder-count="4">
+<button type="button" aria-pressed="{{n.pressed}}" style="width: 180px; height: 140px; box-sizing: border-box; border-radius: 22px; border: 3px solid {{n.border}}; background: {{n.bg}}; color: {{n.fg}}; font-size: 64px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0; font-variant-numeric: tabular-nums">{{n.value}}</button>
+</sc-for>
+</div>
+
+<div style="width: 760px; height: 96px; box-sizing: border-box; padding: 0 32px; border-radius: 22px; background: #F3F5F8; display: flex; align-items: center; justify-content: space-between">
+<div style="font-size: 52px; font-weight: 700; font-variant-numeric: tabular-nums">600 + <span style="color: #9AA3B0">?</span></div>
+<div style="font-size: 24px; color: #4A5565">Now tap a number</div>
+</div>
+
+<div style="display: flex; gap: 16px">
+<sc-for list="{{operators}}" as="o" hint-placeholder-count="4">
+<button type="button" aria-label="{{o.label}}" aria-pressed="{{o.pressed}}" style="width: 160px; height: 120px; box-sizing: border-box; border-radius: 22px; border: 3px solid {{o.border}}; background: {{o.bg}}; color: {{o.fg}}; font-size: 64px; font-weight: 600; display: flex; align-items: center; justify-content: center; padding: 0">{{o.sign}}</button>
+</sc-for>
+</div>
+
+</section>
+
+<section style="flex: 1; min-width: 0; box-sizing: border-box; padding: 28px 32px; border-radius: 28px; background: #FFFFFF; display: flex; flex-direction: column; gap: 20px">
+
+<div style="display: flex; align-items: center; gap: 20px">
+<span style="width: 80px; height: 80px; flex: none; border-radius: 40px; background: #6D3FD1; color: #FFFFFF; font-size: 40px; font-weight: 700; display: flex; align-items: center; justify-content: center">L</span>
+<div style="flex: 1; min-width: 0">
+<div style="font-size: 40px; font-weight: 700; line-height: 1.1">Leo's number of the day</div>
+<div style="font-size: 26px; color: #4A5565; margin-top: 4px">2 steps so far · 5 days in a row</div>
+</div>
+<a href="Numbers.dc.html" style="flex: none; height: 72px; padding: 0 28px; border-radius: 36px; border: 2px solid #C9D0D9; display: flex; align-items: center; font-size: 26px; font-weight: 600; text-decoration: none">Stop for now</a>
+</div>
+
+<div style="font-size: 26px; color: #4A5565">Tap a number, a sign, then another number. Each number can be used once.</div>
+
+<ol aria-label="Steps so far" style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px">
+<sc-for list="{{steps}}" as="s" hint-placeholder-count="2">
+<li style="height: 80px; box-sizing: border-box; padding: 0 28px; border-radius: 18px; background: #F3F5F8; display: flex; align-items: center; font-size: 44px; font-weight: 600; font-variant-numeric: tabular-nums">{{s}}</li>
+</sc-for>
+</ol>
+
+<div style="flex: 1"></div>
+
+<div style="display: flex; gap: 16px">
+<button type="button" style="flex: 1; height: 96px; border-radius: 22px; border: 2px solid #C9D0D9; background: #FFFFFF; color: #161B22; font-size: 30px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 12px"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#161B22" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>Undo</button>
+<button type="button" style="flex: 1; height: 96px; border-radius: 22px; border: 2px solid #C9D0D9; background: #FFFFFF; color: #161B22; font-size: 30px; font-weight: 700">Start again</button>
+<button type="button" style="flex: 1.3; height: 96px; border-radius: 22px; border: none; background: #161B22; color: #FFFFFF; font-size: 30px; font-weight: 700">Finish with…</button>
+</div>
+
+</section>
+
+</main>
+
+<nav style="height: 76px; flex: none; display: flex; align-items: center; justify-content: space-between">
+<div style="display: flex; align-items: center; gap: 4px; padding: 6px; border-radius: 22px; background: #E3E7ED">
+<a href="#" style="height: 64px; padding: 0 30px; border-radius: 16px; display: flex; align-items: center; font-size: 26px; font-weight: 600; text-decoration: none">Today</a>
+<a href="#" style="height: 64px; padding: 0 30px; border-radius: 16px; display: flex; align-items: center; font-size: 26px; font-weight: 600; text-decoration: none">Day</a>
+<a href="#" style="height: 64px; padding: 0 30px; border-radius: 16px; display: flex; align-items: center; font-size: 26px; font-weight: 600; text-decoration: none">Week</a>
+<a href="#" style="height: 64px; padding: 0 30px; border-radius: 16px; display: flex; align-items: center; font-size: 26px; font-weight: 600; text-decoration: none">Shopping</a>
+<a href="#" style="height: 64px; padding: 0 30px; border-radius: 16px; display: flex; align-items: center; font-size: 26px; font-weight: 600; text-decoration: none">To-dos</a>
+<a href="#" style="height: 64px; padding: 0 30px; border-radius: 16px; display: flex; align-items: center; font-size: 26px; font-weight: 600; text-decoration: none">Chores</a>
+<a href="#" style="height: 64px; padding: 0 30px; border-radius: 16px; display: flex; align-items: center; font-size: 26px; font-weight: 600; text-decoration: none">Energy</a>
+<a href="Numbers.dc.html" aria-current="page" style="height: 64px; padding: 0 30px; border-radius: 16px; background: #FFFFFF; display: flex; align-items: center; font-size: 26px; font-weight: 600; text-decoration: none">Games</a>
+<a href="#" aria-label="Settings" style="width: 64px; height: 64px; border-radius: 16px; display: flex; align-items: center; justify-content: center"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#161B22" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></a>
+</div>
+<div style="height: 56px; padding: 0 24px; border-radius: 28px; border: 2px dashed #C9D0D9; display: flex; align-items: center; font-size: 24px; color: #2E3644">Sample data</div>
+</nav>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1920,"height":1080}}'>
+class Component extends DCLogic {
+renderVals() {
+// 24 November's draw: 100, 75, 50, 7, 4, 4 to 605. Leo has made 4 + 4 = 8 and 75 × 8 = 600, then chosen 600 and +.
+const plain = { bg: '#FFFFFF', fg: '#161B22', border: '#C9D0D9', pressed: 'false' };
+const chosen = { bg: '#1F5FBF', fg: '#FFFFFF', border: '#1F5FBF', pressed: 'true' };
+const opPlain = { bg: '#E3E7ED', fg: '#161B22', border: '#E3E7ED', pressed: 'false' };
+return {
+numbers: [100, 50, 7].map((value) => ({ value, ...plain })).concat([{ value: 600, ...chosen }]),
+operators: [
+{ sign: '+', label: 'Add', ...chosen },
+{ sign: '−', label: 'Take away', ...opPlain },
+{ sign: '×', label: 'Times', ...opPlain },
+{ sign: '÷', label: 'Divide', ...opPlain }
+],
+steps: ['4 + 4 = 8', '75 × 8 = 600']
+};
+}
+}
+</script>
+</body>
+</html>
