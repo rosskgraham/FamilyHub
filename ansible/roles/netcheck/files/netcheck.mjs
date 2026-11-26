@@ -1,10 +1,12 @@
 // Watches the Pi's network every few seconds, to find out why the Hub loses the internet for short spells (AB#62).
 // familyhub-netcheck.service runs it all the time. Each round asks every nameserver for one name, connects to public
 // IPs over IPv4 and IPv6 without DNS, pings the router, and reads which link has the default route and whether eth0 has a cable.
+// It also reaches www.googleapis.com the way the Hub does, through the system's resolver and Node's fetch, because the
+// Hub's timeouts didn't line up with the checks above.
 // It logs a line only when one of those changes, so the journal stays small, and says how long each spell lasted.
 import { execFile } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
-import { Resolver } from 'node:dns/promises';
+import { lookup as systemLookup, Resolver } from 'node:dns/promises';
 import { connect } from 'node:net';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
@@ -71,16 +73,32 @@ export function changes(previous, next, since, now) {
 	return lines;
 }
 
-/** Times a promise that resolves on success, as a state. Never throws. */
-async function timed(attempt, describe = () => '') {
+/**
+ * A short reason for a failure. fetch wraps the socket's error code in `cause`, and an aborted fetch's DOMException has
+ * a number for a code, so a timeout is named rather than numbered.
+ */
+export function failure(e) {
+	if (e?.name === 'TimeoutError') return 'TIMEOUT';
+	const code = e?.cause?.code ?? e?.code;
+	return typeof code === 'string' ? code : (e?.cause?.message ?? e?.message ?? String(e));
+}
+
+/** Times a promise that resolves on success, as a state. Gives up after `timeoutMs`. Never throws. */
+async function timed(attempt, describe = () => '', timeoutMs = TIMEOUT_MS) {
 	const start = performance.now();
+	let timer;
+	const giveUp = new Promise((_, reject) => {
+		timer = setTimeout(() => reject(Object.assign(new Error('timed out'), { code: 'TIMEOUT' })), timeoutMs);
+	});
 	try {
-		const result = await attempt();
+		const result = await Promise.race([attempt(), giveUp]);
 		const ms = Math.round(performance.now() - start);
 		const state = grade(true, ms);
 		return { state, detail: state === 'slow' ? `${ms} ms` : describe(result) };
 	} catch (e) {
-		return { state: 'fail', detail: e.code ?? e.message };
+		return { state: 'fail', detail: failure(e) };
+	} finally {
+		clearTimeout(timer);
 	}
 }
 
@@ -108,6 +126,33 @@ function reach(ip, port = 443) {
 	);
 }
 
+/**
+ * Looks the name up as the Hub's fetches do: getaddrinfo through resolv.conf, on libuv's threads, with glibc's own
+ * timeouts and retries. A lookup that hangs is given up on, though its thread carries on, as it would in the Hub.
+ */
+export function hubLookup(lookup = systemLookup, timeoutMs = TIMEOUT_MS) {
+	return timed(
+		() => lookup(NAME),
+		({ family }) => `IPv${family}`,
+		timeoutMs
+	);
+}
+
+/**
+ * Asks for a page with Node's fetch, as the Hub does: its own lookup, a connection from fetch's pool, TLS and an
+ * answer. Any answer counts, since it's the way there being checked, not the page.
+ */
+export function hubFetch(fetcher = fetch, timeoutMs = TIMEOUT_MS) {
+	return timed(
+		async () => {
+			const response = await fetcher(`https://${NAME}/`, { signal: AbortSignal.timeout(timeoutMs) });
+			await response.arrayBuffer();
+		},
+		() => '',
+		timeoutMs
+	);
+}
+
 function ping(ip) {
 	return timed(() => run('ping', ['-c', '1', '-W', String(TIMEOUT_MS / 1000), ip]));
 }
@@ -129,7 +174,9 @@ export async function round() {
 	]);
 	const route = defaultRoute(stdout);
 	const servers = nameservers(resolvConf);
-	const [router, ...rest] = await Promise.all([
+	const [hubDns, hubHttps, router, ...rest] = await Promise.all([
+		hubLookup(),
+		hubFetch(),
 		route?.gateway ? ping(route.gateway) : { state: 'fail', detail: 'no gateway' },
 		...PUBLIC_IPS.map((ip) => reach(ip)),
 		...servers.map((server) => lookup(server))
@@ -141,6 +188,8 @@ export async function round() {
 	};
 	PUBLIC_IPS.forEach((ip, i) => (states[`internet ${ip}`] = rest[i]));
 	servers.forEach((server, i) => (states[`dns ${server}`] = rest[PUBLIC_IPS.length + i]));
+	states[`system lookup ${NAME}`] = hubDns;
+	states[`https ${NAME}`] = hubHttps;
 	return states;
 }
 

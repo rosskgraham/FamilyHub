@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { changes, defaultRoute, grade, nameservers } from './netcheck.mjs';
+import { changes, defaultRoute, failure, grade, hubFetch, hubLookup, nameservers, NAME } from './netcheck.mjs';
 
 test('quick is ok, a second or more is slow, and a failure fails', () => {
 	assert.equal(grade(true, 40), 'ok');
@@ -63,4 +63,58 @@ test('a nameserver that disappears from resolv.conf is logged as gone', () => {
 	const since = { 'dns fd31::6': 0 };
 	assert.deepEqual(changes({ 'dns fd31::6': { state: 'ok' } }, {}, since, 1000), ['dns fd31::6: gone']);
 	assert.deepEqual(since, {});
+});
+
+test("a failure is named by its code, from inside fetch's wrapper too, and a timeout by name", () => {
+	assert.equal(failure(Object.assign(new Error('x'), { code: 'ENOTFOUND' })), 'ENOTFOUND');
+	assert.equal(
+		failure(new TypeError('fetch failed', { cause: Object.assign(new Error('y'), { code: 'ECONNRESET' }) })),
+		'ECONNRESET'
+	);
+	assert.equal(failure(new DOMException('The operation was aborted due to timeout', 'TimeoutError')), 'TIMEOUT');
+	assert.equal(failure(new Error('something else')), 'something else');
+});
+
+test('the system lookup asks for the name and says which family answered', async () => {
+	const asked = [];
+	const state = await hubLookup(async (name) => {
+		asked.push(name);
+		return { address: '2a00:1450::5f', family: 6 };
+	});
+	assert.deepEqual(asked, [NAME]);
+	assert.deepEqual(state, { state: 'ok', detail: 'IPv6' });
+});
+
+test('a system lookup that hangs is given up on, as a failure', async () => {
+	const state = await hubLookup(() => new Promise(() => {}), 50);
+	assert.deepEqual(state, { state: 'fail', detail: 'TIMEOUT' });
+});
+
+test('the HTTPS check asks for the name, with a timeout, and any answer is ok', async () => {
+	const asked = [];
+	const state = await hubFetch(async (url, init) => {
+		asked.push({ url, signal: init.signal instanceof AbortSignal });
+		return new Response('not found', { status: 404 });
+	});
+	assert.deepEqual(asked, [{ url: `https://${NAME}/`, signal: true }]);
+	assert.deepEqual(state, { state: 'ok', detail: '' });
+});
+
+test('an HTTPS check that never answers is given up on, and a reset is named', async () => {
+	assert.deepEqual(await hubFetch(() => new Promise(() => {}), 50), { state: 'fail', detail: 'TIMEOUT' });
+	const reset = new TypeError('fetch failed', { cause: Object.assign(new Error('reset'), { code: 'ECONNRESET' }) });
+	assert.deepEqual(await hubFetch(() => Promise.reject(reset)), { state: 'fail', detail: 'ECONNRESET' });
+});
+
+test("the real fetch is aborted by its own timeout, as the Hub's are", async () => {
+	// A server that accepts and never answers, so it's the fetch's AbortSignal that ends it.
+	const { createServer } = await import('node:net');
+	const server = createServer(() => {}).listen(0, '127.0.0.1');
+	await new Promise((r) => server.once('listening', r));
+	const { port } = server.address();
+	const state = await hubFetch((_, init) => fetch(`http://127.0.0.1:${port}/`, init), 100);
+	server.close();
+	server.unref();
+	assert.equal(state.state, 'fail');
+	assert.equal(state.detail, 'TIMEOUT');
 });
