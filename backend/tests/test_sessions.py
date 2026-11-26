@@ -43,7 +43,13 @@ class FakeEntra:
             raise RuntimeError("The token endpoint is down.")
         assert flow["state"] == response["state"]
         object_id = response["code"]
-        return Account(object_id=object_id, email=f"{object_id}@gmail.example", cache=f"cache-{object_id}")
+        return Account(
+            object_id=object_id,
+            email=f"{object_id}@gmail.example",
+            cache=f"cache-{object_id}",
+            name="Ross Graham",
+            given_name="Ross",
+        )
 
     def refresh(self, cache: str) -> str | None:
         if self.unreachable:
@@ -220,6 +226,10 @@ def test_a_members_code_swaps_for_a_session(world: World) -> None:
     answer = response.json()
     assert answer["kind"] == "member"
     assert answer["token"].startswith("fhs_")
+    # Who signed in, for the app to keep its copy under and greet them by.
+    assert answer["object_id"] == MEMBER_OID
+    assert answer["email"] == f"{MEMBER_OID}@gmail.example"
+    assert (answer["name"], answer["given_name"]) == ("Ross Graham", "Ross")
     # Only the token's hash is kept, with the Member's tokens from the tenant.
     [session] = world.store.of_kind("session")
     assert session["id"] == hashlib.sha256(answer["token"].encode()).hexdigest()
@@ -234,7 +244,14 @@ def test_someone_not_in_the_household_gets_their_email_and_no_session(world: Wor
     response = world.swap(world.code(STRANGER_OID))
 
     assert response.status_code == 200
-    assert response.json() == {"kind": "refused", "token": None, "email": f"{STRANGER_OID}@gmail.example"}
+    assert response.json() == {
+        "kind": "refused",
+        "token": None,
+        "email": f"{STRANGER_OID}@gmail.example",
+        "object_id": None,
+        "name": None,
+        "given_name": None,
+    }
     assert world.store.of_kind("session") == []
     # Their tokens were never kept, not even with the code.
     assert "cache" not in str(world.store.items)
