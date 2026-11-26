@@ -1,4 +1,5 @@
 import type { DayKey } from '#lib/time.ts';
+import { random } from './random.ts';
 
 // Today's word (AB#68): the same for everyone, worked out from the date, so it needs no server and works offline. The
 // answer list is stepped through in a fixed shuffled order, a new word each day at midnight.
@@ -7,18 +8,6 @@ import type { DayKey } from '#lib/time.ts';
 const FIRST_DAY = Date.UTC(2026, 0, 1);
 /** The shuffle's seed. Changing it changes every day's word. */
 const SEED = 0x5eed_0068;
-
-// A small, fast generator (mulberry32) that gives the same numbers for the same seed on every machine.
-function random(seed: number): () => number {
-	let a = seed >>> 0;
-	return () => {
-		a = (a + 0x6d2b79f5) >>> 0;
-		let t = a;
-		t = Math.imul(t ^ (t >>> 15), t | 1);
-		t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-		return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-	};
-}
 
 const orders = new WeakMap<readonly string[], number[]>();
 

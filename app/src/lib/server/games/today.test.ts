@@ -20,6 +20,12 @@ describe('wordFor', () => {
 		expect(wordFor(addDays('2026-01-01', answers.length), answers)).toBe(wordFor('2026-01-01', answers));
 	});
 
+	it('keeps each day’s word as it was', () => {
+		// Recorded from main before the generator moved to random.ts for Number of the day (AB#90).
+		const words = { '2025-12-31': 'craft', '2026-01-01': 'gnome', '2026-11-26': 'bliss', '2030-12-31': 'burnt' };
+		for (const [day, word] of Object.entries(words)) expect(wordFor(day, answers)).toBe(word);
+	});
+
 	it('isn’t simply the list in order', () => {
 		const days = Array.from({ length: 5 }, (_, i) => wordFor(addDays('2026-01-01', i), answers));
 		expect(days).not.toEqual(answers.slice(0, 5));

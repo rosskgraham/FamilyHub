@@ -1,0 +1,41 @@
+import { describe, expect, it } from 'vitest';
+import { applyStep, calculate } from './number-game.ts';
+
+describe('calculate', () => {
+	it('adds, takes away, multiplies and divides', () => {
+		expect(calculate(75, '+', 8)).toBe(83);
+		expect(calculate(75, '−', 8)).toBe(67);
+		expect(calculate(75, '×', 8)).toBe(600);
+		expect(calculate(75, '÷', 5)).toBe(15);
+	});
+
+	it('refuses an answer of zero, a negative or a fraction', () => {
+		expect(calculate(4, '−', 4)).toBe('zero');
+		expect(calculate(3, '−', 5)).toBe('negative');
+		expect(calculate(7, '÷', 2)).toBe('fraction');
+	});
+});
+
+describe('applyStep', () => {
+	it('replaces the two numbers with the answer', () => {
+		expect(applyStep([100, 75, 6, 3], 75, '+', 3)).toEqual([100, 6, 78]);
+	});
+
+	it('takes out only one of a number there twice', () => {
+		expect(applyStep([5, 5, 2], 5, '×', 2)).toEqual([5, 10]);
+		expect(applyStep([5, 5, 2], 5, '+', 5)).toEqual([2, 10]);
+	});
+
+	it('refuses a number that isn’t left, including using one number twice', () => {
+		expect(applyStep([100, 75, 6], 50, '+', 6)).toBe('not-left');
+		expect(applyStep([100, 75, 6], 6, '×', 6)).toBe('not-left');
+	});
+
+	it('refuses an answer that isn’t allowed, and leaves the numbers as they were', () => {
+		const numbers = [7, 2, 4];
+		expect(applyStep(numbers, 7, '÷', 2)).toBe('fraction');
+		expect(applyStep(numbers, 2, '−', 7)).toBe('negative');
+		expect(applyStep(numbers, 4, '−', 4)).toBe('not-left');
+		expect(numbers).toEqual([7, 2, 4]);
+	});
+});
