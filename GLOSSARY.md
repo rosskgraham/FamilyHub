@@ -162,6 +162,18 @@ _Avoid_: Wordle (another game's name), puzzle
 One guess at Word of the day. Each letter is marked as in the right place, in the word somewhere else, or not in the word. A guess that isn't a word the Hub knows doesn't use up a Go.
 _Avoid_: Guess, try, turn
 
+**Number of the day**:
+The Games Section's daily numbers game: six numbers and a Target, the same for every Member, and + − × ÷ to reach it. Each Member plays their own game, and new numbers come at midnight.
+_Avoid_: Countdown (another game's name)
+
+**Target**:
+The three-digit number to reach in Number of the day, from 101 to 999. It can always be reached exactly.
+_Avoid_: Goal, answer
+
+**Step**:
+Two numbers joined with + − × or ÷ into one new number in Number of the day. A Step is allowed only if its answer is a positive whole number, and each number can be used once.
+_Avoid_: Go (that's Word of the day), move, sum
+
 ### Energy
 
 **Peak rate / Off-peak rate**:
