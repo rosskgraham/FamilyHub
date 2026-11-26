@@ -2,7 +2,7 @@
 // Shopping list, or an account that isn't the Household's (B), decided by the backend's GET /me. With a copy of the
 // list on the phone for the account that's signed in, the list shows from it straight away, before the backend
 // has answered, so it opens in a shop with no signal (AB#58); the backend is asked afterwards.
-import { SignInFailed, type Account, type Auth } from './auth.ts';
+import { NotTheHousehold, SignInFailed, type Account, type Auth } from './auth.ts';
 import type { CopyStore } from './copy.ts';
 import { ShoppingList, SignedOut, type ListApi } from './shopping.svelte.ts';
 
@@ -42,17 +42,33 @@ export async function open({ auth, fetchMe, api, copy, show }: Opening): Promise
 	} catch (error) {
 		// Cancelled at the account choice, or refused by the tenant: not a signal problem.
 		if (error instanceof SignInFailed) return show({ kind: 'sign-in-failed' }, null);
+		// Signed in, but not with one of the Household's accounts: any copy on the phone isn't theirs, and goes.
+		if (error instanceof NotTheHousehold) {
+			await copy.clear().catch(() => {});
+			return show({ kind: 'refused', email: error.email }, null);
+		}
 		throw error;
 	}
-	// A copy that isn't this account's is never shown, and goes.
 	const saved = await copy.read().catch(() => null);
-	if (saved && saved.account !== account?.id) await copy.clear();
+	// A copy that isn't this account's is never shown, and goes.
+	if (saved && account && saved.account !== account.id) await copy.clear();
 
 	if (!account) {
 		// Back from signing out on screen B: straight on to choosing another account.
 		if (auth.wantsAnotherAccount()) {
 			show({ kind: 'loading' }, null);
 			return auth.signIn();
+		}
+		// No session, but a copy: sign-in has run out, as on a phone signed in before AB#94, or one whose session
+		// was ended. It isn't Sign out, which clears the copy. The list stays usable, keeping changes until the
+		// same account signs in again (screen G).
+		if (saved) {
+			const kept: ShoppingList = new ShoppingList(api, {
+				onchange: () => void copy.write({ ...saved, list: kept.snapshot() }).catch(() => {})
+			});
+			kept.restore(saved.list);
+			show({ kind: 'member', firstName: saved.firstName, initial: saved.initial }, kept);
+			return kept.signedOut();
 		}
 		return show({ kind: 'sign-in' }, null);
 	}

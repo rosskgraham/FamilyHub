@@ -5,7 +5,7 @@ import type { SavedList } from './shopping.svelte.ts';
 
 /** The copy, with who it belongs to. */
 export interface Copy {
-	/** MSAL's id for the account that signed in. */
+	/** The id of the account that signed in: its Object ID and the tenant's, as MSAL named it before AB#94. */
 	account: string;
 	firstName: string;
 	initial: string;

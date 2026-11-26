@@ -170,7 +170,6 @@ stages:
                   env:
                     VITE_FAMILYHUB_ENTRA_TENANT_ID: $(FAMILYHUB_ENTRA_TENANT_ID)
                     VITE_FAMILYHUB_ENTRA_SUBDOMAIN: $(FAMILYHUB_ENTRA_SUBDOMAIN)
-                    VITE_FAMILYHUB_API_CLIENT_ID: $(FAMILYHUB_API_CLIENT_ID)
                     VITE_FAMILYHUB_APP_CLIENT_ID: $(FAMILYHUB_APP_CLIENT_ID)
                     VITE_FAMILYHUB_API_URL: $(apiUrl)
 

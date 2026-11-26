@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import { backendList, type BackendList } from '#lib/api.ts';
-	import { msalAuth, type Auth } from '#lib/auth.ts';
+	import { backendAuth, type Auth } from '#lib/auth.ts';
 	import { readConfig } from '#lib/config.ts';
 	import { indexedDbCopy } from '#lib/copy.ts';
 	import { Live } from '#lib/live.ts';
@@ -43,7 +44,13 @@
 			screen = { kind: 'not-set-up' };
 			return;
 		}
-		const signIn = (auth ??= msalAuth(config, location.origin));
+		// The address is changed through SvelteKit, so its router keeps up.
+		const browser = {
+			location,
+			go: (url: string) => location.assign(url),
+			replace: (path: string) => void goto(path, { shallow: true, replace: true })
+		};
+		const signIn = (auth ??= backendAuth(config, location.origin, fetch, browser));
 		const api = backendList(config.apiUrl, () => signIn.token());
 		showList(null, api);
 		try {

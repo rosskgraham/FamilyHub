@@ -6,11 +6,13 @@ It installs on a phone, signs in, and shows the Shopping list, which keeps worki
 
 ## Signing in
 
-Each Member signs in with their own Google account, through the FamilyHub tenant in Entra External ID ([ADR 0010](../docs/adr/0010-shared-lists-in-an-azure-backend-with-an-installable-family-app.md), the [sign-in runbook](../docs/runbooks/sign-in-setup.md)). `src/lib/auth.ts` wraps MSAL:
+Each Member signs in with their own Google account, through the FamilyHub tenant in Entra External ID ([ADR 0010](../docs/adr/0010-shared-lists-in-an-azure-backend-with-an-installable-family-app.md), the [sign-in runbook](../docs/runbooks/sign-in-setup.md)). The backend holds the sign-in, and the app holds a session from it ([ADR 0016](../docs/adr/0016-sign-in-held-by-the-backend.md), the [backend README](../backend/README.md#sessions)). `src/lib/auth.ts`:
 
-- **Sign in with Google** is a full-page redirect to the tenant, asking which Google account every time, and back to `/`. An installed app handles a redirect better than a popup.
-- Tokens are kept in the phone's local storage, so the app stays signed in between openings. A single-page app's refresh token lasts 24 hours. After that, MSAL renews through the tenant's session in a hidden frame that lands on `/auth/bridge` (MSAL v5's redirect bridge), or the app asks to sign in again. How often that happens is measured in AB#56.
-- The app then asks the backend's `GET /me` who it is (`src/lib/session.ts`): one of the Household gets the Shopping list, with the circle and their initial at the top, whose menu has **Sign out** (`design/mockups/family-app/`, screen I); anyone else gets "Not this account" (screen B), with **Use another account**, which signs out and goes straight on to choosing an account.
+- **Sign in with Google** is a full-page trip to the backend's `/auth/sign-in`, which goes on to the tenant, asking which Google account every time. It comes back to the app's `/auth/done` with a one-time code, which the app swaps for a session token, then takes out of the address.
+- The session token is kept in the phone's local storage and sent on every call. The backend refreshes the sign-in from Entra itself, so the app stays signed in while the phone's used, and only asks again after 90 days unused, or if the session's been ended (`backend/scripts/sessions.py`).
+- When it does ask, and there's a copy of the list on the phone, the list stays usable with the sign-in banner (screen G), keeping changes until the same account signs in. That's also how a phone signed in with MSAL before AB#94 moves over: one sign-in, and nothing waiting is lost. The copy belongs to the account's `<Object ID>.<tenant ID>`, the id MSAL gave it.
+- **Sign out** ends the session on the backend (or, with no signal, just forgets it, and the backend lets it run out), then signs out of the tenant and comes back to `/`.
+- The app then asks the backend's `GET /me` who it is (`src/lib/session.ts`): one of the Household gets the Shopping list, with the circle and their initial at the top, whose menu has **Sign out** (`design/mockups/family-app/`, screen I). Anyone else gets "Not this account" (screen B), straight from the swap, with **Use another account**, which signs out and goes straight on to choosing an account.
 - A sign-in that comes back with an error, as when it's cancelled at the account choice, says signing in didn't finish, with **Sign in again**.
 
 ## The Shopping list
@@ -45,11 +47,10 @@ The settings are built in by the pipeline, from the `familyhub` variable group a
 VITE_FAMILYHUB_ENTRA_TENANT_ID=<the tenant's ID>
 VITE_FAMILYHUB_ENTRA_SUBDOMAIN=<its subdomain>
 VITE_FAMILYHUB_APP_CLIENT_ID=<FamilyHub app's client ID>
-VITE_FAMILYHUB_API_CLIENT_ID=<FamilyHub API's client ID>
 VITE_FAMILYHUB_API_URL=https://func-familyhub-<suffix>.azurewebsites.net
 ```
 
-The backend lets the app call it from `http://localhost:5173` as well as its own address (CORS).
+The backend lets the app call it from `http://localhost:5173` as well as its own address (CORS), and signing in may come back to either. The tenant and app IDs are only for signing out of the tenant.
 
 ## What's here
 
