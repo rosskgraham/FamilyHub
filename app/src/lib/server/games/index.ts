@@ -15,6 +15,7 @@ import {
 import { configuredHousehold } from '../household.ts';
 import { hubDatabase } from '../hub-db.ts';
 import { now } from '../now.ts';
+import { seedNumberSample } from './sample-numbers.ts';
 import { openGameStore, type GameStore } from './store.ts';
 import { wordFor } from './today.ts';
 import { answers, isAllowedGuess } from './words.ts';
@@ -44,6 +45,7 @@ export async function gamesSetup(): Promise<GamesSetup> {
 		sample = openGameStore(':memory:');
 		const day = dayKey(now());
 		for (const go of sampleGoes(day)) sample.record(go);
+		seedNumberSample(sample, day);
 	}
 	return { household: sampleHousehold, store: sample, sample: true };
 }

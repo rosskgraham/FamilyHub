@@ -204,3 +204,183 @@ test('the celebration in the Evening theme, closed with Nice one!', async ({ pag
 	await expect(page).toHaveURL(/\/games(\?theme=evening)?$/);
 	await expect(card(page, 'Sam')).toContainText('Got it in 1');
 });
+
+// Number of the day (AB#91). On the sample's day the draw is 100, 50, 8, 4, 3 and 3, with 424 to reach. Maya got it,
+// Ross finished on 108, 316 away, Leo is two steps in (3 + 3 and 100 + 50) and Sam hasn't played.
+const numbers = (page: Page) => page.getByRole('group', { name: 'Numbers left' });
+// The nth tile with that number, as a number can be there twice.
+const tapNumber = (page: Page, n: number, nth = 0) =>
+	numbers(page)
+		.getByRole('button', { name: String(n), exact: true })
+		.nth(nth)
+		.click();
+const tapSign = (page: Page, name: string) => page.getByRole('button', { name, exact: true }).click();
+const steps = (page: Page) => page.getByRole('list', { name: 'Steps so far' }).getByRole('listitem');
+
+async function step(page: Page, a: number, sign: string, b: number) {
+	await tapNumber(page, a);
+	await tapSign(page, sign);
+	await tapNumber(page, b);
+}
+
+test('Number of the day: choosing it shows its cards, and the Games tab opens on it', async ({ page }) => {
+	await page.goto('/games');
+	await expect(page).toHaveURL(/\/games$/);
+	await page.getByRole('link', { name: /^Number of the day/ }).click();
+	await expect(page).toHaveURL(/\/games\/numbers$/);
+	await expect(page.getByRole('link', { name: /^Number of the day/ })).toHaveAttribute('aria-current', 'true');
+	await expect(page.getByRole('link', { name: 'Games', exact: true })).toHaveAttribute('aria-current', 'page');
+
+	await expect(page.getByRole('listitem')).toHaveText([/Ross/, /Sam/, /Maya/, /Leo/]);
+	await expect(card(page, 'Maya')).toContainText('Got it');
+	await expect(card(page, 'Ross')).toContainText('316 away');
+	await expect(card(page, 'Leo')).toContainText('2 steps so far');
+	await expect(card(page, 'Sam')).toContainText('Not played yet');
+	// A finished game can't be opened, and its card shows only how close it got.
+	await expect(card(page, 'Maya').getByRole('link')).toHaveCount(0);
+	await expect(card(page, 'Ross')).not.toContainText('108');
+
+	await page.evaluate(() => document.fonts.ready);
+	await expect(page).toHaveScreenshot('games-numbers.png');
+	await page.goto('/games/numbers?theme=evening');
+	await page.evaluate(() => document.fonts.ready);
+	await expect(page).toHaveScreenshot('games-numbers-evening.png');
+
+	// The Games tab now opens on Number of the day, until Word of the day is chosen again.
+	await page.goto('/');
+	await page.getByRole('link', { name: 'Games', exact: true }).click();
+	await expect(page).toHaveURL(/\/games\/numbers$/);
+	await page.getByRole('link', { name: /^Word of the day/ }).click();
+	await expect(page).toHaveURL(/\/games\?game=word$/);
+	await expect(card(page, 'Ross')).toContainText('Got it in 3');
+	await page.goto('/');
+	await page.getByRole('link', { name: 'Games', exact: true }).click();
+	await expect(page).toHaveURL(/\/games$/);
+});
+
+// A page's own data from SvelteKit's __data.json, where values point to each other by their place in one array.
+function pageData(body: { nodes: { data?: unknown[] }[] }): unknown {
+	const data = body.nodes.at(-1)!.data!;
+	const at = (i: number): unknown => {
+		if (i < 0) return undefined;
+		const value = data[i];
+		if (Array.isArray(value)) return value.map(at);
+		if (value && typeof value === 'object')
+			return Object.fromEntries(Object.entries(value).map(([key, j]) => [key, at(j as number)]));
+		return value;
+	};
+	return at(0);
+}
+
+test('Number of the day: no way to reach the target is sent before a game is finished', async ({ request }) => {
+	// The solver's way is 50 + 3 = 53, then 53 × 8, and nobody still playing has made 53 themselves.
+	for (const path of [
+		'/games/numbers/__data.json',
+		'/games/numbers/leo/__data.json',
+		'/games/numbers/sam/__data.json'
+	]) {
+		const data = JSON.stringify(pageData(await (await request.get(path)).json()));
+		expect(data, path).not.toMatch(/\b53\b/);
+		expect(data, path).not.toMatch(/"(solution|way)"/i);
+	}
+	const leo = JSON.stringify(pageData(await (await request.get('/games/numbers/leo/__data.json')).json()));
+	expect(leo).toContain('"numbers":[8,4,6,150]');
+});
+
+test('Number of the day: steps, refused steps, Undo and Start again', async ({ page }) => {
+	await page.goto('/games/numbers');
+	await card(page, 'Sam').getByRole('link', { name: /Play/ }).click();
+	await expect(page).toHaveURL(/\/games\/numbers\/sam$/);
+	await expect(page.getByLabel('Target', { exact: true })).toHaveText('424');
+	await expect(numbers(page).getByRole('button')).toHaveText(['100', '50', '8', '4', '3', '3']);
+	await expect(page.getByText('Closest so far: 100, which is 324 away')).toBeVisible();
+
+	// Every tap target is at least as big as Word of the day's keys, 100 by 104.
+	for (const button of await page.locator('.numbers button, .buttons button').all()) {
+		const box = (await button.boundingBox())!;
+		expect(box.width).toBeGreaterThanOrEqual(100);
+		expect(box.height).toBeGreaterThanOrEqual(104);
+	}
+
+	await step(page, 50, 'Add', 3);
+	await expect(steps(page)).toHaveText(['50 + 3 = 53']);
+	await expect(numbers(page).getByRole('button')).toHaveText(['100', '8', '4', '3', '53']);
+	await expect(page.getByText('1 step so far')).toBeVisible();
+
+	// Tapping a chosen number again puts it down.
+	await tapNumber(page, 53);
+	await expect(numbers(page).getByRole('button', { name: '53' })).toHaveAttribute('aria-pressed', 'true');
+	await tapNumber(page, 53);
+	await expect(numbers(page).getByRole('button', { name: '53' })).toHaveAttribute('aria-pressed', 'false');
+
+	await step(page, 3, 'Take away', 8);
+	await expect(page.getByRole('alert')).toHaveText('That would be less than nothing');
+	await step(page, 8, 'Divide', 3);
+	await expect(page.getByRole('alert')).toHaveText('That gives a fraction');
+	await expect(numbers(page).getByRole('button')).toHaveText(['100', '8', '4', '3', '53']);
+
+	await tapNumber(page, 53);
+	await tapSign(page, 'Times');
+	await expect(page.getByRole('alert')).toHaveText('Now tap a number');
+	await page.evaluate(() => document.fonts.ready);
+	await expect(page).toHaveScreenshot('games-numbers-playing.png');
+
+	await page.getByRole('button', { name: 'Undo' }).click();
+	await expect(steps(page)).toHaveCount(0);
+	await expect(numbers(page).getByRole('button')).toHaveText(['100', '50', '8', '4', '3', '3']);
+	await tapNumber(page, 3);
+	await tapSign(page, 'Take away');
+	await tapNumber(page, 3, 1);
+	await expect(page.getByRole('alert')).toHaveText('That gives zero');
+
+	await step(page, 100, 'Add', 8);
+	await step(page, 108, 'Times', 4);
+	await expect(steps(page)).toHaveText(['100 + 8 = 108', '108 × 4 = 432']);
+	await page.getByRole('button', { name: 'Start again' }).click();
+	await expect(steps(page)).toHaveCount(0);
+	await expect(numbers(page).getByRole('button')).toHaveText(['100', '50', '8', '4', '3', '3']);
+
+	await page.goto('/games/numbers/sam?theme=evening');
+	await tapNumber(page, 100);
+	await tapSign(page, 'Add');
+	await page.evaluate(() => document.fonts.ready);
+	await expect(page).toHaveScreenshot('games-numbers-playing-evening.png');
+});
+
+test('Number of the day: Stop for now keeps the steps, and Finish with… ends it so many away', async ({ page }) => {
+	await page.goto('/games/numbers/sam');
+	await step(page, 100, 'Times', 4);
+	await expect(steps(page)).toHaveText(['100 × 4 = 400']);
+	await page.getByRole('link', { name: 'Stop for now' }).click();
+	await expect(page).toHaveURL(/\/games\/numbers$/);
+	await expect(card(page, 'Sam')).toContainText('1 step so far');
+
+	// The steps come back from the Hub's database, not the page.
+	await page.reload();
+	await card(page, 'Sam')
+		.getByRole('link', { name: /Carry on/ })
+		.click();
+	await expect(steps(page)).toHaveText(['100 × 4 = 400']);
+
+	await page.getByRole('button', { name: 'Finish with…' }).click();
+	await expect(page.getByRole('alert')).toHaveText('Which number are you finishing with?');
+	await tapNumber(page, 400);
+	await expect(page).toHaveURL(/\/games\/numbers$/);
+	await expect(card(page, 'Sam')).toContainText('24 away');
+	await expect(card(page, 'Sam').getByRole('link')).toHaveCount(0);
+
+	// A finished game can't be played again that day.
+	await page.goto('/games/numbers/sam');
+	await expect(page).toHaveURL(/\/games\/numbers$/);
+});
+
+test('Number of the day: making the target ends the game as Got it', async ({ page }) => {
+	await page.goto('/games/numbers/leo');
+	await expect(steps(page)).toHaveText(['3 + 3 = 6', '100 + 50 = 150']);
+	await page.getByRole('button', { name: 'Start again' }).click();
+	await step(page, 50, 'Add', 3);
+	await step(page, 53, 'Times', 8);
+	await expect(page).toHaveURL(/\/games\/numbers$/);
+	await expect(card(page, 'Leo')).toContainText('Got it');
+	await expect(card(page, 'Leo').getByRole('link')).toHaveCount(0);
+});
