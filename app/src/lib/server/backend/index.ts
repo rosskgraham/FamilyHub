@@ -8,7 +8,7 @@ import {
 } from '$app/env/private';
 import { backendClient, backendSettings, type BackendClient } from './auth.ts';
 
-export { BackendSignInRefused } from './auth.ts';
+export { BackendRequestFailed, BackendSignInRefused } from './auth.ts';
 
 let client: BackendClient | null | undefined;
 

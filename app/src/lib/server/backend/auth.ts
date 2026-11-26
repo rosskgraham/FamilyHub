@@ -37,6 +37,16 @@ export function backendSettings(env: Record<string, string | undefined>): Backen
  */
 export class BackendSignInRefused extends Error {}
 
+/** The backend answered, but not with success: such as a 422 for a change it won't take, or a 503 while it's busy. */
+export class BackendRequestFailed extends Error {
+	constructor(
+		message: string,
+		readonly status: number
+	) {
+		super(message);
+	}
+}
+
 // A request that hangs is as good as none, and holds up the page while it waits.
 const TIMEOUT_MS = 10_000;
 // Renew a few minutes early, so a token never expires mid-request.
@@ -144,7 +154,10 @@ export function backendClient(settings: BackendSettings, fetcher: typeof fetch =
 				}
 				if (response.status === 401 || response.status === 403)
 					throw new BackendSignInRefused(`Backend refused the Hub: ${method} ${path}: ${response.status}`);
-				throw new Error(`Backend request failed, ${method} ${path}: ${response.status}`);
+				throw new BackendRequestFailed(
+					`Backend request failed, ${method} ${path}: ${response.status}`,
+					response.status
+				);
 			}
 		}
 	};

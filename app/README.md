@@ -103,7 +103,17 @@ node scripts/backend-env.mjs
 
 This puts `BACKEND_URL`, `ENTRA_TENANT_ID`, `ENTRA_SUBDOMAIN`, `BACKEND_API_CLIENT_ID`, `HUB_CLIENT_ID` and `HUB_CERTIFICATE` in `app/.env`, from the Key Vault, without printing them. The certificate holds the Hub's private key, so it never goes in a commit or a chat. On the Pi, the playbook puts the same in `hub.env`. [The sign-in runbook](../docs/runbooks/sign-in-setup.md), step 9, has the details.
 
-With them, the Hub signs in once when it starts and asks the backend's `/me` who it is. The log says "Signed in to the backend as the Hub", or why not. It gets an app-only token by signing a client assertion with the certificate, keeps it until five minutes before it expires, and gets a new one if the backend turns it down. Without them, it doesn't try. Nothing on screen uses the backend yet.
+With them, the Hub signs in once when it starts and asks the backend's `/me` who it is. The log says "Signed in to the backend as the Hub", or why not. It gets an app-only token by signing a client assertion with the certificate, keeps it until five minutes before it expires, and gets a new one if the backend turns it down. Without them, it doesn't try.
+
+### The Shopping list from the backend, for building only
+
+Set `SHOPPING_SOURCE=backend` in `app/.env` as well, and the Shopping Section and Today card show the backend's Shopping list instead of the Google Tasks one, looking just the same. It's for building and trying it on the PC until the switch in slice 5, which removes the setting. Never set it on the Pi. Unset, the Hub uses Google Tasks as before, and with `CALENDAR_SOURCE=sample` it's the sample list either way.
+
+- The list is all of `GET /lists/shopping/items?after=0`, asked for every minute and straight after a change at the Hub: the items still to get, newest first, then those ticked off in the last 10 minutes.
+- Each add, tick, untick and remove is one operation to `POST /lists/shopping/operations`. The Hub makes the operation's id, and an added item's id, when the change is made, so sending it again after a lost answer changes nothing, and an item added offline keeps its id.
+- While the backend can't be reached, changes wait in `app/data/shopping-backend-queue.json`, in order, the screen shows them at once with "Offline · 2 to send", and they're sent in a batch once it's back. A change the backend turns down (422) is logged and dropped, and the ones after it are still sent.
+- If the backend refuses the Hub's sign-in, the list says Offline, not Sign in needed, as nothing at the Hub can fix it, and the log says why.
+- The last list is kept in `app/data/shopping-backend-cache.json`, apart from the Google one's files.
 
 ## Check types and run the tests
 
@@ -153,7 +163,8 @@ It listens on port 3000, or `PORT`. `/api/health` answers `{"status":"ok","versi
 - `src/routes/settings/`: Settings: the clock, About this Hub, and the Household and Google (`src/lib/components/HouseholdSettings.svelte` and `MemberForm.svelte`): Members, their colours and Calendars, the lists, and signing in. `/setup` only redirects there now.
 - `src/lib/server/hub-db.ts`: the Hub's database, `hub.db`, and its migrations. `household.ts` keeps the Household in it, `settings.ts` the choices, and `import-files.ts` imports the old files once.
 - `src/lib/server/tasks/`: what the Shopping list and To-dos share as Google Tasks lists. `google.ts` reads and changes a list, `queue.ts` holds changes made while Google can't be reached, and `feed.ts` keeps a list fresh, shows it from disk when Google can't be reached, and applies changes.
-- `src/lib/server/shopping/` and `src/lib/server/todos/`: each list's own reading of Google's tasks, and its sample list in `fake.ts`.
+- `src/lib/server/shopping/` and `src/lib/server/todos/`: each list's own reading of Google's tasks, and its sample list in `fake.ts`. The Shopping list's `backend.ts` is the backend's list, with its own queue of operations, and `index.ts` picks one with `SHOPPING_SOURCE`.
+- `src/lib/server/backend/`: signing in to the backend as the Hub, and calling it.
 - `src/lib/components/ShoppingList.svelte`: the list on the Today view and in the Shopping section, with ticking off, adding and removing.
 - `src/routes/api/shopping/`: the endpoint the screen calls to change the list.
 - `src/env.ts`: the environment variables the app reads.
