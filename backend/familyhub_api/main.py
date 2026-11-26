@@ -67,10 +67,15 @@ class SessionCode(BaseModel):
 
 
 class SessionAnswer(BaseModel):
-    # A Member gets a session token. Anyone else gets their email address, for screen B, and no session.
+    # A Member gets a session token, and who they are: their Object ID, which the app keeps its copy of the
+    # list under, and their names from the ID token. Anyone else gets their email address, for screen B, and
+    # no session.
     kind: Literal["member", "refused"]
     token: str | None = None
     email: str | None = None
+    object_id: str | None = None
+    name: str | None = None
+    given_name: str | None = None
 
 
 class ChangedItems(BaseModel):
@@ -185,7 +190,14 @@ def create_app(
             signed = sessions.swap(body.code)
         if signed is None:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "That sign-in has run out. Sign in again.")
-        return SessionAnswer(kind=signed.kind, token=signed.token, email=signed.email)
+        return SessionAnswer(
+            kind=signed.kind,
+            token=signed.token,
+            email=signed.email,
+            object_id=signed.object_id,
+            name=signed.name,
+            given_name=signed.given_name,
+        )
 
     @app.delete("/sessions/current", status_code=status.HTTP_204_NO_CONTENT)
     def end_session(request: Request, sessions: Annotated[Sessions, Depends(signing_in)]) -> Response:

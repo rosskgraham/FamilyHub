@@ -53,6 +53,9 @@ class Account:
     object_id: str
     email: str
     cache: str
+    # From the ID token, for the family app to greet the Member by.
+    name: str = ""
+    given_name: str = ""
 
 
 class SignInRefused(Exception):
@@ -114,7 +117,13 @@ class MsalEntra:
             raise SignInRefused(str(result["error"]))
         claims = result.get("id_token_claims") or {}
         email = claims.get("email") or claims.get("preferred_username") or ""
-        return Account(object_id=str(claims["oid"]), email=str(email), cache=cache.serialize())
+        return Account(
+            object_id=str(claims["oid"]),
+            email=str(email),
+            cache=cache.serialize(),
+            name=str(claims.get("name") or ""),
+            given_name=str(claims.get("given_name") or ""),
+        )
 
     def refresh(self, cache: str) -> str | None:
         tokens = msal.SerializableTokenCache()
@@ -193,12 +202,15 @@ class CosmosStore:
 
 @dataclass(frozen=True)
 class Signed:
-    """What a one-time code swaps for: a Member's session token, or the email of an account that isn't the
-    Household's."""
+    """What a one-time code swaps for: a Member's session token, with who they are for the family app to
+    show, or the email of an account that isn't the Household's."""
 
     kind: Literal["member", "refused"]
     token: str | None = None
     email: str | None = None
+    object_id: str | None = None
+    name: str | None = None
+    given_name: str | None = None
 
 
 class Sessions:
@@ -254,6 +266,8 @@ class Sessions:
             "kind": "code",
             "objectId": account.object_id,
             "email": account.email,
+            "name": account.name,
+            "givenName": account.given_name,
             "expires": self._at(CODE_SECONDS),
             "ttl": CODE_SECONDS,
         }
@@ -289,7 +303,14 @@ class Sessions:
                 "ttl": SESSION_SECONDS,
             }
         )
-        return Signed(kind="member", token=token)
+        return Signed(
+            kind="member",
+            token=token,
+            email=item["email"],
+            object_id=item["objectId"],
+            name=item.get("name", ""),
+            given_name=item.get("givenName", ""),
+        )
 
     def object_id(self, token: str) -> str:
         """The account a session token is for, refreshing its tokens from Entra if it's a day since they were.

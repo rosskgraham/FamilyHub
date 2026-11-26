@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { SignInFailed, type Account, type Auth } from './auth.ts';
+import { NotTheHousehold, SignInFailed, type Account, type Auth } from './auth.ts';
 import { memoryCopy, type Copy } from './copy.ts';
 import { FakeBackend } from './fakes.ts';
 import { CANT_REACH, firstName, open, type FetchMe, type Screen } from './session.ts';
-import type { ShoppingList } from './shopping.svelte.ts';
+import { SignedOut, type ShoppingList } from './shopping.svelte.ts';
 
 const ROSS: Account = { id: 'ross-home', username: 'ross@example.com', name: 'Ross Graham', givenName: 'Ross' };
 
@@ -58,11 +58,58 @@ beforeEach(() => vi.useFakeTimers());
 afterEach(() => vi.useRealTimers());
 
 describe('opening the app', () => {
-	it('is sign in (A) when nobody is signed in, and drops any copy left on the phone', async () => {
-		const { done, last, copy } = await opening(fakeAuth(null), member, { copy: savedCopy() });
+	it('is sign in (A) when nobody is signed in', async () => {
+		const { done, last } = await opening(fakeAuth(null), member);
 		await done;
 
 		expect(last().screen).toEqual({ kind: 'sign-in' });
+	});
+
+	it('keeps a copy with no session usable, asking to sign in (G), as on a phone signed in before AB#94', async () => {
+		const backend = new FakeBackend();
+		const { done, last, copy } = await opening(fakeAuth(null), member, { copy: savedCopy(), backend });
+		await done;
+
+		const list = last().list!;
+		expect(last().screen).toEqual({ kind: 'member', firstName: 'Ross', initial: 'R' });
+		expect(list.reach).toBe('signed-out');
+		expect(texts(list)).toEqual(['Pasta', 'Milk']);
+		list.add('Eggs');
+		expect(copy.saved?.account).toBe('ross-home');
+		expect(copy.saved?.list.queue.map((pending) => pending.op.type)).toEqual(['add', 'add']);
+		list.stop();
+	});
+
+	it('sends what waited once the same account signs in again', async () => {
+		const backend = new FakeBackend();
+		// With no session, the backend is never reached: the API says to sign in.
+		backend.failing = new SignedOut();
+		backend.failChanges = new SignedOut();
+		const before = await opening(fakeAuth(null), member, { copy: savedCopy(), backend });
+		await before.done;
+		before.last().list!.add('Eggs');
+		before.last().list!.stop();
+		expect(backend.items.size).toBe(0);
+		backend.failing = null;
+		backend.failChanges = null;
+
+		const after = await opening(fakeAuth(ROSS), member, { copy: before.copy.saved, backend });
+		await after.done;
+
+		expect([...backend.items.values()].map((item) => item.text).sort()).toEqual(['Eggs', 'Pasta']);
+		expect(after.last().list?.waiting).toBe(0);
+		after.last().list?.stop();
+	});
+
+	it('is not this account (B), with its email, when the sign-in was an account that isn’t the Household’s', async () => {
+		const auth = fakeAuth(null);
+		auth.start = vi.fn(async () => {
+			throw new NotTheHousehold('stranger@example.com');
+		});
+		const { done, last, copy } = await opening(auth, member, { copy: savedCopy() });
+		await done;
+
+		expect(last().screen).toEqual({ kind: 'refused', email: 'stranger@example.com' });
 		expect(copy.saved).toBeNull();
 	});
 
