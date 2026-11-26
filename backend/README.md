@@ -6,12 +6,24 @@ So far it's the skeleton from slice 1 (`/health`, sign-in, and `/me`, deployed b
 
 ## Sign-in
 
-Members sign in with their own Google account through Microsoft Entra External ID, and call the API with an access token for the `Lists.ReadWrite` scope. The Hub signs in as itself, with a certificate, and its app-only token carries the `Hub` app role. The API checks each token's signature against the FamilyHub tenant's keys, its issuer, audience and expiry, then the scope or role. A Member must also have an item in Cosmos DB's `accounts` container, from their Object ID to their Member id on the Hub ([ADR 0014](../docs/adr/0014-household-accounts-in-cosmos-db.md)).
+Members sign in with their own Google account through Microsoft Entra External ID. The backend holds their sign-in as a confidential client, and gives each phone a FamilyHub session token ([ADR 0016](../docs/adr/0016-sign-in-held-by-the-backend.md), below). Scripts can call with an Entra access token for the `Lists.ReadWrite` scope instead. The Hub signs in as itself, with a certificate, and its app-only token carries the `Hub` app role. The API checks each token's signature against the FamilyHub tenant's keys, its issuer, audience and expiry, then the scope or role. A Member must also have an item in Cosmos DB's `accounts` container, from their Object ID to their Member id on the Hub ([ADR 0014](../docs/adr/0014-household-accounts-in-cosmos-db.md)).
 
+- A session token is checked against Cosmos DB's `sessions` container, by its hash, and stands for the Member whose account it is. Either way, the account must still be on the list, on every call.
 - `GET /me` says who the caller is: `{"kind": "member", "member_id": "…"}` or `{"kind": "hub", "member_id": null}`.
 - No token, or a bad one, is a 401. A good token for an account not on the list, or without the scope or role, is a 403. Before the tenant's details are set (the app settings `ENTRA_TENANT_ID`, `ENTRA_SUBDOMAIN` and `API_CLIENT_ID`), it's a 503.
 - `/health` needs no sign-in.
-- The family app calls from another origin, its Static Web Apps address, so the API answers CORS for that and `http://localhost:5173` only. In Azure that's the function app's own CORS setting, in `infra/backend.bicep`: the Functions host answers the browser's preflight itself, before FastAPI sees it. On a PC, set `ALLOWED_ORIGINS` (comma-separated) and FastAPI answers instead, allowing `GET` and `POST` with `Authorization`. Never both, as the header would be sent twice, and never cookies.
+- The family app calls from another origin, its Static Web Apps address, so the API answers CORS for that and `http://localhost:5173` only. In Azure that's the function app's own CORS setting, in `infra/backend.bicep`: the Functions host answers the browser's preflight itself, before FastAPI sees it. On a PC, set `ALLOWED_ORIGINS` (comma-separated) and FastAPI answers instead, allowing `GET`, `POST` and `DELETE` with `Authorization`. Never both, as the header would be sent twice, and never cookies.
+
+### Sessions
+
+The FamilyHub app registration signs Members in as a confidential client, with its secret from the Key Vault (the app setting `APP_CLIENT_SECRET` is a Key Vault reference, and `APP_CLIENT_ID` is its client ID). Without either, or Cosmos DB, the routes below say 503.
+
+- `GET /auth/sign-in?return_to=<the family app's origin>` sends the browser to the tenant, with an authorisation code flow and PKCE, asking which Google account. `return_to` must be one of `FAMILY_APP_ORIGINS` (on a PC, `ALLOWED_ORIGINS` too), or it's a 400.
+- The tenant posts the code to `/auth/callback`, at the API's own address (`WEBSITE_HOSTNAME` in Azure; on a PC, wherever the request came). It redeems the code with the secret and sends the browser to `<return_to>/auth/done?code=<one-time code>`, or `?error=<why>` when it was cancelled or failed. A state works once, for 10 minutes.
+- `POST /auth/session` with `{"code": "…"}` swaps the code, once and within 2 minutes, for `{"kind": "member", "token": "fhs_…"}`, or `{"kind": "refused", "email": "…"}` for an account that isn't the Household's, with no session and none of its tokens kept.
+- At most once a day, a call with a session refreshes its tokens from Entra. If Entra says the sign-in is over (90 days unused, or revoked in the tenant), the session ends and the call is a 401. If Entra can't be reached, or turns down the backend's own secret, the call goes ahead and it's asked again next time.
+- `DELETE /sessions/current` ends the session in the `Authorization` header: 204, even if it had already gone.
+- `scripts/sessions.py` lists a Member's sessions and ends one or all of them, for a lost or replaced phone.
 
 The tenant is set up by hand, as the [sign-in runbook](../docs/runbooks/sign-in-setup.md) says. `scripts/whoami.py` signs in as a Member or the Hub and calls `/me`, to check it by hand. `scripts/accounts.py` lists, adds and removes the Household's accounts, finding each one in the tenant by its Google address.
 
@@ -49,7 +61,7 @@ Web PubSub's keys are off, so the API makes each token through Web PubSub's own 
 
 ## What's here
 
-- `familyhub_api/`: the FastAPI app, with no Azure Functions in sight, so it runs and is tested as a plain FastAPI service. `main.py` has the routes, `auth.py` checks tokens, `accounts.py` reads the Household's accounts from Cosmos DB, `lists.py` has the lists' operations and rules, `cosmos_lists.py` keeps them in Cosmos DB, and `live.py` sends live updates through Web PubSub.
+- `familyhub_api/`: the FastAPI app, with no Azure Functions in sight, so it runs and is tested as a plain FastAPI service. `main.py` has the routes, `auth.py` checks tokens, `sessions.py` signs Members in and keeps their sessions, `accounts.py` reads the Household's accounts from Cosmos DB, `lists.py` has the lists' operations and rules, `cosmos_lists.py` keeps them in Cosmos DB, and `live.py` sends live updates through Web PubSub.
 - `function_app.py`: the Azure Functions entry point. `AsgiFunctionApp` hands every HTTP request to the FastAPI app.
 - `host.json`: the Functions host's settings. Routes have no `/api` prefix, so it's `/health`, not `/api/health`.
 - `tests/`: pytest tests, run with FastAPI's test client. Sign-in's tests sign their own tokens with a key made for the test. The tests use stand-ins for Cosmos DB, the lists' one refusing clashing writes as a transactional batch would.

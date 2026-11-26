@@ -28,6 +28,12 @@ param entraSubdomain string = ''
 @description('The client ID of the FamilyHub API app registration: the audience its access tokens are for.')
 param apiClientId string = ''
 
+@description('The client ID of the FamilyHub app registration, which the backend signs Members in as, a confidential client (ADR 0016). Its secret is family-app-client-secret in the Key Vault (the sign-in runbook).')
+param appClientId string = ''
+
+@description('The Key Vault holding family-app-client-secret, which the API reads through a Key Vault reference.')
+param keyVaultName string
+
 @description('The family app\'s address on Static Web Apps, such as https://lively-beach-0.azurestaticapps.net. The API answers CORS for it.')
 param familyAppUrl string = ''
 
@@ -44,6 +50,16 @@ var storageBlobDataOwner = 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b'
 
 // Built-in role: send messages and hand out client access tokens through Web PubSub.
 var webPubSubServiceOwner = '12cf5a90-567b-43ae-8102-96cf46c7d9b4'
+
+// Built-in role: read secrets' values, nothing else. Given on the one secret the API needs, not the whole vault,
+// which holds the Hub's private key too.
+var keyVaultSecretsUser = '4633458b-17de-408a-b874-0445c86b69e6'
+
+// The FamilyHub app registration's client secret, made by hand (the sign-in runbook, step 5).
+var clientSecretName = 'family-app-client-secret'
+
+// Where signing in may return to: the family app, and its dev server on the PC.
+var familyAppOrigins = filter([familyAppUrl, 'http://localhost:5173'], origin => !empty(origin))
 
 // Cosmos DB's own built-in data role, not an Azure role: read and write items, nothing else.
 var cosmosDataContributor = '00000000-0000-0000-0000-000000000002'
@@ -169,6 +185,24 @@ resource cosmos 'Microsoft.DocumentDB/databaseAccounts@2025-10-15' = {
         }
       }
     }
+
+    // Sign-in held by the backend (ADR 0016): sign-in flows, one-time codes and phones' sessions, keyed by /id so
+    // each is a point read. Every item carries its own ttl: 10 minutes, 2 minutes, and 90 days that start again
+    // each time a session is checked. On the database's shared throughput.
+    resource sessions 'containers' = {
+      name: 'sessions'
+      properties: {
+        resource: {
+          id: 'sessions'
+          partitionKey: {
+            paths: ['/id']
+            kind: 'Hash'
+          }
+          // On, with each item's own ttl. An item without one would last 90 days.
+          defaultTtl: 7776000
+        }
+      }
+    }
   }
 }
 
@@ -223,7 +257,7 @@ resource api 'Microsoft.Web/sites@2025-03-01' = {
       // platform's. FastAPI's own CORS is for the PC only (ALLOWED_ORIGINS), as both at once would send the header
       // twice, which browsers refuse. Bearer tokens only, never cookies.
       cors: {
-        allowedOrigins: filter([familyAppUrl, 'http://localhost:5173'], origin => !empty(origin))
+        allowedOrigins: familyAppOrigins
         supportCredentials: false
       }
       appSettings: [
@@ -260,6 +294,20 @@ resource api 'Microsoft.Web/sites@2025-03-01' = {
         {
           name: 'API_CLIENT_ID'
           value: apiClientId
+        }
+        // Sign-in held by the backend (ADR 0016). The secret is a Key Vault reference, resolved with the managed
+        // identity, so it's never in Bicep, the pipeline or the app's settings as text.
+        {
+          name: 'APP_CLIENT_ID'
+          value: appClientId
+        }
+        {
+          name: 'APP_CLIENT_SECRET'
+          value: empty(appClientId) ? '' : '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=${clientSecretName})'
+        }
+        {
+          name: 'FAMILY_APP_ORIGINS'
+          value: join(familyAppOrigins, ',')
         }
       ]
     }
@@ -312,6 +360,25 @@ resource apiCanUseWebPubSub 'Microsoft.Authorization/roleAssignments@2022-04-01'
     principalId: api.identity.principalId
     principalType: 'ServicePrincipal'
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', webPubSubServiceOwner)
+  }
+}
+
+resource vault 'Microsoft.KeyVault/vaults@2026-05-15' existing = {
+  name: keyVaultName
+
+  resource clientSecret 'secrets' existing = {
+    name: clientSecretName
+  }
+}
+
+// Only once there's an app registration to sign in as, as the secret has to exist first (the sign-in runbook).
+resource apiCanReadClientSecret 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(appClientId)) {
+  name: guid(vault::clientSecret.id, api.id, keyVaultSecretsUser)
+  scope: vault::clientSecret
+  properties: {
+    principalId: api.identity.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultSecretsUser)
   }
 }
 

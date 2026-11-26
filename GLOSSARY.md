@@ -22,6 +22,10 @@ _Avoid_: All, family, shared
 The account a Member signs in to the Family app and the Backend with: their own Google account, through Microsoft Entra External ID. Only the accounts on the Backend's list get in, each linked to one Member ([ADR 0014](docs/adr/0014-household-accounts-in-cosmos-db.md)). The Hub signs in as itself, and has none.
 _Avoid_: User, login, profile
 
+**Phone session**:
+A phone's sign-in to the Backend, which it gets when a Member signs in once in the Family app. It lasts while the phone is used, and ends after 90 days unused, at Sign out, or when it's ended for a lost phone ([ADR 0016](docs/adr/0016-sign-in-held-by-the-backend.md)). Not a Routine.
+_Avoid_: Login, token
+
 ### The device
 
 **Hub**:
