@@ -42,7 +42,26 @@ export const MIGRATIONS = [
 		word TEXT NOT NULL,
 		at TEXT NOT NULL
 	);
-	CREATE INDEX word_goes_day ON word_goes (day);`
+	CREATE INDEX word_goes_day ON word_goes (day);`,
+	// Number of the day's steps, one row per step, taken out again by Undo and Start again; and how each Member's game
+	// ended, with the number they finished on.
+	`CREATE TABLE number_steps (
+		id INTEGER PRIMARY KEY,
+		day TEXT NOT NULL,
+		member TEXT NOT NULL,
+		a INTEGER NOT NULL,
+		op TEXT NOT NULL,
+		b INTEGER NOT NULL,
+		at TEXT NOT NULL
+	);
+	CREATE INDEX number_steps_day ON number_steps (day);
+	CREATE TABLE number_results (
+		day TEXT NOT NULL,
+		member TEXT NOT NULL,
+		value INTEGER NOT NULL,
+		at TEXT NOT NULL,
+		PRIMARY KEY (day, member)
+	);`
 ];
 
 /** Opens the database at `path`, creating and upgrading it as needed. `:memory:` keeps it in memory. */

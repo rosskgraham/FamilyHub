@@ -51,3 +51,51 @@ export function applyStep(numbers: readonly number[], a: number, op: Operator, b
 	const answer = calculate(a, op, b);
 	return typeof answer === 'number' ? [...left, answer] : answer;
 }
+
+/** What the bar under the numbers says about a step that isn't allowed (AB#91). */
+export const REFUSALS: Record<Refusal, string> = {
+	zero: 'That gives zero',
+	negative: 'That would be less than nothing',
+	fraction: 'That gives a fraction',
+	'not-left': 'That number’s been used'
+};
+
+/** Where a Member is with today's numbers: not started, part way, or finished on the target or short of it. */
+export type NumberState = 'new' | 'playing' | 'got' | 'away';
+
+/** A Member's game: the numbers left, their steps, and how it ended if it has. */
+export interface NumberGame {
+	numbers: number[];
+	target: number;
+	steps: Step[];
+	state: NumberState;
+	/** How far the number finished with is from the target, once finished. */
+	away: number | null;
+}
+
+/** One Member's card on the Games Section. A finished game shows only how close it got, never how. */
+export interface NumberCard {
+	member: string;
+	state: NumberState;
+	steps: number;
+	away: number | null;
+}
+
+export const isNumberGameFinished = (state: NumberState) => state === 'got' || state === 'away';
+
+/** The number nearest the target, the first of them on a tie. */
+export function closest(numbers: readonly number[], target: number): number {
+	return numbers.reduce((best, n) => (Math.abs(n - target) < Math.abs(best - target) ? n : best));
+}
+
+/** A finished game's result, in words. */
+export function numberResult(state: NumberState, away: number | null): string {
+	return state === 'got' ? 'Got it' : `${away} away`;
+}
+
+/** How a Member's game today is going, in words. */
+export function numberStatus(state: NumberState, steps: number): string {
+	if (state === 'new') return 'Not played yet';
+	if (state === 'playing') return `${steps} ${steps === 1 ? 'step' : 'steps'} so far`;
+	return 'Finished today';
+}
