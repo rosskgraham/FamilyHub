@@ -40,7 +40,7 @@ In the Azure DevOps project:
 
    This gives the connection **Contributor** on the `FamilyHub` subscription, with no secret to rotate. It can create the resource group, and can't reach any other subscription.
 
-2. Let the connection give out four roles, and only those: **Key Vault Secrets Officer** and **Key Vault Certificates Officer**, which the deployment gives Ross on the vault, and **Storage Blob Data Owner** and **Web PubSub Service Owner**, which it gives the function app on its storage account and Web PubSub. (Cosmos DB's data role is Cosmos DB's own, not an Azure role, so Contributor already covers it.) Find the connection's app ID under **Manage App registration**, then, in Git Bash:
+2. Let the connection give out five roles, and only those: **Key Vault Secrets Officer** and **Key Vault Certificates Officer**, which the deployment gives Ross on the vault, and **Storage Blob Data Owner**, **Web PubSub Service Owner** and **Key Vault Secrets User**, which it gives the function app on its storage account, Web PubSub, and the one secret it signs Members in with. (Cosmos DB's data role is Cosmos DB's own, not an Azure role, so Contributor already covers it.) Find the connection's app ID under **Manage App registration**, then, in Git Bash:
 
    ```
    sub=$(az account show --subscription FamilyHub --query id --output tsv)
@@ -49,7 +49,7 @@ In the Azure DevOps project:
      --role "Role Based Access Control Administrator" \
      --scope "/subscriptions/$sub" \
      --condition-version 2.0 \
-     --condition "((!(ActionMatches{'Microsoft.Authorization/roleAssignments/write'})) OR (@Request[Microsoft.Authorization/roleAssignments:RoleDefinitionId] ForAnyOfAnyValues:GuidEquals {b86a8fe4-44ce-4948-aee5-eccb2c155cd7, b7e6dc6d-f1e8-4753-8033-0f276bb0955b, 12cf5a90-567b-43ae-8102-96cf46c7d9b4, a4417e6f-fecd-4de8-b567-7b0420556985})) AND ((!(ActionMatches{'Microsoft.Authorization/roleAssignments/delete'})) OR (@Resource[Microsoft.Authorization/roleAssignments:RoleDefinitionId] ForAnyOfAnyValues:GuidEquals {b86a8fe4-44ce-4948-aee5-eccb2c155cd7, b7e6dc6d-f1e8-4753-8033-0f276bb0955b, 12cf5a90-567b-43ae-8102-96cf46c7d9b4, a4417e6f-fecd-4de8-b567-7b0420556985}))"
+     --condition "((!(ActionMatches{'Microsoft.Authorization/roleAssignments/write'})) OR (@Request[Microsoft.Authorization/roleAssignments:RoleDefinitionId] ForAnyOfAnyValues:GuidEquals {b86a8fe4-44ce-4948-aee5-eccb2c155cd7, b7e6dc6d-f1e8-4753-8033-0f276bb0955b, 12cf5a90-567b-43ae-8102-96cf46c7d9b4, a4417e6f-fecd-4de8-b567-7b0420556985, 4633458b-17de-408a-b874-0445c86b69e6})) AND ((!(ActionMatches{'Microsoft.Authorization/roleAssignments/delete'})) OR (@Resource[Microsoft.Authorization/roleAssignments:RoleDefinitionId] ForAnyOfAnyValues:GuidEquals {b86a8fe4-44ce-4948-aee5-eccb2c155cd7, b7e6dc6d-f1e8-4753-8033-0f276bb0955b, 12cf5a90-567b-43ae-8102-96cf46c7d9b4, a4417e6f-fecd-4de8-b567-7b0420556985, 4633458b-17de-408a-b874-0445c86b69e6}))"
    ```
 
    Or in PowerShell:
@@ -57,7 +57,7 @@ In the Azure DevOps project:
    ```powershell
    $sub = az account show --subscription FamilyHub --query id --output tsv
    $condition = @'
-   ((!(ActionMatches{'Microsoft.Authorization/roleAssignments/write'})) OR (@Request[Microsoft.Authorization/roleAssignments:RoleDefinitionId] ForAnyOfAnyValues:GuidEquals {b86a8fe4-44ce-4948-aee5-eccb2c155cd7, b7e6dc6d-f1e8-4753-8033-0f276bb0955b, 12cf5a90-567b-43ae-8102-96cf46c7d9b4, a4417e6f-fecd-4de8-b567-7b0420556985})) AND ((!(ActionMatches{'Microsoft.Authorization/roleAssignments/delete'})) OR (@Resource[Microsoft.Authorization/roleAssignments:RoleDefinitionId] ForAnyOfAnyValues:GuidEquals {b86a8fe4-44ce-4948-aee5-eccb2c155cd7, b7e6dc6d-f1e8-4753-8033-0f276bb0955b, 12cf5a90-567b-43ae-8102-96cf46c7d9b4, a4417e6f-fecd-4de8-b567-7b0420556985}))
+   ((!(ActionMatches{'Microsoft.Authorization/roleAssignments/write'})) OR (@Request[Microsoft.Authorization/roleAssignments:RoleDefinitionId] ForAnyOfAnyValues:GuidEquals {b86a8fe4-44ce-4948-aee5-eccb2c155cd7, b7e6dc6d-f1e8-4753-8033-0f276bb0955b, 12cf5a90-567b-43ae-8102-96cf46c7d9b4, a4417e6f-fecd-4de8-b567-7b0420556985, 4633458b-17de-408a-b874-0445c86b69e6})) AND ((!(ActionMatches{'Microsoft.Authorization/roleAssignments/delete'})) OR (@Resource[Microsoft.Authorization/roleAssignments:RoleDefinitionId] ForAnyOfAnyValues:GuidEquals {b86a8fe4-44ce-4948-aee5-eccb2c155cd7, b7e6dc6d-f1e8-4753-8033-0f276bb0955b, 12cf5a90-567b-43ae-8102-96cf46c7d9b4, a4417e6f-fecd-4de8-b567-7b0420556985, 4633458b-17de-408a-b874-0445c86b69e6}))
    '@
    az role assignment create `
      --assignee <the connection's app ID> `
@@ -67,7 +67,7 @@ In the Azure DevOps project:
      --condition $condition.Trim()
    ```
 
-   If the connection already has this role from an earlier setup, which allowed fewer roles, edit its condition instead: **Subscriptions → FamilyHub → Access control (IAM) → Role assignments**, then the connection's **Role Based Access Control Administrator**, and add the missing roles to the condition for both adding and removing role assignments. Web PubSub Service Owner was added on 17 November 2026, and Key Vault Certificates Officer (`a4417e6f-fecd-4de8-b567-7b0420556985`) on 22 November 2026, for the Hub's certificate ([the sign-in runbook](sign-in-setup.md), step 6).
+   If the connection already has this role from an earlier setup, which allowed fewer roles, edit its condition instead: **Subscriptions → FamilyHub → Access control (IAM) → Role assignments**, then the connection's **Role Based Access Control Administrator**, and add the missing roles to the condition for both adding and removing role assignments. Web PubSub Service Owner was added on 17 November 2026, and Key Vault Certificates Officer (`a4417e6f-fecd-4de8-b567-7b0420556985`) on 22 November 2026, for the Hub's certificate ([the sign-in runbook](sign-in-setup.md), step 6). Key Vault Secrets User (`4633458b-17de-408a-b874-0445c86b69e6`) was added on 26 November 2026, so the function app can read `family-app-client-secret` (ADR 0016). Without it, the deploy fails with "does not have permission to perform action 'Microsoft.Authorization/roleAssignments/write'".
 
 3. **Pipelines → Library → + Variable group.** Name it `familyhub`, and add two variables. Neither is secret, but the repo is public, so they're kept here:
    - `FAMILYHUB_ADMIN_OBJECT_ID`: the output of `az ad signed-in-user show --query id --output tsv`.
