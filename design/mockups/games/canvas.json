@@ -8,12 +8,20 @@
     "Main.dc.html": { "x": 0, "y": 0, "w": 1920, "h": 1080, "title": "A · Games: Word of the day, who's playing" },
     "Play.dc.html": { "x": 2000, "y": 0, "w": 1920, "h": 1080, "title": "B · Playing: Leo's third go" },
     "Solved.dc.html": { "x": 0, "y": 1500, "w": 1920, "h": 1080, "title": "C · Solved: the celebration" },
-    "Together.dc.html": { "x": 2000, "y": 1500, "w": 1920, "h": 1080, "title": "D · Alternative: one family board, taking turns" }
+    "Together.dc.html": { "x": 2000, "y": 1500, "w": 1920, "h": 1080, "title": "D · Alternative: one family board, taking turns" },
+    "Numbers.dc.html": { "x": 0, "y": 3000, "w": 1920, "h": 1080, "title": "E · Games: Number of the day chosen, who's playing" },
+    "NumbersPlay.dc.html": { "x": 2000, "y": 3000, "w": 1920, "h": 1080, "title": "F · Number of the day: Leo two steps in" },
+    "NumbersGot.dc.html": { "x": 0, "y": 4500, "w": 1920, "h": 1080, "title": "G · Number of the day: got it" },
+    "NumbersClose.dc.html": { "x": 2000, "y": 4500, "w": 1920, "h": 1080, "title": "H · Number of the day: finished 5 away" }
   },
-  "order": ["Main.dc.html", "Play.dc.html", "Solved.dc.html", "Together.dc.html"],
+  "order": ["Main.dc.html", "Play.dc.html", "Solved.dc.html", "Together.dc.html", "Numbers.dc.html", "NumbersPlay.dc.html", "NumbersGot.dc.html", "NumbersClose.dc.html"],
   "notes": {
     "t1": { "x": 0, "y": -260, "text": "Games: picking a player, and playing at the wall", "kind": "title1", "maxW": 3920 },
-    "t2": { "x": 0, "y": 1240, "text": "Finishing, and the shared-board alternative", "kind": "title1", "maxW": 3920 }
+    "t2": { "x": 0, "y": 1240, "text": "Finishing, and the shared-board alternative", "kind": "title1", "maxW": 3920 },
+    "t3": { "x": 0, "y": 2740, "text": "Number of the day: choosing the game, and playing (AB#91)", "kind": "title1", "maxW": 3920 },
+    "t4": { "x": 0, "y": 4240, "text": "Number of the day: the two endings (AB#92)", "kind": "title1", "maxW": 3920 },
+    "n1": { "x": 4000, "y": 3000, "w": 560, "size": "m", "fill": "orange", "text": "Playing (F): tap a number, a sign, then another number. The two numbers go and the answer joins the end of the row, and the step is listed. Tap a chosen number again to put it down.\n\nA step that isn't allowed changes nothing and says why in the bar under the numbers: \"That gives a fraction\", \"That would be less than nothing\", \"That gives zero\".\n\nFinish with… asks \"Which number are you finishing with?\" and the number tiles become the choices. Making the target finishes by itself." },
+    "n2": { "x": 4000, "y": 4500, "w": 560, "size": "m", "fill": "orange", "text": "Both endings show one of the shortest ways, worked out by the Hub. It only comes from the server once that Member has finished, and it's gone when the celebration closes.\n\nThe day's numbers and target aren't secret: everyone gets the same ones. Only the working is." }
   },
   "designSystems": []
 }
