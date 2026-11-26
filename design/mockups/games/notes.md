@@ -77,3 +77,36 @@ Not chosen: the New York Times' own Wordle lists. They're widely copied, but the
 ## Still open
 
 Nothing. The work is split into AB#67 (word lists), AB#68 (playing) and AB#69 (the celebration and streaks).
+
+# Number of the day
+
+The second game (Feature AB#89), designed on 26 November 2026. Boards E–H are on the same canvas.
+
+## Decided (26 November 2026)
+
+- **Our own game in the numbers-game genre**, with its own name and look, not a copy of Countdown. _Avoid:_ Countdown.
+- **No clock.** Stop for now, and carry on later, as with Word of the day.
+- **The same six numbers and target for everyone**, worked out from the date, with new numbers at midnight. The target is from 101 to 999, and can always be reached exactly (AB#90).
+- **The same target for children too.** There's no easier level.
+- **Finishing:** make the target, or choose Finish with… to settle on your closest. Either keeps the streak going. Cards show "Got it" or "N away", never the working.
+- **One way to reach it**, the solver's, is shown in both endings, to the player who just finished, and only until the celebration closes. It's shown even when it's the same as the player's own.
+- **Its own streak, and no Stars**, with the same rules as Word of the day.
+- **The Games tab opens on the last game chosen**, which goes back to Word of the day at midnight.
+
+## How it works at the wall
+
+- **Choosing the game (board E):** the Games list has Word of the day and Number of the day. The chosen one is outlined, and "Who's playing?" shows each Member's card for it.
+- **Playing (board F):** a big target, then the numbers left as tiles. Tap a number, a sign, then another number. The two numbers go, the answer joins the end of the row, and the step is listed. Tapping a chosen number again puts it down. The bar under the numbers shows the step being made. "Closest so far" shows the nearest number on the board.
+- **A step that isn't allowed** changes nothing, and the bar says why: "That gives a fraction", "That would be less than nothing" or "That gives zero".
+- **Undo** takes back the last step, and **Start again** goes back to the six numbers.
+- **Finish with…** asks "Which number are you finishing with?", and the tiles become the choices.
+- **Got it (board G):** the player's steps beside one way to do it, and the same celebration as Word of the day: the chime, a burst of stars and the family's results.
+- **N away (board H):** the same layout without the stars, saying how close it was, with "Next time!".
+
+## Proposed glossary terms
+
+Number of the day, Target and Step, added with AB#90.
+
+## Still open
+
+Nothing. The work is split into AB#90 (the draw and solver, done), AB#91 (playing) and AB#92 (the endings and streak).
