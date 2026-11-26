@@ -66,6 +66,8 @@ class FakeTenant:
             "sub": "someone",
             "tid": SETTINGS.tenant_id,
             "email": "ross@gmail.example",
+            "name": "Ross Graham",
+            "given_name": "Ross",
             "nonce": self.nonce,
             "iat": now,
             "exp": now + 3600,
@@ -139,6 +141,7 @@ def test_it_redeems_the_code_with_the_secret_and_the_verifier(entra: MsalEntra, 
     assert redeemed["code_verifier"] == flow["code_verifier"]
     assert account.object_id == MEMBER_OID
     assert account.email == "ross@gmail.example"
+    assert (account.name, account.given_name) == ("Ross Graham", "Ross")
     assert "refresh-1" in account.cache
 
 
