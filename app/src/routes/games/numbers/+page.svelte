@@ -24,7 +24,7 @@
 				<PlayerCard
 					{owner}
 					status={numberStatus(card.state, card.steps)}
-					streak={0}
+					streak={card.streak}
 					href={playing ? `/games/numbers/${card.member}` : undefined}
 					action={card.state === 'new' ? 'Play' : 'Carry on'}
 				>

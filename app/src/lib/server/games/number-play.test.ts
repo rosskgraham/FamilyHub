@@ -5,7 +5,9 @@ import { sampleHousehold } from '#lib/household.ts';
 // 7, 4 and 4, with 605 to reach.
 vi.mock('$app/env/private', () => ({ HUB_NOW: '2026-11-24T10:00:00Z', CALENDAR_SOURCE: 'sample' }));
 
-const { makeNumberMove, numberCards, numberGameToPlay } = await import('./number-play.ts');
+const { makeNumberMove, numberCards, numberGameToPlay, numberStreakOf } = await import('./number-play.ts');
+const { streakOf } = await import('./index.ts');
+const { applyStep } = await import('#lib/number-game.ts');
 const { openGameStore } = await import('./store.ts');
 const { seedNumberSample } = await import('./sample-numbers.ts');
 const { drawFor } = await import('./numbers.ts');
@@ -107,10 +109,10 @@ describe('numberCards and numberGameToPlay', () => {
 		const setup = setupWith();
 		seedNumberSample(setup.store, DAY);
 		expect(numberCards(setup, DAY)).toEqual([
-			{ member: 'ross', state: 'away', steps: 1, away: 455 },
-			{ member: 'sam', state: 'new', steps: 0, away: null },
-			{ member: 'maya', state: 'got', steps: 5, away: 0 },
-			{ member: 'leo', state: 'playing', steps: 2, away: null }
+			{ member: 'ross', state: 'away', steps: 1, away: 455, streak: 1 },
+			{ member: 'sam', state: 'new', steps: 0, away: null, streak: 3 },
+			{ member: 'maya', state: 'got', steps: 5, away: 0, streak: 3 },
+			{ member: 'leo', state: 'playing', steps: 2, away: null, streak: 5 }
 		]);
 	});
 
@@ -140,5 +142,57 @@ describe('the game chosen', () => {
 		expect(store.chosenGame('2026-11-25')).toBe('word');
 		store.chooseGame('word', DAY);
 		expect(store.chosenGame(DAY)).toBe('word');
+	});
+});
+
+describe('the end of a game (AB#92)', () => {
+	it('comes only with the move that finishes it, with one of the shortest ways to the target', () => {
+		const setup = setupWith();
+		const step = makeNumberMove(setup, 'leo', { kind: 'step', a: 4, op: '+', b: 4 });
+		expect(step.ok && step.end).toBeUndefined();
+		const result = makeNumberMove(setup, 'leo', { kind: 'finish', value: 100 });
+		if (!result.ok || !result.end) throw new Error('No end');
+		expect(result.end).toMatchObject({ value: 100, streak: 1 });
+		// Following its steps from the day's numbers makes the target, in no more steps than the sample's five.
+		let numbers: number[] | string = drawFor(DAY).numbers;
+		for (const { a, op, b } of result.end.solution) numbers = applyStep(numbers as number[], a, op, b);
+		expect(numbers).toContain(605);
+		expect(result.end.solution.length).toBeLessThanOrEqual(5);
+		expect(result.end.cards.find((c) => c.member === 'leo')).toMatchObject({ state: 'away', away: 505 });
+	});
+
+	it('comes when a step makes the target too', () => {
+		const setup = setupWith();
+		for (const step of [
+			{ a: 4, op: '+', b: 4 },
+			{ a: 75, op: '×', b: 8 },
+			{ a: 100, op: '÷', b: 50 },
+			{ a: 7, op: '−', b: 2 }
+		] as const)
+			expect(makeNumberMove(setup, 'sam', { kind: 'step', ...step })).not.toHaveProperty('end');
+		const result = makeNumberMove(setup, 'sam', { kind: 'step', a: 600, op: '+', b: 5 });
+		expect(result.ok && result.end).toMatchObject({ value: 605 });
+	});
+});
+
+describe('numberStreakOf', () => {
+	it('counts the days in a row with a finished game, got or not, and a missed day ends it', () => {
+		const store = openGameStore(':memory:');
+		const result = (day: string, value: number) =>
+			store.recordResult({ day, member: 'leo', value, at: `${day}T08:00:00Z` });
+		result('2026-11-20', 605);
+		result('2026-11-22', 100);
+		result('2026-11-23', 100);
+		expect(numberStreakOf(store, 'leo', DAY)).toBe(2);
+		result(DAY, 605);
+		expect(numberStreakOf(store, 'leo', DAY)).toBe(3);
+		expect(numberStreakOf(store, 'leo', '2026-11-26')).toBe(0);
+	});
+
+	it('is its own: Word of the day’s streak isn’t affected', () => {
+		const store = openGameStore(':memory:');
+		store.recordResult({ day: DAY, member: 'leo', value: 605, at: '2026-11-24T08:00:00Z' });
+		expect(numberStreakOf(store, 'leo', DAY)).toBe(1);
+		expect(streakOf(store, 'leo', DAY)).toBe(0);
 	});
 });
