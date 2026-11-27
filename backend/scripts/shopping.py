@@ -4,6 +4,7 @@
     uv run python scripts/shopping.py member check     # adds, ticks, renames and removes test items
     uv run python scripts/shopping.py hub check        # the same, signed in as the Hub
     uv run python scripts/shopping.py hub live [minutes]  # listens for live updates while making a change
+    uv run python scripts/shopping.py hub clear        # removes every item (AB#103)
 
 list shows the Shopping list as a device starting from nothing would get it. check runs through every
 operation, sends one twice, and sends 10 adds at once, saying what it expected and what it got. Its items are
@@ -23,6 +24,9 @@ from typing import Any
 
 from websockets.sync.client import connect
 from whoami import hub_token, member_token, setting
+
+# The most operations POST /lists/shopping/operations takes at once: familyhub_api.lists.MOST_OPERATIONS.
+MOST_OPERATIONS = 100
 
 
 class Api:
@@ -143,10 +147,20 @@ def live(api: Api, sign_in_again: Any, wait_minutes: float) -> None:
     print("All good." if failures == 0 else f"{failures} failed.")
 
 
+def clear(api: Api) -> int:
+    """Removes every item on the list, as a device starting from nothing sees it, and says how many.
+    Through remove operations rather than deleting the partition, so the Hub and phones keep catching up
+    from their last seq. Shops are kept."""
+    item_ids = [item["id"] for item in api.items()["items"] if not item["removed"]]
+    for start in range(0, len(item_ids), MOST_OPERATIONS):
+        api.send(*(op("remove", item_id) for item_id in item_ids[start : start + MOST_OPERATIONS]))
+    return len(item_ids)
+
+
 def main() -> None:
     who, command = (sys.argv[1:3] + ["", ""])[:2]
-    if who not in ("member", "hub") or command not in ("list", "check", "live"):
-        sys.exit("Usage: shopping.py member|hub list|check|live [minutes]")
+    if who not in ("member", "hub") or command not in ("list", "check", "live", "clear"):
+        sys.exit("Usage: shopping.py member|hub list|check|live [minutes]|clear")
     tenant_id = setting("FAMILYHUB_ENTRA_TENANT_ID")
     authority = f"https://{setting('FAMILYHUB_ENTRA_SUBDOMAIN')}.ciamlogin.com/{tenant_id}"
     api_client_id = setting("FAMILYHUB_API_CLIENT_ID")
@@ -162,6 +176,8 @@ def main() -> None:
         print(json.dumps(api.items(), indent=2))
     elif command == "check":
         check(api)
+    elif command == "clear":
+        print(f"Removed {clear(api)} items.")
     else:
         live(api, sign_in, float(sys.argv[3]) if len(sys.argv) > 3 else 0)
     sys.exit(1 if failures else 0)

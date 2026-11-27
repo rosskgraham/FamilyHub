@@ -74,7 +74,6 @@ export const load: PageServerLoad = async ({ url }) => {
 		household: householdConfig(),
 		choices: {
 			calendars: settings.calendars,
-			shoppingList: settings.shoppingList ?? '',
 			todoList: settings.todoList ?? '',
 			birthdays: settings.birthdays ?? ''
 		},
@@ -170,7 +169,6 @@ export const actions = {
 		await writeSettings({
 			...(await readSettings()),
 			birthdays: chosen('birthdays'),
-			shoppingList: chosen('shoppingList'),
 			todoList: chosen('todoList')
 		});
 		return { saved: 'lists' };

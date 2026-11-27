@@ -8,8 +8,6 @@ import { getSetting, hubDatabase, setSetting } from './hub-db.ts';
 export interface Settings {
 	/** Which Google Calendar belongs to each Member, and which is the Family calendar. */
 	calendars: Record<OwnerId, string>;
-	/** The Google Tasks list that is the Shopping list. */
-	shoppingList?: string;
 	/** The Google Tasks list of the Household's To-dos. */
 	todoList?: string;
 	/** The Google Calendar of friends' and family's birthdays, shown as everyone's. */
@@ -23,15 +21,7 @@ export interface Settings {
 }
 
 /** Each setting's own key in the database, so saving one never touches another. */
-export const SETTING_KEYS = [
-	'calendars',
-	'shoppingList',
-	'todoList',
-	'birthdays',
-	'clockFormat',
-	'theme',
-	'sleepHours'
-] as const;
+export const SETTING_KEYS = ['calendars', 'todoList', 'birthdays', 'clockFormat', 'theme', 'sleepHours'] as const;
 
 export async function readSettings(): Promise<Settings> {
 	const db = hubDatabase();

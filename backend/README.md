@@ -57,7 +57,7 @@ Devices hear about a change made elsewhere within about a second, through Azure 
 
 Web PubSub's keys are off, so the API makes each token through Web PubSub's own API, with the function app's managed identity and its Web PubSub Service Owner role. The free tier allows 20 connections at once and 20,000 messages a day, each message to each connection counting once. Past a limit, connections or messages are refused, not charged for.
 
-`scripts/shopping.py` signs in as `whoami.py` does, and lists the Shopping list, runs through every operation with test items, or listens for live updates while making a change (`live`), to check it by hand.
+`scripts/shopping.py` signs in as `whoami.py` does, and lists the Shopping list, runs through every operation with test items, or listens for live updates while making a change (`live`), to check it by hand. `clear` removes every item, as was done before the Hub switched to the backend (AB#103), keeping Shops.
 
 ## What's here
 
