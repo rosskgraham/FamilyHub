@@ -33,12 +33,13 @@ test('a development build shows Check for updates, but it can’t be pressed', a
 
 test('Check for updates asks the updater, shows how it goes, and Load now loads the new version', async ({ page }) => {
 	updaterSays('up-to-date', '2026.10.28.1', -600);
-	await page.goto(`${HEATING_URL}/settings`);
+	await page.goto(`${HEATING_URL}/settings`, { waitUntil: 'networkidle' });
 	const about = page.getByRole('region', { name: 'About this Hub' });
 	await expect(about.getByRole('status')).toContainText('Up to date: 2026.10.28.1');
 
 	// The first press writes the request the Pi's path unit watches, and waits for the updater.
 	await about.getByRole('button', { name: 'Check for updates' }).click();
+	await expect(page).toHaveURL(`${HEATING_URL}/settings`);
 	await expect(about.getByRole('status')).toHaveText('Asking the Pi to check…');
 	await expect(about.getByRole('button', { name: 'Check for updates' })).toBeDisabled();
 	expect(readFileSync(UPDATE_REQUESTED, 'utf8').trim()).toBe(after(0));
@@ -59,3 +60,23 @@ test('Check for updates asks the updater, shows how it goes, and Load now loads 
 	await reloaded;
 	await expect(about.getByRole('button', { name: 'Load now' })).toHaveCount(0);
 });
+
+// About this Hub with both buttons and the status line, as after a check has installed a release.
+for (const [name, query] of [
+	['settings-updates', ''],
+	['settings-updates-evening', '?theme=evening']
+]) {
+	test(`${name} view`, async ({ page }) => {
+		updaterSays('installed', '2026.10.28.2', -60);
+		await page.route('**/_app/version.json', (route) => route.fulfill({ json: { version: '2026.10.28.2' } }));
+		// Pressed before the page has hydrated, the form would post without the page's ?theme.
+		await page.goto(`${HEATING_URL}/settings${query}`, { waitUntil: 'networkidle' });
+		const about = page.getByRole('region', { name: 'About this Hub' });
+		await page.addStyleTag({ content: '.varies { visibility: hidden; }' });
+		await about.getByRole('button', { name: 'Check for updates' }).click();
+		updaterSays('installed', '2026.10.28.2', 1);
+		await expect(about.getByRole('button', { name: 'Load now' })).toBeVisible();
+		await page.evaluate(() => document.fonts.ready);
+		await expect(about).toHaveScreenshot(`${name}.png`);
+	});
+}
