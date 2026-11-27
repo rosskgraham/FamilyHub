@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page, type Response } from '@playwright/test';
 import { NOW } from '../playwright.config.ts';
 
 // While a release restarts the Hub, its server doesn't answer for a moment. The screen keeps what it shows rather than
@@ -20,10 +20,26 @@ async function healthSwitch(page: Page) {
 	return state;
 }
 
+/**
+ * Waits until the screen is running: hydrated, with its timers started, and one minute refresh done. Its idle time
+ * starts when it hydrates, which can come after the page has loaded when the machine is busy.
+ */
+async function untilRunning(page: Page) {
+	let refreshed = false;
+	const seen = (response: Response) => response.url().includes('__data.json') && (refreshed = true);
+	page.on('response', seen);
+	await expect(async () => {
+		await page.clock.fastForward('00:30');
+		expect(refreshed).toBe(true);
+	}).toPass({ timeout: 10_000 });
+	page.off('response', seen);
+}
+
 test('the minute refresh waits while the Hub’s server doesn’t answer, then catches up', async ({ page }) => {
 	await page.clock.install({ time: new Date(NOW) });
 	const health = await healthSwitch(page);
 	await page.goto('/');
+	await untilRunning(page);
 	await expect(page.getByText('Coming up')).toBeVisible();
 	const loads = countDataLoads(page);
 
@@ -45,15 +61,8 @@ test('the minute refresh waits while the Hub’s server doesn’t answer, then c
 test('going back to the Today view waits until the Hub’s server answers', async ({ page }) => {
 	await page.clock.install({ time: new Date(NOW) });
 	const health = await healthSwitch(page);
-	// DIAGNOSTIC (AB#41, CI only fails this): what the page asks for and logs. To be removed.
-	const t0 = Date.now();
-	const note = (s: string) => console.log(`[diag +${Date.now() - t0}ms] ${s}`);
-	page.on('console', (m) => note(`console ${m.type()}: ${m.text()}`));
-	page.on('request', (r) => /health|__data|\/$/.test(r.url()) && note(`request ${r.url()}`));
-	page.on('requestfailed', (r) => note(`failed ${r.url()} ${r.failure()?.errorText}`));
-	page.on('requestfinished', (r) => /health|__data/.test(r.url()) && note(`finished ${r.url()}`));
-	page.on('framenavigated', (f) => f === page.mainFrame() && note(`navigated ${f.url()}`));
 	await page.goto('/week');
+	await untilRunning(page);
 
 	health.down = true;
 	await page.clock.fastForward('02:05');
