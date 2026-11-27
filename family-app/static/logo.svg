@@ -1,15 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
   <title>FamilyHub</title>
-  <!-- Colours from app/src/lib/theme.ts: hero ink, car blue, star gold. -->
+  <!-- Colours from app/src/lib/theme.ts: the Day theme's ink for the tile, and the Evening theme's Member colours,
+       made for dark backgrounds. Everything sits inside the middle 80%, which a maskable icon never loses (AB#95). -->
   <rect width="120" height="120" fill="#161B22"/>
-  <!-- The house: a roof over a wall screen. -->
-  <path d="M24 58 L60 27 L96 58" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect x="34" y="52" width="52" height="42" rx="7" fill="#FFFFFF"/>
-  <!-- The screen's week: today picked out in gold. -->
-  <rect x="41" y="59" width="11" height="11" rx="2.5" fill="#2456C9"/>
-  <rect x="54.5" y="59" width="11" height="11" rx="2.5" fill="#2456C9"/>
-  <rect x="68" y="59" width="11" height="11" rx="2.5" fill="#F2B42C"/>
-  <rect x="41" y="75" width="11" height="11" rx="2.5" fill="#2456C9"/>
-  <rect x="54.5" y="75" width="11" height="11" rx="2.5" fill="#2456C9"/>
-  <rect x="68" y="75" width="11" height="11" rx="2.5" fill="#2456C9"/>
+  <!-- The house: a roof over the Household, one tile per Member colour. -->
+  <path d="M26 55 L60 26 L94 55" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="34" y="57" width="24" height="18" rx="5" fill="#7FA8FF"/>
+  <rect x="62" y="57" width="24" height="18" rx="5" fill="#FFA85C"/>
+  <rect x="34" y="79" width="24" height="18" rx="5" fill="#5ED6B5"/>
+  <rect x="62" y="79" width="24" height="18" rx="5" fill="#B99BFF"/>
 </svg>
