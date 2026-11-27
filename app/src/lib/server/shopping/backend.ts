@@ -1,5 +1,4 @@
-// The Shopping list from the family app's backend, for the Hub to switch to in slice 5. Until then it's chosen with
-// SHOPPING_SOURCE=backend, on the PC only. It shows and changes the list as the Google Tasks one does: kept fresh in the
+// The Hub's Shopping list, from the family app's backend since the switch from Google Tasks (AB#103): kept fresh in the
 // background, shown from disk when the backend can't be reached, and changed at once or queued until it can be.
 import type { ShoppingItem } from '#lib/shopping.ts';
 import { BackendRequestFailed, type BackendRequest } from '../backend/auth.ts';

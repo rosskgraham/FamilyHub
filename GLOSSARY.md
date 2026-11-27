@@ -33,11 +33,11 @@ The wall-mounted touchscreen in the kitchen, and the product as a whole.
 _Avoid_: Screen, display, dashboard, tablet
 
 **Family app**:
-The Household's own app on their phones, installed from Chrome rather than an app store, where each Member signs in as themselves to use the Shopping list and To-dos. Planned ([ADR 0010](docs/adr/0010-shared-lists-in-an-azure-backend-with-an-installable-family-app.md)).
+The Household's own app on their phones, installed from Chrome rather than an app store, where each Member signs in as themselves to use the Shopping list, and later the To-dos. In use for the Shopping list ([ADR 0010](docs/adr/0010-shared-lists-in-an-azure-backend-with-an-installable-family-app.md)).
 _Avoid_: Phone app, mobile app, PWA
 
 **Backend**:
-The Hub's own service in Azure that holds the Shopping list and To-dos for the Family app and the Hub. Being built ([ADR 0010](docs/adr/0010-shared-lists-in-an-azure-backend-with-an-installable-family-app.md)).
+The Hub's own service in Azure that holds the Shopping list for the Family app and the Hub, and later the To-dos ([ADR 0010](docs/adr/0010-shared-lists-in-an-azure-backend-with-an-installable-family-app.md)).
 _Avoid_: Server (the Hub's server on the Pi), cloud, API
 
 **Section**:

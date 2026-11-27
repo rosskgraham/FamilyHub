@@ -22,7 +22,7 @@
 		form
 	}: {
 		household: { members: MemberConfig[]; everyone: Colour };
-		choices: { calendars: Record<string, string>; shoppingList: string; todoList: string; birthdays: string };
+		choices: { calendars: Record<string, string>; todoList: string; birthdays: string };
 		google:
 			| { step: 'credentials' }
 			| { step: 'sign-in' }
@@ -160,13 +160,6 @@
 					</select>
 				</label>
 				<label>
-					<span>Shopping</span>
-					<select name="shoppingList" value={choices.shoppingList}>
-						<option value="">Sample list</option>
-						{#each taskLists as l (l.id)}<option value={l.id}>{l.title}</option>{/each}
-					</select>
-				</label>
-				<label>
 					<span>To-dos</span>
 					<select name="todoList" value={choices.todoList}>
 						<option value="">Sample To-dos</option>
@@ -185,7 +178,7 @@
 					<code>GOOGLE_CLIENT_SECRET</code> in <code>app/.env</code> and restart it.
 				</p>
 			{:else if google.step === 'sign-in'}
-				<p>Sign in with the Household’s Google account to show its Calendars, Shopping list and To-dos.</p>
+				<p>Sign in with the Household’s Google account to show its Calendars and To-dos.</p>
 				<a class="primary" href="/auth/google" data-sveltekit-reload>Sign in with Google</a>
 			{:else}
 				<p>

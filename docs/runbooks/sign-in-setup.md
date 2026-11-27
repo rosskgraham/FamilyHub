@@ -221,7 +221,7 @@ The Hub signs in with the certificate from step 6 and these settings, all kept i
 2. **The Pi:** run the playbook with `--tags config` ([the Pi runbook](pi-setup.md)). It puts them in `/etc/familyhub/hub.env` and restarts the Hub.
 3. **The PC:** in the main checkout's `app/`, run `node scripts/backend-env.mjs`. It puts them in `app/.env` without printing them. Restart the dev server.
 
-When the Hub starts with them, its log says "Signed in to the backend as the Hub", or why not: `journalctl -u familyhub` on the Pi, `data/dev-server.log` on the PC. Without them, it doesn't try. Nothing on screen changes yet: the Shopping list stays on Google Tasks until the switch (slice 5). When Key Vault renews the certificate, run the playbook and the script again, after uploading its public half (step 6).
+When the Hub starts with them, its log says "Signed in to the backend as the Hub", or why not: `journalctl -u familyhub` on the Pi, `data/dev-server.log` on the PC. Without them, it doesn't try. The Hub's Shopping list then comes from the backend. When Key Vault renews the certificate, run the playbook and the script again, after uploading its public half (step 6).
 
 ## If something goes wrong
 

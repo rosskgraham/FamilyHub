@@ -44,13 +44,13 @@ Run in a card's worktree, on its branch `ab<id>-…`, this starts its dev server
 
 `node scripts/card-dev.mjs --main` moves the main checkout to the latest `origin/main` and restarts its dev server on 5173, so that always shows what's merged. It leaves the checkout alone if anything in it is changed or it's on a branch.
 
-## Show the real Calendars, Shopping list and To-dos
+## Show the real Calendars and To-dos
 
 1. Follow [the Google Cloud runbook](../docs/runbooks/google-cloud-setup.md), and put `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `app/.env`.
 2. Run the app, and choose **Sample data · set up Google** in the bottom corner, or the gear. Under **Household and Google**, hold **Hold to change** for a second to unlock it.
 3. Sign in with the Household's Google account.
 4. Add each Member, with a name, a colour and their Calendar, and save the Family calendar's colour and Calendar. The colours include Google Calendar's own (Blueberry, Cherry Blossom, Peacock, Pistachio and Tangerine), to match everyone's phones. The Family calendar can't share a Member's colour.
-5. Choose the Birthdays calendar, and which Google Tasks lists are the Shopping list and the To-dos. Repeating To-dos are set up in the Google Tasks app on a phone; the Hub only adds one-off ones.
+5. Choose the Birthdays calendar, and which Google Tasks list is the To-dos. The Shopping list comes from the family app's backend instead ([below](#the-shopping-list)). Repeating To-dos are set up in the Google Tasks app on a phone; the Hub only adds one-off ones.
 
 Change any of it later in the same place. Each Member has an id that never changes, so renaming someone keeps their Calendar and Stars. A Member with Chores can't be removed. Until a Member is added, the Hub shows the made-up Household (Ross, Sam, Maya and Leo).
 
@@ -62,8 +62,7 @@ The sign-in and the database are kept in `app/data/`, which Git ignores. Delete 
 
 ### When Google can't be reached
 
-- The Hub shows the last Events, Shopping list and To-dos it loaded, and the bottom bar says "Offline · last updated 14:02". They're kept in `app/data/` too, so they still show after a restart, and on a new day the Calendar is pieced together from the days it loaded before. To spare the Pi's SD card, they're written when they change and otherwise hourly.
-- Shopping changes wait in `app/data/shopping-queue.json` and show on screen straight away, with "Offline · 2 to send" on the list. They're sent in order once Google answers. One Google turns down, such as ticking off an item someone deleted on their phone, is dropped.
+- The Hub shows the last Events and To-dos it loaded, and the bottom bar says "Offline · last updated 14:02". They're kept in `app/data/` too, so they still show after a restart, and on a new day the Calendar is pieced together from the days it loaded before. To spare the Pi's SD card, they're written when they change and otherwise hourly.
 - Google requests give up after 10 seconds, so a dead connection never holds up the screen. Set `CALENDAR_SOURCE=sample` in `app/.env` to show sample Events, a sample Shopping list, sample To-dos and sample weather even when Google and home are set up.
 
 ## Show the real weather
@@ -107,15 +106,15 @@ With them, the Hub signs in once when it starts and asks the backend's `/me` who
 
 ### Live updates
 
-With the same settings, the Hub's server holds one live connection to the backend's Web PubSub, from a URL it gets with `GET /live`, and hears `{"list": "shopping", "seq": N}` after each change made anywhere. On the Pi, still showing Google Tasks, it only connects and logs, to find out whether a connection outlives its URL's 60-minute token (AB#82).
+With the same settings, the Hub's server holds one live connection to the backend's Web PubSub, from a URL it gets with `GET /live`, and hears `{"list": "shopping", "seq": N}` after each change made anywhere. It logs each close, to find out whether a connection outlives its URL's 60-minute token (AB#82).
 
 - When the connection closes, the Hub gets a new URL and connects again: a second after a failure, then twice as long each time up to 5 minutes, and quickly again once a connection has stayed up a minute.
 - The log says "Live updates connected" and "Live updates closed after 1h 01m 05s: code 1006, reason …", or "Live updates couldn't connect". Never the URL, which holds the token.
-- A `shopping` message refreshes the backend Shopping list when it's the one on screen. Then `/api/changes`, a stream of server-sent events the screen listens to only then, tells the screen, which loads it again at once rather than at the next minute. A change made on a phone shows on the Hub in under a second. Other lists' messages are ignored.
+- A `shopping` message refreshes the Shopping list, unless the Hub shows the sample one. Then `/api/changes`, a stream of server-sent events the screen listens to only then, tells the screen, which loads it again at once rather than at the next minute. A change made on a phone shows on the Hub in under a second. Other lists' messages are ignored.
 
-### The Shopping list from the backend, for building only
+### The Shopping list
 
-Set `SHOPPING_SOURCE=backend` in `app/.env` as well, and the Shopping Section and Today card show the backend's Shopping list instead of the Google Tasks one, looking just the same. It's for building and trying it on the PC until the switch in slice 5, which removes the setting. Never set it on the Pi. Unset, the Hub uses Google Tasks as before, and with `CALENDAR_SOURCE=sample` it's the sample list either way.
+With the same settings, the Shopping Section and Today card show the backend's Shopping list, the one the family app shows on phones. It moved there from Google Tasks in slice 5 (AB#103). The Google Tasks list was left as it was, and the Hub no longer reads it. Without the settings, or with `CALENDAR_SOURCE=sample`, it's the sample list.
 
 - The list is all of `GET /lists/shopping/items?after=0`, asked for straight after a change at the Hub or a live update, and otherwise every 10 minutes while the live connection is open, or every minute while it isn't: the items still to get, newest first, then those ticked off in the last 10 minutes.
 - Each add, tick, untick and remove is one operation to `POST /lists/shopping/operations`. The Hub makes the operation's id, and an added item's id, when the change is made, so sending it again after a lost answer changes nothing, and an item added offline keeps its id.
@@ -170,8 +169,8 @@ It listens on port 3000, or `PORT`. `/api/health` answers `{"status":"ok","versi
 - `src/lib/server/google/auth.ts`: signing in to Google and keeping the sign-in fresh.
 - `src/routes/settings/`: Settings: the clock, About this Hub, and the Household and Google (`src/lib/components/HouseholdSettings.svelte` and `MemberForm.svelte`): Members, their colours and Calendars, the lists, and signing in. `/setup` only redirects there now.
 - `src/lib/server/hub-db.ts`: the Hub's database, `hub.db`, and its migrations. `household.ts` keeps the Household in it, `settings.ts` the choices, and `import-files.ts` imports the old files once.
-- `src/lib/server/tasks/`: what the Shopping list and To-dos share as Google Tasks lists. `google.ts` reads and changes a list, `queue.ts` holds changes made while Google can't be reached, and `feed.ts` keeps a list fresh, shows it from disk when Google can't be reached, and applies changes.
-- `src/lib/server/shopping/` and `src/lib/server/todos/`: each list's own reading of Google's tasks, and its sample list in `fake.ts`. The Shopping list's `backend.ts` is the backend's list, with its own queue of operations, and `index.ts` picks one with `SHOPPING_SOURCE`.
+- `src/lib/server/tasks/`: the To-dos' Google Tasks list. `google.ts` reads and changes a list, `queue.ts` holds changes made while Google can't be reached, and `feed.ts` keeps a list fresh, shows it from disk when Google can't be reached, and applies changes.
+- `src/lib/server/shopping/`: the Shopping list. `backend.ts` is the backend's list, with its own queue of operations, and `fake.ts` the sample one. `src/lib/server/todos/`: the To-dos' reading of Google's tasks, and their sample list.
 - `src/lib/server/backend/`: signing in to the backend as the Hub, and calling it. `live.ts` holds the live connection.
 - `src/lib/server/changes.ts` and `src/routes/api/changes/`: telling the screen a list changed on a phone.
 - `src/lib/components/ShoppingList.svelte`: the list on the Today view and in the Shopping section, with ticking off, adding and removing.

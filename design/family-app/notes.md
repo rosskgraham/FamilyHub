@@ -117,7 +117,7 @@ Ticking off or removing affects one occurrence, as now.
 2. **The Shopping list in the backend:** its operations, log and live updates, with Python tests. Test data only. Built: the operations, log and catch-up (`POST /lists/shopping/operations` and `GET /lists/shopping/items`, in the [backend README](../../backend/README.md#the-shopping-list)), and live updates (`GET /live`, in the [backend README](../../backend/README.md#live-updates)).
 3. **The family app, first version:** Static Web Apps in Bicep, and the app deployed to it by the pipeline; install, sign in, the Shopping list, offline queue, live updates. Static Web Apps waits until here (decided 17 November 2026), as there's nothing to host on it before the app. Started: the app installs on a phone from Static Web Apps, signs in with Google, and shows the Shopping list ([`family-app/`](../../family-app/README.md)), newest first by the number each item was added at (`added_seq`, AB#57). It works with no signal, from a copy of the list in IndexedDB that it opens from every time (AB#58), and shows changes made elsewhere live, through Web PubSub, while it's open and in front, closing the connection when it's put away (AB#59). It sorts the list for the shop a Member is in, each Shop learning its walking order from items dragged into place (AB#84, AB#86).
 4. **The Hub on the backend:** a Shopping list client behind the same interface as the Google Tasks one, so the Shopping Section and Today card don't change.
-5. **The switch:** import the Household's list from Google Tasks once, then use the backend.
+5. **The switch:** the Hub uses the backend's Shopping list (AB#103, 27 November 2026). Nothing was imported, as the Google Tasks list was empty, and the Google Tasks list is left as it was. The Hub moved in one go, and `SHOPPING_SOURCE` went.
 6. **To-dos and repeats**, in the backend, the app and the Hub, with an import from Tasks.
 7. **Notifications**, once it's clear what's worth a buzz.
 
@@ -127,8 +127,6 @@ Later, if wanted: Chores on the children's phones, the Week view on phones, and 
 
 - **Do the children's Google accounts allow "Sign in with Google" to other apps?** If they're supervised with Family Link, a parent may have to allow it in Family Link first. Check with one child's account (AB#7). Sign-in was built without waiting (21 November 2026): the children's accounts are added to the list once it's known.
 - **What's worth a notification?** For example, a To-do due today, or "something was added to the Shopping list".
-- **What happens to the Google Tasks lists** after the switch: deleted, or left as a read-only record.
-- **Does the Hub's own Shopping and To-dos code move to the backend client in one go**, or stay switchable between Google Tasks and the backend for a while?
 - **Does the app share code with the Hub** as a package in this repo, or start as its own SvelteKit project and share later?
 
 ## Considered Options

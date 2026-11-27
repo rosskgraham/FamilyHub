@@ -97,10 +97,5 @@ export const variables = defineEnvVars({
 		description:
 			'Set to `sample` to show sample Events, a sample Shopping list, sample weather and sample energy even when Google, home and Octopus are set up.',
 		schema: (value) => (value === 'sample' ? 'sample' : undefined)
-	},
-	SHOPPING_SOURCE: {
-		description:
-			'Set to `backend` for the Shopping list from the family app’s backend instead of Google Tasks. For building on the PC only, until the switch in slice 5; never on the Pi.',
-		schema: (value) => (value === 'backend' ? 'backend' : undefined)
 	}
 });
