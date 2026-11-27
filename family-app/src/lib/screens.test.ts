@@ -19,7 +19,7 @@ describe('the screens', () => {
 	it('A: sign in, with the logo', () => {
 		const { body } = render(SignIn, { props: { onsignin: noop } });
 
-		expect(body).toContain('<svg');
+		expect(body).toContain('src="/logo.svg"');
 		expect(text(body)).toContain('FamilyHub');
 		expect(text(body)).toContain('Sign in with Google');
 		expect(text(body)).toContain('Use your own Google account.');

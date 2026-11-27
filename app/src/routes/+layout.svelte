@@ -5,7 +5,6 @@
 	import '@fontsource/figtree/600.css';
 	import '@fontsource/figtree/700.css';
 	import '../app.css';
-	import favicon from '#lib/assets/favicon.svg';
 	import Header from '#lib/components/Header.svelte';
 	import NavBar from '#lib/components/NavBar.svelte';
 	import EventDetail from '#lib/components/EventDetail.svelte';
@@ -112,7 +111,8 @@
 
 <svelte:head>
 	<title>FamilyHub</title>
-	<link rel="icon" href={favicon} />
+	<!-- static/logo.svg, a copy of site/logo.svg (AB#95). -->
+	<link rel="icon" href="/logo.svg" type="image/svg+xml" />
 </svelte:head>
 
 <svelte:window bind:innerWidth bind:innerHeight onpointerdowncapture={touched} />

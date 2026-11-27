@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <title>FamilyHub</title>
+  <!-- Colours from app/src/lib/theme.ts: the Day theme's ink for the tile, and the Evening theme's Member colours,
+       made for dark backgrounds. Everything sits inside the middle 80%, which a maskable icon never loses (AB#95). -->
+  <rect width="120" height="120" fill="#161B22"/>
+  <!-- The house: a roof over the Household, one tile per Member colour. -->
+  <path d="M26 55 L60 26 L94 55" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="34" y="57" width="24" height="18" rx="5" fill="#7FA8FF"/>
+  <rect x="62" y="57" width="24" height="18" rx="5" fill="#FFA85C"/>
+  <rect x="34" y="79" width="24" height="18" rx="5" fill="#5ED6B5"/>
+  <rect x="62" y="79" width="24" height="18" rx="5" fill="#B99BFF"/>
+</svg>

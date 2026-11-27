@@ -57,7 +57,7 @@ The backend lets the app call it from `http://localhost:5173` as well as its own
 - `src/`: the app. `src/routes/+page.svelte` decides which screen to show; the screens and the sign-in code are in `src/lib/`. It's a single-page app with no server (`ssr = false`): Static Web Apps serves the same `index.html` for every path that isn't a file, as `static/staticwebapp.config.json` says.
 - `src/service-worker/`: keeps the app's own files on the phone, so it opens in a shop with no signal. Each release gets a new cache, which reaches a phone the next time the app opens. Calls to the backend aren't touched.
 - `static/manifest.webmanifest`: what Chrome needs to install it: the name, the icons and full-screen display.
-- `static/icons/`: the home-screen icons, made from `static/logo.svg` (a copy of `site/logo.svg`) by `npm run icons`. Run it again after changing the logo, and commit the results.
+- `static/icons/`: the home-screen icons, made from `static/logo.svg` (a copy of `site/logo.svg`) by `npm run icons`. Run it again after changing the logo, and commit the results. The sign-in screens show `static/logo.svg` itself. The wall app keeps a copy as well, at `app/static/logo.svg`, for its browser-tab icon; a test in each app fails if its copy differs from `site/logo.svg`.
 - The colours are the Hub's (`app/src/lib/theme.ts`): its Day theme when the phone is set to light, its Evening theme when dark. They're copied rather than shared, until there's enough in common to share (decided 22 November 2026).
 
 ## Run it on the PC
