@@ -13,23 +13,28 @@ function countDataLoads(page: Page) {
 	return loads;
 }
 
-const serverDown = (page: Page) => page.route('**/api/health', (route) => route.abort('connectionrefused'));
-const serverBack = (page: Page) => page.unroute('**/api/health');
+/** Refuses /api/health while down. The route stays in place, as removing it can leave a request it holds unanswered. */
+async function healthSwitch(page: Page) {
+	const state = { down: false };
+	await page.route('**/api/health', (route) => (state.down ? route.abort('connectionrefused') : route.continue()));
+	return state;
+}
 
 test('the minute refresh waits while the Hub’s server doesn’t answer, then catches up', async ({ page }) => {
 	await page.clock.install({ time: new Date(NOW) });
+	const health = await healthSwitch(page);
 	await page.goto('/');
 	await expect(page.getByText('Coming up')).toBeVisible();
 	const loads = countDataLoads(page);
 
-	await serverDown(page);
+	health.down = true;
 	await page.clock.fastForward('01:01');
 	await page.waitForTimeout(200);
 	expect(loads.count).toBe(0);
 	await expect(page).toHaveURL(/\/$/);
 	await expect(page.getByText('Coming up')).toBeVisible();
 
-	await serverBack(page);
+	health.down = false;
 	const reload = page.waitForRequest((request) => request.url().includes('__data.json'));
 	await page.clock.fastForward('01:00');
 	await reload;
@@ -39,14 +44,15 @@ test('the minute refresh waits while the Hub’s server doesn’t answer, then c
 
 test('going back to the Today view waits until the Hub’s server answers', async ({ page }) => {
 	await page.clock.install({ time: new Date(NOW) });
+	const health = await healthSwitch(page);
 	await page.goto('/week');
 
-	await serverDown(page);
+	health.down = true;
 	await page.clock.fastForward('02:05');
 	await page.waitForTimeout(200);
 	await expect(page).toHaveURL(/\/week$/);
 
-	await serverBack(page);
+	health.down = false;
 	await page.clock.fastForward('00:02');
 	await expect(page).toHaveURL(/\/$/);
 	await expect(page.getByText('Coming up')).toBeVisible();
