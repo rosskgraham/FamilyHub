@@ -1,6 +1,7 @@
 // Installs the newest FamilyHub release beside the current one, switches to it, and switches back
 // if it doesn't answer its health check (ADR 0004). familyhub-update.timer runs it as root every few
-// minutes. Ansible installs this script, not a release, so a bad release can't break the updater.
+// minutes, and familyhub-update.path whenever Check for updates is pressed in Settings (AB#105). Ansible
+// installs this script, not a release, so a bad release can't break the updater.
 import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { mkdir, mkdtemp, readFile, readdir, readlink, rename, rm, symlink, writeFile } from 'node:fs/promises';
@@ -96,6 +97,17 @@ async function get(url) {
 	});
 	if (!response.ok) throw new Error(`${url} answered ${response.status}`);
 	return response;
+}
+
+/**
+ * Writes what the updater is doing to status.json in its state folder, for Settings to show (AB#105). It's replaced in
+ * one step, so the Hub never reads half of it, and anyone can read it, as the Hub runs as its own user.
+ */
+export async function writeStatus(stateDir, state, { version = null, message = '' } = {}, now = new Date()) {
+	await mkdir(stateDir, { recursive: true });
+	const file = join(stateDir, 'status.json');
+	await writeFile(`${file}.next`, JSON.stringify({ state, version, message, at: now.toISOString() }), { mode: 0o644 });
+	await rename(`${file}.next`, file);
 }
 
 async function readJson(path, fallback) {
@@ -204,6 +216,8 @@ export async function update(config) {
 	const current = broken ? await newestIntact(releasesDir, broken) : installed;
 	if (broken) console.error(`${broken} isn't whole, as after a power cut, so installing a release again`);
 	const failed = await readJson(failedFile, []);
+	const report = (state, details) => writeStatus(stateDir, state, details);
+	await report('checking', { version: current });
 
 	let latest;
 	try {
@@ -212,13 +226,16 @@ export async function update(config) {
 		const decision = broken ? { install: true } : decide({ latest, current, failed });
 		if (!decision.install) {
 			console.log(decision.reason);
+			await report('up-to-date', { version: current ?? latest, message: decision.reason });
 			return true;
 		}
 		console.log(`Installing ${latest}${installed ? `, replacing ${installed}` : ''}`);
+		await report('installing', { version: latest });
 		await download(release, latest, releasesDir);
 	} catch (error) {
 		if (!broken) throw error;
 		console.error(`Couldn't install a release: ${error.message}`);
+		await report('failed', { version: current, message: `Couldn't install a release: ${error.message}` });
 		return fallBack(config, current);
 	}
 	await switchTo(home, latest);
@@ -226,6 +243,7 @@ export async function update(config) {
 
 	if (await answers(config.healthUrl, latest, config.healthTimeoutSeconds)) {
 		console.log(`Installed ${latest}`);
+		await report('installed', { version: latest });
 		const installed = await readdir(releasesDir);
 		for (const old of releasesToPrune(installed, { keep: 3, current: latest, previous: current })) {
 			await rm(join(releasesDir, old), { recursive: true, force: true });
@@ -236,10 +254,14 @@ export async function update(config) {
 	await mkdir(stateDir, { recursive: true });
 	await writeFile(failedFile, JSON.stringify([...failed, latest]));
 	if (!current) {
-		console.error(`${latest} didn't answer its health check, and there's no earlier release to go back to`);
+		const message = `${latest} didn't answer its health check, and there's no earlier release to go back to`;
+		console.error(message);
+		await report('failed', { version: latest, message });
 		return false;
 	}
-	console.error(`${latest} didn't answer its health check, so going back to ${current}`);
+	const message = `${latest} didn't answer its health check, so going back to ${current}`;
+	console.error(message);
+	await report('failed', { version: current, message });
 	await switchTo(home, current);
 	await restart(service);
 	await rm(join(releasesDir, latest), { recursive: true, force: true });
@@ -247,6 +269,17 @@ export async function update(config) {
 		console.error(`${current} isn't answering either`);
 	}
 	return false;
+}
+
+/** Runs the updater, and says in status.json when it stopped on an error. Resolves whether it went well. */
+export async function main(config) {
+	try {
+		return await update(config);
+	} catch (error) {
+		console.error(error.message);
+		await writeStatus(config.stateDir, 'failed', { message: error.message });
+		return false;
+	}
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
@@ -259,11 +292,5 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 		stateDir: env.STATE_DIRECTORY,
 		service: 'familyhub.service'
 	};
-	update(config).then(
-		(ok) => (process.exitCode = ok ? 0 : 1),
-		(error) => {
-			console.error(error.message);
-			process.exitCode = 1;
-		}
-	);
+	main(config).then((ok) => (process.exitCode = ok ? 0 : 1));
 }

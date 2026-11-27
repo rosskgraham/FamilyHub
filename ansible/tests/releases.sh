@@ -11,6 +11,9 @@ update() { systemctl reset-failed familyhub-update.service; systemctl start fami
 answers() { curl --fail --silent --max-time 5 http://127.0.0.1:3000/api/health | grep -q "\"version\":\"$1\""; }
 current() { basename "$(readlink /opt/familyhub/current)"; }
 installed() { ls /opt/familyhub/releases | sort | tr '\n' ' '; }
+# What the updater last told Settings (AB#105), such as installed and 2026.01.02.2.
+status_is() { grep -q "\"state\":\"$1\",\"version\":\"$2\"" /var/lib/familyhub-update/status.json; }
+status() { cat /var/lib/familyhub-update/status.json; }
 fail() {
   echo "FAILED: $*" >&2
   journalctl --no-pager -n 30 -u familyhub-update.service -u familyhub.service -u familyhub-watchdog.service >&2
@@ -31,12 +34,14 @@ publish 2026.01.02.2
 update || fail "installing 2026.01.02.2"
 answers 2026.01.02.2 || fail "the Hub isn't answering as 2026.01.02.2"
 [[ $(current) == 2026.01.02.2 ]] || fail "current is $(current)"
+status_is installed 2026.01.02.2 || fail "status.json says $(status)"
 
 echo "A release that won't start is rolled back, and isn't tried again"
 publish 2026.01.03.3 --broken
 if update; then fail "the broken release wasn't reported"; fi
 answers 2026.01.02.2 || fail "the Hub didn't go back to 2026.01.02.2"
 [[ ! -e /opt/familyhub/releases/2026.01.03.3 ]] || fail "the broken release was left behind"
+status_is failed 2026.01.02.2 || fail "status.json says $(status)"
 since=$(date '+%Y-%m-%d %H:%M:%S')
 update || fail "the broken release was tried again"
 journalctl --no-pager --since "$since" -o cat -u familyhub-update.service | grep -q "failed its health check before" ||
@@ -84,6 +89,19 @@ wait_until answers 2026.01.07.7 || fail "the Hub didn't come back after hanging"
 echo "systemd restarts the Hub when it crashes"
 kill -KILL "$(systemctl show --property MainPID --value familyhub.service)"
 wait_until answers 2026.01.07.7 || fail "the Hub didn't come back after crashing"
+
+echo "Check for updates in Settings: the Hub writes its request, and the updater installs the new release"
+publish 2026.01.08.8
+systemctl reset-failed familyhub-update.service
+runuser -u familyhub -- sh -c 'date > /var/lib/familyhub/update-requested'
+# The updater runs in the background now, as from the Hub, so wait for it to finish rather than for the Hub to answer.
+for _ in $(seq 120); do status_is installed 2026.01.08.8 && break; sleep 1; done
+status_is installed 2026.01.08.8 || fail "asking from the Hub didn't install 2026.01.08.8: status.json says $(status)"
+answers 2026.01.08.8 || fail "the Hub isn't answering as 2026.01.08.8"
+# The Hub can only ask through its file: it can't start the updater itself.
+if runuser -u familyhub -- systemctl start familyhub-update.service </dev/null 2>/dev/null; then
+  fail "the Hub's user could start the updater"
+fi
 
 systemctl start familyhub-update.timer familyhub-watchdog.timer
 echo "All release checks passed"

@@ -89,6 +89,16 @@ export const variables = defineEnvVars({
 			'A JSON file standing in for the network the Hub is on, for Settings. Unset, the Hub reads its own; only the screenshot tests set it.',
 		schema: optional
 	},
+	HUB_UPDATE_STATUS: {
+		description:
+			'The updater’s status.json, for Check for updates in Settings. Defaults to the Pi’s, /var/lib/familyhub-update/status.json; only the e2e tests set it.',
+		schema: optional
+	},
+	HUB_UPDATES_AS_RELEASE: {
+		description:
+			'Set to `true` to offer Check for updates on a development build, as on a release. Only for the e2e tests.',
+		schema: (value) => value === 'true'
+	},
 	HUB_NOW: {
 		description: 'Pretend it is this moment (an ISO time) on the server. Only for the screenshot tests.',
 		schema: optional

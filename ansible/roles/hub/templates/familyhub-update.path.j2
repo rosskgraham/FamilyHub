@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# Check for updates in Settings (AB#105). The Hub runs as its own user, so it can't start the updater, which runs as
+# root. It writes this file in its own data folder instead, and systemd starts the updater (ADR 0004).
+[Unit]
+Description=Check for a new FamilyHub release when Settings asks
+
+[Path]
+PathModified={{ hub_data_dir }}/update-requested
+Unit=familyhub-update.service
+
+[Install]
+WantedBy=paths.target

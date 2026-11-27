@@ -108,7 +108,7 @@
     - name: Read the Hub's, the updater's and the watchdog's units
       ansible.builtin.systemd_service:
         name: "{{ item }}"
-      loop: [familyhub.service, familyhub-update.timer, familyhub-watchdog.timer]
+      loop: [familyhub.service, familyhub-update.timer, familyhub-watchdog.timer, familyhub-update.path]
       register: units
 
     - name: Check the Hub runs as its own user, starts with the Pi, and the updater and watchdog run
@@ -116,8 +116,15 @@
         that:
           - units.results[0].status.User == 'familyhub'
           - units.results[0].status.ActiveState == 'active'
-          - units.results | map(attribute='status.UnitFileState') | list == ['enabled', 'enabled', 'enabled']
-          - units.results[1:] | map(attribute='status.ActiveState') | list == ['active', 'active']
+          - units.results | map(attribute='status.UnitFileState') | list == ['enabled', 'enabled', 'enabled', 'enabled']
+          - units.results[1:] | map(attribute='status.ActiveState') | list == ['active', 'active', 'active']
+
+    # Check for updates in Settings (AB#105): the Hub writes a file in its own folder, and only the updater starts.
+    # tests/releases.sh plays it out.
+    - name: Check the path unit starts the updater, and nothing else
+      ansible.builtin.assert:
+        that:
+          - units.results[3].status.Unit == 'familyhub-update.service'
 
     - name: Read the pretend Key Vault the tests use
       ansible.builtin.set_fact:

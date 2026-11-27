@@ -8,7 +8,10 @@ import { join } from 'node:path';
 const PORT = 4173;
 /** A second Hub, with Google's client and the Nest's project but no Nest sign-in. */
 export const NO_NEST_URL = 'http://localhost:4174';
-/** A third Hub with sample data, whose heating the tests change, so the other tests always see the sample's own. */
+/**
+ * A third Hub with sample data, whose heating the tests change, so the other tests always see the sample's own. It
+ * also offers Check for updates as a release would, and the tests play the Pi's updater (AB#105).
+ */
 export const HEATING_URL = 'http://localhost:4175';
 
 // Empty config and data folders for each run, so the Hub under test never reads or writes the Household's own
@@ -25,6 +28,12 @@ writeFileSync(THERMAL_ZONE, '52500\n');
 // ...on the home Wi-Fi, so Settings shows the same network on every machine too.
 const NETWORK = join(HOME, 'network.json');
 writeFileSync(NETWORK, JSON.stringify({ kind: 'wifi', name: 'Home Wi-Fi', signal: 72, address: '192.168.0.240' }));
+
+// Where the third Hub reads what the pretend updater says, and writes its request to check for updates. The others
+// read a status file that's never written, so they never see a real Pi's.
+export const UPDATE_STATUS = join(HOME, 'heating', 'update-status.json');
+export const UPDATE_REQUESTED = join(HOME, 'heating', 'data', 'update-requested');
+const NO_UPDATE_STATUS = join(HOME, 'no-update-status.json');
 
 export default defineConfig({
 	testDir: 'e2e',
@@ -63,7 +72,8 @@ export default defineConfig({
 				HUB_THERMAL_ZONE: THERMAL_ZONE,
 				HUB_NETWORK_FILE: NETWORK,
 				HUB_CONFIG_DIR: join(HOME, 'config'),
-				HUB_DATA_DIR: join(HOME, 'data')
+				HUB_DATA_DIR: join(HOME, 'data'),
+				HUB_UPDATE_STATUS: NO_UPDATE_STATUS
 			}
 		},
 		{
@@ -90,7 +100,8 @@ export default defineConfig({
 				HUB_THERMAL_ZONE: THERMAL_ZONE,
 				HUB_NETWORK_FILE: NETWORK,
 				HUB_CONFIG_DIR: join(HOME, 'no-nest', 'config'),
-				HUB_DATA_DIR: join(HOME, 'no-nest', 'data')
+				HUB_DATA_DIR: join(HOME, 'no-nest', 'data'),
+				HUB_UPDATE_STATUS: NO_UPDATE_STATUS
 			}
 		},
 		{
@@ -117,7 +128,9 @@ export default defineConfig({
 				HUB_THERMAL_ZONE: THERMAL_ZONE,
 				HUB_NETWORK_FILE: NETWORK,
 				HUB_CONFIG_DIR: join(HOME, 'heating', 'config'),
-				HUB_DATA_DIR: join(HOME, 'heating', 'data')
+				HUB_DATA_DIR: join(HOME, 'heating', 'data'),
+				HUB_UPDATE_STATUS: UPDATE_STATUS,
+				HUB_UPDATES_AS_RELEASE: 'true'
 			}
 		}
 	]
