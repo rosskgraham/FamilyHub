@@ -11,14 +11,18 @@ A design with the main choices made. No code yet. Mockups: [`canvas.json`](canva
 - **At the wall only**, not in the family app on phones.
 - **The answer list is kept in plain text.** It's visible in the public repo, and that's fine.
 - **Rude words stay in the allowed guesses.** They never show unless someone types one, and they're never answers.
-- **Members are drawn in their real Household colours.** The mockups give Ross magenta and Sam brown, which aren't Hub colours. The build uses each Member's own colour, so in the sample Household Ross is blue and Sam is orange, the same as the "right place" and "in the word" tiles. That's accepted, and the mockups aren't redrawn: Members only appear as round badges and tinted cards, and results are square tiles with letters.
+- **Members are drawn in their real Household colours.** The mockups give Ross magenta and Sam brown, which aren't Hub colours. The build uses each Member's own colour, so in the sample Household Maya is green and Sam is orange, close to the "right place" and "in the word" tiles. That's accepted, and the mockups aren't redrawn: Members only appear as round badges and tinted cards, and results are square tiles with letters.
 - **Results and streaks are kept in the Hub's SQLite database**, as Chores are ([ADR 0006](../../../docs/adr/0006-hub-owned-data-in-sqlite.md)).
 
 ## The idea
 
 The children love Wordle. A Games Section gives the Hub games the family can play at the wall, starting with **Word of the day**: one five-letter word a day, six goes to find it. Each go colours its letters: the right letter in the right place, a letter that's in the word somewhere else, or a letter that isn't in the word.
 
-It is our own game in the same genre, not a copy of Wordle. It has its own name and its own colours: blue for the right place and orange for in the word. Blue and orange also differ in lightness, so they can be told apart by anyone colourblind.
+It is our own game in the same genre, not a copy of Wordle. It has its own name and its own colours: green for the right place and orange for in the word.
+
+- **Green for the right place** (AB#102, 27 November 2026). It was blue at first, and the mockups still show blue. Green means good almost everywhere, so it reads at a glance, especially for the children. It's a dark green with a white letter (Day `#167A3A`, Evening `#1C8540`), at least 4.5:1 in each theme.
+- **Orange, not yellow, for in the word**, so it still isn't Wordle's green and yellow. The orange is light with a dark letter and the green dark with a white one, so they differ in lightness as well as hue (at least 2:1), and anyone red–green colourblind can still tell them apart, as well as by where the letter is.
+- **The same green elsewhere**: the Games list's Word of the day tiles and Number of the day's highlights use it too.
 
 ## How it works at the wall
 

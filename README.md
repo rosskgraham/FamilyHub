@@ -52,8 +52,8 @@ FamilyHub is a personal project, built by one family for its own kitchen. Buildi
 
 | Games | Word of the day |
 |---|---|
-| ![The Games Section, listing Word of the day and Number of the day, with Word of the day chosen and a card for each Member: Ross and Maya have solved it, shown only as coloured squares, Sam hasn't played and Leo is two goes in](docs/images/games-view.png) | ![Leo's word of the day: two goes marked in blue, orange and grey, a third being typed, and a big keyboard with the letters tried coloured](docs/images/word-of-the-day.png) |
-| Everyone gets the same word each day. A tap on your name starts your game or carries it on. Finished games show only their colours, so nobody sees the word before they've played. | Blue is the right letter in the right place, orange is in the word somewhere else, and grey isn't in it. A word the Hub doesn't know uses no go. |
+| ![The Games Section, listing Word of the day and Number of the day, with Word of the day chosen and a card for each Member: Ross and Maya have solved it, shown only as coloured squares, Sam hasn't played and Leo is two goes in](docs/images/games-view.png) | ![Leo's word of the day: two goes marked in green, orange and grey, a third being typed, and a big keyboard with the letters tried coloured](docs/images/word-of-the-day.png) |
+| Everyone gets the same word each day. A tap on your name starts your game or carries it on. Finished games show only their colours, so nobody sees the word before they've played. | Green is the right letter in the right place, orange is in the word somewhere else, and grey isn't in it. A word the Hub doesn't know uses no go. |
 
 | Number of the day | Playing it |
 |---|---|
