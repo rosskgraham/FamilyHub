@@ -11,6 +11,7 @@
 	import { warmth, warmthNote } from '#lib/pi-temperature.ts';
 	import { DEFAULT_THEME_CHOICE, type ThemeChoice } from '#lib/theme.ts';
 	import { dayKey, formatDayMonth, formatDuration, formatTime, type ClockFormat } from '#lib/time.ts';
+	import { describeUpdate, type UpdateStatus } from '#lib/update-status.ts';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -29,6 +30,38 @@
 		{ choice: 'dark', name: 'Dark', note: 'Always' }
 	];
 	const themeChoice = $derived(data.themeChoice ?? DEFAULT_THEME_CHOICE);
+
+	// What the Pi's updater last said: from the page's data, or newer from asking while it checks and installs.
+	let polled: UpdateStatus | null = $state(null);
+	const updateStatus = $derived.by(() => {
+		const loaded = data.updates.status;
+		if (!polled || !loaded) return polled ?? loaded;
+		return Date.parse(polled.at) > Date.parse(loaded.at) ? polled : loaded;
+	});
+	const asked = $derived(form && 'asked' in form ? (form.asked ?? null) : null);
+	const updateLine = $derived(data.updates.offered ? describeUpdate(updateStatus, asked, clock.now) : null);
+
+	// While it's going, ask every two seconds. Installing restarts the Hub's server, so a failed ask just waits for the
+	// next one.
+	const busyUpdating = $derived(!!updateLine?.busy);
+	$effect(() => {
+		if (!busyUpdating) return;
+		const timer = setInterval(async () => {
+			try {
+				polled = ((await (await fetch('/api/update')).json()) as { status: UpdateStatus | null }).status;
+			} catch {
+				// The server is restarting into the new release.
+			}
+		}, 2000);
+		return () => clearInterval(timer);
+	});
+
+	// Once this check has installed a release, see straight away that there's a new version to load, rather than at
+	// SvelteKit's next look a minute later.
+	$effect(() => {
+		if (asked && updateStatus?.state === 'installed' && Date.parse(updateStatus.at) >= Date.parse(asked))
+			updated.check();
+	});
 </script>
 
 <section class="settings">
@@ -131,8 +164,29 @@
 				</dd>
 			{/if}
 		</dl>
+		<!-- Check for updates (AB#105): the first press asks the Pi's updater to look now, the second loads what it
+		     installed. -->
+		<div class="updates">
+			<form method="POST" action="?/checkForUpdates" use:enhance>
+				<button class="quiet" type="submit" disabled={!data.updates.offered || updateLine?.busy}>
+					Check for updates
+				</button>
+			</form>
+			{#if !data.updates.offered}
+				<p class="note">Only on a release, not a development build.</p>
+			{:else if updateLine}
+				<p class="note" class:offline={updateLine.failed} role="status">
+					{updateLine.text}{#if !updateLine.busy && updateStatus}<span class="when">
+							· {when(updateStatus.at)}</span
+						>{/if}
+				</p>
+			{/if}
+		</div>
 		{#if updated.current}
-			<p class="update">A new version is installed. It loads once the Hub has been left alone for two minutes.</p>
+			<div class="updates">
+				<p class="update">A new version is installed. It loads once the Hub has been left alone for two minutes.</p>
+				<button class="primary" type="button" onclick={() => location.reload()}>Load now</button>
+			</div>
 		{/if}
 	</section>
 </section>
@@ -247,11 +301,46 @@
 	.offline {
 		color: var(--problem);
 	}
+	.updates {
+		margin-top: 20px;
+		display: flex;
+		align-items: center;
+		gap: 24px;
+	}
+	.updates form {
+		display: contents;
+	}
 	.update {
-		margin: 20px 0 0;
+		margin: 0;
 		font-size: 24px;
 		font-weight: 600;
 		color: var(--ink);
+	}
+	.note {
+		margin: 0;
+		font-size: 24px;
+	}
+	.primary,
+	.quiet {
+		flex: none;
+		height: 64px;
+		padding: 0 24px;
+		box-sizing: border-box;
+		border-radius: 20px;
+		font-size: 24px;
+		font-weight: 700;
+	}
+	.primary {
+		border: 0;
+		background: var(--ink);
+		color: var(--on-ink);
+	}
+	.quiet {
+		border: 2px solid var(--line);
+		background: var(--card);
+	}
+	.quiet:disabled {
+		opacity: 0.45;
 	}
 	.example {
 		font-size: 22px;

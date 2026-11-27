@@ -48,7 +48,7 @@ FamilyHub is a personal project, built by one family for its own kitchen. Buildi
 | Settings |
 |---|
 | ![Settings, unlocked: the clock as 24-hour or 12-hour, and Household and Google with the Family calendar's colour, a row to add a Member with a name and a colour, and a note that Google isn't set up](docs/images/settings-view.png) |
-| A 24-hour clock unless 12-hour is chosen, for every time on the screen. Below it, the Household: each Member's name, colour and Calendar, the Family calendar, the lists and Google, locked until held so nobody changes it by accident. About this Hub says what's running, to check a release reached the Pi. |
+| A 24-hour clock unless 12-hour is chosen, for every time on the screen. Below it, the Household: each Member's name, colour and Calendar, the Family calendar, the lists and Google, locked until held so nobody changes it by accident. About this Hub says what's running, to check a release reached the Pi. Check for updates there installs a new release straight away, rather than at the Pi's next look, and Load now shows it without waiting for the Hub to be left alone. |
 
 | Games | Word of the day |
 |---|---|

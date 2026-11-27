@@ -44,6 +44,7 @@
   loop:
     - familyhub-update.service
     - familyhub-update.timer
+    - familyhub-update.path
     - familyhub-watchdog.service
     - familyhub-watchdog.timer
 
@@ -53,13 +54,14 @@
     enabled: true
     daemon_reload: true
 
-- name: Check for new releases, and that the Hub is answering
+- name: Check for new releases, also when Settings asks, and that the Hub is answering
   ansible.builtin.systemd_service:
     name: "{{ item }}"
     enabled: true
     state: started
   loop:
     - familyhub-update.timer
+    - familyhub-update.path
     - familyhub-watchdog.timer
 
 - name: See whether a release is installed

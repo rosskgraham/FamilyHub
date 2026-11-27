@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, stat, symlink, writeFile } from 'node:fs/promises';
+import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -7,10 +8,12 @@ import {
 	compareVersions,
 	decide,
 	intact,
+	main,
 	newestIntact,
 	parseChecksum,
 	releasesToPrune,
-	versionOf
+	versionOf,
+	writeStatus
 } from './update.mjs';
 
 /** A releases folder with each release's package.json as given: an object, raw text, or null for none. */
@@ -115,5 +118,76 @@ test('with no whole release, or no releases folder, there is nothing to fall bac
 		assert.equal(await newestIntact(join(dir, 'missing'), null), null);
 	} finally {
 		await rm(dir, { recursive: true });
+	}
+});
+
+const readStatus = async (stateDir) => JSON.parse(await readFile(join(stateDir, 'status.json'), 'utf8'));
+
+test('status.json says what the updater is doing, when, and anyone can read it', async () => {
+	const dir = await mkdtemp(join(tmpdir(), 'state-'));
+	try {
+		await writeStatus(dir, 'installing', { version: '2026.11.27.3' }, new Date('2026-11-27T10:00:00Z'));
+		assert.deepEqual(await readStatus(dir), {
+			state: 'installing',
+			version: '2026.11.27.3',
+			message: '',
+			at: '2026-11-27T10:00:00.000Z'
+		});
+		if (process.platform !== 'win32') assert.equal((await stat(join(dir, 'status.json'))).mode & 0o777, 0o644);
+
+		// Each step replaces the last.
+		await writeStatus(dir, 'failed', { message: 'No network' }, new Date('2026-11-27T10:01:00Z'));
+		assert.deepEqual(await readStatus(dir), {
+			state: 'failed',
+			version: null,
+			message: 'No network',
+			at: '2026-11-27T10:01:00.000Z'
+		});
+	} finally {
+		await rm(dir, { recursive: true });
+	}
+});
+
+/** A pretend GitHub answering with a latest release of the version given, until stopped. */
+async function latestRelease(version) {
+	const server = createServer((_, res) => {
+		res.setHeader('content-type', 'application/json');
+		res.end(JSON.stringify({ tag_name: `v${version}`, assets: [] }));
+	});
+	await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+	return { url: `http://127.0.0.1:${server.address().port}/latest`, stop: () => server.close() };
+}
+
+// Installing needs root and systemd, so the stand-in Pi plays those out (tests/releases.sh).
+test('a check with nothing newer ends up to date in status.json', { skip: process.platform === 'win32' }, async () => {
+	const home = await mkdtemp(join(tmpdir(), 'home-'));
+	const github = await latestRelease('2026.11.27.3');
+	try {
+		await mkdir(join(home, 'releases', '2026.11.27.3'), { recursive: true });
+		await writeFile(join(home, 'releases', '2026.11.27.3', 'package.json'), '{"version":"2026.11.27.3"}');
+		await symlink(join('releases', '2026.11.27.3'), join(home, 'current'));
+		const ok = await main({ releasesUrl: github.url, home, stateDir: join(home, 'state') });
+		assert.equal(ok, true);
+		const status = await readStatus(join(home, 'state'));
+		assert.equal(status.state, 'up-to-date');
+		assert.equal(status.version, '2026.11.27.3');
+	} finally {
+		github.stop();
+		await rm(home, { recursive: true });
+	}
+});
+
+test("a check that can't reach GitHub ends failed in status.json, saying why", async () => {
+	const home = await mkdtemp(join(tmpdir(), 'home-'));
+	const github = await latestRelease('2026.11.27.3');
+	github.stop();
+	try {
+		const ok = await main({ releasesUrl: github.url, home, stateDir: join(home, 'state') });
+		assert.equal(ok, false);
+		const status = await readStatus(join(home, 'state'));
+		assert.equal(status.state, 'failed');
+		assert.ok(status.message.length > 0);
+	} finally {
+		await rm(home, { recursive: true });
 	}
 });

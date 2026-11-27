@@ -18,6 +18,7 @@ import { readSettings, readSleepHours, writeSettings, type Settings } from '#lib
 import { sleepTimes, STEP_MINUTES, stepHours, type SleepTime } from '#lib/sleep.ts';
 import { serverStartedAt } from '#lib/server/started.ts';
 import { listTaskLists, type GoogleTaskList } from '#lib/server/tasks/google.ts';
+import { canCheckForUpdates, readUpdateStatus, requestUpdate } from '#lib/server/update.ts';
 import { themeChoices, type ThemeChoice } from '#lib/theme.ts';
 import { clockFormats, type ClockFormat } from '#lib/time.ts';
 import type { Actions, PageServerLoad } from './$types';
@@ -57,12 +58,13 @@ async function nest(): Promise<Nest> {
 }
 
 export const load: PageServerLoad = async ({ url }) => {
-	const [{ google: g, ended }, settings, backup, n, network] = await Promise.all([
+	const [{ google: g, ended }, settings, backup, n, network, updateStatus] = await Promise.all([
 		google(),
 		readSettings(),
 		readBackupStatus(),
 		nest(),
-		hubNetwork()
+		hubNetwork(),
+		readUpdateStatus()
 	]);
 	return {
 		server: {
@@ -71,6 +73,7 @@ export const load: PageServerLoad = async ({ url }) => {
 			temperature: piTemperature(),
 			network
 		},
+		updates: { offered: canCheckForUpdates(), status: updateStatus },
 		household: householdConfig(),
 		choices: {
 			calendars: settings.calendars,
@@ -110,6 +113,12 @@ async function household(form: string, change: () => void | Promise<void>) {
 }
 
 export const actions = {
+	// Asks the Pi's updater to check for a new release now, rather than at its next run (AB#105).
+	checkForUpdates: async () => {
+		if (!canCheckForUpdates())
+			return fail(400, { form: 'update', message: 'A development build has no releases to update to.' });
+		return { form: 'update', asked: await requestUpdate() };
+	},
 	clock: async ({ request }) => {
 		const chosen = (await request.formData()).get('clockFormat');
 		if (!clockFormats.includes(chosen as ClockFormat))
