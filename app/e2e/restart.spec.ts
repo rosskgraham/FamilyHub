@@ -52,8 +52,11 @@ test('going back to the Today view waits until the Hub’s server answers', asyn
 	await page.waitForTimeout(200);
 	await expect(page).toHaveURL(/\/week$/);
 
+	// It goes once an answer comes back, at a tick of the screen's clock after that, so the clock is moved on until then.
 	health.down = false;
-	await page.clock.fastForward('00:02');
-	await expect(page).toHaveURL(/\/$/);
+	await expect(async () => {
+		await page.clock.fastForward('00:01');
+		await expect(page).toHaveURL(/\/$/, { timeout: 500 });
+	}).toPass({ timeout: 10_000 });
 	await expect(page.getByText('Coming up')).toBeVisible();
 });
