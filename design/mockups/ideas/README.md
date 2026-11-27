@@ -5,14 +5,14 @@ The Ideas tab, where anyone in the Household sends an idea or says something's b
 (`app/e2e/__screenshots__/games.png`, `games-evening.png` and `keyboard.png`), so the tab sits on the real screen. The
 PNGs are renders of it, with the sample Household.
 
-| File          | Screen                                                  |
-| ------------- | ------------------------------------------------------- |
-| `ideas-a.png` | A · The Ideas tab: sending, and everyone's ideas        |
-| `ideas-b.png` | B · Something's broken: who, which part, what happened  |
-| `ideas-c.png` | C · I've got an idea                                    |
-| `ideas-d.png` | D · No more today                                       |
-| `ideas-e.png` | E · Me too: who's backing it                            |
-| `ideas-f.png` | F · The Ideas tab in the Evening theme                  |
+| File          | Screen                                                 |
+| ------------- | ------------------------------------------------------ |
+| `ideas-a.png` | A · The Ideas tab: sending, and everyone's ideas       |
+| `ideas-b.png` | B · Something's broken: who, which part, what happened |
+| `ideas-c.png` | C · I've got an idea                                   |
+| `ideas-d.png` | D · No more today                                      |
+| `ideas-e.png` | E · Me too: who's backing it                           |
+| `ideas-f.png` | F · The Ideas tab in the Evening theme                 |
 
 ## Proposed (27 November 2026)
 
