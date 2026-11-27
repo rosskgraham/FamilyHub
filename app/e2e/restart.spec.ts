@@ -45,6 +45,14 @@ test('the minute refresh waits while the Hub’s server doesn’t answer, then c
 test('going back to the Today view waits until the Hub’s server answers', async ({ page }) => {
 	await page.clock.install({ time: new Date(NOW) });
 	const health = await healthSwitch(page);
+	// DIAGNOSTIC (AB#41, CI only fails this): what the page asks for and logs. To be removed.
+	const t0 = Date.now();
+	const note = (s: string) => console.log(`[diag +${Date.now() - t0}ms] ${s}`);
+	page.on('console', (m) => note(`console ${m.type()}: ${m.text()}`));
+	page.on('request', (r) => /health|__data|\/$/.test(r.url()) && note(`request ${r.url()}`));
+	page.on('requestfailed', (r) => note(`failed ${r.url()} ${r.failure()?.errorText}`));
+	page.on('requestfinished', (r) => /health|__data/.test(r.url()) && note(`finished ${r.url()}`));
+	page.on('framenavigated', (f) => f === page.mainFrame() && note(`navigated ${f.url()}`));
 	await page.goto('/week');
 
 	health.down = true;
