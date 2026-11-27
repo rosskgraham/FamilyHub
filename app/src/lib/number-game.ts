@@ -79,6 +79,19 @@ export interface NumberCard {
 	state: NumberState;
 	steps: number;
 	away: number | null;
+	/** Days in a row with a finished game (AB#92). */
+	streak: number;
+}
+
+/**
+ * The end of a game (AB#92): the number finished on, one of the shortest ways to the target, the Member's streak, and
+ * how everyone has done today. Only the Member who just finished is ever sent it.
+ */
+export interface NumberEnd {
+	value: number;
+	solution: Step[];
+	streak: number;
+	cards: NumberCard[];
 }
 
 export const isNumberGameFinished = (state: NumberState) => state === 'got' || state === 'away';

@@ -9,5 +9,5 @@ export const load: PageServerLoad = async ({ params }) => {
 	if (!players(setup.household).includes(params.member)) error(404, 'Not one of the Household');
 	const game = numberGameToPlay(setup, params.member);
 	if (!game) redirect(303, '/games/numbers');
-	return { member: params.member, owner: setup.household[params.member]!, game };
+	return { member: params.member, owner: setup.household[params.member]!, owners: setup.household, game };
 };

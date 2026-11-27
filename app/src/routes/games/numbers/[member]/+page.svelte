@@ -1,16 +1,20 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import Badge from '#lib/components/Badge.svelte';
+	import Celebration from '#lib/components/Celebration.svelte';
 	import {
 		closest,
 		isNumberGameFinished,
+		numberResult,
 		numberStatus,
 		OPERATORS,
 		REFUSALS,
+		type NumberEnd,
 		type NumberGame,
 		type Operator,
 		type Refusal
 	} from '#lib/number-game.ts';
+	import { STREAK_SHOWN_FROM } from '#lib/word-game.ts';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -28,6 +32,21 @@
 	let finishing = $state(false);
 	let problem: string | null = $state(null);
 	let busy = $state(false);
+	// A game that's just finished, and how it ended, until the celebration closes.
+	let ended = $state<NumberEnd | null>(null);
+	// Long enough to follow one way to do it, step by step.
+	const SHOW_ENDING_MS = 12_000;
+
+	const inARow = (days: number) => `${days} ${days === 1 ? 'day' : 'days'} in a row`;
+	// Under the name: the steps so far, and the streak once it's long enough to show.
+	const progress = $derived(
+		[
+			game.steps.length ? numberStatus('playing', game.steps.length) : 'No steps yet',
+			data.game.streak >= STREAK_SHOWN_FROM ? inARow(data.game.streak) : ''
+		]
+			.filter(Boolean)
+			.join(' · ')
+	);
 
 	const hint = $derived(
 		finishing
@@ -56,7 +75,8 @@
 				problem = 'That didn’t save. Try again.';
 			} else {
 				moved = result.game;
-				if (isNumberGameFinished(result.game.state)) await goto('/games/numbers', { invalidateAll: true });
+				if (result.end) ended = result.end;
+				else if (isNumberGameFinished(result.game.state)) await goto('/games/numbers', { invalidateAll: true });
 			}
 			// Done or refused, the next step starts afresh.
 			[first, op, finishing] = [null, null, false];
@@ -136,7 +156,7 @@
 			<Badge owner={data.owner} size={80} />
 			<div class="who">
 				<h2>{data.owner.name}’s number of the day</h2>
-				<p>{game.steps.length ? numberStatus('playing', game.steps.length) : 'No steps yet'}</p>
+				<p>{progress}</p>
 			</div>
 			<a class="stop" href="/games/numbers">Stop for now</a>
 		</div>
@@ -162,6 +182,62 @@
 		</div>
 	</section>
 </div>
+
+{#if ended}
+	{@const end = ended}
+	{@const got = game.state === 'got'}
+	<Celebration
+		owner={data.owner}
+		title={got ? `You got it, ${data.owner.name}!` : `So close, ${data.owner.name}!`}
+		cheer={got}
+		close={got ? 'Nice one!' : 'Next time!'}
+		showFor={SHOW_ENDING_MS}
+		onclose={() => goto('/games/numbers', { invalidateAll: true })}
+	>
+		{#snippet aside()}
+			<p class="aim-line">
+				Target <span class="small-target">{game.target}</span>
+			</p>
+			<div class="ways">
+				<div class="way">
+					<h3>Your steps</h3>
+					<ol aria-label="Your steps">
+						{#each game.steps as step, i (i)}
+							<li class:hit={got && i === game.steps.length - 1}>
+								{step.a}
+								{step.op}
+								{step.b} = {step.answer}
+							</li>
+						{/each}
+						{#if !got}<li class="finished">Finished with {end.value}</li>{/if}
+					</ol>
+				</div>
+				<div class="way">
+					<h3>One way to do it</h3>
+					<ol aria-label="One way to do it">
+						{#each end.solution as step, i (i)}
+							<li class="theirs">{step.a} {step.op} {step.b} = {step.answer}</li>
+						{/each}
+					</ol>
+				</div>
+			</div>
+			<p class="only">Only {data.owner.name} sees a way to do it, and only until this closes.</p>
+		{/snippet}
+		<p class="how">
+			{got
+				? `${game.target} in ${game.steps.length} ${game.steps.length === 1 ? 'step' : 'steps'}. That’s ${inARow(end.streak)}.`
+				: `Finished with ${end.value}, ${game.away} away. That’s ${inARow(end.streak)}.`}
+		</p>
+		<ul class="family" aria-label="Everyone today">
+			{#each end.cards as card (card.member)}
+				<li>
+					<Badge owner={data.owners[card.member]!} size={56} />
+					<span>{isNumberGameFinished(card.state) ? numberResult(card.state, card.away) : 'Not yet'}</span>
+				</li>
+			{/each}
+		</ul>
+	</Celebration>
+{/if}
 
 <style>
 	.play {
@@ -394,5 +470,93 @@
 		border: none;
 		background: var(--ink);
 		color: var(--on-ink);
+	}
+	/* The celebration (AB#92): the steps beside one way to do it, and everyone's results. */
+	.aim-line {
+		display: flex;
+		align-items: center;
+		gap: 20px;
+		margin-bottom: 24px;
+		font-size: 28px;
+		font-weight: 600;
+		color: var(--dim);
+	}
+	.small-target {
+		height: 88px;
+		padding: 0 28px;
+		border-radius: 20px;
+		background: var(--ink);
+		color: var(--on-ink);
+		font-size: 64px;
+		font-weight: 700;
+		display: flex;
+		align-items: center;
+		font-variant-numeric: tabular-nums;
+	}
+	.ways {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 24px;
+	}
+	h3 {
+		margin: 0 0 12px;
+		font-size: 30px;
+	}
+	.way ol {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+	}
+	.way li {
+		height: 72px;
+		box-sizing: border-box;
+		padding: 0 24px;
+		border-radius: 18px;
+		background: var(--soft);
+		display: flex;
+		align-items: center;
+		font-size: 34px;
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
+	}
+	.way li.hit {
+		background: var(--word-right);
+		color: var(--on-word-right);
+	}
+	.way li.theirs {
+		background: none;
+		box-shadow: inset 0 0 0 2px var(--line);
+	}
+	.only {
+		margin-top: 24px;
+		font-size: 22px;
+		color: var(--dim);
+	}
+	.how {
+		font-size: 34px;
+		color: var(--dim);
+	}
+	.family {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		display: flex;
+		gap: 16px;
+	}
+	.family li {
+		width: 180px;
+		box-sizing: border-box;
+		padding: 16px;
+		border-radius: 20px;
+		background: var(--soft);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 10px;
+		font-size: 24px;
+		font-weight: 600;
 	}
 </style>

@@ -236,6 +236,11 @@ test('Number of the day: choosing it shows its cards, and the Games tab opens on
 	await expect(card(page, 'Ross')).toContainText('316 away');
 	await expect(card(page, 'Leo')).toContainText('2 steps so far');
 	await expect(card(page, 'Sam')).toContainText('Not played yet');
+	// Number of the day's own streaks (AB#92): Ross is only on his first.
+	await expect(card(page, 'Maya')).toContainText('3 days in a row');
+	await expect(card(page, 'Leo')).toContainText('5 days in a row');
+	await expect(card(page, 'Sam')).toContainText('3 days in a row');
+	await expect(card(page, 'Ross')).not.toContainText('in a row');
 	// A finished game can't be opened, and its card shows only how close it got.
 	await expect(card(page, 'Maya').getByRole('link')).toHaveCount(0);
 	await expect(card(page, 'Ross')).not.toContainText('108');
@@ -349,6 +354,7 @@ test('Number of the day: steps, refused steps, Undo and Start again', async ({ p
 
 test('Number of the day: Stop for now keeps the steps, and Finish with… ends it so many away', async ({ page }) => {
 	await page.goto('/games/numbers/sam');
+	await expect(page.getByText('No steps yet · 3 days in a row')).toBeVisible();
 	await step(page, 100, 'Times', 4);
 	await expect(steps(page)).toHaveText(['100 × 4 = 400']);
 	await page.getByRole('link', { name: 'Stop for now' }).click();
@@ -365,22 +371,78 @@ test('Number of the day: Stop for now keeps the steps, and Finish with… ends i
 	await page.getByRole('button', { name: 'Finish with…' }).click();
 	await expect(page.getByRole('alert')).toHaveText('Which number are you finishing with?');
 	await tapNumber(page, 400);
+
+	// The quieter ending (AB#92): no chime or stars, how close it was, one way to do it, and everyone's results.
+	const end = page.getByRole('alertdialog', { name: 'So close, Sam!' });
+	await expect(end).toBeVisible();
+	expect(await page.evaluate(() => (window as unknown as { chimes: number }).chimes)).toBe(0);
+	await expect(end).toContainText('Finished with 400, 24 away. That’s 4 days in a row.');
+	await expect(end.getByRole('list', { name: 'Your steps' }).getByRole('listitem')).toHaveText([
+		'100 × 4 = 400',
+		'Finished with 400'
+	]);
+	await expect(end.getByRole('list', { name: 'One way to do it' }).getByRole('listitem')).toHaveText([
+		'50 + 3 = 53',
+		'53 × 8 = 424'
+	]);
+	await expect(end.getByRole('list', { name: 'Everyone today' }).getByRole('listitem')).toHaveText([
+		/^R\s*316 away$/,
+		/^S\s*24 away$/,
+		/^M\s*Got it$/,
+		/^L\s*Not yet$/
+	]);
+	await page.evaluate(() => document.fonts.ready);
+	await expect(page).toHaveScreenshot('games-numbers-close.png');
+
+	// It closes by itself, and the way to do it goes with it.
+	await page.clock.fastForward('00:12');
 	await expect(page).toHaveURL(/\/games\/numbers$/);
 	await expect(card(page, 'Sam')).toContainText('24 away');
+	await expect(card(page, 'Sam')).toContainText('4 days in a row');
 	await expect(card(page, 'Sam').getByRole('link')).toHaveCount(0);
+	expect(await page.content()).not.toContain('53 × 8');
 
 	// A finished game can't be played again that day.
 	await page.goto('/games/numbers/sam');
 	await expect(page).toHaveURL(/\/games\/numbers$/);
 });
 
-test('Number of the day: making the target ends the game as Got it', async ({ page }) => {
+test('Number of the day: making the target ends the game with a celebration', async ({ page }) => {
 	await page.goto('/games/numbers/leo');
+	await expect(page.getByText('2 steps so far · 5 days in a row')).toBeVisible();
 	await expect(steps(page)).toHaveText(['3 + 3 = 6', '100 + 50 = 150']);
 	await page.getByRole('button', { name: 'Start again' }).click();
 	await step(page, 50, 'Add', 3);
 	await step(page, 53, 'Times', 8);
+
+	const end = page.getByRole('alertdialog', { name: 'You got it, Leo!' });
+	await expect(end).toBeVisible();
+	expect(await page.evaluate(() => (window as unknown as { chimes: number }).chimes)).toBe(1);
+	await expect(end).toContainText('424 in 2 steps. That’s 6 days in a row.');
+	await expect(end.getByRole('list', { name: 'Your steps' }).getByRole('listitem')).toHaveText([
+		'50 + 3 = 53',
+		'53 × 8 = 424'
+	]);
+	await expect(end.getByRole('list', { name: 'One way to do it' }).getByRole('listitem')).toHaveCount(2);
+	await page.evaluate(() => document.fonts.ready);
+	await expect(page).toHaveScreenshot('games-numbers-celebration.png');
+
+	await end.getByRole('button', { name: 'Nice one!' }).click();
 	await expect(page).toHaveURL(/\/games\/numbers$/);
 	await expect(card(page, 'Leo')).toContainText('Got it');
+	await expect(card(page, 'Leo')).toContainText('6 days in a row');
 	await expect(card(page, 'Leo').getByRole('link')).toHaveCount(0);
+	expect(await page.content()).not.toContain('53 × 8');
+});
+
+test('Number of the day: the celebration in the Evening theme', async ({ page }) => {
+	// The heating tests' Hub has its own sample games, where Sam hasn't played Number of the day yet.
+	await page.goto(`${HEATING_URL}/games/numbers/sam?theme=evening`);
+	await step(page, 50, 'Add', 3);
+	await step(page, 53, 'Times', 8);
+	await expect(page.getByRole('alertdialog', { name: 'You got it, Sam!' })).toBeVisible();
+	// The heating tests change this Hub's target while they run, so the header's heating is hidden.
+	await page.addStyleTag({ content: '.heating { visibility: hidden; }' });
+	await page.evaluate(() => document.fonts.ready);
+	await expect(page).toHaveScreenshot('games-numbers-celebration-evening.png');
 });

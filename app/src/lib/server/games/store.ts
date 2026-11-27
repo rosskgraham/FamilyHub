@@ -47,6 +47,8 @@ export interface GameStore {
 	clearSteps(day: DayKey, member: string): void;
 	/** How each Member's Number of the day ended on a day. */
 	numberResults(day: DayKey): NumberResultRow[];
+	/** How every Number of the day a Member has finished ended, on every day. */
+	numberResultsBy(member: string): NumberResultRow[];
 	recordResult(result: NumberResultRow): void;
 	/** The game chosen last on a day: Word of the day until another is chosen that day. */
 	chosenGame(day: DayKey): GameName;
@@ -74,6 +76,7 @@ export function openGameStore(at: string | DatabaseSync): GameStore {
 	);
 	const clearSteps = db.prepare('DELETE FROM number_steps WHERE day = ? AND member = ?');
 	const results = db.prepare('SELECT day, member, value, at FROM number_results WHERE day = ?');
+	const resultsBy = db.prepare('SELECT day, member, value, at FROM number_results WHERE member = ? ORDER BY day');
 	const insertResult = db.prepare('INSERT INTO number_results (day, member, value, at) VALUES (?, ?, ?, ?)');
 	return {
 		goes(day) {
@@ -99,6 +102,9 @@ export function openGameStore(at: string | DatabaseSync): GameStore {
 		},
 		numberResults(day) {
 			return results.all(day) as unknown as NumberResultRow[];
+		},
+		numberResultsBy(member) {
+			return resultsBy.all(member) as unknown as NumberResultRow[];
 		},
 		recordResult(result) {
 			insertResult.run(result.day, result.member, result.value, result.at);

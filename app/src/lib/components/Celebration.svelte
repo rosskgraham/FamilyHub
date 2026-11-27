@@ -12,6 +12,8 @@
 		cheer = true,
 		close = 'Nice one!',
 		onclose,
+		showFor = 6000,
+		aside,
 		children
 	}: {
 		owner: Owner;
@@ -23,36 +25,47 @@
 		/** The button that closes it. */
 		close?: string;
 		onclose: () => void;
+		/** How long it stays, in milliseconds, before it closes by itself, so the next child isn't kept waiting. */
+		showFor?: number;
+		/** Something to read beside it, such as Number of the day's steps (AB#92). */
+		aside?: Snippet;
 		children?: Snippet;
 	} = $props();
 
-	// It closes by itself, so the next child isn't kept waiting.
-	const SHOW_MS = 6000;
 	const BURST = 12;
 
 	onMount(() => {
 		if (cheer) chime();
-		const timer = setTimeout(onclose, SHOW_MS);
+		const timer = setTimeout(onclose, showFor);
 		return () => clearTimeout(timer);
 	});
 </script>
 
-<div class="backdrop" role="presentation" onclick={onclose}>
-	<div class="card" role="alertdialog" aria-labelledby="celebration-title">
-		<div class="burst" aria-hidden="true">
-			{#if cheer}
-				{#each { length: BURST } as _, i (i)}
-					<span class="spark" style:--angle="{(360 / BURST) * i}deg"><Star size={44} /></span>
-				{/each}
-			{/if}
-			<Badge {owner} size={140} />
-		</div>
-		<h2 id="celebration-title">{title}</h2>
-		{#if stars !== undefined}
-			<p class="earned tabular"><Star size={48} />+{stars} {stars === 1 ? 'Star' : 'Stars'}</p>
+{#snippet body()}
+	<div class="burst" aria-hidden="true">
+		{#if cheer}
+			{#each { length: BURST } as _, i (i)}
+				<span class="spark" style:--angle="{(360 / BURST) * i}deg"><Star size={44} /></span>
+			{/each}
 		{/if}
-		{@render children?.()}
-		<button class="close" style:background={owner.solid} style:color={owner.on} onclick={onclose}>{close}</button>
+		<Badge {owner} size={140} />
+	</div>
+	<h2 id="celebration-title">{title}</h2>
+	{#if stars !== undefined}
+		<p class="earned tabular"><Star size={48} />+{stars} {stars === 1 ? 'Star' : 'Stars'}</p>
+	{/if}
+	{@render children?.()}
+	<button class="close" style:background={owner.solid} style:color={owner.on} onclick={onclose}>{close}</button>
+{/snippet}
+
+<div class="backdrop" role="presentation" onclick={onclose}>
+	<div class="card" class:wide={aside} role="alertdialog" aria-labelledby="celebration-title">
+		{#if aside}
+			<div class="aside">{@render aside()}</div>
+			<div class="main">{@render body()}</div>
+		{:else}
+			{@render body()}
+		{/if}
 	</div>
 </div>
 
@@ -78,6 +91,28 @@
 		background: var(--card);
 		text-align: center;
 		animation: pop 400ms cubic-bezier(0.2, 1.4, 0.4, 1);
+	}
+	/* With something beside it: that on the left, the celebration on the right. */
+	.card.wide {
+		width: 1760px;
+		flex-direction: row;
+		align-items: stretch;
+		gap: 48px;
+		padding: 48px;
+	}
+	.aside {
+		width: 820px;
+		flex: none;
+		text-align: left;
+	}
+	.main {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 24px;
 	}
 	.burst {
 		position: relative;
