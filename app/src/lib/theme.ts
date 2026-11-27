@@ -122,7 +122,11 @@ export interface Palette {
 	/** The cake on a birthday, and its candle's flame. */
 	cake: string;
 	flame: string;
-	/** Word of the day's tiles and keys: a letter in the right place, in the word somewhere else, or not in it. */
+	/**
+	 * Word of the day's tiles and keys: a letter in the right place, in the word somewhere else, or not in it. Right is
+	 * a dark green and in the word a light orange, so they differ in lightness as well as hue, for anyone colourblind.
+	 * Number of the day and the Games list use `wordRight` too.
+	 */
 	wordRight: string;
 	onWordRight: string;
 	wordPresent: string;
@@ -173,7 +177,7 @@ export const palettes: Record<Theme, Palette> = {
 		binPurple: '#6C3FC4',
 		cake: '#C2306B',
 		flame: '#B86200',
-		wordRight: '#1F5FBF',
+		wordRight: '#167A3A',
 		onWordRight: '#FFFFFF',
 		wordPresent: '#F08A24',
 		onWordPresent: '#2B1600',
@@ -235,8 +239,8 @@ export const palettes: Record<Theme, Palette> = {
 		binPurple: '#B99BFF',
 		cake: '#FF85B4',
 		flame: '#FFB547',
-		wordRight: '#7FA8FF',
-		onWordRight: '#0B1A3F',
+		wordRight: '#1C8540',
+		onWordRight: '#FFFFFF',
 		wordPresent: '#FFA85C',
 		onWordPresent: '#3A1800',
 		wordAbsent: '#3A4553',

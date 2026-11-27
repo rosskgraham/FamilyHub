@@ -101,6 +101,7 @@ const shapes = (p: Palette): [string, string, string][] => [
 			[`${bin} bin on a past day`, colour, p.past]
 		];
 	}),
+	['Word of the day right-place tile', p.wordRight, p.card],
 	['birthday cake', p.cake, p.card],
 	['birthday cake on a past day', p.cake, p.past],
 	['birthday candle', p.flame, p.card],
@@ -122,6 +123,47 @@ describe.each(themes)('the %s theme', (theme) => {
 
 	it.each(shapes(palette))('has visible shapes: %s', (_, fg, bg) => {
 		expect(contrast(fg, bg)).toBeGreaterThanOrEqual(3);
+	});
+});
+
+// Hue in degrees, from 0 (red) through 120 (green) to 240 (blue).
+function hue(hex: string): number {
+	const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255) as [number, number, number];
+	const max = Math.max(r, g, b);
+	const d = max - Math.min(r, g, b);
+	if (d === 0) return 0;
+	const h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+	return (h * 60 + 360) % 360;
+}
+
+describe.each(themes)("Word of the day's colours in the %s theme", (theme) => {
+	const p = palettes[theme];
+
+	it('marks a letter in the right place green, with a white letter', () => {
+		expect(hue(p.wordRight)).toBeGreaterThanOrEqual(100);
+		expect(hue(p.wordRight)).toBeLessThanOrEqual(150);
+		expect(p.onWordRight).toBe('#FFFFFF');
+	});
+
+	it('keeps in the word orange', () => {
+		expect(hue(p.wordPresent)).toBeGreaterThanOrEqual(20);
+		expect(hue(p.wordPresent)).toBeLessThanOrEqual(40);
+	});
+
+	// Orange and green can look alike to someone red–green colourblind, so they differ in lightness too: 2:1 is
+	// a clear step without any hue.
+	it.each([
+		['in the word', p.wordPresent],
+		['not in the word', p.wordAbsent]
+	])('keeps the right place apart from %s by lightness', (_, other) => {
+		expect(contrast(p.wordRight, other)).toBeGreaterThanOrEqual(2);
+	});
+});
+
+describe('Word of the day', () => {
+	it('uses these greens for the right place', () => {
+		expect(palettes.day.wordRight).toBe('#167A3A');
+		expect(palettes.evening.wordRight).toBe('#1C8540');
 	});
 });
 
