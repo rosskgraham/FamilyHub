@@ -158,6 +158,8 @@ node --env-file=.env build
 
 It listens on port 3000, or `PORT`. `/api/health` answers `{"status":"ok","version":"2026.10.31.57"}`, which is what the Pi checks after switching to a new release.
 
+Told to stop (SIGTERM, as the Pi restarts it for a release), it ends the screen's `/api/changes` streams and its live connection, so it exits in well under a second rather than waiting for systemd to kill it. The screen asks `/api/health` before its minute refresh and before going back to Today. While nothing answers, it keeps what it shows and tries again later, rather than loading a page into a refused connection and showing the browser's error page (AB#41).
+
 ## Layout
 
 - `src/lib/time.ts`: UK time handling. Everything is shown in Europe/London time, whatever the machine's own time zone.

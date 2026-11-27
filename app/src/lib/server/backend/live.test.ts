@@ -210,6 +210,22 @@ describe('startLiveUpdates', () => {
 		expect(startLiveUpdates(() => {})).toBeNull();
 		expect(liveConnected()).toBe(false);
 	});
+
+	it('stops when the Hub shuts down, so nothing keeps Node running (AB#41)', async () => {
+		let asked = 0;
+		const request = (async () => {
+			asked++;
+			throw new Error('fetch failed');
+		}) as unknown as BackendRequest;
+		startLiveUpdates(() => {}, { request });
+		await vi.advanceTimersByTimeAsync(0);
+		expect(asked).toBe(1);
+
+		process.emit('sveltekit:shutdown' as 'SIGTERM');
+		await vi.advanceTimersByTimeAsync(MAX_RETRY_MS * 2);
+		expect(asked).toBe(1);
+		expect(vi.getTimerCount()).toBe(0);
+	});
 });
 
 describe('duration', () => {
