@@ -167,7 +167,14 @@
 		<!-- Check for updates (AB#105): the first press asks the Pi's updater to look now, the second loads what it
 		     installed. -->
 		<div class="updates">
-			<form method="POST" action="?/checkForUpdates" use:enhance>
+			<!-- It stays on this page, keeping a `?theme=` preview, rather than going to the action's own address. -->
+			<form
+				method="POST"
+				action="?/checkForUpdates"
+				use:enhance={() =>
+					({ update }) =>
+						update({ navigate: false })}
+			>
 				<button class="quiet" type="submit" disabled={!data.updates.offered || updateLine?.busy}>
 					Check for updates
 				</button>
@@ -176,9 +183,7 @@
 				<p class="note">Only on a release, not a development build.</p>
 			{:else if updateLine}
 				<p class="note" class:offline={updateLine.failed} role="status">
-					{updateLine.text}{#if !updateLine.busy && updateStatus}<span class="when">
-							· {when(updateStatus.at)}</span
-						>{/if}
+					{updateLine.text}{#if !updateLine.busy && updateStatus}{` · ${when(updateStatus.at)}`}{/if}
 				</p>
 			{/if}
 		</div>
