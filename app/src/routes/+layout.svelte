@@ -14,6 +14,7 @@
 	import { clock } from '#lib/clock.svelte.ts';
 	import { eventDetail } from '#lib/event-detail.svelte.ts';
 	import { heatingPanel } from '#lib/heating-panel.svelte.ts';
+	import { hubAnswers } from '#lib/hub-answers.ts';
 	import { IDLE_MS } from '#lib/idle.ts';
 	import { reloadsForRelease, returnsToToday } from '#lib/idle.ts';
 	import { isAsleep, sleepPalette } from '#lib/sleep.ts';
@@ -63,12 +64,20 @@
 		return () => clearInterval(timer);
 	});
 
-	// Two minutes untouched, the Hub goes back to the Today view, keeping a `?theme=` preview.
+	// Two minutes untouched, the Hub goes back to the Today view, keeping a `?theme=` preview. Only once its server
+	// answers, so going home while a release restarts it never lands on the browser's error page (AB#41).
 	const loadedAt = new Date();
+	let goingHome = false;
 	$effect(() => {
-		if (!browser || !returnsToToday(page.url.pathname, clock.now, lastTouch ?? loadedAt)) return;
+		// The clock is read first, so this runs again each second even while an answer is awaited.
+		if (!browser || !returnsToToday(page.url.pathname, clock.now, lastTouch ?? loadedAt) || goingHome) return;
 		const theme = page.url.searchParams.get('theme');
-		goto(theme ? `/?theme=${theme}` : '/');
+		goingHome = true;
+		void hubAnswers()
+			.then(async (answers) => {
+				if (answers) await goto(theme ? `/?theme=${theme}` : '/');
+			})
+			.finally(() => (goingHome = false));
 	});
 
 	// While the on-screen keyboard is open, the page slides up so the form being typed in stays above it.
@@ -94,9 +103,12 @@
 			location.reload();
 	});
 
-	// Check for changes every minute.
+	// Check for changes every minute, when the Hub's server answers. While a release restarts it, the screen keeps what
+	// it shows and tries again a minute later (AB#41).
 	onMount(() => {
-		const timer = setInterval(() => invalidateAll(), 60_000);
+		const timer = setInterval(async () => {
+			if (await hubAnswers()) await invalidateAll();
+		}, 60_000);
 		return () => clearInterval(timer);
 	});
 

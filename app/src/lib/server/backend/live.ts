@@ -133,7 +133,12 @@ export function startLiveUpdates(
 	api: { request: BackendRequest } | null = backend()
 ): Live | null {
 	if (!api) return null;
-	current ??= connectLive({ request: api.request, onMessage });
+	if (!current) {
+		current = connectLive({ request: api.request, onMessage });
+		// Its socket and reconnect timer would keep Node running after the server has closed (AB#41).
+		const live = current;
+		process.once('sveltekit:shutdown', () => live.stop());
+	}
 	return current;
 }
 
