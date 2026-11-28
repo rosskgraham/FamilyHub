@@ -28,7 +28,7 @@ from familyhub_api.auth import (
     bearer_token,
 )
 from familyhub_api.cosmos_lists import CosmosLists
-from familyhub_api.lists import Applied, Busy, Item, Lists, Operations, ShopShown, Store
+from familyhub_api.lists import MOST_REGULARS, Applied, Busy, Item, Lists, Operations, ShopShown, Store
 from familyhub_api.live import Live, WebPubSubLive
 from familyhub_api.sessions import Sessions, SignInRefused, sessions_from_environment
 
@@ -84,6 +84,16 @@ class ChangedItems(BaseModel):
     shops: list[ShopShown]
     # Ask for everything after this next time.
     seq: int
+
+
+class RegularShown(BaseModel):
+    name: str
+
+
+class Regulars(BaseModel):
+    """The Household's regulars, best first (#109)."""
+
+    regulars: list[RegularShown]
 
 
 def create_app(
@@ -255,6 +265,18 @@ def create_app(
         with _unavailable_if_cosmos_fails():
             caught_up = lists.changed_since(SHOPPING, after)
         return ChangedItems(items=caught_up.items, shops=caught_up.shops, seq=caught_up.seq)
+
+    @app.get("/lists/shopping/regulars")
+    def shopping_regulars(
+        caller: Annotated[Caller, Depends(signed_in)],
+        lists: Annotated[Lists, Depends(shared_lists)],
+        limit: Annotated[int, Query(ge=1, le=MOST_REGULARS)] = 20,
+    ) -> Regulars:
+        """The names bought most, and most recently, in the last 12 weeks, best first, each as last spelled.
+        Leaves out what's on the list, what was ticked off in the last 10 minutes, and dont_suggest names."""
+        with _unavailable_if_cosmos_fails():
+            found = lists.regulars(SHOPPING, limit)
+        return Regulars(regulars=[RegularShown(name=regular.name) for regular in found])
 
     return app
 

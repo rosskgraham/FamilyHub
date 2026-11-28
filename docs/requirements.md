@@ -37,6 +37,7 @@ Ross, Sam, Maya and Leo. Everyone sees every Event and can use every Quick actio
 - At the Hub: add a Shopping item with the on-screen keyboard, Tick off with a tap (struck through for 10 minutes, so it can be undone; items ticked off in the shop don't come back on the wall), and Remove with a swipe or long press.
 - Phones use the Google Tasks app, which works offline in the shop.
 - A change made in the shop appears on the Hub within 1 minute.
+- **Regulars** (Feature #15): the usual items, added in a few taps instead of typed, up to 24 at the Hub and 20 on a phone. The backend ranks them from what's been bought in the last 12 weeks, where a purchase counts half as much every 3 weeks. It leaves out what's already on the list, and anything marked Don't suggest until it's added again. The backend part is #109; the Hub's and the family app's panels follow.
 
 ### Layout and navigation
 

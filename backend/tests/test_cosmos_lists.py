@@ -122,3 +122,19 @@ def test_shops_changed_since_a_number_are_read(container: FakeContainer) -> None
     assert query["partition_key"] == "shopping"
     assert query["query"] == "SELECT * FROM c WHERE c.kind = 'shop' AND c.seq > @after"
     assert query["parameters"] == [{"name": "@after", "value": 3}]
+
+
+def test_regulars_read_the_recent_log_every_dont_suggest_and_the_list_in_one_query(
+    container: FakeContainer,
+) -> None:
+    partition(container).history("2026-08-30T09:00:00.000000Z", "2026-11-22T08:50:00.000000Z")
+
+    [query] = container.queries
+    assert query["partition_key"] == "shopping"
+    assert "c.at >= @since AND IS_DEFINED(c.itemId)" in query["query"]
+    assert "c.type = 'dont_suggest'" in query["query"]
+    assert "c.tickedOffAt > @shownSince" in query["query"]
+    assert query["parameters"] == [
+        {"name": "@since", "value": "2026-08-30T09:00:00.000000Z"},
+        {"name": "@shownSince", "value": "2026-11-22T08:50:00.000000Z"},
+    ]

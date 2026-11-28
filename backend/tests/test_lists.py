@@ -55,6 +55,10 @@ class FakePartition:
         # Every shop, so the API's own filtering is what's tested.
         return [copy.deepcopy(doc) for doc in self.docs.values() if doc["kind"] == "shop"]
 
+    def history(self, since: str, shown_since: str) -> list[dict[str, Any]]:
+        # The whole log and every item, so the API's own filtering is what's tested.
+        return [copy.deepcopy(doc) for doc in self.docs.values() if doc["kind"] in ("op", "item")]
+
     def log(self) -> list[dict[str, Any]]:
         return sorted((d for d in self.docs.values() if d["kind"] == "op"), key=lambda d: d["seq"])
 

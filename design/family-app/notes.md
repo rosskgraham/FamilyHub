@@ -95,6 +95,17 @@ The Hub holds one connection open to Web PubSub, an always-on service of its own
 - **The instance takes 16 requests at once** (found 17 November 2026). Flex's default for Python is 1, and with at most one instance, requests waited up to a minute or failed with a 503 after 60 seconds, even sent one at a time. With 16, a warm request takes about 0.1 seconds.
 - **Cosmos DB and Web PubSub are always on.**
 
+## Regulars
+
+The usual Shopping items, offered to add in a few taps (Feature #15). The backend works them out each time they're asked for, with `GET /lists/shopping/regulars?limit=N` (at most 50), from the Shopping list's log. That's one query in the list's partition, and no scores are stored (#109).
+
+- **What counts:** each Shopping item from the last 12 weeks counts once, dated by when it was ticked off, or by when it was added if it never was. Removed items don't count, as they were added by mistake.
+- **The ranking:** items are matched by name the way Shops' walking orders are ("Milk", " milk" and "Milk." are one; "apple" and "apples" are two). A purchase counts half as much every 3 weeks, so something bought weekly beats something bought often two months ago. Each regular is shown as it was last spelled.
+- **Left out:** names on the list and not ticked off, names ticked off in the last 10 minutes, and names marked Don't suggest.
+- **Don't suggest** is a `dont_suggest` operation (an operation id and the name) sent like the others, so it works offline and sending it twice does no harm. It's for the whole Household. Adding a matching name again later undoes it.
+
+The Hub shows up to 24 and a phone 20. The panels are their own stories (#110 and #111).
+
 ## Repeats
 
 The server owns repeating To-dos, as calendar-style rules (RFC 5545's RRULE, read with `python-dateutil`): every 2 weeks, the first Monday of the month, and so on. It also does what Google Tasks can't:

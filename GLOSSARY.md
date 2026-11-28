@@ -132,6 +132,10 @@ _Avoid_: Store, supermarket
 The order a Shop's aisles bring Shopping items up in, as the Shop has learned it, by item name, so it carries over from one trip to the next.
 _Avoid_: Sort order, aisle order, layout
 
+**Regulars**:
+The Shopping items the Household buys most often and most recently, offered to add in a few taps instead of typed. Worked out from the last 12 weeks of what was ticked off, leaving out what's already on the list. Anyone can mark one Don't suggest, which holds until that item is added again.
+_Avoid_: Favourites, recent items, staples, usuals
+
 ### To-dos
 
 **To-do**:
