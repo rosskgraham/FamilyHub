@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Editing a meal</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+button{font-family:inherit}
+a{color:#161B22}a:hover{color:#161B22}
+</style>
+</helmet>
+<div style="width: 1920px; height: 1080px; position: relative; overflow: hidden; background: #6B7380; font-family: 'Figtree', system-ui, sans-serif; color: #161B22">
+
+<div style="position: absolute; left: 32px; top: 32px; width: 1856px; box-sizing: border-box; padding: 32px; border-radius: 28px; background: #FFFFFF; display: flex; flex-direction: column; gap: 22px" role="dialog" aria-label="Edit meal">
+
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 24px">
+<div style="font-size: 40px; font-weight: 700">Edit meal</div>
+<div style="display: flex; align-items: center; gap: 14px">
+<button style="height: 64px; padding: 0 28px; border-radius: 32px; border: 2px solid #B3261E; background: #FFFFFF; color: #B3261E; font-size: 24px; font-weight: 700; cursor: pointer">Remove meal</button>
+<a href="a-meals.dc.html" style="height: 64px; padding: 0 28px; border-radius: 32px; background: #E3E7ED; color: #161B22; font-size: 24px; font-weight: 700; text-decoration: none; display: flex; align-items: center">Cancel</a>
+<a href="a-meals.dc.html" style="height: 64px; padding: 0 40px; border-radius: 32px; background: #1F5FBF; color: #FFFFFF; font-size: 24px; font-weight: 700; text-decoration: none; display: flex; align-items: center">Done</a>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label for="meal-name" style="font-size: 22px; font-weight: 600; color: #4A5565">Name</label>
+<input id="meal-name" value="Chilli con carne" readonly style="height: 72px; box-sizing: border-box; padding: 0 22px; border-radius: 16px; border: 2px solid #C9D0D9; background: #F3F5F8; font-family: inherit; font-size: 32px; font-weight: 700; color: #161B22">
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 22px; font-weight: 600; color: #4A5565">Ingredients · 8 · tap one to rename it</div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px">
+<sc-for list="{{ingredients}}" as="i" hint-placeholder-count="8">
+<div style="height: 64px; box-sizing: border-box; padding: 0 8px 0 20px; border-radius: 16px; border: {{i.border}}; background: {{i.bg}}; display: flex; align-items: center; gap: 8px; min-width: 0">
+<span style="flex: 1; min-width: 0; font-size: 26px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{i.text}}<sc-if value="{{i.editing}}" hint-placeholder-val="{{false}}"><span style="display: inline-block; width: 3px; height: 30px; margin-left: 2px; vertical-align: -5px; background: #1F5FBF"></span></sc-if></span>
+<button aria-label="Remove {{i.text}}" style="width: 48px; height: 48px; flex: none; border: 0; border-radius: 24px; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4A5565" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+</div>
+</sc-for>
+<button style="height: 64px; box-sizing: border-box; padding: 0 20px; border-radius: 16px; border: 2px dashed #C9D0D9; background: #FFFFFF; color: #1F5FBF; font-size: 26px; font-weight: 700; display: flex; align-items: center; gap: 10px; cursor: pointer"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1F5FBF" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add ingredient</button>
+</div>
+</div>
+
+</div>
+
+<div style="position: absolute; left: 0; right: 0; bottom: 0; box-sizing: border-box; padding: 20px 32px 24px; background: #DCE1E8; display: flex; flex-direction: column; gap: 10px" aria-label="On-screen keyboard">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+<div style="display: flex; gap: 10px">
+<sc-for list="{{r}}" as="k" hint-placeholder-count="10">
+<button style="flex: {{k.flex}}; height: 72px; border: 0; border-radius: 12px; background: {{k.bg}}; color: {{k.colour}}; font-size: 30px; font-weight: 600; box-shadow: 0 2px 0 #B8C0CB; cursor: pointer">{{k.label}}</button>
+</sc-for>
+</div>
+</sc-for>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1920,"height":1080}}'>
+class Component extends DCLogic {
+renderVals() {
+const ing = (text, editing) => ({
+text, editing,
+bg: editing ? '#FFFFFF' : '#F3F5F8',
+border: editing ? '3px solid #1F5FBF' : '3px solid transparent'
+});
+const key = (label, flex, kind) => ({
+label, flex: String(flex || 1),
+bg: kind === 'enter' ? '#1F5FBF' : (kind === 'fn' ? '#C3CAD4' : '#FFFFFF'),
+colour: kind === 'enter' ? '#FFFFFF' : '#161B22'
+});
+const chars = (s) => [...s].map((c) => key(c));
+return {
+ingredients: [
+ing('beef mince'), ing('kidney bea', true), ing('chopped tomatoes'), ing('onions'),
+ing('peppers'), ing('rice'), ing('sour cream'), ing('cheddar')
+],
+rows: [
+chars('1234567890'),
+chars('qwertyuiop'),
+chars('asdfghjkl\''),
+[key('⇧', 1.5, 'fn'), ...chars('zxcvbnm,.'), key('⌫', 1.5, 'fn')],
+[key('?123', 1.5, 'fn'), key('', 6), key('Hide', 1.5, 'fn'), key('Return', 2, 'enter')]
+]
+};
+}
+}
+</script>
+</body>
+</html>

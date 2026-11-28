@@ -7,6 +7,7 @@
 		{ href: '/day', label: 'Day' },
 		{ href: '/week', label: 'Week' },
 		{ href: '/shopping', label: 'Shopping' },
+		{ href: '/meals', label: 'Meals' },
 		{ href: '/todos', label: 'To-dos' },
 		{ href: '/chores', label: 'Chores' },
 		{ href: '/energy', label: 'Energy' },
