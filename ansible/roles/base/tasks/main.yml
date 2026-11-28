@@ -115,12 +115,12 @@
 # And now, so it needn't wait for the next time the cable comes up. The tests' stand-in has no EEE to switch.
 - name: Read whether Energy-Efficient Ethernet is on
   ansible.builtin.command: ethtool --show-eee eth0
-  register: hub_eee
+  register: base_eee
   changed_when: false
   failed_when: false
   check_mode: false
 
 - name: Switch Energy-Efficient Ethernet off now
   ansible.builtin.command: ethtool --set-eee eth0 eee off
-  when: "hub_eee.stdout is search('EEE status: enabled')"
+  when: "base_eee.stdout is search('EEE status: enabled')"
   changed_when: true
