@@ -15,7 +15,12 @@ export interface BackendItem {
 /** A change as POST /lists/shopping/operations takes it. Both ids are made on the Hub, so a resend changes nothing. */
 export type Operation =
 	| { id: string; type: 'add'; item_id: string; text: string }
-	| { id: string; type: 'tick' | 'untick' | 'remove'; item_id: string };
+	| { id: string; type: 'tick' | 'untick' | 'remove'; item_id: string }
+	// Stops a name being offered as a regular until it's added again (AB#109).
+	| { id: string; type: 'dont_suggest'; name: string };
+
+/** An operation on one item. */
+export type ItemOperation = Exclude<Operation, { type: 'dont_suggest' }>;
 
 /**
  * Items still to get, newest first, then items ticked off in the last few minutes. With after=0 the backend sends only
@@ -30,7 +35,7 @@ export function toShoppingItems(items: BackendItem[]): ShoppingItem[] {
 }
 
 /** The operation for a change at the Hub. An added item gets its id here, so it never needs swapping for another. */
-export function toOperation(change: ShoppingChange, newId: () => string = randomUUID): Operation {
+export function toOperation(change: ShoppingChange, newId: () => string = randomUUID): ItemOperation {
 	if (change.action === 'add') return { id: newId(), type: 'add', item_id: newId(), text: change.text };
 	if (change.action === 'tick') return { id: newId(), type: change.tickedOff ? 'tick' : 'untick', item_id: change.id };
 	return { id: newId(), type: 'remove', item_id: change.id };
@@ -42,7 +47,8 @@ export function withOperations(items: ShoppingItem[], operations: Operation[]): 
 	for (const op of operations) {
 		if (op.type === 'add') result = [{ id: op.item_id, text: op.text, tickedOff: false }, ...result];
 		else if (op.type === 'remove') result = result.filter((i) => i.id !== op.item_id);
-		else result = result.map((i) => (i.id === op.item_id ? { ...i, tickedOff: op.type === 'tick' } : i));
+		else if (op.type === 'tick' || op.type === 'untick')
+			result = result.map((i) => (i.id === op.item_id ? { ...i, tickedOff: op.type === 'tick' } : i));
 	}
 	return result;
 }

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Shopping with Regulars</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+button{font-family:inherit}
+a{color:#161B22}a:hover{color:#161B22}
+</style>
+</helmet>
+<div style="width: 1920px; height: 1080px; box-sizing: border-box; padding: 32px; background: #F3F5F8; font-family: 'Figtree', system-ui, sans-serif; color: #161B22; display: flex; flex-direction: column; gap: 24px">
+
+<header style="height: 128px; flex: none; display: flex; align-items: center; justify-content: space-between; gap: 32px">
+<div style="display: flex; align-items: center; gap: 28px">
+<div style="font-size: 112px; font-weight: 600; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums">17:05</div>
+<div>
+<div style="font-size: 44px; font-weight: 600; line-height: 1.1">Friday</div>
+<div style="font-size: 28px; color: #4A5565; margin-top: 4px">27 November</div>
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 16px">
+<div style="font-size: 56px; font-weight: 600; line-height: 1">6°</div>
+<div>
+<div style="font-size: 24px; font-weight: 600">Cloudy</div>
+<div style="font-size: 22px; color: #4A5565">High 8° · Low 2°</div>
+</div>
+</div>
+</header>
+
+<main style="flex: 1; min-height: 0; box-sizing: border-box; padding: 28px; border-radius: 28px; background: #FFFFFF; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<div style="font-size: 36px; font-weight: 700">Shopping</div>
+<div style="height: 40px; padding: 0 16px; border-radius: 20px; background: #E3E7ED; font-size: 22px; font-weight: 700; display: flex; align-items: center">4 to get</div>
+</div>
+<div style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 4px">
+<sc-for list="{{items}}" as="i" hint-placeholder-count="5">
+<div style="height: 68px; display: flex; align-items: center; gap: 26px; padding-left: 10px">
+<span style="width: 44px; height: 44px; box-sizing: border-box; border-radius: 10px; border: {{i.box}}; background: {{i.fill}}; display: flex; align-items: center; justify-content: center"><sc-if value="{{i.done}}" hint-placeholder-val="{{false}}"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L19 7"/></svg></sc-if></span>
+<span style="font-size: 32px; font-weight: 500; text-decoration: {{i.strike}}; color: {{i.colour}}">{{i.text}}</span>
+</div>
+</sc-for>
+</div>
+<div style="flex: none; display: flex; gap: 16px">
+<button style="flex: 1; height: 72px; border-radius: 18px; border: 2px solid #C9D0D9; background: #FFFFFF; color: #161B22; font-size: 28px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 12px; cursor: pointer"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#161B22" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add item</button>
+<a href="b-panel.dc.html" style="width: 420px; height: 72px; box-sizing: border-box; border-radius: 18px; background: #161B22; color: #FFFFFF; font-size: 28px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 12px"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg>Regulars</a>
+</div>
+</main>
+
+<nav style="height: 76px; flex: none; display: flex; align-items: center; justify-content: space-between">
+<div style="display: flex; align-items: center; gap: 6px; padding: 6px; border-radius: 26px; background: #E3E7ED">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="8">
+<a href="#" aria-current="{{t.current}}" style="width: 132px; height: 64px; border-radius: 20px; background: {{t.bg}}; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 600; text-decoration: none">{{t.label}}</a>
+</sc-for>
+</div>
+<div style="height: 56px; padding: 0 24px; border-radius: 28px; border: 2px dashed #C9D0D9; display: flex; align-items: center; font-size: 24px; color: #2E3644">Sample data</div>
+</nav>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1920,"height":1080}}'>
+class Component extends DCLogic {
+renderVals() {
+const item = (text, done) => ({
+text, done,
+box: done ? '0' : '3px solid #5B6676',
+fill: done ? '#161B22' : 'transparent',
+strike: done ? 'line-through' : 'none',
+colour: done ? '#5B6574' : '#161B22'
+});
+const tab = (label, current) => ({ label, current: current ? 'page' : 'false', bg: current ? '#FFFFFF' : 'transparent' });
+return {
+items: [item('Milk'), item('Eggs'), item('Bananas'), item('Washing-up liquid'), item('Wholemeal bread', true)],
+tabs: [tab('Today'), tab('Day'), tab('Week'), tab('Shopping', true), tab('To-dos'), tab('Chores'), tab('Energy'), tab('Games')]
+};
+}
+}
+</script>
+</body>
+</html>

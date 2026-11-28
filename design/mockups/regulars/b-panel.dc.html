@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Regulars on the Hub</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+button{font-family:inherit}
+a{color:#161B22}a:hover{color:#161B22}
+</style>
+</helmet>
+<div style="width: 1920px; height: 1080px; position: relative; overflow: hidden; background: #6B7380; font-family: 'Figtree', system-ui, sans-serif; color: #161B22">
+
+<div style="position: absolute; left: 32px; top: 32px; right: 32px; bottom: 32px; box-sizing: border-box; padding: 36px; border-radius: 28px; background: #FFFFFF; display: flex; flex-direction: column; gap: 22px" role="dialog" aria-label="Regulars">
+
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 24px">
+<div style="font-size: 48px; font-weight: 700; line-height: 1.1">Regulars</div>
+<div style="font-size: 24px; color: #4A5565">Tick what you need · long press to stop suggesting one</div>
+</div>
+
+<div style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px">
+<sc-for list="{{groups}}" as="g" hint-placeholder-count="1">
+<sc-if value="{{g.titled}}" hint-placeholder-val="{{false}}">
+<div style="font-size: 24px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #4A5565">{{g.title}}</div>
+</sc-if>
+<div style="flex: {{g.flex}}; min-height: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); gap: 12px">
+<sc-for list="{{g.tiles}}" as="t" hint-placeholder-count="24">
+<label style="box-sizing: border-box; padding: 0 20px; border-radius: 18px; border: {{t.border}}; background: {{t.bg}}; display: flex; align-items: center; gap: 18px; min-width: 0; cursor: pointer">
+<input type="checkbox" checked="{{t.ticked}}" style="width: 40px; height: 40px; margin: 0; flex: none; accent-color: #1F5FBF">
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+<span style="font-size: 28px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{t.name}}</span>
+<sc-if value="{{t.hasNote}}" hint-placeholder-val="{{false}}"><span style="font-size: 20px; color: #4A5565; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{t.note}}</span></sc-if>
+</span>
+</label>
+</sc-for>
+</div>
+</sc-for>
+</div>
+
+<div style="display: flex; align-items: center; justify-content: flex-end; gap: 14px">
+<a href="a-section.dc.html" style="height: 72px; padding: 0 32px; border-radius: 36px; background: #E3E7ED; color: #161B22; font-size: 26px; font-weight: 700; text-decoration: none; display: flex; align-items: center">Cancel</a>
+<a href="a-section.dc.html" style="height: 72px; padding: 0 44px; border-radius: 36px; background: #1F5FBF; color: #FFFFFF; font-size: 26px; font-weight: 700; text-decoration: none; display: flex; align-items: center">{{addLabel}}</a>
+</div>
+
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1920,"height":1080}}'>
+class Component extends DCLogic {
+renderVals() {
+const tile = (name, ticked, note) => ({
+name, ticked: !!ticked, note: note || '', hasNote: !!note,
+bg: ticked ? '#E8EFFB' : '#F3F5F8',
+border: ticked ? '3px solid #1F5FBF' : '3px solid transparent'
+});
+const regulars = ['Bread', 'Cheddar', 'Apples', 'Yoghurts', 'Butter', 'Orange juice', 'Kitchen roll', 'Toilet roll',
+'Pasta', 'Chicken breasts', 'Tomatoes', 'Cucumber', 'Crisps', 'Cereal', 'Ham', 'Grapes',
+'Carrots', 'Potatoes', 'Onions', 'Coffee', 'Tea bags', 'Bin bags', 'Dishwasher tablets', 'Squash'];
+const ticked = { 'Bread': 1, 'Kitchen roll': 1, 'Cereal': 1 };
+return {
+addLabel: 'Add 3 to Shopping',
+groups: [{ titled: false, title: '', flex: '1', tiles: regulars.map((n) => tile(n, ticked[n])) }]
+};
+}
+}
+</script>
+</body>
+</html>

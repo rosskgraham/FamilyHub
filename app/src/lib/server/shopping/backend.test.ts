@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BackendRequestFailed, BackendSignInRefused, type BackendRequest } from '../backend/auth.ts';
-import { createBackendFeed } from './backend.ts';
+import { createBackendFeed, offerable } from './backend.ts';
 import type { BackendItem, Operation } from './from-backend.ts';
 import type { ShoppingSource } from './source.ts';
 
@@ -29,10 +29,22 @@ function fakeBackend() {
 		/** Applies the next batch, then loses its answer. */
 		loseNextAnswer: false,
 		/** How often the list was asked for. */
-		gets: 0
+		gets: 0,
+		/** The regulars it ranks, best first, before leaving any out (AB#110). */
+		regulars: [] as string[],
+		/** Names a dont_suggest has stopped. */
+		notSuggested: new Set<string>(),
+		/** How often the regulars were asked for. */
+		regularsAsked: 0
 	};
 	const request: BackendRequest = async <T>(method: 'GET' | 'POST', path: string, body?: unknown) => {
 		if (backend.down) throw backend.down;
+		if (method === 'GET' && path.startsWith('/lists/shopping/regulars')) {
+			backend.regularsAsked += 1;
+			expect(path).toBe('/lists/shopping/regulars?limit=24');
+			const names = backend.regulars.filter((name) => !backend.notSuggested.has(name));
+			return { regulars: names.map((name) => ({ name })) } as T;
+		}
 		if (method === 'GET') {
 			backend.gets += 1;
 			expect(path).toBe('/lists/shopping/items?after=0');
@@ -41,13 +53,18 @@ function fakeBackend() {
 		expect(path).toBe('/lists/shopping/operations');
 		const { operations } = body as { operations: Operation[] };
 		posts.push(operations);
-		if (operations.some((op) => backend.refuse.has(op.item_id)))
+		if (operations.some((op) => 'item_id' in op && backend.refuse.has(op.item_id)))
 			throw new BackendRequestFailed('Backend request failed, POST /lists/shopping/operations: 422', 422);
 		const results = operations.map((op) => {
 			if (applied.has(op.id)) return { id: op.id, seq, changed: false };
 			applied.add(op.id);
 			seq++;
+			if (op.type === 'dont_suggest') {
+				backend.notSuggested.add(op.name);
+				return { id: op.id, seq, changed: true };
+			}
 			const found = items.get(op.item_id);
+			if (op.type === 'add') backend.notSuggested.delete(op.text);
 			if (op.type === 'add')
 				items.set(op.item_id, {
 					id: op.item_id,
@@ -75,7 +92,9 @@ const sample: ShoppingSource = {
 	list: async () => [{ id: 'sample-1', text: 'Sample milk', tickedOff: false }],
 	add: async () => 'sample-2',
 	setTickedOff: async () => {},
-	remove: async () => {}
+	remove: async () => {},
+	regulars: async () => ['Sample bread', 'Sample milk', 'Sample apples'],
+	dontSuggest: async () => {}
 };
 
 let dir: string;
@@ -131,7 +150,7 @@ describe('the backend Shopping list', () => {
 		const add = backend.posts[0]![0] as Extract<Operation, { type: 'add' }>;
 		expect(add).toEqual({ id: expect.any(String), type: 'add', item_id: id, text: 'Milk' });
 		expect(new Set(backend.posts.map(([op]) => op!.id)).size).toBe(4);
-		expect(backend.posts.slice(1).every(([op]) => op!.item_id === id)).toBe(true);
+		expect(backend.posts.slice(1).every(([op]) => op && 'item_id' in op && op.item_id === id)).toBe(true);
 	});
 
 	it('queues changes in a file while the backend can’t be reached, shows them, and sends them in order once it’s back', async () => {
@@ -334,5 +353,127 @@ describe('sending what waits (AB#108)', () => {
 		expect([backend.posts.length, backend.gets]).toEqual([posts, gets]);
 		expect(vi.getTimerCount()).toBe(0);
 		expect(sent).not.toHaveBeenCalled();
+	});
+});
+
+describe('regulars (AB#110)', () => {
+	const REGULARS = ['Bread', 'Milk', 'Apples', 'Kitchen roll'];
+
+	it('offers the backend’s regulars, leaving out what’s on the list however it’s spelled', async () => {
+		const { backend, request } = fakeBackend();
+		backend.regulars = REGULARS;
+		const feed = feedFor(request);
+		await feed.apply({ action: 'add', text: ' milk.' });
+
+		expect(await feed.regulars()).toEqual({ names: ['Bread', 'Apples', 'Kitchen roll'], offline: false });
+		expect(backend.regularsAsked).toBe(1);
+	});
+
+	it('offers at most 24', async () => {
+		const { backend, request } = fakeBackend();
+		backend.regulars = Array.from({ length: 30 }, (_, n) => `Item ${n}`);
+		expect((await feedFor(request).regulars()).names).toHaveLength(24);
+	});
+
+	it('offers the last regulars it was given while the backend can’t be reached, minus adds still waiting', async () => {
+		const { backend, request } = fakeBackend();
+		backend.regulars = REGULARS;
+		const feed = feedFor(request);
+		await feed.regulars();
+		expect(JSON.parse(await readFile(join(dir, 'shopping-backend-regulars.json'), 'utf8'))).toEqual(REGULARS);
+
+		backend.down = new TypeError('fetch failed');
+		expect(await feed.apply({ action: 'add', text: 'Apples' })).toBe(202);
+		expect(await feed.regulars()).toEqual({ names: ['Bread', 'Milk', 'Kitchen roll'], offline: true });
+		expect(errors).toHaveBeenCalledWith("Shopping list: couldn't get the regulars:", 'fetch failed');
+	});
+
+	it('offers none offline before it’s ever had any', async () => {
+		const { backend, request } = fakeBackend();
+		backend.down = new TypeError('fetch failed');
+		expect(await feedFor(request).regulars()).toEqual({ names: [], offline: true });
+	});
+
+	it('adds several as their own items in one request, and shows them', async () => {
+		const { backend, request } = fakeBackend();
+		backend.regulars = REGULARS;
+		const feed = feedFor(request);
+
+		expect(await feed.addAll(['Bread', 'Apples', 'Kitchen roll'])).toBe(200);
+		expect(backend.posts).toHaveLength(1);
+		expect(backend.posts[0]!.map((op) => op.type)).toEqual(['add', 'add', 'add']);
+		expect(texts((await feed.load()).items)).toEqual(['Kitchen roll', 'Apples', 'Bread']);
+		expect((await feed.regulars()).names).toEqual(['Milk']);
+	});
+
+	it('queues them while the backend can’t be reached, and sends them once it’s back', async () => {
+		const { backend, request } = fakeBackend();
+		const feed = feedFor(request);
+		await feed.load();
+		backend.down = new TypeError('fetch failed');
+
+		expect(await feed.addAll(['Bread', 'Apples'])).toBe(202);
+		expect((await queued()).map((op) => op.type === 'add' && op.text)).toEqual(['Bread', 'Apples']);
+		expect((await feed.load()).status).toMatchObject({ kind: 'stale', waiting: 2 });
+
+		backend.down = null;
+		await feed.sendWaiting();
+		expect(backend.items().map((i) => i.text)).toEqual(['Bread', 'Apples']);
+	});
+
+	it('stops suggesting one, and a later add brings it back', async () => {
+		const { backend, request } = fakeBackend();
+		backend.regulars = REGULARS;
+		const feed = feedFor(request);
+
+		expect(await feed.dontSuggest('Milk')).toBe(200);
+		expect(backend.posts.at(-1)).toEqual([{ id: expect.any(String), type: 'dont_suggest', name: 'Milk' }]);
+		expect((await feed.regulars()).names).toEqual(['Bread', 'Apples', 'Kitchen roll']);
+
+		await feed.apply({ action: 'add', text: 'Milk' });
+		const [milk] = (await feed.load()).items;
+		await feed.apply({ action: 'remove', id: milk!.id });
+		expect((await feed.regulars()).names).toContain('Milk');
+	});
+
+	it('leaves one out straight away when stopping it has to wait, offline too', async () => {
+		const { backend, request } = fakeBackend();
+		backend.regulars = REGULARS;
+		const feed = feedFor(request);
+		await feed.regulars();
+		backend.down = new TypeError('fetch failed');
+
+		expect(await feed.dontSuggest('Bread')).toBe(202);
+		expect((await feed.regulars()).names).toEqual(['Milk', 'Apples', 'Kitchen roll']);
+	});
+
+	it('offers the sample’s regulars, minus the sample list, until the Hub has the backend’s settings', async () => {
+		const added: string[] = [];
+		const stopped: string[] = [];
+		const feed = createBackendFeed({
+			api: () => null,
+			sample: {
+				...sample,
+				add: async ({ text }) => (added.push(text), 'sample-2'),
+				dontSuggest: async (name) => void stopped.push(name)
+			},
+			sampleOnly: false,
+			dir
+		});
+		expect(await feed.regulars()).toEqual({ names: ['Sample bread', 'Sample apples'], offline: false });
+		expect(await feed.addAll(['Sample bread', 'Sample apples'])).toBe(200);
+		expect(await feed.dontSuggest('Sample bread')).toBe(200);
+		expect([added, stopped]).toEqual([['Sample bread', 'Sample apples'], ['Sample bread']]);
+	});
+});
+
+describe('offerable', () => {
+	const item = (text: string, tickedOff = false) => ({ id: text, text, tickedOff });
+
+	it('leaves out names on the list, ticked off or not, and ones a waiting dont_suggest stops', () => {
+		const waiting: Operation[] = [{ id: '1', type: 'dont_suggest', name: 'cheddar' }];
+		expect(offerable(['Bread', 'Eggs', 'Cheddar', 'Apples'], [item('Bread.'), item('eggs', true)], waiting)).toEqual([
+			'Apples'
+		]);
 	});
 });

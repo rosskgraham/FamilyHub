@@ -121,6 +121,7 @@ With the same settings, the Shopping Section and Today card show the backend's S
 - While the backend can't be reached, changes wait in `app/data/shopping-backend-queue.json`, in order, the screen shows them at once with "Offline · 2 to send", and they're sent in a batch once it's back. While anything waits, the Hub tries again every 20 seconds, and straight away when live updates reconnect, then the screen loads the list again so Offline clears. With nothing waiting it asks for nothing extra. A change the backend turns down (422) is logged and dropped, and the ones after it are still sent.
 - If the backend refuses the Hub's sign-in, the list says Offline, not Sign in needed, as nothing at the Hub can fix it, and the log says why.
 - The last list is kept in `app/data/shopping-backend-cache.json`, apart from the Google one's files.
+- **Regulars** (AB#110): the Regulars button beside Add item opens a panel of up to 24 regulars from `GET /lists/shopping/regulars`, leaving out what's on the Hub's list, queued adds included. Ticked ones go as one batch of adds, and a long press sends `dont_suggest` after asking. Both go through the queue, so they work offline. The last regulars are kept in `app/data/shopping-backend-regulars.json`, written only when they change, and shown while the backend can't be reached. The sample list has sample regulars.
 
 ## Check types and run the tests
 

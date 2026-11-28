@@ -28,7 +28,43 @@ const items: FakeItem[] = [
 	item('Wholemeal bread', now())
 ];
 
+// Sample regulars, best first, as the backend would rank them. Don't suggest takes one out until it's added again.
+const regulars = [
+	'Bread',
+	'Cheddar',
+	'Apples',
+	'Yoghurts',
+	'Butter',
+	'Orange juice',
+	'Kitchen roll',
+	'Toilet roll',
+	'Pasta',
+	'Chicken breasts',
+	'Tomatoes',
+	'Cucumber',
+	'Crisps',
+	'Cereal',
+	'Ham',
+	'Grapes',
+	'Carrots',
+	'Potatoes',
+	'Onions',
+	'Coffee',
+	'Tea bags',
+	'Bin bags',
+	'Dishwasher tablets',
+	'Squash',
+	'Porridge oats'
+];
+const notSuggested = new Set<string>();
+
 export const fakeShopping: ShoppingSource = {
+	async regulars() {
+		return regulars.filter((name) => !notSuggested.has(name));
+	},
+	async dontSuggest(name) {
+		notSuggested.add(name);
+	},
 	async list() {
 		// Ticked-off items go after 10 minutes, as Google's do.
 		const toGet = items.filter((i) => !i.tickedOffAt);
@@ -40,6 +76,7 @@ export const fakeShopping: ShoppingSource = {
 		}));
 	},
 	async add({ text }) {
+		notSuggested.delete(text);
 		const added = item(text);
 		items.unshift(added);
 		return added.id;
