@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ideas mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<!--
+  The Ideas tab (AB#116) and Me too (AB#117). Each frame is 1920×1080, drawn over the screenshot test images (Games
+  for the header, Keyboard for the on-screen keyboard) so the tab sits on the real screen. Day and Evening theme
+  colours from app/src/lib/theme.ts, with the sample Household's names and colours. Open this file in a browser from
+  the repo.
+-->
+<style>
+	.day {
+		--bg: #F3F5F8; --card: #FFFFFF; --ink: #161B22; --on-ink: #FFFFFF; --dim: #4A5565; --line: #C3CBD7;
+		--soft: #EDF0F5; --segment: #E3E8F0; --selected: #FFFFFF; --warn-bg: #FFDDB8; --warn-fg: #6B2E00;
+		--right: #167A3A; --on-right: #FFFFFF; --scrim: rgba(22, 27, 34, 0.45);
+		--blue-bg: #D6E4FF; --blue-fg: #0F2F78; --blue-solid: #2456C9; --blue-on: #FFFFFF;
+		--orange-bg: #FFDDB8; --orange-fg: #6B2E00; --orange-solid: #B85200; --orange-on: #FFFFFF;
+		--green-bg: #BDEBDD; --green-fg: #0A4136; --green-solid: #0B7A64; --green-on: #FFFFFF;
+		--purple-bg: #E6D8FA; --purple-fg: #46228A; --purple-solid: #6C3FC4; --purple-on: #FFFFFF;
+	}
+	.evening {
+		--bg: #0E1116; --card: #171C24; --ink: #F2F4F8; --on-ink: #0E1116; --dim: #A6B0BF; --line: #3A4553;
+		--soft: #212A36; --segment: #1F2630; --selected: #3A4553; --warn-bg: #4A2A0E; --warn-fg: #FFD8B0;
+		--right: #1C8540; --on-right: #FFFFFF; --scrim: rgba(0, 0, 0, 0.6);
+		--blue-bg: #1C2B52; --blue-fg: #C4D6FF; --blue-solid: #7FA8FF; --blue-on: #0B1A3F;
+		--orange-bg: #4A2A0E; --orange-fg: #FFD8B0; --orange-solid: #FFA85C; --orange-on: #3A1800;
+		--green-bg: #0F3B31; --green-fg: #A9EEDA; --green-solid: #5ED6B5; --green-on: #04281F;
+		--purple-bg: #33235F; --purple-fg: #E0D2FF; --purple-solid: #B99BFF; --purple-on: #24104D;
+	}
+	.day.games { --shot: url('../../../app/e2e/__screenshots__/games.png'); }
+	.evening.games { --shot: url('../../../app/e2e/__screenshots__/games-evening.png'); }
+	.day.keyboard { --shot: url('../../../app/e2e/__screenshots__/keyboard.png'); }
+	body { margin: 0; background: #888; font-family: 'Figtree', system-ui, sans-serif; }
+	h1.title { font: 700 28px Figtree, sans-serif; color: #fff; margin: 32px 32px 12px; }
+	p.note { color: #fff; margin: 0 32px 16px; font-size: 18px; max-width: 1400px; }
+	.frame {
+		position: relative; width: 1920px; height: 1080px; margin: 0 32px 48px; overflow: hidden; color: var(--ink);
+		background: var(--shot) no-repeat; background-size: 1920px 1080px;
+	}
+	p { margin: 0; }
+	h2 { margin: 0; font-size: 40px; }
+
+	/* Covers the views' area between the header and the bottom bar, as Games' two cards do. */
+	.content {
+		position: absolute; left: 0; right: 0; top: 176px; height: 760px; background: var(--bg); display: flex; gap: 24px;
+		padding: 8px 32px; box-sizing: border-box;
+	}
+	.card { border-radius: 28px; background: var(--card); padding: 28px 32px; box-sizing: border-box; }
+
+	/* The bottom bar, with Ideas after Games. */
+	.bar {
+		position: absolute; left: 32px; top: 962px; display: flex; padding: 6px; gap: 6px; border-radius: 26px;
+		background: var(--segment);
+	}
+	.bar span {
+		width: 132px; height: 64px; border-radius: 20px; font-size: 24px; font-weight: 600; display: flex;
+		align-items: center; justify-content: center;
+	}
+	.bar span.on { background: var(--selected); font-weight: 700; }
+	.bar span.cog { width: 80px; }
+	.bar-cover { position: absolute; left: 0; top: 944px; width: 1500px; height: 136px; background: var(--bg); }
+
+	/* Left: sending one. */
+	.send { width: 420px; flex: none; display: flex; flex-direction: column; gap: 20px; }
+	.send p { font-size: 24px; color: var(--dim); }
+	.big {
+		border-radius: 24px; padding: 26px 24px; display: flex; align-items: center; gap: 20px; font-size: 30px;
+		font-weight: 700; border: 3px solid transparent;
+	}
+	.big svg { flex: none; }
+	.big.idea { background: var(--right); color: var(--on-right); }
+	.big.broken { background: var(--warn-bg); color: var(--warn-fg); }
+	.big small { display: block; font-size: 22px; font-weight: 600; opacity: 0.85; margin-top: 2px; }
+
+	/* Right: every idea. */
+	.list { flex: 1; min-width: 0; }
+	.list header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
+	.list header p { font-size: 24px; color: var(--dim); }
+	.idea-row { display: flex; align-items: center; gap: 22px; padding: 9px 0; min-height: 64px; }
+	.idea-row + .idea-row { border-top: 2px solid var(--line); }
+	.idea-row.gone { opacity: 0.5; }
+	.badge {
+		flex: none; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+		font-size: 30px; font-weight: 700;
+	}
+	.badge.small { width: 34px; height: 34px; font-size: 18px; border: 3px solid var(--card); margin-left: -12px; }
+	.badge.small:first-child { margin-left: 0; }
+	.blue { background: var(--blue-solid); color: var(--blue-on); }
+	.orange { background: var(--orange-solid); color: var(--orange-on); }
+	.green { background: var(--green-solid); color: var(--green-on); }
+	.purple { background: var(--purple-solid); color: var(--purple-on); }
+	.words { flex: 1; min-width: 0; }
+	.words b { font-size: 28px; font-weight: 600; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+	.words p { font-size: 22px; color: var(--dim); margin-top: 2px; display: flex; gap: 12px; align-items: center; }
+	.chip { border-radius: 14px; padding: 2px 12px; font-size: 20px; font-weight: 700; }
+	.chip.broken { background: var(--warn-bg); color: var(--warn-fg); }
+	.chip.waiting { border: 2px dashed var(--line); color: var(--dim); font-weight: 600; }
+
+	/* Where it is: the words over five steps, filled up to where it is, all green once it's on the Hub. */
+	.where { flex: none; width: 300px; display: flex; flex-direction: column; gap: 8px; }
+	.where b { font-size: 24px; }
+	.steps { display: flex; gap: 6px; }
+	.steps i { flex: 1; height: 10px; border-radius: 5px; background: var(--segment); }
+	.steps i.done { background: var(--ink); }
+	.steps.shipped i { background: var(--right); }
+	.where.gone b { color: var(--dim); font-weight: 600; }
+
+	/* Me too: who backs it, and the button. Gone once it's being built; the count stays. */
+	.metoo { flex: none; width: 300px; display: flex; align-items: center; justify-content: flex-end; gap: 14px; }
+	.backers { display: flex; }
+	.metoo button {
+		font: inherit; font-size: 24px; font-weight: 700; height: 60px; padding: 0 22px; border-radius: 30px;
+		border: 2px solid var(--line); background: var(--card); color: var(--ink); display: flex; align-items: center; gap: 10px;
+		white-space: nowrap;
+	}
+	.metoo .count { font-size: 24px; font-weight: 700; color: var(--dim); }
+
+	/* The form, above the keyboard. */
+	.form-cover { position: absolute; left: 0; right: 0; top: 0; height: 672px; background: var(--bg); }
+	.form {
+		position: absolute; left: 32px; right: 32px; top: 20px; height: 636px; display: flex; flex-direction: column;
+		gap: 22px;
+	}
+	.form .top { display: flex; align-items: center; justify-content: space-between; }
+	.form .top h2 { display: flex; align-items: center; gap: 16px; }
+	.label { font-size: 24px; font-weight: 700; color: var(--dim); margin-bottom: 10px; }
+	.who { display: flex; gap: 14px; }
+	.person {
+		display: flex; align-items: center; gap: 14px; height: 76px; padding: 0 26px 0 8px; border-radius: 38px;
+		background: var(--soft); font-size: 28px; font-weight: 600; border: 3px solid transparent;
+	}
+	.person .badge { width: 60px; height: 60px; font-size: 28px; }
+	.person.on { border-color: var(--ink); background: var(--card); font-weight: 700; }
+	.parts { display: flex; flex-wrap: wrap; gap: 12px; }
+	.parts span {
+		height: 60px; padding: 0 24px; border-radius: 30px; background: var(--soft); font-size: 24px; font-weight: 600;
+		display: flex; align-items: center; border: 3px solid transparent;
+	}
+	.parts span.on { border-color: var(--ink); background: var(--card); font-weight: 700; }
+	.field { display: flex; gap: 14px; align-items: center; }
+	.box {
+		flex: 1; height: 72px; border: 2px solid var(--ink); border-radius: 36px; background: var(--card); display: flex;
+		align-items: center; justify-content: space-between; padding: 0 28px; font-size: 26px;
+	}
+	.box small { font-size: 20px; color: var(--dim); }
+	.box .caret { display: inline-block; width: 2px; height: 30px; background: var(--ink); vertical-align: middle; margin-left: 2px; }
+	.btn {
+		height: 72px; padding: 0 32px; border-radius: 36px; font-size: 26px; font-weight: 700; display: flex;
+		align-items: center; border: 2px solid var(--line); background: var(--card);
+	}
+	.btn.go { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+	.hint { font-size: 22px; color: var(--dim); }
+	/* Covers the keyboard's Add, which says Send here. */
+	.enter {
+		position: absolute; left: 1386px; top: 988px; width: 374px; height: 64px; border-radius: 12px; background: var(--ink);
+		color: var(--on-ink); display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700;
+	}
+
+	/* No more today: the form without the keyboard. */
+	.used {
+		margin-top: 8px; border-radius: 24px; background: var(--soft); padding: 32px 36px; display: flex; gap: 28px;
+		align-items: center;
+	}
+	.used b { font-size: 32px; display: block; }
+	.used p { font-size: 26px; color: var(--dim); margin-top: 6px; }
+
+	/* Me too: who's backing it, over the list. */
+	.scrim { position: absolute; inset: 0; background: var(--scrim); }
+	.sheet {
+		position: absolute; left: 460px; top: 260px; width: 1000px; border-radius: 32px; background: var(--card);
+		padding: 36px 40px; box-sizing: border-box; display: flex; flex-direction: column; gap: 22px;
+	}
+	.sheet .quote { font-size: 28px; color: var(--dim); }
+	.sheet .who { flex-wrap: wrap; }
+	.person.mine { opacity: 0.45; }
+	.person .tick { margin-left: 4px; color: var(--right); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<h1 class="title">A · The Ideas tab (Day theme)</h1>
+<p class="note">Ideas comes after Games in the bottom bar. On the left: send an idea or say something's broken. On the right: every idea, with who sent it, where it is in kid words over five steps, and Me too (AB#117), with the most backed first, then the newest. Me too stops once an idea is being built, and the count stays. "Not this time" is faded and goes after a week; "It's on the Hub!" goes after two. Something not sent yet says so.</p>
+<div class="frame day games" data-frame="list"></div>
+
+<h1 class="title">B · Something's broken</h1>
+<p class="note">Tapping "Something's broken" opens the form with the keyboard. Tap who you are and which part, then say what happened, 200 characters at most. Send is greyed until all three are done. Who's chosen first shows how many they have left today.</p>
+<div class="frame day keyboard">
+	<div class="form-cover"></div>
+	<div class="form">
+		<div class="top"><h2><span data-icon="broken"></span>Something's broken</h2><span class="btn">Cancel</span></div>
+		<div><p class="label">Who are you?</p><div class="who" data-who="Leo"></div></div>
+		<div><p class="label">Which part?</p><div class="parts" data-parts="Games"></div></div>
+		<div><p class="label">What happened? <span class="hint">· Leo has 2 left today</span></p>
+			<div class="field"><div class="box"><span>the number game said i was wrong but i got 605<span class="caret"></span></span><small>47 / 200</small></div><span class="btn go">Send</span></div>
+		</div>
+	</div>
+	<div class="bar-cover" style="display:none"></div>
+	<div class="enter">Send</div>
+</div>
+
+<h1 class="title">C · I've got an idea</h1>
+<p class="note">The same form without Which part. After Send it closes, and the idea is at the top of the list straight away, as "Dad's thinking about it", or "Not sent yet" if the internet's down.</p>
+<div class="frame day keyboard">
+	<div class="form-cover"></div>
+	<div class="form">
+		<div class="top"><h2><span data-icon="idea"></span>I've got an idea</h2><span class="btn">Cancel</span></div>
+		<div><p class="label">Who are you?</p><div class="who" data-who="Maya"></div></div>
+		<div><p class="label">What's your idea? <span class="hint">· Maya has 3 left today</span></p>
+			<div class="field"><div class="box"><span>a page with all our pets and when to feed them<span class="caret"></span></span><small>46 / 200</small></div><span class="btn go">Send</span></div>
+		</div>
+	</div>
+	<div class="enter">Send</div>
+</div>
+
+<h1 class="title">D · No more today</h1>
+<p class="note">Choosing someone who's sent 3 today puts this where the box would be, with no keyboard. Someone else can still be chosen. It's a new 3 at midnight.</p>
+<div class="frame day games">
+	<div class="content">
+		<div class="card" style="flex:1;display:flex;flex-direction:column;gap:24px">
+			<div class="top" style="display:flex;justify-content:space-between;align-items:center"><h2 style="display:flex;gap:16px;align-items:center"><span data-icon="idea"></span>I've got an idea</h2><span class="btn">Cancel</span></div>
+			<div><p class="label">Who are you?</p><div class="who" data-who="Leo"></div></div>
+			<div class="used">
+				<span data-icon="moon"></span>
+				<div><b>That's your 3 for today, Leo</b><p>Brilliant ideas! Save the next one for tomorrow, or tell Dad.</p></div>
+			</div>
+		</div>
+	</div>
+	<div data-bar></div>
+</div>
+
+<h1 class="title">E · Me too</h1>
+<p class="note">Tapping Me too asks who's backing it. The person who sent it can't back their own. Anyone who already has shows a tick, and tapping them again takes it back. The count on the card on the board changes with it.</p>
+<div class="frame day games" data-frame="list" data-sheet></div>
+
+<h1 class="title">F · The Ideas tab in the Evening theme</h1>
+<p class="note">The same list after sunset.</p>
+<div class="frame evening games" data-frame="list"></div>
+
+<script>
+	const people = { Ross: 'blue', Sam: 'orange', Maya: 'green', Leo: 'purple' };
+	const badge = (name, small) => `<span class="badge ${people[name]}${small ? ' small' : ''}">${name[0]}</span>`;
+	const stages = ["Dad's thinking about it", 'Planned', 'Being built', 'Nearly there', "It's on the Hub!"];
+
+	// Most backed first, then the newest. Gone and waiting ones as they'd fall.
+	const ideas = [
+		{ from: 'Leo', text: 'A game where you guess the animal from its noise', when: 'Monday', stage: 1, backers: ['Maya', 'Sam', 'Ross'] },
+		{ from: 'Maya', text: 'Show my swimming lesson on Today with a countdown', when: 'Yesterday', stage: 0, backers: ['Leo', 'Sam'] },
+		{ from: 'Sam', text: 'The number game said I was wrong but I got 605', when: 'Tuesday', stage: 2, part: 'Games', backers: ['Leo'] },
+		{ from: 'Leo', text: 'Stars in the sky on the Evening theme', when: 'Last week', stage: 3, backers: [] },
+		{ from: 'Maya', text: 'Count down the days to my birthday', when: '9 days ago', stage: 4, backers: ['Leo'] },
+		{ from: 'Leo', text: 'Make the Hub play music really loud at night', when: 'Saturday', gone: true, backers: [] },
+		{ from: 'Maya', text: 'A page with all our pets and when to feed them', when: 'Just now', waiting: true, backers: [] }
+	];
+
+	const row = (i) => {
+		const extra = [i.part && `<span class="chip broken">Broken · ${i.part}</span>`, i.waiting && '<span class="chip waiting">Not sent yet</span>']
+			.filter(Boolean).join('');
+		const where = i.gone
+			? `<div class="where gone"><b>Not this time</b></div>`
+			: i.waiting
+				? `<div class="where"></div>`
+				: `<div class="where"><b>${stages[i.stage]}</b><div class="steps${i.stage === 4 ? ' shipped' : ''}">${[0, 1, 2, 3, 4].map((s) => `<i class="${s <= i.stage ? 'done' : ''}"></i>`).join('')}</div></div>`;
+		const canBack = !i.gone && !i.waiting && i.stage <= 1;
+		const backers = `<span class="backers">${i.backers.map((b) => badge(b, true)).join('')}</span>`;
+		const metoo = canBack
+			? `<div class="metoo">${backers}<button>Me too · ${i.backers.length}</button></div>`
+			: `<div class="metoo">${backers}${i.backers.length ? `<span class="count">${i.backers.length}</span>` : ''}</div>`;
+		return `<div class="idea-row${i.gone ? ' gone' : ''}">${badge(i.from)}<div class="words"><b>${i.text}</b><p>${i.from} · ${i.when}${extra}</p></div>${where}${metoo}</div>`;
+	};
+
+	const icons = {
+		idea: (c = 'currentColor') => `<svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3Z"/></svg>`,
+		broken: (c = 'currentColor') => `<svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L3 17.8V21h3.2l6.3-6.3a4 4 0 0 0 5.2-5.4l-2.6 2.6-2.4-.6-.6-2.4 2.6-2.6Z"/></svg>`,
+		moon: (c = 'currentColor') => `<svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>`
+	};
+
+	const bar = () => `<div class="bar-cover"></div><div class="bar">${['Today', 'Day', 'Week', 'Shopping', 'To-dos', 'Chores', 'Energy', 'Games', 'Ideas']
+		.map((l) => `<span class="${l === 'Ideas' ? 'on' : ''}">${l}</span>`).join('')}<span class="cog"><svg viewBox="0 0 24 24" width="34" height="34"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.830 2.83l-.06-.06a1.650 1.650 0 0 0-1.82-.33 1.650 1.650 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg></span></div>`;
+
+	const list = () => `<div class="content">
+		<div class="card send">
+			<h2>Ideas</h2>
+			<p>Got an idea for the Hub, or found something that doesn't work?</p>
+			<div class="big idea">${icons.idea()}<span>I've got an idea<small>Something new for the Hub</small></span></div>
+			<div class="big broken">${icons.broken()}<span>Something's broken<small>It doesn't work right</small></span></div>
+			<p style="margin-top:auto">3 a day each. Dad reads every one.</p>
+		</div>
+		<div class="card list">
+			<header><h2>Everyone's ideas</h2><p>Most wanted first</p></header>
+			${ideas.map(row).join('')}
+		</div>
+	</div>`;
+
+	const sheet = () => `<div class="scrim"></div><div class="sheet">
+		<h2>Who wants this too?</h2>
+		<p class="quote">"A game where you guess the animal from its noise" · Leo's idea</p>
+		<div class="who">
+			<span class="person">${badge('Ross')}Ross <span class="tick">✓</span></span>
+			<span class="person">${badge('Sam')}Sam <span class="tick">✓</span></span>
+			<span class="person">${badge('Maya')}Maya <span class="tick">✓</span></span>
+			<span class="person mine">${badge('Leo')}Leo · your idea</span>
+		</div>
+		<div style="display:flex;justify-content:flex-end"><span class="btn">Done</span></div>
+	</div>`;
+
+	document.querySelectorAll('[data-frame="list"]').forEach((f) => {
+		f.innerHTML = list() + bar() + (f.hasAttribute('data-sheet') ? sheet() : '');
+	});
+	document.querySelectorAll('[data-bar]').forEach((b) => (b.outerHTML = bar()));
+	document.querySelectorAll('[data-who]').forEach((w) => {
+		w.innerHTML = Object.keys(people).map((n) => `<span class="person${n === w.dataset.who ? ' on' : ''}">${badge(n)}${n}</span>`).join('');
+	});
+	document.querySelectorAll('[data-parts]').forEach((p) => {
+		p.innerHTML = ['Today', 'Day', 'Week', 'Shopping', 'To-dos', 'Chores', 'Energy', 'Games', 'Something else']
+			.map((n) => `<span class="${n === p.dataset.parts ? 'on' : ''}">${n}</span>`).join('');
+	});
+	document.querySelectorAll('[data-icon]').forEach((s) => (s.outerHTML = icons[s.dataset.icon]()));
+</script>
+</body>
+</html>
