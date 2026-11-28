@@ -53,6 +53,7 @@ let sockets: FakeSocket[];
 let urls: number;
 let failGetLive: boolean;
 let messages: [string, number][];
+let connects: number;
 let live: Live;
 let logs: string[];
 
@@ -67,6 +68,7 @@ function start() {
 	live = connectLive({
 		request,
 		onMessage: (list, seq) => messages.push([list, seq]),
+		onConnected: () => connects++,
 		connect: (url) => {
 			const socket = new FakeSocket(url);
 			sockets.push(socket);
@@ -83,7 +85,7 @@ const openSockets = () => sockets.filter((s) => !s.closed).length;
 beforeEach(() => {
 	vi.useFakeTimers();
 	vi.setSystemTime(new Date('2026-11-26T09:00:00Z'));
-	[sockets, urls, failGetLive, messages, logs] = [[], 0, false, [], []];
+	[sockets, urls, failGetLive, messages, connects, logs] = [[], 0, false, [], 0, []];
 	const log = (...args: unknown[]) => void logs.push(args.join(' '));
 	vi.spyOn(console, 'log').mockImplementation(log);
 	vi.spyOn(console, 'error').mockImplementation(log);
@@ -164,6 +166,19 @@ describe('connectLive', () => {
 		expect(logs.filter((l) => l.includes('no URL from GET /live'))).toHaveLength(3);
 	});
 
+	it('says each time it connects, after every reconnect too, so changes queued meanwhile can go (AB#108)', async () => {
+		start();
+		await settle();
+		expect(connects).toBe(0);
+		latest().open();
+		expect(connects).toBe(1);
+		latest().drop();
+		await vi.advanceTimersByTimeAsync(FIRST_RETRY_MS);
+		expect(connects).toBe(1);
+		latest().open();
+		expect(connects).toBe(2);
+	});
+
 	it('passes on each list’s messages, and ignores anything else', async () => {
 		start();
 		await settle();
@@ -207,7 +222,7 @@ describe('connectLive', () => {
 
 describe('startLiveUpdates', () => {
 	it('doesn’t connect without the backend’s settings, and says it isn’t connected', () => {
-		expect(startLiveUpdates(() => {})).toBeNull();
+		expect(startLiveUpdates({ onMessage: () => {} })).toBeNull();
 		expect(liveConnected()).toBe(false);
 	});
 
@@ -217,7 +232,7 @@ describe('startLiveUpdates', () => {
 			asked++;
 			throw new Error('fetch failed');
 		}) as unknown as BackendRequest;
-		startLiveUpdates(() => {}, { request });
+		startLiveUpdates({ onMessage: () => {} }, { request });
 		await vi.advanceTimersByTimeAsync(0);
 		expect(asked).toBe(1);
 

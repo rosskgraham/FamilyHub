@@ -24,6 +24,8 @@ export interface LiveOptions {
 	request: BackendRequest;
 	/** Told the list each message names, and its sequence number. */
 	onMessage: (list: string, seq: number) => void;
+	/** Told each time the connection opens: the first time, and after every reconnect. */
+	onConnected?: () => void;
 	connect?: (url: string) => LiveSocket;
 }
 
@@ -89,6 +91,7 @@ export function connectLive(options: LiveOptions): Live {
 			openedAt = Date.now();
 			open = true;
 			console.log('Live updates connected');
+			options.onConnected?.();
 		};
 		ws.onmessage = ({ data }) => {
 			const message = parse(data);
@@ -129,12 +132,12 @@ let current: Live | null = null;
 
 /** Starts the Hub's live connection once it has the backend's settings. Without them, it doesn't connect. */
 export function startLiveUpdates(
-	onMessage: LiveOptions['onMessage'],
+	handlers: Pick<LiveOptions, 'onMessage' | 'onConnected'>,
 	api: { request: BackendRequest } | null = backend()
 ): Live | null {
 	if (!api) return null;
 	if (!current) {
-		current = connectLive({ request: api.request, onMessage });
+		current = connectLive({ request: api.request, ...handlers });
 		// Its socket and reconnect timer would keep Node running after the server has closed (AB#41).
 		const live = current;
 		process.once('sveltekit:shutdown', () => live.stop());

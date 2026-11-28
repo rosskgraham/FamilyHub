@@ -14,7 +14,8 @@ export const shopping = createBackendFeed({
 	api: () => backend()?.request ?? null,
 	sample: fakeShopping,
 	sampleOnly: CALENDAR_SOURCE === 'sample',
-	live: liveConnected
+	live: liveConnected,
+	sent: () => announceListChanged('shopping')
 });
 
 export const loadShopping = (): Promise<ShoppingResult> => shopping.load();
@@ -30,4 +31,11 @@ export async function onLiveMessage(list: string): Promise<void> {
 	if (list !== 'shopping' || !shoppingIsLive()) return;
 	await shopping.refresh();
 	announceListChanged('shopping');
+}
+
+/** Live updates reconnected, such as after the internet was out, so changes queued meanwhile go now (AB#108). */
+export function onLiveConnected(): void {
+	shopping
+		.sendWaiting()
+		.catch((e) => console.error('Shopping list: couldn’t send what was waiting:', e instanceof Error ? e.message : e));
 }
