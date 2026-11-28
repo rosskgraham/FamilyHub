@@ -122,5 +122,5 @@
 
 - name: Switch Energy-Efficient Ethernet off now
   ansible.builtin.command: ethtool --set-eee eth0 eee off
-  when: hub_eee.stdout is search('EEE status: enabled')
+  when: "hub_eee.stdout is search('EEE status: enabled')"
   changed_when: true
