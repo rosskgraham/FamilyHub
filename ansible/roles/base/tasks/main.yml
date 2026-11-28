@@ -87,3 +87,40 @@
   ansible.builtin.file:
     path: /etc/NetworkManager/system-connections/familyhub-wifi.nmconnection
     state: absent
+
+# Energy-Efficient Ethernet stays off on the cable (AB#62): with it on, the Pi lost every packet for about 2
+# seconds, about every 2 minutes while idle, and every request the Hub had under way timed out at once.
+- name: Install ethtool, which switches Energy-Efficient Ethernet off
+  ansible.builtin.apt:
+    name: ethtool
+    state: present
+
+- name: Create the folder for NetworkManager's scripts
+  ansible.builtin.file:
+    path: /etc/NetworkManager/dispatcher.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+# A restart turns Energy-Efficient Ethernet back on, so it's switched off each time the cable comes up.
+- name: Switch Energy-Efficient Ethernet off whenever the cable comes up
+  ansible.builtin.copy:
+    src: eee-off
+    dest: /etc/NetworkManager/dispatcher.d/50-familyhub-eee-off
+    owner: root
+    group: root
+    mode: "0755"
+
+# And now, so it needn't wait for the next time the cable comes up. The tests' stand-in has no EEE to switch.
+- name: Read whether Energy-Efficient Ethernet is on
+  ansible.builtin.command: ethtool --show-eee eth0
+  register: hub_eee
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Switch Energy-Efficient Ethernet off now
+  ansible.builtin.command: ethtool --set-eee eth0 eee off
+  when: hub_eee.stdout is search('EEE status: enabled')
+  changed_when: true

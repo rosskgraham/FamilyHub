@@ -271,6 +271,45 @@
       vars:
         lines: "{{ (boot_config.content | b64decode).splitlines() }}"
 
+    - name: Read NetworkManager's script that switches Energy-Efficient Ethernet off
+      ansible.builtin.stat:
+        path: /etc/NetworkManager/dispatcher.d/50-familyhub-eee-off
+      register: eee_script
+
+    - name: Look for ethtool
+      ansible.builtin.command: sh -c 'command -v ethtool'
+      register: ethtool_path
+      changed_when: false
+
+    # NetworkManager only runs scripts that are root's and that no one else can change.
+    - name: Check ethtool is installed and NetworkManager will run the script
+      ansible.builtin.assert:
+        that:
+          - ethtool_path.stdout != ''
+          - eee_script.stat.exists
+          - eee_script.stat.pw_name == 'root'
+          - eee_script.stat.mode == '0755'
+
+    # A pretend ethtool that says EEE is on and writes down what it's asked to change.
+    - name: Run the script as NetworkManager would, with a pretend ethtool
+      ansible.builtin.shell: |
+        set -eu
+        dir=$(mktemp -d)
+        printf '#!/bin/sh\ncase "$1" in --show-eee) echo "EEE status: enabled - active" ;; *) echo "$@" >> %s/asked ;; esac\n' "$dir" > "$dir/ethtool"
+        chmod +x "$dir/ethtool"
+        for event in "wlan0 up" "eth0 down" "eth0 up"; do
+          PATH="$dir:$PATH" /etc/NetworkManager/dispatcher.d/50-familyhub-eee-off $event
+        done
+        cat "$dir/asked"
+        rm -r "$dir"
+      register: eee_run
+      changed_when: false
+
+    - name: Check it switches EEE off only when eth0 comes up
+      ansible.builtin.assert:
+        that:
+          - eee_run.stdout_lines == ['--set-eee eth0 eee off']
+
     - name: Read the journal's settings
       ansible.builtin.slurp:
         src: /etc/systemd/journald.conf.d/familyhub.conf
