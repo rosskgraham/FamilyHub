@@ -1,6 +1,7 @@
 // The Hub's Shopping list, from the family app's backend since the switch from Google Tasks (AB#103): kept fresh in the
 // background, shown from disk when the backend can't be reached, and changed at once or queued until it can be.
-import type { ShoppingItem } from '#lib/shopping.ts';
+import { matchName, MOST_REGULARS, type Regulars, type ShoppingItem } from '#lib/shopping.ts';
+import { randomUUID } from 'node:crypto';
 import { BackendRequestFailed, type BackendRequest } from '../backend/auth.ts';
 import { orElse } from '../fallback.ts';
 import { readJson, writeJson } from '../store.ts';
@@ -13,6 +14,8 @@ const NAME = 'Shopping list';
 // Files in the Hub's data folder, apart from the Google Tasks list's, so switching back and forth never mixes them.
 const CACHE_FILE = 'shopping-backend-cache.json';
 const QUEUE_FILE = 'shopping-backend-queue.json';
+// The last regulars the backend gave, so the panel still has them offline (AB#110).
+const REGULARS_FILE = 'shopping-backend-regulars.json';
 // Changes at the Hub refresh the list straight away, and live updates bring changes made on phones. The catch-up is
 // the safety net for a missed message, and every minute while the live connection is down.
 const REFRESH_MS = 60_000;
@@ -57,7 +60,7 @@ export async function sendOperations(
 				await post(request, [op]);
 			} catch (e) {
 				if (turnedDown(e)) {
-					console.error(`${name} change dropped: ${op.type} ${op.item_id}:`, why(e));
+					console.error(`${name} change dropped: ${op.type} ${'item_id' in op ? op.item_id : op.name}:`, why(e));
 					continue;
 				}
 				console.error(`${name} still offline:`, why(e));
@@ -122,6 +125,25 @@ export interface BackendFeed extends Feed<{ text: string }, ShoppingItem> {
 	refresh(): Promise<void>;
 	/** Sends any changes still waiting, such as when live updates reconnect. Asks for nothing if none are. */
 	sendWaiting(): Promise<void>;
+	/** The regulars to offer: the backend's, or the last it gave while it can't be reached, minus what's on the list. */
+	regulars(): Promise<Regulars>;
+	/** Adds each name as its own item, in one go: 200 once the backend has them, 202 while they wait. */
+	addAll(names: string[]): Promise<200 | 202>;
+	/** Stops a name being offered as a regular until it's added again: 200 or 202, as above. */
+	dontSuggest(name: string): Promise<200 | 202>;
+}
+
+/**
+ * The regulars worth offering, at most MOST_REGULARS: not on the list, ticked off or not, and not stopped by a
+ * dont_suggest still waiting to be sent. The backend leaves those out too, but the Hub's list may be newer, or the
+ * regulars from disk older.
+ */
+export function offerable(names: string[], items: ShoppingItem[], waiting: Operation[]): string[] {
+	const left = new Set([
+		...items.map((i) => matchName(i.text)),
+		...waiting.flatMap((op) => (op.type === 'dont_suggest' ? [matchName(op.name)] : []))
+	]);
+	return names.filter((name) => !left.has(matchName(name))).slice(0, MOST_REGULARS);
 }
 
 export function createBackendFeed(options: BackendFeedOptions): BackendFeed {
@@ -179,6 +201,37 @@ export function createBackendFeed(options: BackendFeedOptions): BackendFeed {
 		return request && { request, sync: listSync(request) };
 	}
 
+	/** Sends the operations behind any still waiting, and refreshes the list once they're in: 200, or 202 if they wait. */
+	async function applyOperations(live: NonNullable<ReturnType<typeof current>>, operations: Operation[]) {
+		const waiting = await send(live.request, operations);
+		if (waiting.length > 0) return 202;
+		// So the page the screen loads next shows the change.
+		await live.sync.refresh({ fresh: true });
+		return 200;
+	}
+
+	let regularsWritten: string | null = null;
+	/** The backend's regulars, kept on disk when they change, or what's on disk if the backend can't be reached. */
+	async function fetchRegulars(request: BackendRequest): Promise<{ names: string[]; offline: boolean }> {
+		try {
+			const { regulars } = await request<{ regulars: { name: string }[] }>(
+				'GET',
+				`/lists/shopping/regulars?limit=${MOST_REGULARS}`
+			);
+			const names = regulars.map((r) => r.name);
+			const json = JSON.stringify(names);
+			// Only written when they change, to spare the Pi's SD card.
+			if (json !== regularsWritten) {
+				await writeJson(REGULARS_FILE, names, options.dir);
+				regularsWritten = json;
+			}
+			return { names, offline: false };
+		} catch (e) {
+			console.error(`${NAME}: couldn't get the regulars:`, why(e));
+			return { names: (await readJson<string[]>(REGULARS_FILE, options.dir)) ?? [], offline: true };
+		}
+	}
+
 	return {
 		load: () =>
 			orElse(
@@ -205,11 +258,42 @@ export function createBackendFeed(options: BackendFeedOptions): BackendFeed {
 				return 200;
 			}
 			// Behind any changes still waiting, so they reach the backend in the order they were made.
-			const waiting = await send(live.request, [toOperation(change)]);
-			if (waiting.length > 0) return 202;
-			// So the page the screen loads next shows the change.
-			await live.sync.refresh({ fresh: true });
-			return 200;
+			return applyOperations(live, [toOperation(change)]);
+		},
+
+		async regulars() {
+			const live = current();
+			if (!live) {
+				const [names, items] = await Promise.all([options.sample.regulars(), options.sample.list()]);
+				return { names: offerable(names, items, []), offline: false };
+			}
+			const [{ names, offline }, { value }, waiting] = await Promise.all([
+				fetchRegulars(live.request),
+				live.sync.read(),
+				queue.read()
+			]);
+			return { names: offerable(names, withOperations(value ?? [], waiting), waiting), offline };
+		},
+
+		async addAll(names) {
+			const live = current();
+			if (!live) {
+				for (const text of names) await options.sample.add({ text });
+				return 200;
+			}
+			return applyOperations(
+				live,
+				names.map((text) => ({ id: randomUUID(), type: 'add', item_id: randomUUID(), text }))
+			);
+		},
+
+		async dontSuggest(name) {
+			const live = current();
+			if (!live) {
+				await options.sample.dontSuggest(name);
+				return 200;
+			}
+			return applyOperations(live, [{ id: randomUUID(), type: 'dont_suggest', name }]);
 		},
 
 		async refresh() {

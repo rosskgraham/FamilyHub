@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { sendChange } from '#lib/quick-action.ts';
+	import RegularsPanel from './RegularsPanel.svelte';
 	import type { ShoppingChange, ShoppingItem, ShoppingStatus } from '#lib/shopping.ts';
 
 	let {
@@ -30,6 +31,19 @@
 	let removing: string | null = $state(null);
 	let adding = $state(false);
 	let draft = $state('');
+	let choosingRegulars = $state(false);
+	// Says how many regulars went on, for a few seconds after the panel closes.
+	let addedNote: string | null = $state(null);
+	let noteTimer: ReturnType<typeof setTimeout> | undefined;
+	const NOTE_MS = 4000;
+
+	function regularsClosed(added: number) {
+		choosingRegulars = false;
+		if (added === 0) return;
+		addedNote = `Added ${added} to Shopping`;
+		clearTimeout(noteTimer);
+		noteTimer = setTimeout(() => (addedNote = null), NOTE_MS);
+	}
 
 	const shown = $derived([
 		...added.map((a) => ({ id: a.id, text: a.text, tickedOff: false, pending: true })),
@@ -111,6 +125,7 @@
 	</div>
 
 	{#if problem}<p class="message" role="alert">{problem}</p>{/if}
+	{#if addedNote}<p class="note" role="status">{addedNote}</p>{/if}
 
 	<ul
 		style:grid-template-rows="repeat({rows}, {ROW}px)"
@@ -169,21 +184,42 @@
 			<button class="quiet" type="button" onclick={() => ((adding = false), (draft = ''))}>Cancel</button>
 		</form>
 	{:else}
-		<button class="add-button" onclick={() => (adding = true)}>
-			<svg
-				width="26"
-				height="26"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2.6"
-				stroke-linecap="round"
-				aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg
-			>
-			Add item
-		</button>
+		<div class="actions">
+			<button class="add-button" onclick={() => (adding = true)}>
+				<svg
+					width="26"
+					height="26"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2.6"
+					stroke-linecap="round"
+					aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg
+				>
+				Add item
+			</button>
+			<button class="regulars-button" onclick={() => (choosingRegulars = true)}>
+				<svg
+					width="28"
+					height="28"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2.2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					aria-hidden="true"
+					><path d="M17 2l4 4-4 4" /><path d="M3 11V9a3 3 0 0 1 3-3h15" /><path d="M7 22l-4-4 4-4" /><path
+						d="M21 13v2a3 3 0 0 1-3 3H3"
+					/></svg
+				>
+				Regulars
+			</button>
+		</div>
 	{/if}
 </section>
+
+{#if choosingRegulars}<RegularsPanel onclose={regularsClosed} />{/if}
 
 <style>
 	.shopping {
@@ -221,7 +257,11 @@
 		background: var(--warn-bg);
 		color: var(--warn-fg);
 	}
-	.message {
+	.note {
+		background: var(--soft);
+	}
+	.message,
+	.note {
 		flex: none;
 		margin: 0;
 		padding: 10px 16px;
@@ -309,9 +349,30 @@
 	}
 
 	.add,
-	.add-button {
+	.actions {
 		height: 72px;
 		flex: none;
+	}
+	.actions {
+		display: flex;
+		gap: 16px;
+	}
+	.add-button {
+		flex: 1;
+	}
+	.regulars-button {
+		width: 420px;
+		box-sizing: border-box;
+		border: 0;
+		border-radius: 22px;
+		background: var(--ink);
+		color: var(--on-ink);
+		font-size: 26px;
+		font-weight: 700;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 12px;
 	}
 	.add {
 		display: flex;
