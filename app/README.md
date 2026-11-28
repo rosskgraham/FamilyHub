@@ -123,6 +123,14 @@ With the same settings, the Shopping Section and Today card show the backend's S
 - The last list is kept in `app/data/shopping-backend-cache.json`, apart from the Google one's files.
 - **Regulars** (AB#110): the Regulars button beside Add item opens a panel of up to 24 regulars from `GET /lists/shopping/regulars`, leaving out what's on the Hub's list, queued adds included. Ticked ones go as one batch of adds, and a long press sends `dont_suggest` after asking. Both go through the queue, so they work offline. The last regulars are kept in `app/data/shopping-backend-regulars.json`, written only when they change, and shown while the backend can't be reached. The sample list has sample regulars.
 
+### Meals
+
+The Meals Section (AB#98) shows the backend's saved meals ([ADR 0017](../docs/adr/0017-meals-and-the-plan-in-the-backend.md)) A–Z, each with its ingredients, to add, edit and remove in a panel over the Section with the on-screen keyboard. Return on the last ingredient opens another, so a list can be typed in one go. Without the backend's settings, or with `CALENDAR_SOURCE=sample`, it's sample meals, kept in memory.
+
+- It works like the Shopping list: `add_meal`, `edit_meal` and `remove_meal` go to `POST /meals/operations`, with ids made at the Hub. While the backend can't be reached they wait in `app/data/meals-backend-queue.json`, the meal shows "Saving…", and they're tried again every 20 seconds and when live updates reconnect. The last meals and plan are kept in `app/data/meals-backend-cache.json`.
+- A `meals` live update refreshes them, so a meal added elsewhere shows without a reload.
+- Remove meal asks first and says which day it's planned for, if any, as that day will show as empty.
+
 ## Check types and run the tests
 
 ```
