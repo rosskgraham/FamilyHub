@@ -5,6 +5,7 @@
     uv run python scripts/shopping.py hub check        # the same, signed in as the Hub
     uv run python scripts/shopping.py hub live [minutes]  # listens for live updates while making a change
     uv run python scripts/shopping.py hub clear        # removes every item (AB#103)
+    uv run python scripts/shopping.py hub regulars [N]  # the regulars, best first, 24 unless N (AB#109)
 
 list shows the Shopping list as a device starting from nothing would get it. check runs through every
 operation, sends one twice, and sends 10 adds at once, saying what it expected and what it got. Its items are
@@ -53,6 +54,12 @@ class Api:
         status, body = self.call("GET", f"/lists/shopping/items?after={after}")
         if status != 200:
             sys.exit(f"GET items: {status} {body}")
+        return body
+
+    def regulars(self, limit: int) -> dict[str, Any]:
+        status, body = self.call("GET", f"/lists/shopping/regulars?limit={limit}")
+        if status != 200:
+            sys.exit(f"GET regulars: {status} {body}")
         return body
 
 
@@ -157,10 +164,15 @@ def clear(api: Api) -> int:
     return len(item_ids)
 
 
+def regulars(api: Api, limit: int = 24) -> list[str]:
+    """The regulars' names, best first, as the Hub would offer them."""
+    return [regular["name"] for regular in api.regulars(limit)["regulars"]]
+
+
 def main() -> None:
     who, command = (sys.argv[1:3] + ["", ""])[:2]
-    if who not in ("member", "hub") or command not in ("list", "check", "live", "clear"):
-        sys.exit("Usage: shopping.py member|hub list|check|live [minutes]|clear")
+    if who not in ("member", "hub") or command not in ("list", "check", "live", "clear", "regulars"):
+        sys.exit("Usage: shopping.py member|hub list|check|live [minutes]|clear|regulars [N]")
     tenant_id = setting("FAMILYHUB_ENTRA_TENANT_ID")
     authority = f"https://{setting('FAMILYHUB_ENTRA_SUBDOMAIN')}.ciamlogin.com/{tenant_id}"
     api_client_id = setting("FAMILYHUB_API_CLIENT_ID")
@@ -178,6 +190,9 @@ def main() -> None:
         check(api)
     elif command == "clear":
         print(f"Removed {clear(api)} items.")
+    elif command == "regulars":
+        names = regulars(api, int(sys.argv[3]) if len(sys.argv) > 3 else 24)
+        print("\n".join(names) if names else "No regulars yet.")
     else:
         live(api, sign_in, float(sys.argv[3]) if len(sys.argv) > 3 else 0)
     sys.exit(1 if failures else 0)

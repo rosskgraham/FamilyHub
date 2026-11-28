@@ -36,6 +36,12 @@ ATTEMPTS = 10
 # The most item names a shop's order keeps. Placing one more drops the name placed longest ago.
 MOST_PLACED = 500
 
+# Regulars (#109): how far back purchases count, and how long until one counts half as much.
+REGULARS_LOOK_BACK = timedelta(weeks=12)
+REGULARS_HALF_LIFE = timedelta(weeks=3)
+# The most regulars one request can ask for.
+MOST_REGULARS = 50
+
 ItemText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 ShopName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=50)]
 
@@ -86,9 +92,17 @@ class Place(BaseModel):
     after: ItemText | None = None
 
 
+class DontSuggest(BaseModel):
+    """Stops a name being suggested as a regular, for the whole Household, until it's added again (#109)."""
+
+    id: UUID
+    type: Literal["dont_suggest"]
+    name: ItemText
+
+
 ItemOperation = Add | Tick | Untick | Rename | Remove
 ShopOperation = AddShop | Place
-Operation = Annotated[ItemOperation | ShopOperation, Field(discriminator="type")]
+Operation = Annotated[ItemOperation | ShopOperation | DontSuggest, Field(discriminator="type")]
 
 
 class Operations(BaseModel):
@@ -146,7 +160,7 @@ class ShopShown(BaseModel):
 
 def match_name(text: str) -> str:
     """The form item names are matched in, so "Milk", " milk " and "Milk." are one name. Plurals aren't
-    merged: "apple" and "apples" are two. Recent items (#15) match names the same way."""
+    merged: "apple" and "apples" are two. Regulars (#109) match names the same way."""
     return " ".join(text.lower().split()).rstrip(string.punctuation).rstrip()
 
 
@@ -185,6 +199,11 @@ class Partition(Protocol):
 
     def shops(self, after: int) -> list[dict[str, Any]]:
         """At least every shop changed after sequence number after."""
+        ...
+
+    def history(self, since: str, shown_since: str) -> list[dict[str, Any]]:
+        """For regulars, in one read: at least the log's operations at or after since and every dont_suggest,
+        and the items still to get or ticked off after shown_since."""
         ...
 
 
@@ -260,6 +279,11 @@ def shown(item: Item, now: datetime) -> bool:
 
 
 @dataclass(frozen=True)
+class Regular:
+    name: str
+
+
+@dataclass(frozen=True)
 class CaughtUp:
     items: list[Item]
     shops: list[ShopShown]
@@ -302,7 +326,13 @@ class Lists:
             counter = partition.read(_COUNTER)
             seq = (counter["seq"] if counter is not None else 0) + 1
             now = self._clock()
-            if isinstance(operation, AddShop | Place):
+            if isinstance(operation, DontSuggest):
+                # Nothing but the log: regulars are worked out from it.
+                changed = True
+                logged_doc = _dont_suggest_doc(list_id, operation, seq, now, by)
+                new_doc = None
+                stored = None
+            elif isinstance(operation, AddShop | Place):
                 stored = partition.read(_shop_key(operation.shop_id))
                 shop = apply_to_shop(_shop_from(stored) if stored is not None else None, operation, seq)
                 changed = shop is not None
@@ -353,6 +383,82 @@ class Lists:
             if shop.seq > after
         ]
         return CaughtUp(items=sorted(items, key=lambda item: item.seq), shops=shown_shops, seq=seq)
+
+    def regulars(self, list_id: str, limit: int) -> list[Regular]:
+        """The names bought most, and most recently, best first, worked out from the log (#109)."""
+        now = self._clock()
+        docs = self._store.partition(list_id).history(
+            _timestamp(now - REGULARS_LOOK_BACK), _timestamp(now - TICKED_OFF_SHOWN_FOR)
+        )
+        return regulars(docs, now, limit)
+
+
+@dataclass
+class _Bought:
+    """One item, as the log tells it."""
+
+    text: str | None = None
+    added_at: datetime | None = None
+    ticked_off_at: datetime | None = None
+    removed: bool = False
+
+
+def regulars(docs: Sequence[dict[str, Any]], now: datetime, limit: int) -> list[Regular]:
+    """The regulars from a partition's history: each item counts once, dated by its tick-off, or its add if it
+    was never ticked off, and weighs half as much for every REGULARS_HALF_LIFE since. Removed items don't
+    count. Names still on the list, ticked off in the last few minutes, or marked dont_suggest since they were
+    last added are left out."""
+    since = now - REGULARS_LOOK_BACK
+    log = sorted((doc for doc in docs if doc["kind"] == "op" and doc["changed"]), key=lambda doc: doc["seq"])
+
+    bought: dict[str, _Bought] = {}
+    last_added: dict[str, int] = {}
+    dont_suggest: dict[str, int] = {}
+    for doc in log:
+        if doc["type"] == "dont_suggest":
+            dont_suggest[match_name(doc["name"])] = doc["seq"]
+            continue
+        if "itemId" not in doc:
+            continue
+        item = bought.setdefault(doc["itemId"], _Bought())
+        at = datetime.fromisoformat(doc["at"])
+        item.text = doc["text"] or item.text
+        match doc["type"]:
+            case "add":
+                item.added_at = at
+                last_added[match_name(doc["text"])] = doc["seq"]
+            case "tick":
+                item.ticked_off_at = at
+            case "untick":
+                item.ticked_off_at = None
+            case "remove":
+                item.removed = True
+
+    left_out = {name for name, seq in dont_suggest.items() if seq > last_added.get(name, 0)}
+    shown_since = now - TICKED_OFF_SHOWN_FOR
+    for doc in docs:
+        if doc["kind"] == "item" and not doc["removed"]:
+            ticked_off_at = doc.get("tickedOffAt")
+            if not doc["tickedOff"] or (
+                ticked_off_at and datetime.fromisoformat(ticked_off_at) > shown_since
+            ):
+                left_out.add(match_name(doc["text"]))
+
+    scores: dict[str, float] = {}
+    spelling: dict[str, tuple[datetime, str]] = {}
+    for item in bought.values():
+        when = item.ticked_off_at or item.added_at
+        if item.removed or item.text is None or when is None or when < since:
+            continue
+        name = match_name(item.text)
+        if not name or name in left_out:
+            continue
+        scores[name] = scores.get(name, 0.0) + 0.5 ** ((now - when) / REGULARS_HALF_LIFE)
+        if name not in spelling or when > spelling[name][0]:
+            spelling[name] = (when, item.text)
+
+    best = sorted(scores, key=lambda name: (-scores[name], name))
+    return [Regular(name=spelling[name][1]) for name in best[:limit]]
 
 
 # Documents in a list's partition: one counter, an item per item, and the log of operations. Ids are prefixed,
@@ -418,7 +524,7 @@ def _item_doc(
 def _operation_doc(
     list_id: str, operation: ItemOperation, seq: int, now: datetime, by: str, item: Item | None, changed: bool
 ) -> dict[str, Any]:
-    """The operation in the log. It keeps the item's text as it was after the operation, so recent items (#15)
+    """The operation in the log. It keeps the item's text as it was after the operation, so regulars (#109)
     can count what was bought without reading every item."""
     return {
         "id": _operation_key(operation.id),
@@ -430,6 +536,24 @@ def _operation_doc(
         "text": item.text if item is not None else None,
         "seq": seq,
         "changed": changed,
+        "at": _timestamp(now),
+        "sentBy": by,
+    }
+
+
+def _dont_suggest_doc(
+    list_id: str, operation: DontSuggest, seq: int, now: datetime, by: str
+) -> dict[str, Any]:
+    """A dont_suggest in the log, with the name as sent."""
+    return {
+        "id": _operation_key(operation.id),
+        "listId": list_id,
+        "kind": "op",
+        "opId": str(operation.id),
+        "type": operation.type,
+        "name": operation.name,
+        "seq": seq,
+        "changed": True,
         "at": _timestamp(now),
         "sentBy": by,
     }

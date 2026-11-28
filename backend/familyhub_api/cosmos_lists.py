@@ -93,6 +93,23 @@ class CosmosPartition:
             self._container.query_items(query=query, parameters=parameters, partition_key=self._list_id)
         )
 
+    def history(self, since: str, shown_since: str) -> list[dict[str, Any]]:
+        # One query for regulars (#109): the items' operations in the last few weeks, every dont_suggest, and
+        # what's on the list now. Shops' operations aren't needed.
+        query = (
+            "SELECT * FROM c WHERE (c.kind = 'op' AND c.changed = true"
+            " AND ((c.at >= @since AND IS_DEFINED(c.itemId)) OR c.type = 'dont_suggest'))"
+            " OR (c.kind = 'item' AND c.removed = false"
+            " AND (c.tickedOff = false OR c.tickedOffAt > @shownSince))"
+        )
+        parameters: list[dict[str, Any]] = [
+            {"name": "@since", "value": since},
+            {"name": "@shownSince", "value": shown_since},
+        ]
+        return list(
+            self._container.query_items(query=query, parameters=parameters, partition_key=self._list_id)
+        )
+
     def shops(self, after: int) -> list[dict[str, Any]]:
         query = "SELECT * FROM c WHERE c.kind = 'shop' AND c.seq > @after"
         parameters: list[dict[str, Any]] = [{"name": "@after", "value": after}]
