@@ -138,3 +138,12 @@ def test_regulars_read_the_recent_log_every_dont_suggest_and_the_list_in_one_que
         {"name": "@since", "value": "2026-08-30T09:00:00.000000Z"},
         {"name": "@shownSince", "value": "2026-11-22T08:50:00.000000Z"},
     ]
+
+
+def test_meals_and_plan_days_changed_since_a_number_are_read_by_kind(container: FakeContainer) -> None:
+    partition(container).changed("meal", 4)
+
+    [query] = container.queries
+    assert query["partition_key"] == "shopping"
+    assert query["query"] == "SELECT * FROM c WHERE c.kind = @kind AND c.seq > @after"
+    assert query["parameters"] == [{"name": "@kind", "value": "meal"}, {"name": "@after", "value": 4}]
