@@ -118,7 +118,7 @@ With the same settings, the Shopping Section and Today card show the backend's S
 
 - The list is all of `GET /lists/shopping/items?after=0`, asked for straight after a change at the Hub or a live update, and otherwise every 10 minutes while the live connection is open, or every minute while it isn't: the items still to get, newest first, then those ticked off in the last 10 minutes.
 - Each add, tick, untick and remove is one operation to `POST /lists/shopping/operations`. The Hub makes the operation's id, and an added item's id, when the change is made, so sending it again after a lost answer changes nothing, and an item added offline keeps its id.
-- While the backend can't be reached, changes wait in `app/data/shopping-backend-queue.json`, in order, the screen shows them at once with "Offline · 2 to send", and they're sent in a batch once it's back. A change the backend turns down (422) is logged and dropped, and the ones after it are still sent.
+- While the backend can't be reached, changes wait in `app/data/shopping-backend-queue.json`, in order, the screen shows them at once with "Offline · 2 to send", and they're sent in a batch once it's back. While anything waits, the Hub tries again every 20 seconds, and straight away when live updates reconnect, then the screen loads the list again so Offline clears. With nothing waiting it asks for nothing extra. A change the backend turns down (422) is logged and dropped, and the ones after it are still sent.
 - If the backend refuses the Hub's sign-in, the list says Offline, not Sign in needed, as nothing at the Hub can fix it, and the log says why.
 - The last list is kept in `app/data/shopping-backend-cache.json`, apart from the Google one's files.
 

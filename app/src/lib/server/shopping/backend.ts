@@ -17,6 +17,8 @@ const QUEUE_FILE = 'shopping-backend-queue.json';
 // the safety net for a missed message, and every minute while the live connection is down.
 const REFRESH_MS = 60_000;
 const CATCH_UP_MS = 10 * 60_000;
+// While a change waits to be sent, it's tried again this often, whatever the catch-up (AB#108).
+const RETRY_MS = 20_000;
 // The most the backend takes in one request.
 const BATCH = 100;
 
@@ -111,23 +113,53 @@ export interface BackendFeedOptions {
 	dir?: string;
 	/** Milliseconds since 1970, for tests. */
 	clock?: () => number;
+	/** Told when changes that waited have all been sent, so the screen stops saying Offline. */
+	sent?: () => void;
 }
 
 export interface BackendFeed extends Feed<{ text: string }, ShoppingItem> {
 	/** Asks the backend for the list now, such as when a live update says it changed. */
 	refresh(): Promise<void>;
+	/** Sends any changes still waiting, such as when live updates reconnect. Asks for nothing if none are. */
+	sendWaiting(): Promise<void>;
 }
 
 export function createBackendFeed(options: BackendFeedOptions): BackendFeed {
 	const queue = createOperationQueue(QUEUE_FILE, NAME, options.dir);
 	let sync: Sync<ShoppingItem[]> | undefined;
+	let retry: ReturnType<typeof setTimeout> | null = null;
+
+	/** Sends what's waiting, then `more`, and tries again later while anything is left. */
+	async function send(request: BackendRequest, more?: Operation[]): Promise<Operation[]> {
+		const left = await queue.send(request, more);
+		if (left.length > 0) retryLater();
+		return left;
+	}
+
+	function retryLater() {
+		if (retry) return;
+		retry = setTimeout(() => {
+			retry = null;
+			void sendWaiting();
+		}, RETRY_MS);
+		// So it never keeps Node running after the server has closed (AB#41).
+		retry.unref();
+	}
+
+	async function sendWaiting(): Promise<void> {
+		const live = current();
+		if (!live || (await queue.read()).length === 0) return;
+		// The list's fetch sends the queue first, so the list that comes back includes the changes.
+		await live.sync.refresh({ fresh: true });
+		if ((await queue.read()).length === 0) options.sent?.();
+	}
 
 	function listSync(request: BackendRequest): Sync<ShoppingItem[]> {
 		sync ??= createSync({
 			name: NAME,
 			fetch: async () => {
 				// Changes made while offline go first, so the list that comes back includes them.
-				await queue.send(request);
+				await send(request);
 				const { items } = await request<{ items: BackendItem[] }>('GET', '/lists/shopping/items?after=0');
 				return toShoppingItems(items);
 			},
@@ -173,7 +205,7 @@ export function createBackendFeed(options: BackendFeedOptions): BackendFeed {
 				return 200;
 			}
 			// Behind any changes still waiting, so they reach the backend in the order they were made.
-			const waiting = await queue.send(live.request, [toOperation(change)]);
+			const waiting = await send(live.request, [toOperation(change)]);
 			if (waiting.length > 0) return 202;
 			// So the page the screen loads next shows the change.
 			await live.sync.refresh({ fresh: true });
@@ -182,6 +214,8 @@ export function createBackendFeed(options: BackendFeedOptions): BackendFeed {
 
 		async refresh() {
 			await current()?.sync.refresh({ fresh: true });
-		}
+		},
+
+		sendWaiting
 	};
 }

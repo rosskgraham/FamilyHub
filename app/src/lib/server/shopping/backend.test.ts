@@ -91,8 +91,8 @@ afterEach(async () => {
 	await rm(dir, { recursive: true, force: true });
 });
 
-function feedFor(request: BackendRequest | null, sampleOnly = false, live?: () => boolean) {
-	return createBackendFeed({ api: () => request, sample, sampleOnly, live, dir, clock: () => time });
+function feedFor(request: BackendRequest | null, sampleOnly = false, live?: () => boolean, sent?: () => void) {
+	return createBackendFeed({ api: () => request, sample, sampleOnly, live, sent, dir, clock: () => time });
 }
 
 const texts = (items: { text: string; tickedOff: boolean }[]) =>
@@ -263,5 +263,76 @@ describe('catching up', () => {
 		await feed.load();
 		await feed.refresh();
 		expect(backend.gets).toBe(2);
+	});
+});
+
+describe('sending what waits (AB#108)', () => {
+	// Only the retry's timer is faked: the queue and the cache are real files, read and written as on the Hub.
+	beforeEach(() => vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] }));
+	afterEach(() => vi.useRealTimers());
+
+	/** A queued change, made while the backend couldn't be reached, on a Hub whose live connection is open. */
+	async function queuedWhileOffline() {
+		const { backend, request } = fakeBackend();
+		const sent = vi.fn();
+		const feed = feedFor(request, false, () => true, sent);
+		await feed.load();
+		backend.down = new TypeError('fetch failed');
+		expect(await feed.apply({ action: 'add', text: 'Milk' })).toBe(202);
+		return { backend, feed, sent };
+	}
+
+	it('sends it again within 30 seconds once the backend answers, without waiting for the 10-minute catch-up', async () => {
+		const { backend, feed, sent } = await queuedWhileOffline();
+		backend.down = null;
+
+		await vi.advanceTimersByTimeAsync(19_000);
+		expect(backend.items()).toEqual([]);
+		await vi.advanceTimersByTimeAsync(1_000);
+		await vi.waitFor(() => expect(backend.items().map((i) => i.text)).toEqual(['Milk']));
+		await vi.waitFor(() => expect(sent).toHaveBeenCalledOnce());
+		expect(await queued()).toEqual([]);
+		expect((await feed.load()).status).toMatchObject({ kind: 'live' });
+	});
+
+	it('keeps trying every 20 seconds while the backend still can’t be reached', async () => {
+		const { backend, sent } = await queuedWhileOffline();
+		const tries = () =>
+			(errors.mock.calls as unknown[][]).filter(([line]) => line === 'Shopping list still offline:').length;
+		expect(tries()).toBe(1);
+
+		await vi.advanceTimersByTimeAsync(20_000);
+		await vi.waitFor(() => expect(tries()).toBe(2));
+		await vi.advanceTimersByTimeAsync(20_000);
+		await vi.waitFor(() => expect(tries()).toBe(3));
+
+		backend.down = null;
+		await vi.advanceTimersByTimeAsync(20_000);
+		await vi.waitFor(() => expect(sent).toHaveBeenCalledOnce());
+		expect(backend.items().map((i) => i.text)).toEqual(['Milk']);
+	});
+
+	it('sends it straight away when live updates reconnect', async () => {
+		const { backend, feed, sent } = await queuedWhileOffline();
+		backend.down = null;
+
+		await feed.sendWaiting();
+		expect(backend.items().map((i) => i.text)).toEqual(['Milk']);
+		expect(sent).toHaveBeenCalledOnce();
+		expect(await queued()).toEqual([]);
+	});
+
+	it('asks for nothing more when nothing is waiting', async () => {
+		const { backend, request } = fakeBackend();
+		const sent = vi.fn();
+		const feed = feedFor(request, false, () => true, sent);
+		await feed.apply({ action: 'add', text: 'Milk' });
+		const [posts, gets] = [backend.posts.length, backend.gets];
+
+		await feed.sendWaiting();
+		await vi.advanceTimersByTimeAsync(5 * 60_000);
+		expect([backend.posts.length, backend.gets]).toEqual([posts, gets]);
+		expect(vi.getTimerCount()).toBe(0);
+		expect(sent).not.toHaveBeenCalled();
 	});
 });
