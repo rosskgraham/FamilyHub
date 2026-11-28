@@ -1,0 +1,9 @@
+#!/bin/sh
+# Switches off Energy-Efficient Ethernet on the cable each time it comes up (AB#62). With it on, the Pi 5's
+# Ethernet dozed whenever the link was idle and sometimes took about 2 seconds to wake, losing every packet
+# meanwhile, so every request the Hub had under way timed out at once. A restart turns it back on, so
+# NetworkManager runs this as each connection comes up, with the interface and what happened.
+[ "$1" = eth0 ] && [ "$2" = up ] || exit 0
+if ethtool --show-eee eth0 2>/dev/null | grep -q 'EEE status: enabled'; then
+	ethtool --set-eee eth0 eee off && logger -t familyhub-eee "Switched off Energy-Efficient Ethernet on eth0"
+fi
