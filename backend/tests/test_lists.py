@@ -59,6 +59,10 @@ class FakePartition:
         # The whole log and every item, so the API's own filtering is what's tested.
         return [copy.deepcopy(doc) for doc in self.docs.values() if doc["kind"] in ("op", "item")]
 
+    def changed(self, kind: str, after: int) -> list[dict[str, Any]]:
+        # Every document of the kind, so the API's own filtering is what's tested.
+        return [copy.deepcopy(doc) for doc in self.docs.values() if doc["kind"] == kind]
+
     def log(self) -> list[dict[str, Any]]:
         return sorted((d for d in self.docs.values() if d["kind"] == "op"), key=lambda d: d["seq"])
 
@@ -66,10 +70,11 @@ class FakePartition:
 class FakeStore:
     def __init__(self) -> None:
         self.shopping = FakePartition()
+        self.meals = FakePartition()
 
     def partition(self, list_id: str) -> FakePartition:
-        assert list_id == "shopping"
-        return self.shopping
+        assert list_id in ("shopping", "meals")
+        return self.shopping if list_id == "shopping" else self.meals
 
 
 class Clock:

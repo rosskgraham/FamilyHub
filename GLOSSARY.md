@@ -136,6 +136,16 @@ _Avoid_: Sort order, aisle order, layout
 The Shopping items the Household buys most often and most recently, offered to add in a few taps instead of typed. Worked out from the last 12 weeks of what was ticked off, leaving out what's already on the list. Anyone can mark one Don't suggest, which holds until that item is added again.
 _Avoid_: Favourites, recent items, staples, usuals
 
+### Meals
+
+**Meal**:
+A dinner the Household saves to plan again, with a name and its ingredients in order. A one-off, such as a takeaway, is a Meal with no ingredients.
+_Avoid_: Recipe, dish
+
+**Plan**:
+Which Meal is for dinner on each day, one per day, for today and the next 6 days. Planning a day again replaces its Meal.
+_Avoid_: Menu, schedule, rota
+
 ### To-dos
 
 **To-do**:

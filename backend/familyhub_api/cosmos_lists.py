@@ -110,6 +110,17 @@ class CosmosPartition:
             self._container.query_items(query=query, parameters=parameters, partition_key=self._list_id)
         )
 
+    def changed(self, kind: str, after: int) -> list[dict[str, Any]]:
+        # Meals and plan days (#97), each of its kind.
+        query = "SELECT * FROM c WHERE c.kind = @kind AND c.seq > @after"
+        parameters: list[dict[str, Any]] = [
+            {"name": "@kind", "value": kind},
+            {"name": "@after", "value": after},
+        ]
+        return list(
+            self._container.query_items(query=query, parameters=parameters, partition_key=self._list_id)
+        )
+
     def shops(self, after: int) -> list[dict[str, Any]]:
         query = "SELECT * FROM c WHERE c.kind = 'shop' AND c.seq > @after"
         parameters: list[dict[str, Any]] = [{"name": "@after", "value": after}]

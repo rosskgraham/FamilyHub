@@ -47,6 +47,23 @@ The server decides how operations merge. Removing beats anything later: a remove
 
 Everything is in Cosmos DB's `lists` container, one partition per list (`listId` `shopping`): a counter, an item per item, a document per Shop, and the log of every operation with its number, when it arrived and who sent it (`sentBy`: a Member's id, or `hub`). Each operation is written with the counter and the item or Shop in one transactional batch, and tried again if another request wrote first. If Cosmos DB can't be reached, or is too busy, it's a 503. The operations before the one that failed are kept, so a client resends the whole batch, which is safe: the ones already applied aren't applied again.
 
+## Meals and the plan
+
+Saved Meals and the dinner Plan (#97, [ADR 0017](../docs/adr/0017-meals-and-the-plan-in-the-backend.md)), for the Hub's meal planner, kept like the Shopping list in the same container, in their own partition (`listId` `meals`). The Hub and Members can both use them.
+
+- `POST /meals/operations` takes `{"operations": [...]}`, at most 100, each one of:
+  - `{"id": "<uuid>", "type": "add_meal", "meal_id": "<uuid>", "name": "Chicken curry", "ingredients": ["Chicken thighs", "Rice"]}`: the ingredients in order, at most 50, each trimmed and 1 to 200 characters, like the name. None is fine, for a one-off such as a takeaway. A meal id already used isn't added again.
+  - `{"id": "<uuid>", "type": "edit_meal", "meal_id": "<uuid>", "name": "...", "ingredients": [...]}`: replaces the name, the whole ingredient list, or both. One of them is needed.
+  - `{"id": "<uuid>", "type": "remove_meal", "meal_id": "<uuid>"}`: a removed meal never comes back. Plan days that name it keep pointing at it, and devices show them as empty.
+  - `{"id": "<uuid>", "type": "plan", "date": "2026-11-30", "meal_id": "<uuid>"}`: one meal per date, the Household's local date as YYYY-MM-DD. Planning a date again replaces its meal. Planning a meal id that was never added, here or earlier in the batch, is a 422, and then nothing in the batch is applied.
+  - `{"id": "<uuid>", "type": "unplan", "date": "2026-11-30"}`
+
+  Each answers as Shopping operations do, with its `seq` and whether it `changed` anything, and sending it again gets the same answer.
+- `GET /meals?after=N` answers `{"meals": [...], "plan": [...], "seq": 14}`: every meal changed after N, each with its `id`, `name`, `ingredients`, `removed` and `seq`, and every plan day changed after N, each with its `date`, `meal_id` (null once unplanned) and `seq`, in date order. With `after=0` it's the meals not removed and the days with a meal planned, past days included.
+- After a batch that changed something, live updates send `{"list": "meals", "seq": 12}`.
+
+`scripts/meals.py` signs in as `whoami.py` does and lists the meals and the plan, or runs through a test meal (`check`) planned on 31 December 2099, removing it again after.
+
 ## Live updates
 
 Devices hear about a change made elsewhere within about a second, through Azure Web PubSub, rather than asking over and over.

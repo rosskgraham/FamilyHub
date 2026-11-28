@@ -30,6 +30,7 @@ from familyhub_api.auth import (
 from familyhub_api.cosmos_lists import CosmosLists
 from familyhub_api.lists import MOST_REGULARS, Applied, Busy, Item, Lists, Operations, ShopShown, Store
 from familyhub_api.live import Live, WebPubSubLive
+from familyhub_api.meals import MEALS, Meal, MealOperations, Meals, PlanDay, UnknownMeal
 from familyhub_api.sessions import Sessions, SignInRefused, sessions_from_environment
 
 SHOPPING = "shopping"
@@ -76,6 +77,15 @@ class SessionAnswer(BaseModel):
     object_id: str | None = None
     name: str | None = None
     given_name: str | None = None
+
+
+class ChangedMeals(BaseModel):
+    """The meals and plan days changed after the number asked for (#97)."""
+
+    meals: list[Meal]
+    plan: list[PlanDay]
+    # Ask for everything after this next time.
+    seq: int
 
 
 class ChangedItems(BaseModel):
@@ -125,6 +135,7 @@ def create_app(
         public_url = _public_url_from_environment()
     signed_in = SignIn(checker, accounts, sessions)
     lists = Lists(store, clock) if store is not None else None
+    meals = Meals(store, clock) if store is not None else None
 
     def signing_in() -> Sessions:
         if sessions is None:
@@ -135,6 +146,11 @@ def create_app(
         if lists is None:
             raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "The lists aren't set up yet.")
         return lists
+
+    def shared_meals() -> Meals:
+        if meals is None:
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "The lists aren't set up yet.")
+        return meals
 
     app = FastAPI(title="FamilyHub API", docs_url=None, redoc_url=None, openapi_url=None)
     # CORS for running the API on a PC (ALLOWED_ORIGINS). In Azure the Functions host answers the browser's
@@ -277,6 +293,38 @@ def create_app(
         with _unavailable_if_cosmos_fails():
             found = lists.regulars(SHOPPING, limit)
         return Regulars(regulars=[RegularShown(name=regular.name) for regular in found])
+
+    @app.post("/meals/operations")
+    def change_meals(
+        body: MealOperations,
+        caller: Annotated[Caller, Depends(signed_in)],
+        meals: Annotated[Meals, Depends(shared_meals)],
+    ) -> AppliedOperations:
+        """Applies a batch of operations to the saved meals and the plan, in order. Sending one again does
+        no harm. A plan naming a meal that was never added is refused, and then nothing in the batch is
+        applied."""
+        by = caller.member_id if caller.kind == "member" and caller.member_id else "hub"
+        changes: list[int] = []
+        try:
+            with _unavailable_if_cosmos_fails():
+                return AppliedOperations(results=meals.apply(body.operations, by, changes))
+        except UnknownMeal as error:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(error)) from error
+        finally:
+            if changes:
+                _tell(live, MEALS, max(changes))
+
+    @app.get("/meals")
+    def meals_changed(
+        caller: Annotated[Caller, Depends(signed_in)],
+        meals: Annotated[Meals, Depends(shared_meals)],
+        after: Annotated[int, Query(ge=0)] = 0,
+    ) -> ChangedMeals:
+        """The meals and plan days changed after sequence number after, removed meals as markers. From 0, the
+        meals not removed and the days with a meal planned, past ones included."""
+        with _unavailable_if_cosmos_fails():
+            caught_up = meals.changed_since(after)
+        return ChangedMeals(meals=caught_up.meals, plan=caught_up.plan, seq=caught_up.seq)
 
     return app
 
