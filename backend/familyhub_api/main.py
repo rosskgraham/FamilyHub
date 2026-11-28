@@ -32,6 +32,7 @@ from familyhub_api.lists import MOST_REGULARS, Applied, Busy, Item, Lists, Opera
 from familyhub_api.live import Live, WebPubSubLive
 from familyhub_api.meals import MEALS, Meal, MealOperations, Meals, PlanDay, UnknownMeal
 from familyhub_api.sessions import Sessions, SignInRefused, sessions_from_environment
+from familyhub_api.todos import TODOS, Todo, TodoOperations, Todos
 
 SHOPPING = "shopping"
 
@@ -88,6 +89,14 @@ class ChangedMeals(BaseModel):
     seq: int
 
 
+class ChangedTodos(BaseModel):
+    """The To-dos changed after the number asked for (#118)."""
+
+    todos: list[Todo]
+    # Ask for everything after this next time.
+    seq: int
+
+
 class ChangedItems(BaseModel):
     items: list[Item]
     # The shops changed after the number asked for, each with its learned walking order (#84).
@@ -136,6 +145,7 @@ def create_app(
     signed_in = SignIn(checker, accounts, sessions)
     lists = Lists(store, clock) if store is not None else None
     meals = Meals(store, clock) if store is not None else None
+    todos = Todos(store, clock) if store is not None else None
 
     def signing_in() -> Sessions:
         if sessions is None:
@@ -151,6 +161,11 @@ def create_app(
         if meals is None:
             raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "The lists aren't set up yet.")
         return meals
+
+    def shared_todos() -> Todos:
+        if todos is None:
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "The lists aren't set up yet.")
+        return todos
 
     app = FastAPI(title="FamilyHub API", docs_url=None, redoc_url=None, openapi_url=None)
     # CORS for running the API on a PC (ALLOWED_ORIGINS). In Azure the Functions host answers the browser's
@@ -293,6 +308,34 @@ def create_app(
         with _unavailable_if_cosmos_fails():
             found = lists.regulars(SHOPPING, limit)
         return Regulars(regulars=[RegularShown(name=regular.name) for regular in found])
+
+    @app.post("/lists/todos/operations")
+    def change_todos(
+        body: TodoOperations,
+        caller: Annotated[Caller, Depends(signed_in)],
+        todos: Annotated[Todos, Depends(shared_todos)],
+    ) -> AppliedOperations:
+        """Applies a batch of operations to the To-dos, in order. Sending one again does no harm."""
+        by = caller.member_id if caller.kind == "member" and caller.member_id else "hub"
+        changes: list[int] = []
+        try:
+            with _unavailable_if_cosmos_fails():
+                return AppliedOperations(results=todos.apply(body.operations, by, changes))
+        finally:
+            if changes:
+                _tell(live, TODOS, max(changes))
+
+    @app.get("/lists/todos/items")
+    def todo_items(
+        caller: Annotated[Caller, Depends(signed_in)],
+        todos: Annotated[Todos, Depends(shared_todos)],
+        after: Annotated[int, Query(ge=0)] = 0,
+    ) -> ChangedTodos:
+        """The To-dos changed after sequence number after, removed ones as markers. From 0, the To-dos not
+        done, and those ticked off in the last 10 minutes."""
+        with _unavailable_if_cosmos_fails():
+            caught_up = todos.changed_since(after)
+        return ChangedTodos(todos=caught_up.todos, seq=caught_up.seq)
 
     @app.post("/meals/operations")
     def change_meals(

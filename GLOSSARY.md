@@ -37,7 +37,7 @@ The Household's own app on their phones, installed from Chrome rather than an ap
 _Avoid_: Phone app, mobile app, PWA
 
 **Backend**:
-The Hub's own service in Azure that holds the Shopping list for the Family app and the Hub, and later the To-dos ([ADR 0010](docs/adr/0010-shared-lists-in-an-azure-backend-with-an-installable-family-app.md)).
+The Hub's own service in Azure that holds the Shopping list for the Family app and the Hub, and the To-dos, which the Family app and the Hub move to in slice 6 ([ADR 0010](docs/adr/0010-shared-lists-in-an-azure-backend-with-an-installable-family-app.md)).
 _Avoid_: Server (the Hub's server on the Pi), cloud, API
 
 **Section**:
@@ -149,7 +149,7 @@ _Avoid_: Menu, schedule, rota
 ### To-dos
 
 **To-do**:
-A job for the Household that isn't a Chore, such as entering the meter readings, from a shared Google Tasks list. It happens once or repeats, has no owner, earns no Stars, and is ticked off or removed like a Shopping item. Removing a repeating one skips just that occurrence.
+A job for the Household that isn't a Chore, such as entering the meter readings, from a shared Google Tasks list, moving to the Backend (slice 6). It may have a due date, and happens once or repeats, has no owner, earns no Stars, and is ticked off or removed like a Shopping item. Removing a repeating one skips just that occurrence.
 _Avoid_: Task (a Google Tasks item), chore, job
 
 ### Chores

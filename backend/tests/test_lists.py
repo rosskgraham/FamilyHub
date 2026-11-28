@@ -63,6 +63,10 @@ class FakePartition:
         # Every document of the kind, so the API's own filtering is what's tested.
         return [copy.deepcopy(doc) for doc in self.docs.values() if doc["kind"] == kind]
 
+    def todos(self, after: int, ticked_off_since: str) -> list[dict[str, Any]]:
+        # Every To-do, so the API's own filtering is what's tested.
+        return [copy.deepcopy(doc) for doc in self.docs.values() if doc["kind"] == "todo"]
+
     def log(self) -> list[dict[str, Any]]:
         return sorted((d for d in self.docs.values() if d["kind"] == "op"), key=lambda d: d["seq"])
 
@@ -71,10 +75,11 @@ class FakeStore:
     def __init__(self) -> None:
         self.shopping = FakePartition()
         self.meals = FakePartition()
+        self.todos = FakePartition()
 
     def partition(self, list_id: str) -> FakePartition:
-        assert list_id in ("shopping", "meals")
-        return self.shopping if list_id == "shopping" else self.meals
+        assert list_id in ("shopping", "meals", "todos")
+        return {"shopping": self.shopping, "meals": self.meals, "todos": self.todos}[list_id]
 
 
 class Clock:

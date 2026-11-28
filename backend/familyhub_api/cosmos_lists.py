@@ -78,14 +78,21 @@ class CosmosPartition:
             raise
 
     def items(self, after: int, ticked_off_since: str) -> list[dict[str, Any]]:
+        return self._open_or_changed("item", after, ticked_off_since)
+
+    def todos(self, after: int, ticked_off_since: str) -> list[dict[str, Any]]:
+        # The To-dos (#118), read as the Shopping list's items are.
+        return self._open_or_changed("todo", after, ticked_off_since)
+
+    def _open_or_changed(self, kind: str, after: int, ticked_off_since: str) -> list[dict[str, Any]]:
         if after > 0:
-            query = "SELECT * FROM c WHERE c.kind = 'item' AND c.seq > @after"
+            query = f"SELECT * FROM c WHERE c.kind = '{kind}' AND c.seq > @after"
             parameters: list[dict[str, Any]] = [{"name": "@after", "value": after}]
         else:
-            # Starting from nothing: only what's still to get, or was ticked off recently, so the read doesn't
-            # grow with every item ever bought.
+            # Starting from nothing: only what's still to do, or was ticked off recently, so the read doesn't
+            # grow with everything ever ticked off.
             query = (
-                "SELECT * FROM c WHERE c.kind = 'item' AND c.removed = false"
+                f"SELECT * FROM c WHERE c.kind = '{kind}' AND c.removed = false"
                 " AND (c.tickedOff = false OR c.tickedOffAt > @tickedOffSince)"
             )
             parameters = [{"name": "@tickedOffSince", "value": ticked_off_since}]

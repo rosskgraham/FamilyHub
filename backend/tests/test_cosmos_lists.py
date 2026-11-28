@@ -147,3 +147,17 @@ def test_meals_and_plan_days_changed_since_a_number_are_read_by_kind(container: 
     assert query["partition_key"] == "shopping"
     assert query["query"] == "SELECT * FROM c WHERE c.kind = @kind AND c.seq > @after"
     assert query["parameters"] == [{"name": "@kind", "value": "meal"}, {"name": "@after", "value": 4}]
+
+
+def test_todos_are_read_as_items_are_from_nothing_only_those_not_done_or_ticked_off_recently(
+    container: FakeContainer,
+) -> None:
+    partition(container).todos(0, "2026-11-22T08:50:00.000000Z")
+    partition(container).todos(7, "ignored")
+
+    from_nothing, after = container.queries
+    assert from_nothing["query"].startswith("SELECT * FROM c WHERE c.kind = 'todo' AND c.removed = false")
+    assert "c.tickedOffAt > @tickedOffSince" in from_nothing["query"]
+    assert from_nothing["parameters"] == [{"name": "@tickedOffSince", "value": "2026-11-22T08:50:00.000000Z"}]
+    assert after["query"] == "SELECT * FROM c WHERE c.kind = 'todo' AND c.seq > @after"
+    assert after["parameters"] == [{"name": "@after", "value": 7}]

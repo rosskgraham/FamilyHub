@@ -64,6 +64,23 @@ Saved Meals and the dinner Plan (#97, [ADR 0017](../docs/adr/0017-meals-and-the-
 
 `scripts/meals.py` signs in as `whoami.py` does and lists the meals and the plan, or runs through a test meal (`check`) planned on 31 December 2099, removing it again after.
 
+## To-dos
+
+The family's To-dos (#118, slice 6), one shared list kept like the Shopping list in the same container, in their own partition (`listId` `todos`). The Hub and Members can both use them. Repeats come next (#119); the Hub and the family app don't use these yet.
+
+- `POST /lists/todos/operations` takes `{"operations": [...]}`, at most 100, each one of:
+  - `{"id": "<uuid>", "type": "add_todo", "todo_id": "<uuid>", "text": "Put the bins out", "due": "2026-11-30"}`: the due date is the Household's local date as YYYY-MM-DD, which the server never interprets. Leave it out for a To-do with no date. A To-do id already used, even by a removed one, isn't added again.
+  - `{"id": "<uuid>", "type": "edit_todo", "todo_id": "<uuid>", "text": "...", "due": "2026-12-01"}`: changes the text, the due date, or both, and one of them is needed. `"due": null` takes the date off; leaving `due` out keeps it.
+  - `{"id": "<uuid>", "type": "tick" | "untick" | "remove", "todo_id": "<uuid>"}`
+
+  Text is trimmed and must be 1 to 200 characters. Each answers as Shopping operations do, with its `seq` and whether it `changed` anything, and sending it again gets the same answer. Anything invalid is a 422, and none of the batch is applied.
+- `GET /lists/todos/items?after=N` answers `{"todos": [...], "seq": 14}`: every To-do changed after N, each with its `id`, `text`, `due` (null for none), `ticked_off`, `ticked_off_at`, `removed` and `seq`. A removed To-do comes as a marker, for devices to drop. With `after=0`, it's the To-dos not done, and those ticked off in the last 10 minutes.
+- After a batch that changed something, live updates send `{"list": "todos", "seq": 12}`.
+
+They merge as Shopping items do: ticked-off, the text and the due date are separate fields, so changing one never undoes another, and otherwise the latest to arrive wins. Removing beats anything later.
+
+`scripts/todos.py` signs in as `whoami.py` does and lists the To-dos, or runs through a test To-do (`check`) due on 31 December 2099, adding, editing, ticking and removing it.
+
 ## Live updates
 
 Devices hear about a change made elsewhere within about a second, through Azure Web PubSub, rather than asking over and over.
@@ -80,7 +97,7 @@ Web PubSub's keys are off, so the API makes each token through Web PubSub's own 
 
 ## What's here
 
-- `familyhub_api/`: the FastAPI app, with no Azure Functions in sight, so it runs and is tested as a plain FastAPI service. `main.py` has the routes, `auth.py` checks tokens, `sessions.py` signs Members in and keeps their sessions, `accounts.py` reads the Household's accounts from Cosmos DB, `lists.py` has the lists' operations and rules, `cosmos_lists.py` keeps them in Cosmos DB, and `live.py` sends live updates through Web PubSub.
+- `familyhub_api/`: the FastAPI app, with no Azure Functions in sight, so it runs and is tested as a plain FastAPI service. `main.py` has the routes, `auth.py` checks tokens, `sessions.py` signs Members in and keeps their sessions, `accounts.py` reads the Household's accounts from Cosmos DB, `lists.py` has the lists' operations and rules, `meals.py` and `todos.py` the Meals' and the To-dos', `cosmos_lists.py` keeps them in Cosmos DB, and `live.py` sends live updates through Web PubSub.
 - `function_app.py`: the Azure Functions entry point. `AsgiFunctionApp` hands every HTTP request to the FastAPI app.
 - `host.json`: the Functions host's settings. Routes have no `/api` prefix, so it's `/health`, not `/api/health`.
 - `tests/`: pytest tests, run with FastAPI's test client. Sign-in's tests sign their own tokens with a key made for the test. The tests use stand-ins for Cosmos DB, the lists' one refusing clashing writes as a transactional batch would.
