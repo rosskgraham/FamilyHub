@@ -1,16 +1,18 @@
 # Meals mockups
 
-The meal planner (Feature #96), approved by Ross on 27 November 2026. A snapshot of boards A to C from the design
-canvas: https://claude.ai/artifact/FZFKcD6vRouMZEUkuM71XA. Boards D to G, planning a day, the Today card and adding
-ingredients to Shopping, are for AB#99 and AB#100. The `.dc.html` files are the boards' sources, which render on the
-canvas. The built screens' screenshot tests are `app/e2e/__screenshots__/meals.png` and `meal-editor.png`, with their
-`-evening` versions.
+The meal planner (Feature #96), approved by Ross on 27 November 2026. A snapshot of boards A to E from the design
+canvas: https://claude.ai/artifact/FZFKcD6vRouMZEUkuM71XA. Boards F and G, adding ingredients to Shopping, are for
+AB#100. The `.dc.html` files are the boards' sources, which render on the
+canvas. The built screens' screenshot tests are `app/e2e/__screenshots__/meals.png`, `meal-editor.png`, `meal-picker.png` and `today.png`,
+with their `-evening` versions.
 
 | File              | Board                                                          |
 | ----------------- | -------------------------------------------------------------- |
 | `a-meals.dc.html` | A · Meals: this week (AB#99) and the saved meals               |
 | `b-edit.dc.html`  | B · Editing a meal: renaming an ingredient, the keyboard below |
 | `c-saved.dc.html` | C · Before the plan (AB#98 on its own): saved meals only       |
+| `d-pick.dc.html`  | D · Planning a day: picking its meal (AB#99)                   |
+| `e-today.dc.html` | E · The Today view's dinner card (AB#99)                       |
 
 ## Approved (27 November 2026)
 
@@ -21,6 +23,14 @@ canvas. The built screens' screenshot tests are `app/e2e/__screenshots__/meals.p
   and Return on the last one opens a new ingredient, so a list can be typed in one go. Order is kept, as typed.
 - Done saves, Cancel drops the changes, and Remove meal asks first and says which planned day goes empty.
 - Offline, edits are queued and the meal shows "Saving…" until the backend has it, as Shopping items do.
+
+## Approved for the plan (27 November 2026, AB#99)
+
+- The week on the left: today and the next 6 days, rolling at midnight. Tapping a day opens the picker over the
+  Section: the saved meals A–Z, the planned one marked. A tap plans it and closes the picker. Nothing planned clears
+  the day, and New meal opens the editor, whose Done saves the meal and plans it for that day.
+- The dinner card on the Today view, between Energy and To-dos, which shows 3 rows instead of 5: tonight's dinner,
+  and tomorrow's underneath. A tap opens Meals.
 
 ## Built differently
 

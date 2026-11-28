@@ -6,6 +6,7 @@
 	import Badge from '#lib/components/Badge.svelte';
 	import Banner from '#lib/components/Banner.svelte';
 	import BinIcon from '#lib/components/BinIcon.svelte';
+	import DinnerCard from '#lib/components/DinnerCard.svelte';
 	import EnergyCard from '#lib/components/EnergyCard.svelte';
 	import TodosCard from '#lib/components/TodosCard.svelte';
 	import { fitColumn } from '#lib/fit.ts';
@@ -161,7 +162,9 @@
 
 <aside>
 	<EnergyCard {...data.energy} />
-	<TodosCard todos={data.todos.items} status={data.todos.status} today={data.today} rows={5} />
+	<DinnerCard {...data.dinner} />
+	<!-- Three rows, to make room for the dinner card (AB#99). -->
+	<TodosCard todos={data.todos.items} status={data.todos.status} today={data.today} rows={3} />
 </aside>
 
 <style>

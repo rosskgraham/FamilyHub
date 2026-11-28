@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Today view with dinner</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+button{font-family:inherit}
+a{color:#161B22}a:hover{color:#161B22}
+</style>
+</helmet>
+<div style="width: 1920px; height: 1080px; box-sizing: border-box; padding: 32px; background: #F3F5F8; font-family: 'Figtree', system-ui, sans-serif; color: #161B22; display: flex; flex-direction: column; gap: 24px">
+
+<header style="height: 128px; flex: none; display: flex; align-items: center; justify-content: space-between; gap: 32px">
+<div style="display: flex; align-items: center; gap: 28px">
+<div style="font-size: 112px; font-weight: 600; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums">17:05</div>
+<div>
+<div style="font-size: 44px; font-weight: 600; line-height: 1.1">Friday</div>
+<div style="font-size: 28px; color: #4A5565; margin-top: 4px">27 November</div>
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 16px">
+<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#161B22" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+<div style="font-size: 56px; font-weight: 600; line-height: 1">6°</div>
+<div>
+<div style="font-size: 24px; font-weight: 600">Cloudy</div>
+<div style="font-size: 22px; color: #4A5565">High 8° · Low 2°</div>
+</div>
+</div>
+</header>
+
+<main style="flex: 1; min-height: 0; display: flex; gap: 24px">
+
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<section style="height: 168px; flex: none; box-sizing: border-box; padding: 0 32px; border-radius: 28px; background: #161B22; color: #FFFFFF; display: flex; align-items: center; justify-content: space-between; gap: 24px">
+<div style="display: flex; align-items: center; gap: 24px">
+<span style="width: 80px; height: 80px; border-radius: 40px; background: #0E7C66; color: #FFFFFF; font-size: 40px; font-weight: 700; display: flex; align-items: center; justify-content: center">M</span>
+<div>
+<div style="font-size: 22px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #B8C0CB">Next up · in 55 min</div>
+<div style="font-size: 56px; font-weight: 700; line-height: 1.1; margin-top: 4px">Swimming</div>
+</div>
+</div>
+<div style="font-size: 104px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums">18:00</div>
+</section>
+
+<div style="font-size: 28px; font-weight: 700; line-height: 34px">Later today</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="height: 76px; box-sizing: border-box; padding: 0 24px; border-radius: 18px; background: #FFE3C7; display: flex; align-items: center; gap: 20px; font-size: 28px; font-weight: 600"><span style="font-variant-numeric: tabular-nums">19:30</span><span style="width: 34px; height: 34px; border-radius: 17px; background: #C2570C; color: #FFFFFF; font-size: 18px; font-weight: 700; display: flex; align-items: center; justify-content: center">S</span>Book club</div>
+</div>
+
+<div style="font-size: 28px; font-weight: 700; line-height: 34px">Coming up</div>
+<div style="flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px">
+<sc-for list="{{coming}}" as="d" hint-placeholder-count="4">
+<div style="box-sizing: border-box; padding: 14px; border-radius: 20px; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px">
+<div style="height: 34px; font-size: 26px; font-weight: 700">{{d.day}}</div>
+<sc-for list="{{d.events}}" as="e" hint-placeholder-count="2">
+<div style="height: 38px; box-sizing: border-box; padding: 0 10px; border-radius: 10px; background: {{e.bg}}; display: flex; align-items: center; gap: 8px; font-size: 20px; font-weight: 600; white-space: nowrap; overflow: hidden"><span style="width: 24px; height: 24px; flex: none; border-radius: 12px; background: {{e.tag}}; color: #FFFFFF; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center">{{e.who}}</span>{{e.text}}</div>
+</sc-for>
+</div>
+</sc-for>
+</div>
+</div>
+
+<aside style="width: 560px; flex: none; display: flex; flex-direction: column; gap: 16px">
+
+<section style="flex: none; box-sizing: border-box; padding: 24px 28px; border-radius: 28px; background: #FFFFFF; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<div style="font-size: 34px; font-weight: 700">Energy</div>
+<div style="font-size: 28px; font-weight: 700; color: #9A6200">80%</div>
+</div>
+<div style="display: flex; align-items: baseline; justify-content: space-between">
+<div style="font-size: 52px; font-weight: 700">0.6 kW <span style="font-size: 24px; font-weight: 600; color: #4A5565">now</span></div>
+<div style="font-size: 52px; font-weight: 700">£3.10 <span style="font-size: 24px; font-weight: 600; color: #4A5565">today</span></div>
+</div>
+</section>
+
+<a href="a-meals.dc.html" style="flex: none; box-sizing: border-box; padding: 22px 28px; border-radius: 28px; background: #FFFFFF; color: #161B22; text-decoration: none; display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<div style="font-size: 22px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #4A5565">Dinner tonight</div>
+<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#4A5565" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+</div>
+<div style="font-size: 52px; font-weight: 700; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Fajitas</div>
+<div style="font-size: 24px; color: #2E3644"><span style="font-weight: 700">Tomorrow</span> · Takeaway</div>
+</a>
+
+<section style="flex: 1; min-height: 0; box-sizing: border-box; padding: 24px 28px; border-radius: 28px; background: #FFFFFF; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<div style="font-size: 34px; font-weight: 700">To-dos</div>
+<div style="height: 40px; padding: 0 14px; border-radius: 20px; background: #E3E7ED; font-size: 20px; font-weight: 700; display: flex; align-items: center">3 due</div>
+</div>
+<sc-for list="{{todos}}" as="t" hint-placeholder-count="3">
+<div style="height: 64px; display: flex; align-items: center; gap: 22px; font-size: 28px; font-weight: 500"><span style="width: 40px; height: 40px; flex: none; box-sizing: border-box; border-radius: 10px; border: 3px solid #4A5565"></span>{{t}}</div>
+</sc-for>
+<div style="height: 48px; border-radius: 14px; background: #F3F5F8; font-size: 22px; font-weight: 700; display: flex; align-items: center; justify-content: center">+2 more</div>
+</section>
+
+</aside>
+
+</main>
+
+<nav style="height: 76px; flex: none; display: flex; align-items: center; justify-content: space-between">
+<div style="display: flex; align-items: center; gap: 6px; padding: 6px; border-radius: 26px; background: #E3E7ED">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="9">
+<a href="#" aria-current="{{t.current}}" style="width: 132px; height: 64px; border-radius: 20px; background: {{t.bg}}; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 600; text-decoration: none">{{t.label}}</a>
+</sc-for>
+<a href="#" aria-label="Settings" style="width: 64px; height: 64px; border-radius: 20px; display: flex; align-items: center; justify-content: center"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#161B22" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></a>
+</div>
+<div style="height: 56px; padding: 0 24px; border-radius: 28px; border: 2px dashed #C9D0D9; display: flex; align-items: center; font-size: 24px; color: #2E3644">Sample data</div>
+</nav>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1920,"height":1080}}'>
+class Component extends DCLogic {
+renderVals() {
+const who = {
+M: { bg: '#C9EFE3', tag: '#0E7C66' },
+L: { bg: '#E6DCFB', tag: '#6D3FD1' },
+R: { bg: '#D6E2FF', tag: '#1F4FD1' },
+S: { bg: '#FFE3C7', tag: '#C2570C' },
+A: { bg: '#E3E7ED', tag: '#4A5565' }
+};
+const ev = (w, text) => ({ who: w === 'A' ? 'All' : w, text, ...who[w] });
+const tab = (label, current) => ({ label, current: current ? 'page' : 'false', bg: current ? '#FFFFFF' : 'transparent' });
+return {
+coming: [
+{ day: 'Sat 28', events: [ev('R', '08:00 Parkrun'), ev('L', '10:00 Football')] },
+{ day: 'Sun 29', events: [ev('A', '13:00 Lunch at Gran’s')] },
+{ day: 'Mon 30', events: [ev('M', '17:00 Swimming'), ev('R', '18:00 Five-a-side')] },
+{ day: 'Tue 1', events: [ev('L', '15:30 Dentist')] }
+],
+todos: ['Renew the car insurance', 'Enter meter readings', 'Return library books'],
+tabs: [tab('Today', true), tab('Day'), tab('Week'), tab('Shopping'), tab('Meals'), tab('To-dos'), tab('Chores'), tab('Energy'), tab('Games')]
+};
+}
+}
+</script>
+</body>
+</html>

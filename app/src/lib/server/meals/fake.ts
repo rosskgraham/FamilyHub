@@ -3,7 +3,7 @@ import { addDays, dayKey } from '#lib/time.ts';
 import { now } from '../now.ts';
 
 // Sample meals kept in memory, so adding, editing and removing can be tried without the backend. They reset when
-// the app restarts. Planning comes with AB#99; until then the sample plans one meal, two days on.
+// the app restarts.
 export interface MealsSource {
 	list(): Promise<{ meals: Meal[]; plan: PlanDay[] }>;
 	apply(change: MealChange): Promise<void>;
@@ -41,16 +41,50 @@ const meals: Meal[] = [
 	meal('Takeaway', [])
 ];
 
+// Sample dinners from today on, as on the mockup's board A: changed by planning, kept until the app restarts.
+const planned = new Map<number, string>([
+	[0, 'Fajitas'],
+	[1, 'Takeaway'],
+	[2, 'Chilli con carne'],
+	[4, 'Spaghetti bolognese'],
+	[5, 'Fish pie']
+]);
+let plan: Map<string, string | null> | null = null;
+let planFrom: string | null = null;
+
+/** The sample plan, started from whichever day the Hub first asks on. */
+function samplePlan(): Map<string, string | null> {
+	const today = dayKey(now());
+	if (!plan || planFrom !== today) {
+		planFrom = today;
+		plan = new Map(
+			[...planned].map(([offset, name]) => [addDays(today, offset), meals.find((m) => m.name === name)?.id ?? null])
+		);
+	}
+	return plan;
+}
+
 export const fakeMeals: MealsSource = {
 	async list() {
-		const chilli = meals.find((m) => m.name === 'Chilli con carne');
-		const plan: PlanDay[] = chilli ? [{ date: addDays(dayKey(now()), 2), mealId: chilli.id }] : [];
-		return { meals: meals.map((m) => ({ ...m, ingredients: [...m.ingredients] })), plan };
+		return {
+			meals: meals.map((m) => ({ ...m, ingredients: [...m.ingredients] })),
+			plan: [...samplePlan()].map(([date, mealId]) => ({ date, mealId }))
+		};
 	},
 	async apply(change) {
-		if (change.action === 'add') {
-			meals.push(meal(change.name, change.ingredients));
-			return;
+		switch (change.action) {
+			case 'add': {
+				const added = meal(change.name, change.ingredients);
+				meals.push(added);
+				if (change.planFor) samplePlan().set(change.planFor, added.id);
+				return;
+			}
+			case 'plan':
+				samplePlan().set(change.date, change.mealId);
+				return;
+			case 'unplan':
+				samplePlan().set(change.date, null);
+				return;
 		}
 		const index = meals.findIndex((m) => m.id === change.id);
 		if (index < 0) return;

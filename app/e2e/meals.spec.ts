@@ -46,7 +46,7 @@ test('the bottom bar has a Meals tab after Shopping, marked current in the Meals
 
 test('the Section lists the saved meals A–Z with their ingredients, or none', async ({ page }) => {
 	await page.goto('/meals');
-	const meals = page.getByRole('list').getByRole('button');
+	const meals = page.getByRole('region', { name: 'Saved meals' }).getByRole('list').getByRole('button');
 	await expect(meals).toHaveCount(12);
 	await expect(meals.first()).toHaveText(/Chicken curry\s*6 ingredients · chicken thighs, onions, curry paste…/);
 	await expect(meals.last()).toHaveText(/Takeaway\s*No ingredients/);
@@ -140,7 +140,8 @@ test('Remove meal asks first, naming the day it’s planned for, and sends remov
 
 test('removing a meal that isn’t planned doesn’t mention a day', async ({ page }) => {
 	await catchChanges(page);
-	await openMeal(page, 'Takeaway');
+	// Stir fry isn't in the sample plan.
+	await openMeal(page, 'Stir fry');
 	await editor(page).getByRole('button', { name: 'Remove meal' }).click();
 	await expect(page.getByRole('alertdialog')).toContainText('It goes from the saved meals for everyone.');
 });
