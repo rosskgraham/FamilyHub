@@ -9,7 +9,7 @@ import { createSync, type Kept, type Sync } from '../sync.ts';
 import type { MealsSource } from './fake.ts';
 import {
 	fromBackend,
-	toOperation,
+	toOperations,
 	withOperations,
 	type BackendMeal,
 	type BackendPlanDay,
@@ -58,7 +58,7 @@ export interface MealsFeed {
 export function createMealsFeed(options: MealsFeedOptions): MealsFeed {
 	const queue = createOperationQueue<MealOperation>(
 		QUEUE_FILE,
-		{ path: '/meals/operations', name: NAME, describe: (op) => op.meal_id },
+		{ path: '/meals/operations', name: NAME, describe: (op) => ('meal_id' in op ? op.meal_id : op.date) },
 		options.dir
 	);
 	let sync: Sync<Saved> | undefined;
@@ -124,8 +124,7 @@ export function createMealsFeed(options: MealsFeedOptions): MealsFeed {
 					const live = current();
 					if (!live) return { ...(await options.sample.list()), status: { kind: 'sample', setUp: false } };
 					const [{ value, at, error }, waiting] = await Promise.all([live.sync.read(), queue.read()]);
-					const meals = withOperations(value?.meals ?? [], waiting);
-					const plan = value?.plan ?? [];
+					const { meals, plan } = withOperations({ meals: value?.meals ?? [], plan: value?.plan ?? [] }, waiting);
 					if (error || waiting.length > 0)
 						return {
 							meals,
@@ -144,7 +143,7 @@ export function createMealsFeed(options: MealsFeedOptions): MealsFeed {
 				return 200;
 			}
 			// Behind any changes still waiting, so they reach the backend in the order they were made.
-			const waiting = await send(live.request, [toOperation(change)]);
+			const waiting = await send(live.request, toOperations(change));
 			if (waiting.length > 0) return 202;
 			// So the page the screen loads next shows the change.
 			await live.sync.refresh({ fresh: true });

@@ -20,7 +20,9 @@ export interface BackendPlanDay {
 export type MealOperation =
 	| { id: string; type: 'add_meal'; meal_id: string; name: string; ingredients: string[] }
 	| { id: string; type: 'edit_meal'; meal_id: string; name: string; ingredients: string[] }
-	| { id: string; type: 'remove_meal'; meal_id: string };
+	| { id: string; type: 'remove_meal'; meal_id: string }
+	| { id: string; type: 'plan'; date: string; meal_id: string }
+	| { id: string; type: 'unplan'; date: string };
 
 /** What the Hub keeps: the meals not removed and the days planned, from GET /meals?after=0. */
 export function fromBackend(meals: BackendMeal[], plan: BackendPlanDay[]): { meals: Meal[]; plan: PlanDay[] } {
@@ -32,19 +34,49 @@ export function fromBackend(meals: BackendMeal[], plan: BackendPlanDay[]): { mea
 	};
 }
 
-/** The operation for a change at the Hub. An added meal gets its id here, so it never needs swapping for another. */
-export function toOperation(change: MealChange, newId: () => string = randomUUID): MealOperation {
-	if (change.action === 'add')
-		return { id: newId(), type: 'add_meal', meal_id: newId(), name: change.name, ingredients: change.ingredients };
-	if (change.action === 'edit')
-		return { id: newId(), type: 'edit_meal', meal_id: change.id, name: change.name, ingredients: change.ingredients };
-	return { id: newId(), type: 'remove_meal', meal_id: change.id };
+/**
+ * The operations for a change at the Hub. An added meal gets its id here, so it never needs swapping for another, and
+ * one planned as it's added is planned in the same batch, after it.
+ */
+export function toOperations(change: MealChange, newId: () => string = randomUUID): MealOperation[] {
+	switch (change.action) {
+		case 'add': {
+			const meal_id = newId();
+			const add: MealOperation = {
+				id: newId(),
+				type: 'add_meal',
+				meal_id,
+				name: change.name,
+				ingredients: change.ingredients
+			};
+			return change.planFor ? [add, { id: newId(), type: 'plan', date: change.planFor, meal_id }] : [add];
+		}
+		case 'edit':
+			return [
+				{ id: newId(), type: 'edit_meal', meal_id: change.id, name: change.name, ingredients: change.ingredients }
+			];
+		case 'remove':
+			return [{ id: newId(), type: 'remove_meal', meal_id: change.id }];
+		case 'plan':
+			return [{ id: newId(), type: 'plan', date: change.date, meal_id: change.mealId }];
+		case 'unplan':
+			return [{ id: newId(), type: 'unplan', date: change.date }];
+	}
 }
 
-/** The meals as they will be once the operations waiting are sent, those they touch marked as saving. */
-export function withOperations(meals: Meal[], operations: MealOperation[]): Meal[] {
-	let result = meals;
+/** The meals and plan as they will be once the operations waiting are sent, meals they touch marked as saving. */
+export function withOperations(
+	saved: { meals: Meal[]; plan: PlanDay[] },
+	operations: MealOperation[]
+): { meals: Meal[]; plan: PlanDay[] } {
+	let result = saved.meals;
+	let plan = saved.plan;
 	for (const op of operations) {
+		if (op.type === 'plan' || op.type === 'unplan') {
+			const mealId = op.type === 'plan' ? op.meal_id : null;
+			plan = [...plan.filter((day) => day.date !== op.date), { date: op.date, mealId }];
+			continue;
+		}
 		if (op.type === 'add_meal')
 			result = [...result, { id: op.meal_id, name: op.name, ingredients: op.ingredients, saving: true }];
 		else if (op.type === 'edit_meal')
@@ -53,5 +85,5 @@ export function withOperations(meals: Meal[], operations: MealOperation[]): Meal
 			);
 		else result = result.filter((m) => m.id !== op.meal_id);
 	}
-	return result;
+	return { meals: result, plan };
 }

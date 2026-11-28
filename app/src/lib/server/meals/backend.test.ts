@@ -46,6 +46,11 @@ function fakeBackend() {
 			if (applied.has(op.id)) return { id: op.id, seq, changed: false };
 			applied.add(op.id);
 			seq++;
+			if (op.type === 'plan' || op.type === 'unplan') {
+				const mealId = op.type === 'plan' ? op.meal_id : null;
+				plan.set(op.date, { date: op.date, meal_id: mealId, seq });
+				return { id: op.id, seq, changed: true };
+			}
 			const found = meals.get(op.meal_id);
 			if (op.type === 'add_meal')
 				meals.set(op.meal_id, { id: op.meal_id, name: op.name, ingredients: op.ingredients, removed: false, seq });
@@ -232,5 +237,55 @@ describe('the backend’s meals', () => {
 		}
 		expect(changes).toHaveLength(2);
 		expect(backend.posts).toEqual([]);
+	});
+
+	it('plans a day with one plan, clears it with one unplan, and shows each', async () => {
+		const { backend, request } = fakeBackend();
+		const curry = backend.addElsewhere('Curry');
+		const feed = feedFor(request);
+
+		expect(await feed.apply({ action: 'plan', date: '2026-11-30', mealId: curry })).toBe(200);
+		expect(backend.posts.at(-1)).toEqual([
+			{ id: expect.any(String), type: 'plan', date: '2026-11-30', meal_id: curry }
+		]);
+		expect((await feed.load()).plan).toEqual([{ date: '2026-11-30', mealId: curry }]);
+
+		await feed.apply({ action: 'unplan', date: '2026-11-30' });
+		expect(backend.posts.at(-1)).toEqual([{ id: expect.any(String), type: 'unplan', date: '2026-11-30' }]);
+		expect((await feed.load()).plan).toEqual([{ date: '2026-11-30', mealId: null }]);
+	});
+
+	it('adds a meal and plans it in one go: add_meal then plan, in one request', async () => {
+		const { backend, request } = fakeBackend();
+		const feed = feedFor(request);
+
+		await feed.apply({ action: 'add', name: 'Fish tacos', ingredients: ['cod'], planFor: '2026-12-01' });
+
+		const [batch] = backend.posts;
+		expect(batch!.map((op) => op.type)).toEqual(['add_meal', 'plan']);
+		const [add, plan] = batch as [
+			Extract<MealOperation, { type: 'add_meal' }>,
+			Extract<MealOperation, { type: 'plan' }>
+		];
+		expect(plan).toMatchObject({ date: '2026-12-01', meal_id: add.meal_id });
+		const { meals, plan: days } = await feed.load();
+		expect(days).toEqual([{ date: '2026-12-01', mealId: meals[0]!.id }]);
+	});
+
+	it('shows a plan made offline straight away, keeps it through a restart, and sends it once the backend is back', async () => {
+		const { backend, request } = fakeBackend();
+		const curry = backend.addElsewhere('Curry');
+		await feedFor(request).load();
+		backend.down = new TypeError('fetch failed');
+
+		expect(await feedFor(request).apply({ action: 'plan', date: '2026-11-30', mealId: curry })).toBe(202);
+		const restarted = feedFor(request);
+		expect((await restarted.load()).plan).toEqual([{ date: '2026-11-30', mealId: curry }]);
+
+		backend.down = null;
+		await restarted.sendWaiting();
+		expect(backend.posts.at(-1)!.map((op) => op.type)).toEqual(['plan']);
+		expect(await queued()).toEqual([]);
+		expect((await restarted.load()).plan).toEqual([{ date: '2026-11-30', mealId: curry }]);
 	});
 });

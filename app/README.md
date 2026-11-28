@@ -130,6 +130,7 @@ The Meals Section (AB#98) shows the backend's saved meals ([ADR 0017](../docs/ad
 - It works like the Shopping list: `add_meal`, `edit_meal` and `remove_meal` go to `POST /meals/operations`, with ids made at the Hub. While the backend can't be reached they wait in `app/data/meals-backend-queue.json`, the meal shows "Saving…", and they're tried again every 20 seconds and when live updates reconnect. The last meals and plan are kept in `app/data/meals-backend-cache.json`.
 - A `meals` live update refreshes them, so a meal added elsewhere shows without a reload.
 - Remove meal asks first and says which day it's planned for, if any, as that day will show as empty.
+- **The plan** (AB#99): the Section's This week column shows today and the next 6 days, rolling over at midnight as the screen reloads, each with its dinner or "Nothing planned" (a removed meal reads as nothing planned). Tapping a day opens a picker of the saved meals: a tap sends `plan`, Nothing planned sends `unplan`, and New meal opens the editor, whose Done sends `add_meal` then `plan` in one batch. Plans queue offline like the rest. The Today view's dinner card shows tonight's and tomorrow's, and opens Meals.
 
 ## Check types and run the tests
 

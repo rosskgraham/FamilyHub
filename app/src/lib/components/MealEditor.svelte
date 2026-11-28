@@ -6,12 +6,15 @@
 	let {
 		meal,
 		plannedFor,
+		planFor,
 		onclose
 	}: {
 		/** The meal being edited, or null for a new one. */
 		meal: Meal | null;
 		/** The first day from today it's planned for, if any, to say which goes empty if it's removed. */
 		plannedFor: string | null;
+		/** For a new meal from the plan's picker: the date to plan it for as it's saved (AB#99). */
+		planFor?: string;
 		onclose: () => void;
 	} = $props();
 
@@ -89,7 +92,7 @@
 			'/api/meals',
 			meal
 				? { action: 'edit', id: meal.id, name: trimmed, ingredients: kept }
-				: { action: 'add', name: trimmed, ingredients: kept }
+				: { action: 'add', name: trimmed, ingredients: kept, ...(planFor && { planFor }) }
 		);
 		sending = false;
 		if (!problem) onclose();
@@ -110,7 +113,9 @@
 <div class="backdrop" role="presentation">
 	<div class="panel" role="dialog" aria-modal="true" aria-labelledby="meal-editor-title">
 		<div class="top">
-			<h2 id="meal-editor-title">{meal ? 'Edit meal' : 'New meal'}</h2>
+			<h2 id="meal-editor-title">
+				{meal ? 'Edit meal' : planFor ? `New meal for ${formatWeekday(planFor, 'long')}` : 'New meal'}
+			</h2>
 			<div class="buttons">
 				{#if meal}
 					<button class="outline-danger" onclick={() => (removing = true)}>Remove meal</button>
